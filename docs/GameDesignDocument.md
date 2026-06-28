@@ -58,9 +58,13 @@ records → take on Daily Runs (planned, offline-seeded).
   dark. They are drawn to light and seek to extinguish the Warden.
 - **Tone:** Melancholy but defiant. Beautiful light against oppressive dark.
 
-Art direction: **procedural neon-on-void vector art**. Luminous additive-blended
-projectiles and effects; dark, low-saturation enemies; a parallax dot-field
-void. No bitmap assets. See `docs/ArchitectureNotes.md` for the rendering model.
+Art direction: **procedural, atmospheric, luminous**. Detailed characters are
+baked from code into sprites (the Warden as a faceted crystal hero; the Hollow as
+distinct silhouettes — hooded wraith, armored brute, sleek predator, ethereal
+wisp, robed caster), set against a deep nebula-and-starfield void with parallax,
+drifting fog, grounding shadows and a cinematic vignette. Additive-blended light
+for all projectiles/effects. **No bitmap assets** — everything is generated at
+runtime (see SpriteForge / Background in `docs/ArchitectureNotes.md`).
 
 ---
 

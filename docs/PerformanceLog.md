@@ -17,16 +17,22 @@ Tracks performance targets, measurements, and optimisation decisions.
 | v0.2 (evolution) | JS | 58.9 KB | 18.4 KB |
 | v0.2 (boss) | JS | 68.4 KB | 21.1 KB |
 | v0.2 (chain wpn + relics) | JS | 75.9 KB | 22.8 KB |
+| v0.2 (visual overhaul) | JS | 85.5 KB | 25.4 KB |
 | v0.2 | CSS | 7.0 KB | 2.1 KB |
-| v0.2 | HTML | 4.3 KB | 1.8 KB |
-| v0.2 | single-file HTML | 86 KB | ~26 KB |
+| v0.2 | HTML | 4.9 KB | 2.0 KB |
+| v0.2 | single-file HTML | ~88 KB | ~26 KB |
 
 > Single-file build is a classic IIFE (es2019) for `file://` compatibility; the
 > served build uses ES modules. See ArchitectureNotes / BUG-002.
 
 No image/audio/font assets — all visuals and sound are procedural.
 
-## Optimisations in place (v0.1)
+## Optimisations in place
+- **Baked sprites (v0.2):** characters are rendered once to offscreen canvases
+  at startup and blitted with `drawImage`, which is cheaper than the previous
+  per-frame vector path drawing *and* allows far more detail. The background is
+  similarly a baked tile, drawn with wrap + parallax. Net effect: prettier with
+  equal-or-lower per-frame cost.
 - Object pooling for all high-churn entities (no per-frame allocation).
 - Spatial hash grid (cell 96px) rebuilt per step for broad-phase queries.
 - Swap-and-pop array removal (O(1)).

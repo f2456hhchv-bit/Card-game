@@ -4,6 +4,34 @@
 
 Observations from playtests, and the actions they drive. Newest first.
 
+## 2026-06-28 — Visual Overhaul v1 + live web hosting
+
+**Method:** User feedback ("don't like the basic graphics… want original
+artwork, next level"), plus in-browser screenshots of the new art.
+
+**Observed:**
+- The placeholder geometry (hexagons on a flat dotted void) was indeed the
+  weakest part. The overhaul transforms the feel: an atmospheric nebula +
+  starfield backdrop, characterful creatures (hooded wraith Drifters, etc.), a
+  luminous crystal Warden, grounding shadows, vignette, and a glowing spiked-eye
+  boss. Reads as a polished, premium game now.
+- 60 FPS in headless software rendering with the boss active; no console errors.
+- Hosting: after making the repo public + enabling Pages, the game is live at a
+  tappable link and plays in mobile Safari. The single-file `file://` route is
+  unusable inside the iPhone app's preview, so the hosted URL is now the primary
+  way the user plays; deploys auto-publish on push.
+
+**Actions taken:**
+- Shipped SpriteForge (baked procedural characters) + Background (atmospheric
+  layers) + shadows/vignette/danger-pulse polish.
+- Enabled auto-deploy to GitHub Pages so the live link always reflects latest.
+
+**Open questions:**
+1. Real-device FPS at high enemy counts (300–900) — needs measurement on phone.
+2. Are creature silhouettes readable enough at small sizes during dense swarms?
+3. Next visual passes: weapon-specific effects, evolved-weapon signature visuals,
+   boss attack telegraph flourishes.
+
 ## 2026-06-28 — Critical: single-file wouldn't load + new content
 
 **Method:** User report ("spinning wheel of death" opening the shared file) +

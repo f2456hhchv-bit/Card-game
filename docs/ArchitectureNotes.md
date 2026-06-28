@@ -54,6 +54,30 @@ The **120 FPS target** refers to render/display smoothness; the sim is a fixed
 
 ---
 
+## Rendering & procedural art
+
+All art is generated in code — there are **no image, audio, or font assets**.
+The rendering pipeline:
+
+- **SpriteForge** (`game/render/SpriteForge.ts`) bakes each character (the
+  Warden, every Hollow archetype, the boss, pickups) **once at startup** into an
+  offscreen canvas, with gradients, rim-light, glowing eyes and fine detail. The
+  renderer then blits the cached sprite with `drawImage` — far prettier *and*
+  faster than re-running vector paths for hundreds of entities each frame. A
+  flat-white silhouette of each sprite is also baked for clean hit-flash.
+- Sprites bake at a common design body-radius (`BODY_R`), supersampled for
+  crispness; the renderer scales each by `entity.radius / sprite.bodyRadius`.
+- **Background** (`game/render/Background.ts`) bakes a deep-space tile (gradient
+  + nebula + parallax starfield) and tiles it with wrap + parallax, adds live
+  drifting fog, and supplies a viewport-sized vignette drawn over the world.
+- Live additive effects (projectiles, auras, orbs, chain arcs, particles,
+  enemy projectiles) are drawn on top with `globalCompositeOperation = "lighter"`.
+- Grounding shadows under every creature and a low-HP danger-pulse vignette add
+  the final "premium" polish.
+
+`GameRenderer` owns a `SpriteForge` and `Background` (both create canvases, so
+they only ever run in the browser, never in Node tests).
+
 ## Performance strategy
 
 1. **Object pooling** (`core/ObjectPool.ts`) for every high-churn entity —

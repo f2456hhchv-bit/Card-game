@@ -9,10 +9,12 @@
 # the hosted game stays up to date.
 name: Deploy AFTERLIGHT to GitHub Pages
 
-# NOTE: auto-deploy on push will be enabled once Pages is confirmed working;
-# kept to manual trigger for now so it can't fail before the repo is public.
+# Auto-deploys on every push to the default branch (Pages is confirmed working),
+# plus on-demand via the Actions tab.
 on:
   workflow_dispatch:
+  push:
+    branches: ["claude/survivor-game-development-bdruqt"]
 
 # Permissions the Pages deployment needs.
 permissions:

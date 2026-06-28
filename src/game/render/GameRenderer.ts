@@ -3,15 +3,19 @@ import type { Camera } from "../../engine/Camera";
 import type { World } from "../World";
 import type { Input } from "../../engine/Input";
 import { TAU } from "../../core/math/MathUtils";
+import { SpriteForge, type Sprite } from "./SpriteForge";
+import { Background } from "./Background";
 
 /**
- * Draws the world with procedural vector art — no image assets. The look:
- * luminous shapes against a dark void, additive glow for the Warden's light
- * and bruised, desaturated tones for the Hollow. All art is generated from
- * primitives so the build stays tiny and fully original.
+ * Draws the world. All art is procedural and asset-free: characters are baked
+ * once by the SpriteForge into offscreen canvases and blitted here (fast +
+ * detailed), set against the layered atmospheric Background. Luminous additive
+ * effects (projectiles, auras, arcs, particles) are drawn live on top.
  */
 export class GameRenderer {
   private reduceMotion = false;
+  private readonly forge = new SpriteForge();
+  private readonly background = new Background();
 
   setReduceMotion(v: boolean): void {
     this.reduceMotion = v;
@@ -19,7 +23,11 @@ export class GameRenderer {
 
   render(renderer: Renderer, camera: Camera, world: World, input: Input): void {
     const ctx = renderer.ctx;
-    this.drawBackground(renderer, camera);
+    const w = renderer.width;
+    const h = renderer.height;
+    this.background.resize(w, h);
+    this.background.draw(ctx, camera.x, camera.y, w, h, world.stats.elapsed, this.reduceMotion);
+
     this.drawArenaBoundary(ctx, camera, world);
     this.drawPickups(ctx, camera, world);
     this.drawAura(ctx, camera, world);
@@ -31,24 +39,38 @@ export class GameRenderer {
     this.drawArcs(ctx, camera, world);
     this.drawPlayer(ctx, camera, world);
     this.drawParticles(ctx, camera, world);
+
+    // Cinematic post: vignette, plus a danger pulse when the Warden is low.
+    this.background.drawVignette(ctx);
+    this.drawDangerPulse(ctx, world, w, h);
+
     this.drawDamageNumbers(ctx, camera, world);
     if (input.joystickActive) this.drawJoystick(ctx, input);
   }
 
-  private drawBackground(renderer: Renderer, camera: Camera): void {
-    const ctx = renderer.ctx;
-    // Parallax dot-grid suggesting depth without heavy cost.
-    const grid = 120;
-    const w = renderer.width;
-    const h = renderer.height;
-    ctx.fillStyle = "rgba(120,140,220,0.06)";
-    const startX = -((camera.x * 0.6) % grid);
-    const startY = -((camera.y * 0.6) % grid);
-    for (let x = startX; x < w; x += grid) {
-      for (let y = startY; y < h; y += grid) {
-        ctx.fillRect(x + camera.offsetX, y + camera.offsetY, 2, 2);
-      }
-    }
+  /** Blit a baked sprite centred at (x,y) so its body radius equals `r`. */
+  private blit(
+    ctx: CanvasRenderingContext2D,
+    sprite: Sprite,
+    x: number,
+    y: number,
+    r: number,
+    rotation = 0,
+    alpha = 1,
+  ): void {
+    const k = r / sprite.bodyRadius;
+    ctx.save();
+    ctx.translate(x, y);
+    if (rotation !== 0) ctx.rotate(rotation);
+    ctx.scale(k, k);
+    if (alpha !== 1) ctx.globalAlpha = alpha;
+    ctx.drawImage(sprite.canvas, -sprite.canvas.width / 2, -sprite.canvas.height / 2);
+    ctx.restore();
+  }
+
+  /** Grounding shadow beneath an entity. */
+  private shadow(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
+    this.blit(ctx, this.forge.shadow, x, y + r * 0.55, r * 1.05, 0, 0.9);
   }
 
   private drawArenaBoundary(
@@ -58,11 +80,14 @@ export class GameRenderer {
   ): void {
     const cx = camera.worldToScreenX(0);
     const cy = camera.worldToScreenY(0);
+    const r = world.arenaRadius * camera.zoom;
     ctx.save();
-    ctx.strokeStyle = "rgba(125,140,255,0.18)";
-    ctx.lineWidth = 6;
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = "rgba(120,140,255,0.22)";
+    ctx.lineWidth = 4;
+    ctx.setLineDash([14, 10]);
     ctx.beginPath();
-    ctx.arc(cx, cy, world.arenaRadius * camera.zoom, 0, TAU);
+    ctx.arc(cx, cy, r, 0, TAU);
     ctx.stroke();
     ctx.restore();
   }
@@ -73,94 +98,112 @@ export class GameRenderer {
     const y = camera.worldToScreenY(p.y);
     const r = p.radius * camera.zoom;
 
-    // Soft light halo.
+    this.shadow(ctx, x, y, r);
+
+    // Soft light halo (additive).
     if (!this.reduceMotion) {
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r * 5);
-      g.addColorStop(0, "rgba(180,200,255,0.35)");
-      g.addColorStop(1, "rgba(180,200,255,0)");
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const pulse = 1 + Math.sin(world.stats.elapsed * 3) * 0.08;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r * 4.2 * pulse);
+      g.addColorStop(0, "rgba(150,180,255,0.28)");
+      g.addColorStop(1, "rgba(150,180,255,0)");
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(x, y, r * 5, 0, TAU);
+      ctx.arc(x, y, r * 4.2 * pulse, 0, TAU);
       ctx.fill();
+      ctx.restore();
     }
 
-    // Body — a faceted light-core.
-    const flash = p.hitFlash > 0 ? Math.sin(p.hitFlash * 40) > 0 : false;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(p.facing + Math.PI / 2);
-    ctx.beginPath();
-    const spikes = 4;
-    for (let i = 0; i < spikes * 2; i++) {
-      const rad = i % 2 === 0 ? r : r * 0.5;
-      const a = (i / (spikes * 2)) * TAU;
-      const px = Math.cos(a) * rad;
-      const py = Math.sin(a) * rad;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.fillStyle = flash ? "#ffffff" : "#dce6ff";
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "rgba(120,150,255,0.9)";
-    ctx.stroke();
-    // Inner core.
-    ctx.beginPath();
-    ctx.arc(0, 0, r * 0.32, 0, TAU);
-    ctx.fillStyle = "#ffffff";
-    ctx.fill();
-    ctx.restore();
+    // Body sprite faces up; rotate toward facing. Invuln blink after a hit.
+    const blink = p.invuln > 0 && Math.sin(p.invuln * 40) < -0.2 ? 0.45 : 1;
+    this.blit(ctx, this.forge.warden, x, y, r * 1.25, p.facing + Math.PI / 2, blink);
   }
 
   private drawEnemies(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
-    const bounds = camera.getVisibleBounds(60);
+    const bounds = camera.getVisibleBounds(80);
+    const t = world.stats.elapsed;
+    const px = world.player.x;
+    const py = world.player.y;
     for (let i = 0; i < world.enemies.length; i++) {
       const e = world.enemies[i];
-      if (e.isBoss) continue; // drawn separately with bespoke visuals
+      if (e.isBoss) continue; // bespoke draw
       if (e.x < bounds.minX || e.x > bounds.maxX || e.y < bounds.minY || e.y > bounds.maxY)
         continue;
       const x = camera.worldToScreenX(e.x);
-      const y = camera.worldToScreenY(e.y);
-      const r = e.radius * camera.zoom;
-      const light = e.hitFlash > 0 ? 85 : e.isElite ? 62 : 48;
+      const yBob = this.reduceMotion ? 0 : Math.sin(t * 5 + e.animPhase) * e.radius * 0.07 * camera.zoom;
+      const y = camera.worldToScreenY(e.y) + yBob;
+      const r = e.radius * camera.zoom * 1.25;
 
-      ctx.save();
-      ctx.translate(x, y);
-      // Subtle pulse.
-      const pulse = this.reduceMotion ? 1 : 1 + Math.sin(world.stats.elapsed * 4 + e.animPhase) * 0.06;
-      ctx.scale(pulse, pulse);
+      this.shadow(ctx, x, camera.worldToScreenY(e.y), e.radius * camera.zoom);
 
+      // Directional types point at the Warden; others wobble gently.
+      let rot = this.reduceMotion ? 0 : Math.sin(t * 2.5 + e.animPhase) * 0.08;
+      if (e.behaviour === "charger") {
+        rot = Math.atan2(py - e.y, px - e.x) + Math.PI / 2;
+      }
+
+      // Elite backing glow.
       if (e.isElite) {
-        ctx.shadowColor = `hsl(${e.hue} 90% 60%)`;
-        ctx.shadowBlur = 16;
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.8);
+        g.addColorStop(0, `hsla(${e.hue} 90% 60% / 0.5)`);
+        g.addColorStop(1, `hsla(${e.hue} 90% 60% / 0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 1.8, 0, TAU);
+        ctx.fill();
+        ctx.restore();
       }
-      // Body: a rough hexagon to read as "corrupted shard".
-      ctx.beginPath();
-      for (let s = 0; s < 6; s++) {
-        const a = (s / 6) * TAU + e.animPhase;
-        const px = Math.cos(a) * r;
-        const py = Math.sin(a) * r;
-        if (s === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+
+      const sprite = this.forge.enemy(e.typeId);
+      this.blit(ctx, sprite, x, y, r, rot);
+      // Hit flash overlay.
+      if (e.hitFlash > 0) {
+        this.blit(ctx, this.forge.enemyWhite(e.typeId), x, y, r, rot, Math.min(1, e.hitFlash / 0.08));
       }
-      ctx.closePath();
-      ctx.fillStyle = e.hitFlash > 0 ? "#ffffff" : `hsl(${e.hue} 55% ${light}%)`;
-      ctx.fill();
-      ctx.lineWidth = e.isElite ? 3 : 1.5;
-      ctx.strokeStyle = `hsl(${e.hue} 70% ${e.isElite ? 75 : 30}%)`;
-      ctx.stroke();
-      ctx.restore();
 
       // Health bar for damaged / elite enemies.
       if (e.isElite || e.hp < e.maxHp) {
-        const w = r * 2;
+        const bw = r * 1.6;
         const frac = Math.max(0, e.hp / e.maxHp);
-        ctx.fillStyle = "rgba(0,0,0,0.5)";
-        ctx.fillRect(x - w / 2, y - r - 8, w, 3);
+        const by = y - r - 7;
+        ctx.fillStyle = "rgba(0,0,0,0.55)";
+        ctx.fillRect(x - bw / 2, by, bw, 3.5);
         ctx.fillStyle = e.isElite ? "#ffd166" : "#8affc1";
-        ctx.fillRect(x - w / 2, y - r - 8, w * frac, 3);
+        ctx.fillRect(x - bw / 2, by, bw * frac, 3.5);
       }
+    }
+  }
+
+  private drawBoss(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
+    const boss = world.boss;
+    if (!boss || !boss.active) return;
+    const x = camera.worldToScreenX(boss.x);
+    const y = camera.worldToScreenY(boss.y);
+    const r = boss.radius * camera.zoom;
+    const t = world.stats.elapsed;
+
+    this.shadow(ctx, x, y, r * 0.95);
+
+    // Telegraph: an expanding warning ring during attack wind-up.
+    const tele = world.bossTelegraph;
+    if (tele > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.strokeStyle = `hsla(${boss.hue} 100% 72% / ${0.5 * (1 - tele)})`;
+      ctx.lineWidth = 4 + tele * 12;
+      ctx.beginPath();
+      ctx.arc(x, y, r * (1.15 + tele * 0.9), 0, TAU);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    const rot = this.reduceMotion ? 0 : t * 0.35;
+    this.blit(ctx, this.forge.boss, x, y, r * 1.2, rot);
+    if (boss.hitFlash > 0) {
+      this.blit(ctx, this.forge.bossFlash, x, y, r * 1.2, rot, Math.min(1, boss.hitFlash / 0.08));
     }
   }
 
@@ -173,97 +216,35 @@ export class GameRenderer {
       const y = camera.worldToScreenY(p.y);
       const r = p.radius * camera.zoom;
       const sat = p.crit ? 100 : 90;
-      const lum = p.crit ? 75 : 65;
-      ctx.fillStyle = `hsl(${p.hue} ${sat}% ${lum}%)`;
+      const lum = p.crit ? 78 : 66;
       if (p.style === "shard") {
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(p.rotation);
+        ctx.fillStyle = `hsl(${p.hue} ${sat}% ${lum}%)`;
         ctx.beginPath();
-        ctx.moveTo(0, -r * 1.6);
+        ctx.moveTo(0, -r * 1.7);
         ctx.lineTo(r * 0.7, 0);
-        ctx.lineTo(0, r * 1.6);
+        ctx.lineTo(0, r * 1.7);
         ctx.lineTo(-r * 0.7, 0);
         ctx.closePath();
         ctx.fill();
         ctx.restore();
       } else {
+        // Soft glow + bright core.
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.8);
+        g.addColorStop(0, `hsl(${p.hue} ${sat}% ${lum}%)`);
+        g.addColorStop(1, `hsla(${p.hue} ${sat}% ${lum}% / 0)`);
+        ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(x, y, r, 0, TAU);
+        ctx.arc(x, y, r * 1.8, 0, TAU);
         ctx.fill();
-        // Bright core.
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
         ctx.beginPath();
-        ctx.arc(x, y, r * 0.45, 0, TAU);
+        ctx.arc(x, y, r * 0.5, 0, TAU);
         ctx.fill();
       }
     }
-    ctx.restore();
-  }
-
-  private drawBoss(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
-    const boss = world.boss;
-    if (!boss || !boss.active) return;
-    const x = camera.worldToScreenX(boss.x);
-    const y = camera.worldToScreenY(boss.y);
-    const r = boss.radius * camera.zoom;
-    const t = world.stats.elapsed;
-
-    // Telegraph: an expanding warning ring during attack wind-up.
-    const tele = world.bossTelegraph;
-    if (tele > 0) {
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.strokeStyle = `hsla(${boss.hue} 100% 70% / ${0.5 * (1 - tele)})`;
-      ctx.lineWidth = 4 + tele * 10;
-      ctx.beginPath();
-      ctx.arc(x, y, r * (1.1 + tele * 0.9), 0, TAU);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    ctx.save();
-    ctx.translate(x, y);
-    // Menacing aura.
-    if (!this.reduceMotion) {
-      const g = ctx.createRadialGradient(0, 0, r * 0.4, 0, 0, r * 1.9);
-      g.addColorStop(0, `hsla(${boss.hue} 80% 50% / 0.5)`);
-      g.addColorStop(1, `hsla(${boss.hue} 80% 40% / 0)`);
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(0, 0, r * 1.9, 0, TAU);
-      ctx.fill();
-    }
-    // Rotating spiked body.
-    const rot = this.reduceMotion ? 0 : t * 0.4;
-    ctx.rotate(rot);
-    const spikes = 10;
-    ctx.beginPath();
-    for (let i = 0; i < spikes * 2; i++) {
-      const rad = i % 2 === 0 ? r : r * 0.72;
-      const a = (i / (spikes * 2)) * TAU;
-      const px = Math.cos(a) * rad;
-      const py = Math.sin(a) * rad;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.fillStyle = boss.hitFlash > 0 ? "#ffffff" : `hsl(${boss.hue} 55% 38%)`;
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = `hsl(${boss.hue} 80% 70%)`;
-    ctx.stroke();
-    // Core eye that glows brighter while telegraphing.
-    ctx.rotate(-rot);
-    const coreGlow = 0.4 + tele * 0.6;
-    ctx.fillStyle = `hsla(${boss.hue} 100% ${50 + coreGlow * 40}% / 1)`;
-    ctx.beginPath();
-    ctx.arc(0, 0, r * 0.34, 0, TAU);
-    ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.9)";
-    ctx.beginPath();
-    ctx.arc(0, 0, r * 0.14, 0, TAU);
-    ctx.fill();
     ctx.restore();
   }
 
@@ -280,7 +261,6 @@ export class GameRenderer {
       const y1 = camera.worldToScreenY(a.y1);
       const x2 = camera.worldToScreenX(a.x2);
       const y2 = camera.worldToScreenY(a.y2);
-      // Build a jittered polyline between the endpoints for an electric look.
       const segs = 5;
       const dx = x2 - x1;
       const dy = y2 - y1;
@@ -291,12 +271,10 @@ export class GameRenderer {
       ctx.moveTo(x1, y1);
       for (let s = 1; s < segs; s++) {
         const t = s / segs;
-        // Deterministic-ish jitter from segment index so it shimmers per frame.
-        const jitter = (Math.sin(a.life * 90 + s * 12.9) * 0.5) * 14 * (1 - Math.abs(t - 0.5) * 2 + 0.2);
+        const jitter = Math.sin(a.life * 90 + s * 12.9) * 0.5 * 14 * (1 - Math.abs(t - 0.5) * 2 + 0.2);
         ctx.lineTo(x1 + dx * t + nx * jitter, y1 + dy * t + ny * jitter);
       }
       ctx.lineTo(x2, y2);
-      // Outer glow then bright core.
       ctx.strokeStyle = `hsla(${a.hue} 100% 70% / ${alpha * 0.6})`;
       ctx.lineWidth = 6 * camera.zoom;
       ctx.stroke();
@@ -327,7 +305,6 @@ export class GameRenderer {
       ctx.beginPath();
       ctx.arc(x, y, r * 1.7, 0, TAU);
       ctx.fill();
-      // Dark core so hostile bolts read differently from the Warden's light.
       ctx.fillStyle = `hsl(${p.hue} 90% 30%)`;
       ctx.beginPath();
       ctx.arc(x, y, r * 0.55, 0, TAU);
@@ -377,41 +354,17 @@ export class GameRenderer {
 
   private drawPickups(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
     const bounds = camera.getVisibleBounds(40);
+    const t = world.stats.elapsed;
     for (let i = 0; i < world.pickups.length; i++) {
       const k = world.pickups[i];
       if (k.x < bounds.minX || k.x > bounds.maxX || k.y < bounds.minY || k.y > bounds.maxY)
         continue;
       const x = camera.worldToScreenX(k.x);
-      const bobY = this.reduceMotion ? 0 : Math.sin(k.bob) * 2;
+      const bobY = this.reduceMotion ? 0 : Math.sin(k.bob) * 2.5;
       const y = camera.worldToScreenY(k.y) + bobY;
-      const r = k.radius * camera.zoom;
-      let hue = 150;
-      if (k.kind === "heal") hue = 140;
-      else if (k.kind === "magnet") hue = 280;
-      else if (k.kind === "bomb") hue = 20;
-      ctx.save();
-      ctx.globalCompositeOperation = "lighter";
-      ctx.fillStyle = `hsl(${hue} 90% 60%)`;
-      if (k.kind === "xp") {
-        ctx.beginPath();
-        ctx.moveTo(x, y - r);
-        ctx.lineTo(x + r, y);
-        ctx.lineTo(x, y + r);
-        ctx.lineTo(x - r, y);
-        ctx.closePath();
-        ctx.fill();
-      } else {
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, TAU);
-        ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.9)";
-        ctx.font = `${Math.round(r * 1.3)}px sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        const glyph = k.kind === "heal" ? "+" : k.kind === "magnet" ? "✦" : "✸";
-        ctx.fillText(glyph, x, y + 1);
-      }
-      ctx.restore();
+      const r = k.radius * camera.zoom * 1.5;
+      const spin = k.kind === "xp" && !this.reduceMotion ? Math.sin(t * 2 + k.bob) * 0.3 : 0;
+      this.blit(ctx, this.forge.pickup(k.kind), x, y, r, spin);
     }
   }
 
@@ -423,13 +376,41 @@ export class GameRenderer {
       const x = camera.worldToScreenX(p.x);
       const y = camera.worldToScreenY(p.y);
       ctx.globalAlpha = Math.max(0, p.alpha);
-      ctx.fillStyle = `hsl(${p.hue} 90% 65%)`;
+      const r = p.size * camera.zoom;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.6);
+      g.addColorStop(0, `hsl(${p.hue} 95% 72%)`);
+      g.addColorStop(1, `hsla(${p.hue} 95% 65% / 0)`);
+      ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(x, y, p.size * camera.zoom, 0, TAU);
+      ctx.arc(x, y, r * 1.6, 0, TAU);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
     ctx.restore();
+  }
+
+  /** Red edge pulse when the Warden's vitality is low. */
+  private drawDangerPulse(
+    ctx: CanvasRenderingContext2D,
+    world: World,
+    w: number,
+    h: number,
+  ): void {
+    const frac = world.player.hp / world.player.stats.maxHp;
+    if (frac >= 0.3 || world.isDead) return;
+    const intensity = (1 - frac / 0.3) * (0.35 + 0.25 * Math.sin(world.stats.elapsed * 6));
+    const g = ctx.createRadialGradient(
+      w / 2,
+      h / 2,
+      Math.min(w, h) * 0.3,
+      w / 2,
+      h / 2,
+      Math.max(w, h) * 0.7,
+    );
+    g.addColorStop(0, "rgba(255,30,60,0)");
+    g.addColorStop(1, `rgba(255,30,60,${Math.max(0, intensity)})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
   }
 
   private drawDamageNumbers(

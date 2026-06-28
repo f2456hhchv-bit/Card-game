@@ -69,6 +69,16 @@ done. Remaining M2: more content (weapons/relics), touch pause, tutorial.
 
 ---
 
+## ✅ Visual Overhaul v1 — COMPLETE (within M2)
+
+Goal: replace placeholder geometry with premium, original procedural art.
+- [x] SpriteForge: bake detailed characters once → blit (faster + prettier)
+- [x] Unique creature designs per archetype + the boss, with baked hit-flash
+- [x] Atmospheric Background: nebula + parallax starfield + drifting fog + vignette
+- [x] Grounding shadows, light halos, low-HP danger pulse, glow projectiles
+- [x] Auto-deploy to GitHub Pages on push (live web link stays current)
+- [x] Verified in-browser (no errors, 60 FPS under software rendering)
+
 ## M3 — Meta & Variety (v0.3) — PLANNED
 - [ ] Light Motes shop + persistent unlocks
 - [ ] Offline-seeded Daily Run
