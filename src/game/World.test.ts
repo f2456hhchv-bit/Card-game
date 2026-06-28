@@ -47,6 +47,48 @@ describe("World — combat integration", () => {
     expect(Number.isFinite(p.vy)).toBe(true);
   });
 
+  it("spawns a boss at the boss interval and cleans up when defeated", () => {
+    const world = new World(3);
+    world.reset();
+    // Make the test Warden effectively unkillable so the run survives to 180s.
+    world.player.stats.maxHp = 1e9;
+    world.player.hp = 1e9;
+    let spawned = false;
+    let defeated = false;
+    world.events.on("bossSpawned", () => (spawned = true));
+    world.events.on("bossDefeated", () => (defeated = true));
+
+    // Fast-forward past the first boss interval (180s).
+    for (let i = 0; i < 60 * 185 && !spawned; i++) world.step(1 / 60, STILL);
+    expect(spawned).toBe(true);
+    expect(world.bossActive).toBe(true);
+    expect(world.boss).not.toBeNull();
+
+    // Slay the boss directly.
+    const boss = world.boss!;
+    world.damageEnemy(boss, boss.maxHp + 1, false, 0, 0);
+    world.step(1 / 60, STILL);
+    expect(defeated).toBe(true);
+    expect(world.bossActive).toBe(false);
+    expect(world.boss).toBeNull();
+    // A boss drops a generous loot shower.
+    expect(world.pickups.length).toBeGreaterThan(5);
+  });
+
+  it("enemy projectiles damage the player and are recycled", () => {
+    const world = new World(8);
+    world.reset();
+    const startHp = world.player.hp;
+    // Fire a hostile projectile straight at the Warden.
+    world.fireEnemyProjectile(world.player.x + 40, world.player.y, -300, 0, 15, 320, 8);
+    expect(world.enemyProjectiles.length).toBe(1);
+    for (let i = 0; i < 30 && world.enemyProjectiles.length > 0; i++) {
+      world.step(1 / 60, STILL);
+    }
+    expect(world.enemyProjectiles.length).toBe(0); // hit or expired → recycled
+    expect(world.player.hp).toBeLessThan(startHp); // it connected
+  });
+
   it("kills award XP and can trigger a level-up draft", () => {
     const world = new World(99);
     world.reset();

@@ -63,6 +63,19 @@ feel too "drafty" late, raise the quadratic term; if power plateaus, lower it.
   pacing lands. Evolved Cataclysm knockback (200+) may trivialise surges —
   revisit alongside the boss.
 
+## Boss & ranged tuning (M2, first pass)
+- **The Maw:** 1600 base HP, ×(1 + encounter·0.85) per recurrence, slight time
+  scale. Tuned so the first encounter at 3:00 is a ~20–40s damage check for a
+  developing build, not a wall. Contact 22, projectiles 12 (both scale).
+- **Telegraphs:** 0.7s → 0.5s wind-up across phases — long enough to read, short
+  enough to stay tense. The boss slows to 20% speed while winding up so a volley
+  is committed and dodgeable.
+- **Boss bomb interaction:** a Bomb only deals 12% of boss max HP (no cheap
+  one-shots); it still clears the surrounding swarm.
+- **Caster (shooter):** keeps ~280 units range, fires every 1.9s. First ranged
+  pressure; weight 28, unlocks at 4:00. **To watch:** Caster density during
+  surges could create unfair bullet volume — cap concurrent casters if needed.
+
 ## Change log
 - **2026-06-28** — Initial M1 tuning pass established.
 - **2026-06-28** — Base pickup radius 64 → 80. Playtest showed XP felt lossy
@@ -70,3 +83,5 @@ feel too "drafty" late, raise the quadratic term; if power plateaus, lower it.
   modest, universal generosity that improves early-game feel without
   trivialising Lodestone. Logged from a developer playtest.
 - **2026-06-28** — Added first-pass tuning for the 5 evolved weapons (M2).
+- **2026-06-28** — Added first boss (The Maw), Caster ranged enemy, and enemy
+  projectiles with first-pass tuning (M2).

@@ -52,16 +52,18 @@ Goal: the build-defining payoff and a first marquee encounter.
 - [x] Define evolution pairings (weapon max + specific relic) — 5 pairings
 - [x] Evolved forms excluded from normal pool; guaranteed evolution draft card
 - [x] Tests for evolution eligibility & application (+ in-sim firing)
-- [ ] First boss: telegraphed attacks, phases, arena event
-- [ ] Ranged `shooter` enemy archetype + enemy projectiles
+- [x] First boss "The Maw": 3 telegraphed phases, summons, HUD health bar
+- [x] Ranged `shooter` enemy archetype (Caster) + pooled enemy projectiles
+- [x] Boss state-machine tests + enemy-projectile + boss integration tests
+- [x] Debug console hook (`#dev`) for playtesting specific situations
 - [ ] 2–3 new weapons, 2–3 new relics
 - [ ] On-screen pause button; touch settings polish
 - [ ] First-run tutorial / control hints
-- [ ] Boss state-machine tests
 - [x] Update affected catalogues + balancing notes
 
 **Definition of done:** a run can reach an evolved weapon and a boss fight, both
-feel great, docs updated, build + tests green. (Evolution: done. Boss: next.)
+feel great, docs updated, build + tests green. ✅ Evolution + first boss both
+done. Remaining M2: more content (weapons/relics), touch pause, tutorial.
 
 ---
 

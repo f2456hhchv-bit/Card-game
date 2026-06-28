@@ -66,6 +66,12 @@ npm run preview  # serve the production build locally
 
 Weapons fire **automatically** — your only job is to move, position, and choose
 upgrades. On each level-up you draft one of three offered weapons or relics.
+Survive to **3:00** to face the first boss, **The Maw**.
+
+> **Tip for testers:** open the game with `#dev` in the URL (e.g.
+> `index.html#dev`) to expose a debug console API at `window.afterlight` —
+> `afterlight.spawnBoss()` summons the boss immediately, `afterlight.addLevel()`
+> grants a level-up. Off by default in normal play.
 
 ---
 

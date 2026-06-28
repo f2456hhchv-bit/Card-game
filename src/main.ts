@@ -16,6 +16,13 @@ function boot(): void {
   const game = new Game(canvas, app);
   game.start();
 
+  // Optional debug console hook: open with `#dev` to expose `window.afterlight`.
+  if (location.hash === "#dev") {
+    (window as unknown as { afterlight: unknown }).afterlight = game.getDebugApi();
+    // eslint-disable-next-line no-console
+    console.info("AFTERLIGHT debug API ready: window.afterlight");
+  }
+
   // Fade out the boot splash now that the first frame is up.
   requestAnimationFrame(() => {
     if (splash) {

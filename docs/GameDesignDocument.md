@@ -96,13 +96,20 @@ essential in a genre about precise positioning.
 
 ## 6. Enemies
 
-Archetypes drive distinct movement AI (`chase`, `charger`, `orbiter`, and the
-planned `shooter`). Elites are larger, tankier, hit harder, and drop generous
-loot. Bosses are planned for a later milestone. See `docs/EnemyCatalogue.md`.
+Archetypes drive distinct movement AI: `chase`, `charger`, `orbiter`, and
+`shooter` (ranged, fires hostile projectiles). Elites are larger, tankier, hit
+harder, and drop generous loot. See `docs/EnemyCatalogue.md`.
 
 The **Spawn Director** (`src/game/SpawnDirector.ts`) governs pacing: a smoothly
 rising spawn rate and enemy stat scale, periodic **surges** of heavy pressure,
 and scheduled **elite** spawns. A soft enemy cap protects performance.
+
+**Bosses ✅** are marquee, multi-phase encounters (`BossController`) that arrive
+every 3 minutes. They telegraph each attack with a glowing wind-up, are immune
+to knockback, wear a dedicated HUD health bar, and summon adds between phases.
+The first boss, **The Maw**, has three escalating phases. On defeat they shower
+generous loot. **Enemy projectiles** (`EnemyProjectile`) are pooled, hostile,
+and tested against the Warden.
 
 ---
 

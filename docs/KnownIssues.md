@@ -9,11 +9,12 @@ address them. (Defects go in `docs/BugTracker.md`.)
 
 - **No pause button on touch yet.** Touch players can't pause without a keyboard.
   → On-screen pause button planned in M2.
-- **No weapon evolution.** Mastered (L8) weapons cap out with no evolved form
-  yet. → Core M2 feature.
-- **No bosses.** Only fodder + elites. → First boss in M2.
 - **No tutorial.** Controls are shown only in the README. → First-run onboarding
   in M2.
+- **One boss type.** "The Maw" is the only boss; later encounters reuse it with
+  scaled HP. → More bosses planned (data/controller split already supports it).
+- **No "evolution-ready" telegraph.** Players may not realise a weapon can evolve
+  until the golden card appears. → Considering a HUD marker (see PlaytestNotes).
 - **No meta-shop.** Light Motes accrue but can't be spent yet. → M3.
 - **Single stage / palette.** One arena look. → Additional stages in M3.
 - **High-contrast & colourblind modes** are reserved in settings/save but not

@@ -37,6 +37,9 @@ export class UIManager {
   private loadoutBar!: HTMLDivElement;
   private perf!: HTMLDivElement;
   private flash!: HTMLDivElement;
+  private bossBar!: HTMLDivElement;
+  private bossName!: HTMLDivElement;
+  private bossFill!: HTMLDivElement;
 
   private menu!: HTMLDivElement;
   private draft!: HTMLDivElement;
@@ -100,6 +103,14 @@ export class UIManager {
 
     top.append(xpBar, row);
 
+    // Boss bar (hidden until a boss is active).
+    this.bossName = this.el("div", "boss-name", "");
+    this.bossFill = this.el("div", "boss-fill");
+    const bossTrack = this.el("div", "boss-track");
+    bossTrack.appendChild(this.bossFill);
+    this.bossBar = this.el("div", "boss-bar hidden");
+    this.bossBar.append(this.bossName, bossTrack);
+
     this.hpFill = this.el("div", "hp-fill");
     const hpBar = this.el("div", "hp-bar");
     hpBar.appendChild(this.hpFill);
@@ -111,9 +122,19 @@ export class UIManager {
     this.perf = this.el("div", "perf hidden");
     this.flash = this.el("div", "fade-flash");
 
-    hud.append(top, hpWrap, this.loadoutBar, this.perf, this.flash);
+    hud.append(top, this.bossBar, hpWrap, this.loadoutBar, this.perf, this.flash);
     this.root.appendChild(hud);
     this.hud = hud;
+  }
+
+  /** Show the boss bar with a name; called when a boss spawns. */
+  showBossBar(name: string, title: string): void {
+    this.bossName.textContent = `${name} — ${title}`;
+    this.bossFill.style.width = "100%";
+    this.bossBar.classList.remove("hidden");
+  }
+  hideBossBar(): void {
+    this.bossBar.classList.add("hidden");
   }
 
   updateHUD(world: World, fps: number): void {
@@ -126,6 +147,10 @@ export class UIManager {
     this.hpFill.style.width = `${hpFrac * 100}%`;
     this.hpText.textContent = `${Math.ceil(p.hp)} / ${Math.round(p.stats.maxHp)}`;
     this.updateLoadoutBar(world.loadout);
+
+    if (world.bossActive) {
+      this.bossFill.style.width = `${world.bossHpFraction * 100}%`;
+    }
 
     if (this.showPerf) {
       this.perf.textContent =

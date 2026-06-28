@@ -17,7 +17,7 @@ scales HP and damage upward over time (see `docs/BalancingNotes.md`).
 | `chase` | Moves directly toward the Warden. The baseline threat. |
 | `charger` | Drifts slowly, then periodically winds up and lunges fast. |
 | `orbiter` | Circles the Warden while slowly closing — hard to corner. |
-| `shooter` | *(planned M2)* Keeps distance and fires projectiles. |
+| `shooter` | ✅ Maintains a firing range, strafes, and looses aimed bolts. |
 
 ## Roster
 
@@ -28,6 +28,7 @@ scales HP and damage upward over time (see `docs/BalancingNotes.md`).
 | `husk` | Husk | chase | 34 | 44 | 12 | 18 | 3 | 24 | 45 | 2:00 |
 | `lunger` | Lunger | charger | 22 | 70 | 14 | 14 | 3 | 340 | 35 | 3:30 |
 | `wisp` | Wisp | orbiter | 16 | 96 | 8 | 11 | 2 | 160 | 30 | 5:00 |
+| `caster` | Caster | shooter | 20 | 70 | 10 | 13 | 4 | 320 | 28 | 4:00 |
 
 - **Weight** = relative spawn frequency among currently-unlocked types.
 - **Unlocks** = run-time minute the type begins appearing.
@@ -37,6 +38,8 @@ scales HP and damage upward over time (see `docs/BalancingNotes.md`).
 - **Husk:** first "tank" — forces the player to commit damage, not just graze.
 - **Lunger:** punishes standing still; introduces telegraph-reading.
 - **Wisp:** punishes tunnel vision; can't be out-run in a straight line.
+- **Caster:** the first *ranged* threat — adds bullets to dodge, so the player
+  can no longer treat empty space as safe. Strafes and keeps its distance.
 
 ## Elites
 Any archetype can spawn as an **elite**: larger, glowing, with a shadowed
@@ -44,7 +47,36 @@ outline and a health bar. Tanky, hit hard, and drop generous loot (heal/magnet/
 bomb chances plus an 8× XP shard). Scheduled by the director roughly every
 12–26s after the first minute.
 
-## Planned (M2+)
-- **Boss — "The Maw":** first scripted encounter with telegraphed attacks and
-  phases. (Design TBD; tracked in Milestones M2.)
-- **Ranged shooter archetype** with enemy projectiles.
+## Bosses ✅
+
+Bosses are marquee, multi-phase encounters realised as a special `Enemy`
+(`isBoss = true`) driven by the `BossController` state machine
+(`src/game/systems/BossController.ts`). They are **immovable** (immune to
+knockback and separation), wear a dedicated HUD health bar, and **telegraph**
+every attack with a glowing wind-up ring so volleys are readable and fair.
+
+- **Spawn cadence:** first boss at **3:00**, then every **3:00**. While a boss
+  is alive, no new boss is scheduled. HP scales with encounter index and time.
+- **On defeat:** a generous loot shower (14 XP shards + heal + magnet), big
+  screen shake, and a triumphant audio flourish.
+
+### The Maw — *Devourer of Light* (`theMaw`)
+A slow, relentless mass of dark that spits hostile light. Three escalating
+phases gated by HP:
+
+| Phase | HP band | Attacks | On entry |
+| --- | --- | --- | --- |
+| 1 | 100–66% | Aimed spread, radial burst (cadence 2.6s) | — |
+| 2 | 66–33% | + Spiral; faster bolts (cadence 2.0s) | Summons 4 Husks |
+| 3 | 33–0% | Bigger bursts & spirals; fastest (cadence 1.5s) | Summons 6 Husks |
+
+Base 1600 HP, contact damage 22, projectile damage 12 (all scale up). Tuning in
+`src/game/data/bossDefs.ts`.
+
+> M2 ships this one fully-realised boss; the data/controller split lets more be
+> added with only new tuning. More bosses are tracked in the Roadmap.
+
+## Enemy projectiles ✅
+Hostile projectiles (`EnemyProjectile`) are pooled and tested against the
+Warden. Fired by Casters and bosses, they render as dark-cored hostile orbs to
+read clearly against the Warden's bright light. See `World.fireEnemyProjectile`.

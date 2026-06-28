@@ -15,10 +15,12 @@ The vertical slice: a genuinely fun, complete core loop.
 - Procedural audio, save/profile, achievements, records
 - Unit tests + browser smoke test
 
-## Next (v0.2) — Depth & Identity
-- Weapon **evolution** system (max weapon + paired relic ⇒ evolved form)
-- 2–3 more weapons and relics; first **boss** encounter
-- More enemy archetypes incl. ranged `shooter`
+## Next (v0.2) — Depth & Identity (in progress)
+- ✅ Weapon **evolution** system (max weapon + paired relic ⇒ evolved form)
+- ✅ First **boss** encounter ("The Maw", 3 phases) + enemy projectiles
+- ✅ Ranged `shooter` enemy archetype (Caster)
+- 2–3 more weapons and relics
+- More bosses and enemy archetypes
 - On-screen pause button + settings polish for touch
 - Tutorial / first-run onboarding
 

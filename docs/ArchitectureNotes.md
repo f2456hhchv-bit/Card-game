@@ -19,8 +19,8 @@ main.ts                     ← entry point, boots Game
        │    Renderer, Camera, Input, GameLoop
        ├─ game/World.ts     ← authoritative simulation
        │    ├─ entities/    ← plain pooled data classes
-       │    ├─ data/        ← static content definitions (enemies/weapons/relics)
-       │    ├─ systems/     ← WeaponSystem (operate on the World)
+       │    ├─ data/        ← static content (enemies/weapons/relics/bosses)
+       │    ├─ systems/     ← WeaponSystem, BossController (operate on World)
        │    ├─ SpawnDirector, Loadout
        │    └─ core/        ← engine-agnostic primitives
        │         math/, ObjectPool, SpatialHashGrid, EventBus, Rng
@@ -101,9 +101,29 @@ HUD. This decouples feel/feedback from simulation.
 
 ---
 
+## Boss system
+
+A boss is realised as a normal `Enemy` with `isBoss = true`, but its behaviour
+is driven by a `BossController` (one per boss) rather than the generic enemy AI.
+The controller is a phase/attack **state machine** that talks to the world only
+through a small `BossContext` interface (fire projectile, summon add, read
+player position) — so its phase transitions and attack scheduling are unit-
+tested in isolation, with no World or DOM. Bosses are immovable (skipped by
+knockback and separation), telegraph every attack, and are scheduled by `World`
+on a fixed interval.
+
+## Debug hook
+
+Opening the page with `#dev` attaches `window.afterlight` (see `main.ts` →
+`Game.getDebugApi()`) exposing helpers like `spawnBoss()` and the live `world`.
+It is **off by default** and exists purely to playtest specific situations
+without grinding to them. Not a gameplay feature; never enabled in normal play.
+
 ## Testing
 
 Vitest covers the deterministic core (RNG, pool, spatial grid, math, loadout
-drafting, spawn scaling) in a plain Node environment — no browser needed because
-those modules have no DOM dependencies. Browser smoke-testing is done via
-Playwright against the production build.
+drafting, evolution, spawn scaling, boss state machine) and World-level
+integration (combat, evolved-weapon firing, boss lifecycle, enemy projectiles)
+in a plain Node environment — no browser needed because those modules have no
+DOM dependencies. Browser smoke-testing is done via Playwright against the
+production build (including the `#dev` hook to verify the boss visually).

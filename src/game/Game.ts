@@ -67,6 +67,20 @@ export class Game {
     this.loop.start();
   }
 
+  /**
+   * Optional debug console API, attached to `window.afterlight` only when the
+   * page is opened with `#dev` (see main.ts). Handy for playtesting specific
+   * situations without grinding to them. Never enabled in normal play.
+   */
+  getDebugApi() {
+    return {
+      spawnBoss: () => this.world.debugTriggerBoss(),
+      addLevel: () => this.world.events.emit("levelUp", { level: this.world.player.level + 1 }),
+      world: this.world,
+      state: () => this.state,
+    };
+  }
+
   private onResize = (): void => {
     this.renderer.resize();
     this.camera.setViewport(this.renderer.width, this.renderer.height);
@@ -103,6 +117,16 @@ export class Game {
       this.audio.levelUp();
       this.draftQueue++;
     });
+    e.on("bossSpawned", (b) => {
+      this.ui.showBossBar(b.name, b.title);
+      this.audio.bossWarn();
+      this.camera.addShake(12, 0.6);
+    });
+    e.on("bossDefeated", () => {
+      this.ui.hideBossBar();
+      this.audio.bossDown();
+      this.camera.addShake(20, 0.8);
+    });
     e.on("playerDied", () => this.onPlayerDied());
   }
 
@@ -118,6 +142,7 @@ export class Game {
     this.ui.hideGameOver();
     this.ui.hideDraft();
     this.ui.hidePause();
+    this.ui.hideBossBar();
     this.ui.showHUD();
     this.state = "playing";
   }
@@ -128,6 +153,7 @@ export class Game {
     this.ui.hidePause();
     this.ui.hideGameOver();
     this.ui.hideDraft();
+    this.ui.hideBossBar();
     this.ui.showMenu();
   }
 

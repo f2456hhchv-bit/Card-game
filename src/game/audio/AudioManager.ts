@@ -134,6 +134,19 @@ export class AudioManager {
     setTimeout(() => this.tone(220, 0.6, "sine", 0.25, 80), 200);
   }
 
+  /** Ominous low swell when a boss appears. */
+  bossWarn(): void {
+    this.tone(70, 0.7, "sawtooth", 0.32, 50);
+    setTimeout(() => this.tone(90, 0.6, "square", 0.18, 70), 180);
+  }
+
+  /** Triumphant flourish when a boss falls. */
+  bossDown(): void {
+    this.tone(440, 0.15, "sine", 0.26);
+    setTimeout(() => this.tone(660, 0.18, "sine", 0.26), 110);
+    setTimeout(() => this.tone(880, 0.3, "sine", 0.26), 240);
+  }
+
   /** Sparse ambient pulse, advanced from the render loop. */
   updateMusic(frameDt: number, intensity: number): void {
     if (!this.ctx || !this.musicGain || this.settings.muted) return;

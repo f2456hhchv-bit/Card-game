@@ -4,6 +4,41 @@
 
 Observations from playtests, and the actions they drive. Newest first.
 
+## 2026-06-28 — M2 First boss + enemy projectiles
+
+**Method:** Browser verification via the new `#dev` debug hook (force-spawn the
+boss, inspect live world state) + unit/integration tests for the boss state
+machine, enemy projectiles, and boss lifecycle.
+
+**Observed:**
+- "The Maw" spawns, renders with bespoke visuals (spiked rotating body, glowing
+  eye, menacing aura), and fires readable projectile patterns; the magenta boss
+  health bar shows "THE MAW — DEVOURER OF LIGHT" and tracks HP. 5 hostile
+  projectiles in flight shortly after the fight begins. No console errors.
+- Enemy projectiles read clearly as *hostile* — dark-cored orbs distinct from
+  the Warden's bright light. Confirmed they damage the Warden and recycle.
+- Boss telegraph (glowing wind-up ring + brighter eye) gives a fair tell before
+  each volley; the boss slows while winding up.
+- Integration test: boss spawns at the 3:00 interval and cleans up on defeat
+  with a generous loot shower.
+
+**Design read (to validate with human play):**
+- The 3:00 first-boss timing should land right as a build is taking shape — needs
+  human confirmation that HP/duration feel like a "check", not a wall.
+- Phase-entry Husk summons add good pressure; watch they don't overwhelm a
+  thin build stacked with the boss's bullets.
+
+**Actions taken:**
+- Shipped the boss system, Caster (ranged) enemy, enemy projectiles, boss HUD
+  bar, audio cues, and screen shake.
+- Added the `#dev` debug hook for future playtesting.
+
+**Open questions for next playtest:**
+1. Does the first boss feel fair and exciting on a real, un-cheated run?
+2. Are Caster bullets readable amid a dense swarm, or do they get lost?
+3. Should weapons signal "evolution-ready" in the HUD before the draft?
+
+
 ## 2026-06-28 — M2 Weapon Evolution + draft flow
 
 **Method:** Automated browser playthrough (headless Chromium) of a real run to

@@ -24,8 +24,10 @@ export class GameRenderer {
     this.drawPickups(ctx, camera, world);
     this.drawAura(ctx, camera, world);
     this.drawEnemies(ctx, camera, world);
+    this.drawBoss(ctx, camera, world);
     this.drawOrbitOrbs(ctx, camera, world);
     this.drawProjectiles(ctx, camera, world);
+    this.drawEnemyProjectiles(ctx, camera, world);
     this.drawPlayer(ctx, camera, world);
     this.drawParticles(ctx, camera, world);
     this.drawDamageNumbers(ctx, camera, world);
@@ -114,6 +116,7 @@ export class GameRenderer {
     const bounds = camera.getVisibleBounds(60);
     for (let i = 0; i < world.enemies.length; i++) {
       const e = world.enemies[i];
+      if (e.isBoss) continue; // drawn separately with bespoke visuals
       if (e.x < bounds.minX || e.x > bounds.maxX || e.y < bounds.minY || e.y > bounds.maxY)
         continue;
       const x = camera.worldToScreenX(e.x);
@@ -193,6 +196,101 @@ export class GameRenderer {
         ctx.arc(x, y, r * 0.45, 0, TAU);
         ctx.fill();
       }
+    }
+    ctx.restore();
+  }
+
+  private drawBoss(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
+    const boss = world.boss;
+    if (!boss || !boss.active) return;
+    const x = camera.worldToScreenX(boss.x);
+    const y = camera.worldToScreenY(boss.y);
+    const r = boss.radius * camera.zoom;
+    const t = world.stats.elapsed;
+
+    // Telegraph: an expanding warning ring during attack wind-up.
+    const tele = world.bossTelegraph;
+    if (tele > 0) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.strokeStyle = `hsla(${boss.hue} 100% 70% / ${0.5 * (1 - tele)})`;
+      ctx.lineWidth = 4 + tele * 10;
+      ctx.beginPath();
+      ctx.arc(x, y, r * (1.1 + tele * 0.9), 0, TAU);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.save();
+    ctx.translate(x, y);
+    // Menacing aura.
+    if (!this.reduceMotion) {
+      const g = ctx.createRadialGradient(0, 0, r * 0.4, 0, 0, r * 1.9);
+      g.addColorStop(0, `hsla(${boss.hue} 80% 50% / 0.5)`);
+      g.addColorStop(1, `hsla(${boss.hue} 80% 40% / 0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(0, 0, r * 1.9, 0, TAU);
+      ctx.fill();
+    }
+    // Rotating spiked body.
+    const rot = this.reduceMotion ? 0 : t * 0.4;
+    ctx.rotate(rot);
+    const spikes = 10;
+    ctx.beginPath();
+    for (let i = 0; i < spikes * 2; i++) {
+      const rad = i % 2 === 0 ? r : r * 0.72;
+      const a = (i / (spikes * 2)) * TAU;
+      const px = Math.cos(a) * rad;
+      const py = Math.sin(a) * rad;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fillStyle = boss.hitFlash > 0 ? "#ffffff" : `hsl(${boss.hue} 55% 38%)`;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = `hsl(${boss.hue} 80% 70%)`;
+    ctx.stroke();
+    // Core eye that glows brighter while telegraphing.
+    ctx.rotate(-rot);
+    const coreGlow = 0.4 + tele * 0.6;
+    ctx.fillStyle = `hsla(${boss.hue} 100% ${50 + coreGlow * 40}% / 1)`;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.34, 0, TAU);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.14, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  private drawEnemyProjectiles(
+    ctx: CanvasRenderingContext2D,
+    camera: Camera,
+    world: World,
+  ): void {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = 0; i < world.enemyProjectiles.length; i++) {
+      const p = world.enemyProjectiles[i];
+      const x = camera.worldToScreenX(p.x);
+      const y = camera.worldToScreenY(p.y);
+      const r = p.radius * camera.zoom;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.7);
+      g.addColorStop(0, `hsl(${p.hue} 100% 80%)`);
+      g.addColorStop(0.6, `hsl(${p.hue} 90% 55%)`);
+      g.addColorStop(1, `hsla(${p.hue} 90% 50% / 0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 1.7, 0, TAU);
+      ctx.fill();
+      // Dark core so hostile bolts read differently from the Warden's light.
+      ctx.fillStyle = `hsl(${p.hue} 90% 30%)`;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 0.55, 0, TAU);
+      ctx.fill();
     }
     ctx.restore();
   }

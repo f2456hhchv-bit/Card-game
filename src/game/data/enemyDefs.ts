@@ -92,6 +92,19 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     weight: 30,
     unlockAtMinutes: 5,
   },
+  caster: {
+    id: "caster",
+    name: "Caster",
+    behaviour: "shooter",
+    hp: 20,
+    speed: 70,
+    damage: 10,
+    radius: 13,
+    xpValue: 4,
+    hue: 320,
+    weight: 28,
+    unlockAtMinutes: 4,
+  },
 };
 
 /** Ordered list, convenient for the spawn director's availability filtering. */

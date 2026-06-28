@@ -15,9 +15,10 @@ Tracks performance targets, measurements, and optimisation decisions.
 | --- | --- | --- | --- |
 | v0.1 | JS | 54.3 KB | 17.2 KB |
 | v0.2 (evolution) | JS | 58.9 KB | 18.4 KB |
-| v0.2 | CSS | 6.4 KB | 2.0 KB |
+| v0.2 (boss) | JS | 68.4 KB | 21.1 KB |
+| v0.2 | CSS | 7.0 KB | 2.1 KB |
 | v0.2 | HTML | 3.4 KB | 1.5 KB |
-| v0.2 | single-file HTML | — | ~20 KB |
+| v0.2 | single-file HTML | — | ~23 KB |
 
 No image/audio/font assets — all visuals and sound are procedural.
 

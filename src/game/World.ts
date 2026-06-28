@@ -4,6 +4,7 @@ import { Projectile } from "./entities/Projectile";
 import { Pickup } from "./entities/Pickup";
 import { Particle } from "./entities/Particle";
 import { DamageNumber } from "./entities/DamageNumber";
+import { EnemyProjectile } from "./entities/EnemyProjectile";
 import { ObjectPool } from "../core/ObjectPool";
 import { SpatialHashGrid } from "../core/SpatialHashGrid";
 import { EventBus } from "../core/EventBus";
@@ -11,8 +12,14 @@ import { Rng } from "../core/math/Rng";
 import { Loadout } from "./Loadout";
 import { SpawnDirector } from "./SpawnDirector";
 import { WeaponSystem } from "./systems/WeaponSystem";
+import { BossController } from "./systems/BossController";
+import { bossForEncounter } from "./data/bossDefs";
+import { ENEMY_DEFS } from "./data/enemyDefs";
 import { Input } from "../engine/Input";
 import { clamp, TAU } from "../core/math/MathUtils";
+
+/** First boss appears at this many seconds; bosses recur on this interval. */
+const BOSS_INTERVAL = 180;
 
 /** Aggregate, read-only run statistics surfaced to HUD and endgame screen. */
 export interface RunStats {
@@ -33,6 +40,8 @@ export interface GameEvents {
   pickup: { kind: string };
   weaponFired: { weaponId: string };
   bombDetonate: { x: number; y: number };
+  bossSpawned: { name: string; title: string };
+  bossDefeated: { x: number; y: number };
 }
 
 /** Position of an orbit-weapon orb, mirrored out for the renderer. */
@@ -58,6 +67,7 @@ export class World {
 
   readonly enemies: Enemy[] = [];
   readonly projectiles: Projectile[] = [];
+  readonly enemyProjectiles: EnemyProjectile[] = [];
   readonly pickups: Pickup[] = [];
   readonly particles: Particle[] = [];
   readonly damageNumbers: DamageNumber[] = [];
@@ -67,6 +77,11 @@ export class World {
     () => new Projectile(),
     (p) => p.reset(),
     256,
+  );
+  private readonly enemyProjectilePool = new ObjectPool<EnemyProjectile>(
+    () => new EnemyProjectile(),
+    (p) => p.reset(),
+    128,
   );
   private readonly pickupPool = new ObjectPool<Pickup>(() => new Pickup(), (p) => p.reset(), 256);
   private readonly particlePool = new ObjectPool<Particle>(
@@ -97,6 +112,13 @@ export class World {
   pendingLevelUps = 0;
   /** Set true the moment the Warden dies. */
   isDead = false;
+
+  // Boss state.
+  /** The live boss enemy, or null when none is active. */
+  boss: Enemy | null = null;
+  private bossController: BossController | null = null;
+  private nextBossTime = BOSS_INTERVAL;
+  private bossEncounter = 0;
 
   // Rendering mirrors written by the weapon system (read by GameRenderer).
   auraRadius = 0;
@@ -131,11 +153,13 @@ export class World {
     // Return all live entities to their pools.
     for (const e of this.enemies) this.enemyPool.release(e);
     for (const p of this.projectiles) this.projectilePool.release(p);
+    for (const p of this.enemyProjectiles) this.enemyProjectilePool.release(p);
     for (const p of this.pickups) this.pickupPool.release(p);
     for (const p of this.particles) this.particlePool.release(p);
     for (const d of this.damageNumbers) this.damageNumberPool.release(d);
     this.enemies.length = 0;
     this.projectiles.length = 0;
+    this.enemyProjectiles.length = 0;
     this.pickups.length = 0;
     this.particles.length = 0;
     this.damageNumbers.length = 0;
@@ -157,12 +181,61 @@ export class World {
     this.auraRadius = 0;
     this.orbitOrbCount = 0;
     this.orbitAngle = 0;
+    this.boss = null;
+    this.bossController = null;
+    this.nextBossTime = BOSS_INTERVAL;
+    this.bossEncounter = 0;
   }
 
   obtainProjectile(): Projectile {
     const p = this.projectilePool.obtain();
     this.projectiles.push(p);
     return p;
+  }
+
+  /**
+   * Dev/testing affordance: make the next step spawn a boss immediately.
+   * Exposed through the optional debug console hook (see main.ts).
+   */
+  debugTriggerBoss(): void {
+    if (!this.bossActive) this.nextBossTime = this.stats.elapsed;
+  }
+
+  /** Spawn a hostile projectile (used by ranged enemies and bosses). */
+  fireEnemyProjectile(
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    damage: number,
+    hue: number,
+    radius: number,
+  ): void {
+    const p = this.enemyProjectilePool.obtain();
+    p.x = x;
+    p.y = y;
+    p.vx = vx;
+    p.vy = vy;
+    p.damage = damage;
+    p.hue = hue;
+    p.radius = radius;
+    p.life = 5;
+    p.active = true;
+    this.enemyProjectiles.push(p);
+  }
+
+  /** True while a boss is alive (read by HUD and spawn pacing). */
+  get bossActive(): boolean {
+    return this.boss !== null && this.boss.active;
+  }
+
+  /** Boss telegraph progress 0..1 for the renderer, or 0 when not winding up. */
+  get bossTelegraph(): number {
+    return this.bossController?.telegraphProgress ?? 0;
+  }
+
+  get bossHpFraction(): number {
+    return this.boss ? Math.max(0, this.boss.hp / this.boss.maxHp) : 0;
   }
 
   // ---- Main fixed-step update -------------------------------------------
@@ -174,10 +247,108 @@ export class World {
     this.updatePlayer(dt, input);
     this.rebuildGrid();
     this.spawnEnemies(dt);
+    this.updateBoss(dt);
     this.weaponSystem.update(this, dt);
     this.updateProjectiles(dt);
     this.updateEnemies(dt);
+    this.updateEnemyProjectiles(dt);
     this.updatePickups(dt);
+  }
+
+  // ---- Boss lifecycle ----------------------------------------------------
+
+  private updateBoss(dt: number): void {
+    // Schedule a new boss when its time arrives and none is active.
+    if (!this.bossActive && this.stats.elapsed >= this.nextBossTime) {
+      this.spawnBoss();
+      this.nextBossTime += BOSS_INTERVAL;
+    }
+    if (this.boss && this.bossController) {
+      if (!this.boss.active) {
+        // Boss was killed elsewhere this step; clear refs.
+        this.boss = null;
+        this.bossController = null;
+        return;
+      }
+      this.bossController.update(this.boss, this.bossContext(), dt);
+    }
+  }
+
+  private bossContext() {
+    return {
+      player: this.player,
+      elapsedMinutes: this.stats.elapsed / 60,
+      rng: this.rng,
+      fireEnemyProjectile: (
+        x: number,
+        y: number,
+        vx: number,
+        vy: number,
+        damage: number,
+        hue: number,
+        radius: number,
+      ) => this.fireEnemyProjectile(x, y, vx, vy, damage, hue, radius),
+      spawnAdd: (typeId: string, x: number, y: number) => this.spawnAdd(typeId, x, y),
+    };
+  }
+
+  private spawnBoss(): void {
+    const def = bossForEncounter(this.bossEncounter);
+    const minutes = this.stats.elapsed / 60;
+    const e = this.enemyPool.obtain();
+    const angle = this.rng.angle();
+    const dist = 520;
+    e.x = clamp(this.player.x + Math.cos(angle) * dist, -ARENA_RADIUS, ARENA_RADIUS);
+    e.y = clamp(this.player.y + Math.sin(angle) * dist, -ARENA_RADIUS, ARENA_RADIUS);
+    e.vx = 0;
+    e.vy = 0;
+    e.typeId = def.id;
+    e.behaviour = "chase";
+    e.radius = def.radius;
+    e.speed = def.speed;
+    e.hue = def.hue;
+    e.isElite = false;
+    e.isBoss = true;
+    e.animPhase = 0;
+    // HP scales with encounter index and a touch with time.
+    const encounterScale = 1 + this.bossEncounter * 0.85;
+    e.maxHp = def.baseHp * encounterScale * (1 + minutes * 0.04);
+    e.hp = e.maxHp;
+    e.damage = def.contactDamage * (1 + minutes * 0.08);
+    e.xpValue = 60 + this.bossEncounter * 30;
+    e.knockX = 0;
+    e.knockY = 0;
+    e.active = true;
+    this.enemies.push(e);
+    this.boss = e;
+    this.bossController = new BossController(def);
+    this.bossEncounter++;
+    this.events.emit("bossSpawned", { name: def.name, title: def.title });
+  }
+
+  /** Spawn a normal enemy add at a position (used by boss summons). */
+  private spawnAdd(typeId: string, x: number, y: number): void {
+    const def = ENEMY_DEFS[typeId] ?? ENEMY_DEFS.husk;
+    const minutes = this.stats.elapsed / 60;
+    const e = this.enemyPool.obtain();
+    e.x = clamp(x, -ARENA_RADIUS, ARENA_RADIUS);
+    e.y = clamp(y, -ARENA_RADIUS, ARENA_RADIUS);
+    e.vx = 0;
+    e.vy = 0;
+    e.typeId = def.id;
+    e.behaviour = def.behaviour;
+    e.radius = def.radius;
+    e.speed = def.speed;
+    e.hue = def.hue;
+    e.xpValue = def.xpValue;
+    e.animPhase = this.rng.range(0, TAU);
+    e.isElite = false;
+    e.isBoss = false;
+    e.maxHp = def.hp * this.spawnDirector.hpScale(minutes);
+    e.hp = e.maxHp;
+    e.damage = def.damage * this.spawnDirector.damageScale(minutes);
+    e.active = true;
+    this.enemies.push(e);
   }
 
   private updatePlayer(dt: number, input: Input): void {
@@ -311,13 +482,15 @@ export class World {
       const nx = dx / dist;
       const ny = dy / dist;
 
-      this.steerEnemy(e, nx, ny, dist, dt);
-
-      // Apply knockback impulse (decays quickly).
-      e.x += e.knockX * dt;
-      e.y += e.knockY * dt;
-      e.knockX *= 0.86;
-      e.knockY *= 0.86;
+      // The boss steers itself via BossController; everything else uses AI here.
+      // The boss is also immune to knockback (it's a fixed point of dread).
+      if (!e.isBoss) {
+        this.steerEnemy(e, nx, ny, dist, dt);
+        e.x += e.knockX * dt;
+        e.y += e.knockY * dt;
+        e.knockX *= 0.86;
+        e.knockY *= 0.86;
+      }
 
       // Contact damage to the player.
       const touch = e.radius + this.player.radius;
@@ -356,12 +529,70 @@ export class World {
         e.y += (ny * e.speed * closing + tangentY * e.speed * 0.8) * dt;
         break;
       }
-      case "shooter":
+      case "shooter": {
+        // Maintains a firing range, strafing, and looses aimed bolts.
+        const ideal = 280;
+        if (dist < ideal - 40) {
+          // Too close: back away while strafing.
+          e.x += (-nx * 0.7 - ny * 0.6) * e.speed * dt;
+          e.y += (-ny * 0.7 + nx * 0.6) * e.speed * dt;
+        } else if (dist > ideal + 60) {
+          e.x += nx * e.speed * dt;
+          e.y += ny * e.speed * dt;
+        } else {
+          // In range: strafe sideways.
+          e.x += -ny * e.speed * 0.7 * dt;
+          e.y += nx * e.speed * 0.7 * dt;
+        }
+        e.attackCooldown -= dt;
+        if (e.attackCooldown <= 0 && dist < 540) {
+          e.attackCooldown = 1.9;
+          const speed = 175;
+          this.fireEnemyProjectile(
+            e.x + nx * e.radius,
+            e.y + ny * e.radius,
+            nx * speed,
+            ny * speed,
+            e.damage,
+            e.hue,
+            8,
+          );
+        }
+        break;
+      }
       case "chase":
       default: {
         e.x += nx * e.speed * dt;
         e.y += ny * e.speed * dt;
         break;
+      }
+    }
+  }
+
+  private updateEnemyProjectiles(dt: number): void {
+    const arr = this.enemyProjectiles;
+    const p = this.player;
+    for (let i = arr.length - 1; i >= 0; i--) {
+      const ep = arr[i];
+      ep.life -= dt;
+      ep.x += ep.vx * dt;
+      ep.y += ep.vy * dt;
+      ep.rotation += dt * 6;
+
+      let expired = ep.life <= 0;
+      if (!expired) {
+        const rr = ep.radius + p.radius;
+        const dx = p.x - ep.x;
+        const dy = p.y - ep.y;
+        if (dx * dx + dy * dy <= rr * rr) {
+          this.damagePlayer(ep.damage);
+          expired = true;
+        }
+      }
+      if (expired) {
+        this.enemyProjectilePool.release(ep);
+        arr[i] = arr[arr.length - 1];
+        arr.pop();
       }
     }
   }
@@ -374,6 +605,8 @@ export class World {
     const arr = this.enemies;
     for (let i = 0; i < arr.length; i++) {
       const e = arr[i];
+      // The boss is immovable — it shoves others but is never shoved.
+      if (e.isBoss) continue;
       const near = this.enemyGrid.query(e.x, e.y, e.radius * 2);
       let nudged = 0;
       for (let j = 0; j < near.length && nudged < 6; j++) {
@@ -390,8 +623,11 @@ export class World {
           const iy = (dy / d) * push;
           e.x += ix;
           e.y += iy;
-          o.x -= ix;
-          o.y -= iy;
+          // Don't displace an immovable boss.
+          if (!o.isBoss) {
+            o.x -= ix;
+            o.y -= iy;
+          }
           nudged++;
         }
       }
@@ -462,9 +698,11 @@ export class World {
   private detonateBomb(): void {
     const p = this.player;
     this.events.emit("bombDetonate", { x: p.x, y: p.y });
-    for (const e of this.enemies) {
+    // Bombs clear the swarm but only dent a boss (no cheap boss one-shots).
+    for (const e of [...this.enemies]) {
       if (!e.active) continue;
-      this.damageEnemy(e, 9999, false, 0, 0);
+      if (e.isBoss) this.damageEnemy(e, e.maxHp * 0.12, false, 0, 0);
+      else this.damageEnemy(e, 9999, false, 0, 0);
     }
   }
 
@@ -501,7 +739,12 @@ export class World {
     if (e.isElite) this.stats.eliteKills++;
     this.events.emit("enemyKilled", { x: e.x, y: e.y, xp: e.xpValue, elite: e.isElite });
     this.spawnDeathBurst(e);
-    this.dropLoot(e);
+
+    if (e.isBoss) {
+      this.onBossDefeated(e);
+    } else {
+      this.dropLoot(e);
+    }
 
     // Remove from the live list (swap-pop) and recycle.
     const arr = this.enemies;
@@ -511,6 +754,23 @@ export class World {
       arr.pop();
     }
     this.enemyPool.release(e);
+  }
+
+  /** Boss death: clear refs, big celebratory loot shower, and an event. */
+  private onBossDefeated(e: Enemy): void {
+    this.boss = null;
+    this.bossController = null;
+    this.events.emit("bossDefeated", { x: e.x, y: e.y });
+
+    // Generous reward: a fan of XP shards plus guaranteed support drops.
+    const shards = 14;
+    for (let i = 0; i < shards; i++) {
+      const a = (i / shards) * TAU;
+      const r = e.radius * 0.6;
+      this.dropSpecial(e.x + Math.cos(a) * r, e.y + Math.sin(a) * r, "xp", e.xpValue / shards);
+    }
+    this.dropSpecial(e.x - 20, e.y, "heal", 45);
+    this.dropSpecial(e.x + 20, e.y, "magnet", 0);
   }
 
   private dropLoot(e: Enemy): void {
@@ -641,6 +901,7 @@ export class World {
     return (
       this.enemies.length +
       this.projectiles.length +
+      this.enemyProjectiles.length +
       this.pickups.length +
       this.particles.length
     );
