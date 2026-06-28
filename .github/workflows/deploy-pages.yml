@@ -44,10 +44,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Pages must be enabled once via Settings → Pages → Source: "GitHub
+      # Actions". The workflow token can't reliably create the Pages site
+      # itself ("Resource not accessible by integration"), so we don't try.
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
