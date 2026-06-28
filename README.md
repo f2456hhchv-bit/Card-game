@@ -35,12 +35,27 @@ npm install     # one-time
 npm run dev      # play locally with hot-reload (http://localhost:5173)
 ```
 
-To produce a self-contained, offline build you can open anywhere:
+### One double-clickable file (true offline)
 
 ```bash
-npm run build    # outputs to dist/ — fully static, runs from file://
+npm run build:single   # → dist-single/index.html
+```
+
+This produces a **single self-contained HTML file** with all code, styles, and
+(procedural) art and audio inlined. Copy it anywhere and **double-click to open
+in any modern browser** — no server, no install, no network. This is the
+canonical "just play it" artifact.
+
+### Static multi-file build (for hosting)
+
+```bash
+npm run build    # outputs to dist/ — static files for a web server
 npm run preview  # serve the production build locally
 ```
+
+> The multi-file `dist/` build must be *served* (e.g. `npm run preview`):
+> browsers block ES-module loading over `file://`. Use `build:single` if you
+> want a file you can open directly.
 
 ### Controls
 
