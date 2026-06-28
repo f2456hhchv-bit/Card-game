@@ -15,6 +15,7 @@ weapons). Crit is rolled per hit.
 | `radial` | Even burst in all directions (nova) | `WeaponSystem.fireRadial` |
 | `orbit` | Persistent orbs circling the Warden, re-hit on a timer | `WeaponSystem.updateOrbit` |
 | `aura` | Continuous damage field around the Warden | `WeaponSystem.fireAura` |
+| `chain` | Instant arc that leaps between nearby enemies, damage falloff/jump | `WeaponSystem.fireChain` |
 
 ## Weapons
 
@@ -43,6 +44,13 @@ A searing aura that burns all nearby Hollow continuously. Scales hard with Area;
 pairs with anything that keeps enemies close.
 - L1: 5 dmg/0.5s, r~96 → L8: 18 dmg/0.34s, large corona
 
+### Arc Coil — `chain`
+An instant arc of light that strikes the nearest enemy then leaps to the nearest
+not-yet-hit enemy within range, up to N targets, with gentle damage falloff per
+jump. Excellent at threading through dense crowds. For chain weapons, `count` =
+targets struck and `speed` = leap range. Extra-projectile relics add targets.
+- L1: 8 dmg, 3 targets, 180 leap → L8: 26 dmg, 9 targets, 270 leap
+
 > Full per-level tables live in `weaponDefs.ts`; that file is authoritative.
 
 ## Mastery & Evolution ✅ implemented (M2)
@@ -65,6 +73,7 @@ the normal "new weapon" draft pool** — they are only reachable by evolving.
 | Warden's Halo | Quickening Charm | **Aegis Corona** | An encircling crown of blazing suns |
 | Nova Pulse | Focusing Lens | **Cataclysm** | World-shaking radial detonations |
 | Radiance | Ember Heart | **Solaris** | A captive sun that scours the dark |
+| Arc Coil | Tidal Charm | **Tempest Coil** | A forking storm that chains far and wide |
 
 Evolved weapons have **5 levels** of their own (`Evolved → Zenith`). Full tables
 in `weaponDefs.ts` (entries flagged `evolved: true`).

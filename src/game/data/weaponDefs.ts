@@ -8,8 +8,15 @@ import type { ProjectileStyle } from "../entities/Projectile";
  *  - radial  : evenly distributed burst in all directions (nova)
  *  - orbit   : persistent orbs circling the Warden
  *  - aura    : continuous damage field around the Warden
+ *  - chain   : instant arc of light that leaps between nearby enemies
  */
-export type WeaponPattern = "nearest" | "spread" | "radial" | "orbit" | "aura";
+export type WeaponPattern =
+  | "nearest"
+  | "spread"
+  | "radial"
+  | "orbit"
+  | "aura"
+  | "chain";
 
 export interface WeaponLevel {
   /** Damage per projectile/tick. */
@@ -169,6 +176,29 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     ],
   },
 
+  arcCoil: {
+    id: "arcCoil",
+    name: "Arc Coil",
+    description: "Looses an arc of light that leaps between nearby Hollow.",
+    pattern: "chain",
+    style: "arc",
+    hue: 190,
+    maxLevel: 8,
+    // For chain weapons: `count` = number of targets struck, `speed` = the
+    // distance the arc can leap between targets.
+    evolution: { into: "tempestCoil", relic: "tidalCharm", relicLevel: 3 },
+    levels: [
+      { damage: 8, cooldown: 1.0, count: 3, pierce: 0, speed: 180, area: 1, knockback: 40, note: "Arcs to 3 foes." },
+      { damage: 10, cooldown: 0.95, count: 3, pierce: 0, speed: 190, area: 1, knockback: 42, note: "+Damage." },
+      { damage: 11, cooldown: 0.9, count: 4, pierce: 0, speed: 200, area: 1.05, knockback: 44, note: "Arcs to 4 foes." },
+      { damage: 13, cooldown: 0.85, count: 4, pierce: 0, speed: 210, area: 1.05, knockback: 46, note: "+Damage." },
+      { damage: 15, cooldown: 0.8, count: 5, pierce: 0, speed: 220, area: 1.1, knockback: 48, note: "Arcs to 5 foes." },
+      { damage: 18, cooldown: 0.74, count: 6, pierce: 0, speed: 235, area: 1.1, knockback: 50, note: "Arcs to 6 foes." },
+      { damage: 21, cooldown: 0.68, count: 7, pierce: 0, speed: 250, area: 1.15, knockback: 54, note: "Arcs to 7 foes." },
+      { damage: 26, cooldown: 0.6, count: 9, pierce: 0, speed: 270, area: 1.2, knockback: 60, note: "Mastery: a forking storm." },
+    ],
+  },
+
   // ---- Evolved forms ----------------------------------------------------
   // Reached by evolving a mastered base weapon paired with its relic. These
   // reuse existing firing patterns (no new WeaponSystem branches) but with
@@ -262,6 +292,24 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
       { damage: 32, cooldown: 0.27, count: 1, pierce: 999, speed: 172, area: 1.9, knockback: 66, note: "+Damage, faster." },
       { damage: 36, cooldown: 0.27, count: 1, pierce: 999, speed: 184, area: 2.0, knockback: 70, note: "+Radius." },
       { damage: 44, cooldown: 0.24, count: 1, pierce: 999, speed: 200, area: 2.2, knockback: 78, note: "Zenith: a captive sun." },
+    ],
+  },
+
+  tempestCoil: {
+    id: "tempestCoil",
+    name: "Tempest Coil",
+    description: "Arc Coil unleashed — a forking tempest that chains far and wide.",
+    pattern: "chain",
+    style: "arc",
+    hue: 175,
+    maxLevel: 5,
+    evolved: true,
+    levels: [
+      { damage: 30, cooldown: 0.5, count: 10, pierce: 0, speed: 300, area: 1.3, knockback: 70, note: "Evolved: a chaining tempest." },
+      { damage: 36, cooldown: 0.47, count: 11, pierce: 0, speed: 315, area: 1.35, knockback: 74, note: "+Damage, +1 target." },
+      { damage: 42, cooldown: 0.44, count: 12, pierce: 0, speed: 330, area: 1.4, knockback: 78, note: "+1 target." },
+      { damage: 48, cooldown: 0.41, count: 14, pierce: 0, speed: 350, area: 1.45, knockback: 84, note: "+2 targets." },
+      { damage: 58, cooldown: 0.37, count: 16, pierce: 0, speed: 380, area: 1.55, knockback: 92, note: "Zenith: a boundless storm." },
     ],
   },
 };

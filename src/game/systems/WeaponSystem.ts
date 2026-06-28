@@ -1,4 +1,5 @@
 import type { World } from "../World";
+import type { Enemy } from "../entities/Enemy";
 import { Loadout, type OwnedWeapon } from "../Loadout";
 import { TAU } from "../../core/math/MathUtils";
 
@@ -42,8 +43,73 @@ export class WeaponSystem {
         case "aura":
           this.fireAura(world, w);
           break;
+        case "chain":
+          this.fireChain(world, w);
+          break;
       }
     }
+  }
+
+  /**
+   * Chain lightning: strike the nearest enemy, then leap to the nearest
+   * not-yet-hit enemy within jump range, repeating up to `count` targets.
+   * Damage decays slightly per jump. Instant — only the visual arcs persist.
+   */
+  private fireChain(world: World, w: OwnedWeapon): void {
+    const lvl = Loadout.levelStats(w.def, w.level);
+    const s = world.player.stats;
+    const maxTargets = lvl.count + Math.max(0, s.extraProjectiles);
+    const jumpRange = lvl.speed * Math.max(1, s.areaMult);
+
+    const first = world.enemyGrid.findNearest(world.player.x, world.player.y, 640);
+    if (!first) return;
+
+    const hit = new Set<Enemy>();
+    let fromX = world.player.x;
+    let fromY = world.player.y;
+    let current: Enemy | null = first;
+    let damageScale = 1;
+
+    for (let jump = 0; jump < maxTargets && current; jump++) {
+      hit.add(current);
+      const { dmg, crit } = this.rollDamage(world, lvl.damage * damageScale);
+      const dx = current.x - fromX;
+      const dy = current.y - fromY;
+      const inv = 1 / (Math.hypot(dx, dy) || 1);
+      world.damageEnemy(current, dmg, crit, dx * inv * lvl.knockback, dy * inv * lvl.knockback);
+      world.spawnArc(fromX, fromY, current.x, current.y, w.def.hue);
+
+      fromX = current.x;
+      fromY = current.y;
+      damageScale *= 0.88; // gentle falloff so long chains still matter
+      current = this.nearestUnhit(world, fromX, fromY, jumpRange, hit);
+    }
+    world.events.emit("weaponFired", { weaponId: w.def.id });
+  }
+
+  /** Nearest active enemy to (x,y) within range whose id isn't in `hit`. */
+  private nearestUnhit(
+    world: World,
+    x: number,
+    y: number,
+    range: number,
+    hit: Set<Enemy>,
+  ): Enemy | null {
+    const near = world.enemyGrid.query(x, y, range);
+    let best = null as Enemy | null;
+    let bestSq = range * range;
+    for (let i = 0; i < near.length; i++) {
+      const e = near[i];
+      if (!e.active || hit.has(e)) continue;
+      const dx = e.x - x;
+      const dy = e.y - y;
+      const dSq = dx * dx + dy * dy;
+      if (dSq < bestSq) {
+        bestSq = dSq;
+        best = e;
+      }
+    }
+    return best;
   }
 
   private rollDamage(world: World, base: number): { dmg: number; crit: boolean } {

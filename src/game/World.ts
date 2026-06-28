@@ -5,6 +5,7 @@ import { Pickup } from "./entities/Pickup";
 import { Particle } from "./entities/Particle";
 import { DamageNumber } from "./entities/DamageNumber";
 import { EnemyProjectile } from "./entities/EnemyProjectile";
+import { ArcEffect } from "./entities/ArcEffect";
 import { ObjectPool } from "../core/ObjectPool";
 import { SpatialHashGrid } from "../core/SpatialHashGrid";
 import { EventBus } from "../core/EventBus";
@@ -15,6 +16,7 @@ import { WeaponSystem } from "./systems/WeaponSystem";
 import { BossController } from "./systems/BossController";
 import { bossForEncounter } from "./data/bossDefs";
 import { ENEMY_DEFS } from "./data/enemyDefs";
+import { WEAPON_DEFS } from "./data/weaponDefs";
 import { Input } from "../engine/Input";
 import { clamp, TAU } from "../core/math/MathUtils";
 
@@ -71,6 +73,7 @@ export class World {
   readonly pickups: Pickup[] = [];
   readonly particles: Particle[] = [];
   readonly damageNumbers: DamageNumber[] = [];
+  readonly arcs: ArcEffect[] = [];
 
   private readonly enemyPool = new ObjectPool<Enemy>(() => new Enemy(), (e) => e.reset(), 256);
   private readonly projectilePool = new ObjectPool<Projectile>(
@@ -93,6 +96,11 @@ export class World {
     () => new DamageNumber(),
     (d) => d.reset(),
     128,
+  );
+  private readonly arcPool = new ObjectPool<ArcEffect>(
+    () => new ArcEffect(),
+    (a) => a.reset(),
+    64,
   );
 
   readonly enemyGrid = new SpatialHashGrid<Enemy>(96);
@@ -157,12 +165,14 @@ export class World {
     for (const p of this.pickups) this.pickupPool.release(p);
     for (const p of this.particles) this.particlePool.release(p);
     for (const d of this.damageNumbers) this.damageNumberPool.release(d);
+    for (const a of this.arcs) this.arcPool.release(a);
     this.enemies.length = 0;
     this.projectiles.length = 0;
     this.enemyProjectiles.length = 0;
     this.pickups.length = 0;
     this.particles.length = 0;
     this.damageNumbers.length = 0;
+    this.arcs.length = 0;
 
     this.player.reset();
     this.loadout.reset();
@@ -193,12 +203,36 @@ export class World {
     return p;
   }
 
+  /** Spawn a chain-lightning visual segment between two points. */
+  spawnArc(x1: number, y1: number, x2: number, y2: number, hue: number): void {
+    const a = this.arcPool.obtain();
+    a.x1 = x1;
+    a.y1 = y1;
+    a.x2 = x2;
+    a.y2 = y2;
+    a.life = 0;
+    a.maxLife = 0.16;
+    a.hue = hue;
+    a.active = true;
+    this.arcs.push(a);
+  }
+
   /**
    * Dev/testing affordance: make the next step spawn a boss immediately.
    * Exposed through the optional debug console hook (see main.ts).
    */
   debugTriggerBoss(): void {
     if (!this.bossActive) this.nextBossTime = this.stats.elapsed;
+  }
+
+  /** Dev/testing affordance: replace the first weapon slot with a given id. */
+  debugGiveWeapon(id: string): void {
+    const def = WEAPON_DEFS[id];
+    if (!def || this.loadout.weapons.length === 0) return;
+    this.loadout.weapons[0].def = def;
+    this.loadout.weapons[0].level = 1;
+    this.loadout.weapons[0].cooldownRemaining = 0;
+    this.loadout.recomputeStats(this.player);
   }
 
   /** Spawn a hostile projectile (used by ranged enemies and bosses). */
@@ -893,6 +927,17 @@ export class World {
       }
       d.y += d.vy * frameDt;
       d.vy *= Math.pow(0.9, frameDt * 60);
+    }
+    // Chain-lightning arcs (very short-lived).
+    const arcs = this.arcs;
+    for (let i = arcs.length - 1; i >= 0; i--) {
+      const a = arcs[i];
+      a.life += frameDt;
+      if (a.life >= a.maxLife) {
+        this.arcPool.release(a);
+        arcs[i] = arcs[arcs.length - 1];
+        arcs.pop();
+      }
     }
   }
 

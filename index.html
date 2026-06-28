@@ -116,6 +116,40 @@
       <div class="spinner"></div>
       <p>Hold back the dark</p>
     </div>
+    <!--
+      Classic (non-module) boot watchdog. Runs even if the main module fails to
+      parse or is blocked, so the player never gets stuck on an infinite spinner
+      without explanation. The main module hides #boot once it starts.
+    -->
+    <script>
+      (function () {
+        function fail(detail) {
+          var boot = document.getElementById("boot");
+          if (!boot || boot.classList.contains("hidden")) return;
+          boot.innerHTML =
+            '<h1 style="font-size:1.6rem;letter-spacing:0.15em">AFTERLIGHT</h1>' +
+            '<p style="max-width:90vw;text-align:center;line-height:1.5;opacity:0.9">' +
+            "Couldn't start the game in this browser.<br/>" +
+            "Please try a recent <b>Chrome</b>, <b>Edge</b>, <b>Firefox</b> or <b>Safari</b>." +
+            "</p>" +
+            (detail
+              ? '<p style="font-size:0.7rem;opacity:0.5;max-width:90vw;word-break:break-word">' +
+                String(detail) +
+                "</p>"
+              : "");
+        }
+        window.addEventListener("error", function (e) {
+          fail(e && e.message ? e.message : "");
+        });
+        window.addEventListener("unhandledrejection", function (e) {
+          fail(e && e.reason ? e.reason : "");
+        });
+        // Watchdog: if still on the splash after 7s, something went wrong.
+        setTimeout(function () {
+          fail("");
+        }, 7000);
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

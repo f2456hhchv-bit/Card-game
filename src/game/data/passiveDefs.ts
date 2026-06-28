@@ -130,6 +130,29 @@ export const PASSIVE_DEFS: Record<string, PassiveDef> = {
     },
     levelNote: (lvl) => `XP gain +${12 * lvl}%`,
   },
+  tidalCharm: {
+    id: "tidalCharm",
+    name: "Tidal Charm",
+    description: "Quickens the flight of projectiles.",
+    hue: 195,
+    maxLevel: 5,
+    apply: (s, lvl) => {
+      s.projectileSpeedMult *= 1 + 0.12 * lvl;
+    },
+    levelNote: (lvl) => `Projectile speed +${12 * lvl}%`,
+  },
+  echoStone: {
+    id: "echoStone",
+    name: "Echo Stone",
+    description: "Echoes an extra projectile from every volley.",
+    hue: 265,
+    maxLevel: 2,
+    apply: (s, lvl) => {
+      // Build-defining: adds projectiles to every projectile weapon. Capped low.
+      s.extraProjectiles += lvl;
+    },
+    levelNote: (lvl) => `+${lvl} projectile${lvl > 1 ? "s" : ""}`,
+  },
 };
 
 export const PASSIVE_LIST: PassiveDef[] = Object.values(PASSIVE_DEFS);

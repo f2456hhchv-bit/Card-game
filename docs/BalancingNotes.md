@@ -76,6 +76,20 @@ feel too "drafty" late, raise the quadratic term; if power plateaus, lower it.
   pressure; weight 28, unlocks at 4:00. **To watch:** Caster density during
   surges could create unfair bullet volume — cap concurrent casters if needed.
 
+## New content tuning (M2, first pass)
+- **Arc Coil (chain):** 8 dmg / 3 targets at L1 → 26 dmg / 9 targets at L8, with
+  **0.88× damage falloff per jump** so long chains still contribute but aren't
+  free. Leap range 180→270. Shines vs. dense crowds, weaker vs. spread-out or
+  single targets — a deliberate trade against the single-target weapons.
+- **Echo Stone (relic):** +1 projectile/level, **capped at 2** — it adds to
+  *every* projectile weapon's count and to chain targets, so it's intentionally
+  rare-tier and low-cap to avoid runaway scaling. **To watch:** Echo Stone +
+  Prism Shards/Nova Pulse projectile counts at high levels.
+- **Tidal Charm (relic):** +12% projectile speed/level — fills a stat that no
+  relic previously touched; helps fast-moving targets and projectile uptime.
+- **Tempest Coil (evolved chain):** 10→16 targets, fast cadence — strong AoE
+  payoff; validate against the enemy cap during surges.
+
 ## Change log
 - **2026-06-28** — Initial M1 tuning pass established.
 - **2026-06-28** — Base pickup radius 64 → 80. Playtest showed XP felt lossy
@@ -85,3 +99,5 @@ feel too "drafty" late, raise the quadratic term; if power plateaus, lower it.
 - **2026-06-28** — Added first-pass tuning for the 5 evolved weapons (M2).
 - **2026-06-28** — Added first boss (The Maw), Caster ranged enemy, and enemy
   projectiles with first-pass tuning (M2).
+- **2026-06-28** — Added Arc Coil (chain) + Tempest Coil, and the Tidal Charm &
+  Echo Stone relics with first-pass tuning (M2).

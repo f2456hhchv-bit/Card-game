@@ -53,6 +53,8 @@ Source of truth: `src/game/data/passiveDefs.ts`. Each has up to 5 levels.
 | Ward Plate | +5%×lvl Armor (capped 85%) | 5 |
 | Keen Edge | +4%×lvl Crit, +10%×lvl Crit Dmg | 5 |
 | Scholar's Mark | +12%×lvl XP Gain | 5 |
+| Tidal Charm | +12%×lvl Projectile Speed | 5 |
+| Echo Stone | +1×lvl Extra Projectiles (build-defining) | 2 |
 
 Stats recompute from base + all relics whenever the loadout changes
 (`Loadout.recomputeStats`), never per-frame.

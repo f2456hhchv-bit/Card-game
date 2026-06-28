@@ -115,9 +115,27 @@ on a fixed interval.
 ## Debug hook
 
 Opening the page with `#dev` attaches `window.afterlight` (see `main.ts` →
-`Game.getDebugApi()`) exposing helpers like `spawnBoss()` and the live `world`.
-It is **off by default** and exists purely to playtest specific situations
-without grinding to them. Not a gameplay feature; never enabled in normal play.
+`Game.getDebugApi()`) exposing helpers like `spawnBoss()`, `addLevel()`,
+`giveWeapon(id)` and the live `world`. It is **off by default** and exists purely
+to playtest specific situations without grinding to them. Not a gameplay feature;
+never enabled in normal play.
+
+## Single-file build & `file://` compatibility
+
+`npm run build:single` must produce an HTML file that runs by **double-clicking
+it** — i.e. from a `file://` URL with no server. Two rules make that reliable in
+every browser (see `vite.config.ts`, `index.html`, `main.ts`):
+
+1. **Classic IIFE, not an ES module.** Browsers block `<script type="module">`
+   over `file://` (module CORS), which silently halts boot. The single build
+   bundles as an IIFE and strips `type="module"` from the inlined tag.
+2. **Boot on `DOMContentLoaded`.** Classic scripts aren't deferred, so they can
+   run before the body is parsed; `main.ts` waits for the DOM either way.
+3. A classic **watchdog** in `index.html` surfaces a readable error if boot ever
+   fails or stalls — no more silent infinite spinner. (See BUG-002.)
+
+The served `dist/` build (`npm run build`) keeps standard ES modules; this only
+applies to the single-file variant.
 
 ## Testing
 

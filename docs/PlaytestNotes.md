@@ -4,6 +4,34 @@
 
 Observations from playtests, and the actions they drive. Newest first.
 
+## 2026-06-28 — Critical: single-file wouldn't load + new content
+
+**Method:** User report ("spinning wheel of death" opening the shared file) +
+headless Chromium reproduction of the single-file build from `file://`, plus
+unit/integration tests for the new weapon and relics.
+
+**Observed:**
+- **Boot failure root cause:** the single-file build used `<script type=
+  "module">`, which browsers block over `file://` (silent eternal spinner). The
+  app's own error handling was inside that module, so nothing surfaced. Chromium
+  had been permissive enough to hide it in earlier smoke tests.
+- After the fix (classic IIFE + DOM-ready boot + watchdog), the single file
+  boots and plays from `file://` with no errors, verified in headless Chromium.
+- **Arc Coil (chain lightning)** reads great — a bright cyan bolt that visibly
+  leaps between enemies; confirmed it deals damage and emits arcs in-sim.
+
+**Actions taken:**
+- Fixed BUG-002 (see BugTracker): classic-script single build, DOM-ready boot,
+  non-module watchdog, es2019 target.
+- Shipped Arc Coil + Tempest Coil and the Tidal Charm / Echo Stone relics.
+- Added `giveWeapon(id)` to the `#dev` debug API.
+
+**Open questions:**
+1. Confirm the fixed file loads on the user's actual browser/OS.
+2. Is chain falloff (0.88/jump) the right feel, or should chains hit harder?
+3. Does Echo Stone (+projectiles, cap 2) over-scale Prism Shards / Nova Pulse?
+
+
 ## 2026-06-28 — M2 First boss + enemy projectiles
 
 **Method:** Browser verification via the new `#dev` debug hook (force-spawn the

@@ -76,6 +76,7 @@ export class Game {
     return {
       spawnBoss: () => this.world.debugTriggerBoss(),
       addLevel: () => this.world.events.emit("levelUp", { level: this.world.player.level + 1 }),
+      giveWeapon: (id: string) => this.world.debugGiveWeapon(id),
       world: this.world,
       state: () => this.state,
     };

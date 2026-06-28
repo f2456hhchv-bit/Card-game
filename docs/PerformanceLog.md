@@ -16,9 +16,13 @@ Tracks performance targets, measurements, and optimisation decisions.
 | v0.1 | JS | 54.3 KB | 17.2 KB |
 | v0.2 (evolution) | JS | 58.9 KB | 18.4 KB |
 | v0.2 (boss) | JS | 68.4 KB | 21.1 KB |
+| v0.2 (chain wpn + relics) | JS | 75.9 KB | 22.8 KB |
 | v0.2 | CSS | 7.0 KB | 2.1 KB |
-| v0.2 | HTML | 3.4 KB | 1.5 KB |
-| v0.2 | single-file HTML | — | ~23 KB |
+| v0.2 | HTML | 4.3 KB | 1.8 KB |
+| v0.2 | single-file HTML | 86 KB | ~26 KB |
+
+> Single-file build is a classic IIFE (es2019) for `file://` compatibility; the
+> served build uses ES modules. See ArchitectureNotes / BUG-002.
 
 No image/audio/font assets — all visuals and sound are procedural.
 

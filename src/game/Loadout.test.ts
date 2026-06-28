@@ -69,6 +69,21 @@ describe("Loadout", () => {
     }
   });
 
+  it("Echo Stone adds extra projectiles and Tidal Charm adds projectile speed", () => {
+    const { loadout, player } = freshLoadout();
+    const baseSpeed = player.stats.projectileSpeedMult;
+    loadout.applyDraft(
+      { kind: "passive-new", id: "echoStone", name: "", description: "", hue: 0, note: "", level: 1 },
+      player,
+    );
+    loadout.applyDraft(
+      { kind: "passive-new", id: "tidalCharm", name: "", description: "", hue: 0, note: "", level: 1 },
+      player,
+    );
+    expect(player.stats.extraProjectiles).toBeGreaterThanOrEqual(1);
+    expect(player.stats.projectileSpeedMult).toBeGreaterThan(baseSpeed);
+  });
+
   it("clamps armor into a sane range", () => {
     const { loadout, player } = freshLoadout();
     // Max out Ward Plate well past the cap.

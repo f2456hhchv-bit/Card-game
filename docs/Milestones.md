@@ -55,11 +55,13 @@ Goal: the build-defining payoff and a first marquee encounter.
 - [x] First boss "The Maw": 3 telegraphed phases, summons, HUD health bar
 - [x] Ranged `shooter` enemy archetype (Caster) + pooled enemy projectiles
 - [x] Boss state-machine tests + enemy-projectile + boss integration tests
-- [x] Debug console hook (`#dev`) for playtesting specific situations
-- [ ] 2–3 new weapons, 2–3 new relics
+- [x] Debug console hook (`#dev`) for playtesting (spawnBoss/addLevel/giveWeapon)
+- [~] New content: Arc Coil (chain) weapon + Tempest Coil evolution; Tidal Charm
+      and Echo Stone relics. (More weapons/relics still welcome.)
 - [ ] On-screen pause button; touch settings polish
 - [ ] First-run tutorial / control hints
 - [x] Update affected catalogues + balancing notes
+- [x] **Fix:** single-file build infinite-spinner on `file://` (BUG-002)
 
 **Definition of done:** a run can reach an evolved weapon and a boss fight, both
 feel great, docs updated, build + tests green. ✅ Evolution + first boss both

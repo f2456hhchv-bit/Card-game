@@ -89,6 +89,22 @@ describe("World — combat integration", () => {
     expect(world.player.hp).toBeLessThan(startHp); // it connected
   });
 
+  it("the chain weapon (Arc Coil) damages enemies and spawns visual arcs", () => {
+    const world = new World(15);
+    world.reset();
+    // Swap the starter for Arc Coil (chain pattern).
+    world.loadout.weapons[0].def = WEAPON_DEFS.arcCoil;
+    world.loadout.weapons[0].level = 1;
+    world.loadout.recomputeStats(world.player);
+
+    addEnemyNear(world);
+    // updateCosmetic (which expires arcs) isn't called here, so arcs accumulate
+    // once the chain fires (cooldown ~1s).
+    for (let i = 0; i < 120 && world.arcs.length === 0; i++) world.step(1 / 60, STILL);
+    expect(world.arcs.length).toBeGreaterThan(0); // visual arcs were emitted
+    expect(world.stats.damageDealt).toBeGreaterThan(0); // chain dealt damage
+  });
+
   it("kills award XP and can trigger a level-up draft", () => {
     const world = new World(99);
     world.reset();

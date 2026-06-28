@@ -28,6 +28,7 @@ export class GameRenderer {
     this.drawOrbitOrbs(ctx, camera, world);
     this.drawProjectiles(ctx, camera, world);
     this.drawEnemyProjectiles(ctx, camera, world);
+    this.drawArcs(ctx, camera, world);
     this.drawPlayer(ctx, camera, world);
     this.drawParticles(ctx, camera, world);
     this.drawDamageNumbers(ctx, camera, world);
@@ -263,6 +264,46 @@ export class GameRenderer {
     ctx.beginPath();
     ctx.arc(0, 0, r * 0.14, 0, TAU);
     ctx.fill();
+    ctx.restore();
+  }
+
+  /** Chain-lightning: a jagged, additive bolt between two points, fading out. */
+  private drawArcs(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
+    if (world.arcs.length === 0) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineCap = "round";
+    for (let i = 0; i < world.arcs.length; i++) {
+      const a = world.arcs[i];
+      const alpha = Math.max(0, 1 - a.life / a.maxLife);
+      const x1 = camera.worldToScreenX(a.x1);
+      const y1 = camera.worldToScreenY(a.y1);
+      const x2 = camera.worldToScreenX(a.x2);
+      const y2 = camera.worldToScreenY(a.y2);
+      // Build a jittered polyline between the endpoints for an electric look.
+      const segs = 5;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.hypot(dx, dy) || 1;
+      const nx = -dy / len;
+      const ny = dx / len;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      for (let s = 1; s < segs; s++) {
+        const t = s / segs;
+        // Deterministic-ish jitter from segment index so it shimmers per frame.
+        const jitter = (Math.sin(a.life * 90 + s * 12.9) * 0.5) * 14 * (1 - Math.abs(t - 0.5) * 2 + 0.2);
+        ctx.lineTo(x1 + dx * t + nx * jitter, y1 + dy * t + ny * jitter);
+      }
+      ctx.lineTo(x2, y2);
+      // Outer glow then bright core.
+      ctx.strokeStyle = `hsla(${a.hue} 100% 70% / ${alpha * 0.6})`;
+      ctx.lineWidth = 6 * camera.zoom;
+      ctx.stroke();
+      ctx.strokeStyle = `hsla(${a.hue} 100% 92% / ${alpha})`;
+      ctx.lineWidth = 2 * camera.zoom;
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
