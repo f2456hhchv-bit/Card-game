@@ -57,7 +57,7 @@ export class Player {
     areaMult: 1,
     projectileSpeedMult: 1,
     extraProjectiles: 0,
-    pickupRadius: 64,
+    pickupRadius: 80,
     regen: 0,
     xpMult: 1,
     lightMult: 1,

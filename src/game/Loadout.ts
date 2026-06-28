@@ -2,7 +2,7 @@ import type { Player } from "./entities/Player";
 import type { Rng } from "../core/math/Rng";
 import {
   WEAPON_DEFS,
-  WEAPON_LIST,
+  DRAFTABLE_WEAPONS,
   getStarterWeapon,
   type WeaponDef,
   type WeaponLevel,
@@ -44,6 +44,18 @@ export type DraftOption =
       hue: number;
       note: string;
       level: number;
+    }
+  | {
+      /** Evolve an owned, mastered weapon into its evolved form. */
+      kind: "weapon-evolve";
+      /** Id of the base weapon being evolved (the one currently owned). */
+      id: string;
+      /** Id of the evolved weapon it becomes. */
+      into: string;
+      name: string;
+      description: string;
+      hue: number;
+      note: string;
     };
 
 const MAX_WEAPON_SLOTS = 6;
@@ -115,6 +127,17 @@ export class Loadout {
         if (w && w.level < w.def.maxLevel) w.level++;
         break;
       }
+      case "weapon-evolve": {
+        // Replace the base weapon in-place with its evolved form at level 1.
+        const w = this.getWeapon(option.id);
+        const evolvedDef = WEAPON_DEFS[option.into];
+        if (w && evolvedDef && !this.hasWeapon(option.into)) {
+          w.def = evolvedDef;
+          w.level = 1;
+          w.cooldownRemaining = 0;
+        }
+        break;
+      }
       case "passive-new":
       case "passive-up": {
         const cur = this.passives.get(option.id) ?? 0;
@@ -124,6 +147,35 @@ export class Loadout {
       }
     }
     this.recomputeStats(player);
+  }
+
+  /**
+   * Evolution draft options currently available: for each owned, mastered
+   * (max-level) weapon whose paired relic is owned at the required level, and
+   * whose evolved form isn't already owned.
+   */
+  getEvolutions(): DraftOption[] {
+    const out: DraftOption[] = [];
+    for (const w of this.weapons) {
+      const evo = w.def.evolution;
+      if (!evo) continue;
+      if (w.level < w.def.maxLevel) continue;
+      const relicLevel = this.passives.get(evo.relic) ?? 0;
+      if (relicLevel < evo.relicLevel) continue;
+      if (this.hasWeapon(evo.into)) continue;
+      const evolved = WEAPON_DEFS[evo.into];
+      if (!evolved) continue;
+      out.push({
+        kind: "weapon-evolve",
+        id: w.def.id,
+        into: evo.into,
+        name: evolved.name,
+        description: evolved.description,
+        hue: evolved.hue,
+        note: `Evolve ${w.def.name}`,
+      });
+    }
+    return out;
   }
 
   private weaponSlotsFull(): boolean {
@@ -156,9 +208,10 @@ export class Loadout {
         });
       }
     }
-    // New weapons (if a slot is free).
+    // New weapons (if a slot is free). Evolved forms are excluded — they are
+    // only reachable through evolution, not fresh picks.
     if (!this.weaponSlotsFull()) {
-      for (const def of WEAPON_LIST) {
+      for (const def of DRAFTABLE_WEAPONS) {
         if (!this.hasWeapon(def.id)) {
           pool.push({
             kind: "weapon-new",
@@ -203,12 +256,22 @@ export class Loadout {
       }
     }
 
-    // Sample without replacement.
-    const shuffled = rng.shuffle(pool.slice());
-    const result = shuffled.slice(0, Math.min(count, shuffled.length));
+    // Evolutions are rare, build-defining moments — always surface available
+    // ones first so the player never misses the chance, then fill the rest of
+    // the draft with a random sample of the normal pool.
+    const evolutions = rng.shuffle(this.getEvolutions());
+    const result: DraftOption[] = evolutions.slice(0, count);
 
-    // Fallback: if everything is maxed, offer a small heal/refresh option as a
-    // weapon-up no-op so the draft is never empty. (Rare; safety net.)
+    if (result.length < count) {
+      const shuffled = rng.shuffle(pool.slice());
+      for (const opt of shuffled) {
+        if (result.length >= count) break;
+        result.push(opt);
+      }
+    }
+
+    // If everything is maxed and nothing remains, the caller (Game) converts the
+    // empty draft into a small heal so a level-up is never wasted.
     return result;
   }
 }

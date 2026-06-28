@@ -24,9 +24,19 @@ all currently-valid choices:
 - **Weapon upgrade** (owned, not maxed)
 - **New relic** (if a relic slot is free)
 - **Relic upgrade** (owned, not maxed)
+- **★ Evolution ★** (a mastered weapon's paired relic requirement is met) —
+  *guaranteed* to appear when available, rendered as a distinct golden card.
 
 If *everything* is maxed, the level-up converts to a small heal so it's never a
 dead pick. Logic in `Loadout.rollDraft()` / `Game.openDraftIfPending()`.
+
+### Weapon Evolution ✅
+A weapon at **max level (8)** whose **paired relic is owned at level 3+** can
+**evolve** into a signature form (e.g. Lumen Bolt + Keen Edge → *Sunlance*).
+Evolving replaces the base weapon in-place at level 1 and keeps the relic.
+Evolved forms are far stronger, have their own 5-level track, and never appear
+as fresh weapon picks. Full pairing table: `docs/WeaponCatalogue.md`. Logic in
+`Loadout.getEvolutions()` and `applyDraft("weapon-evolve")`.
 
 ### Relics (passives)
 Source of truth: `src/game/data/passiveDefs.ts`. Each has up to 5 levels.
@@ -76,6 +86,6 @@ See `docs/SaveDataStructure.md` for the persisted schema.
 ---
 
 ## Planned progression work
-- **Weapon Evolution** (M2): mastered weapon + paired relic → evolved form.
+- **Weapon Evolution** (M2): ✅ shipped — mastered weapon + paired relic → evolved form.
 - **Daily Run** (M3): deterministic offline seed from the date.
 - **Unlock economy tuning** (M3): Mote earn/spend balance once the shop exists.

@@ -82,3 +82,76 @@ describe("Loadout", () => {
     expect(player.stats.armor).toBeGreaterThan(0);
   });
 });
+
+describe("Loadout — weapon evolution", () => {
+  // The starter (Lumen Bolt) evolves into Sunlance, requiring Keen Edge L3.
+  function masterStarter(loadout: Loadout): void {
+    const starter = loadout.weapons[0];
+    starter.level = starter.def.maxLevel;
+  }
+
+  it("offers no evolution until the weapon is mastered", () => {
+    const { loadout } = freshLoadout();
+    loadout.passives.set("keenEdge", 3);
+    expect(loadout.getEvolutions()).toHaveLength(0);
+  });
+
+  it("offers no evolution until the paired relic meets the threshold", () => {
+    const { loadout } = freshLoadout();
+    masterStarter(loadout);
+    loadout.passives.set("keenEdge", 2); // one short
+    expect(loadout.getEvolutions()).toHaveLength(0);
+  });
+
+  it("offers the evolution when weapon is mastered and relic qualifies", () => {
+    const { loadout } = freshLoadout();
+    masterStarter(loadout);
+    loadout.passives.set("keenEdge", 3);
+    const evos = loadout.getEvolutions();
+    expect(evos).toHaveLength(1);
+    expect(evos[0].kind).toBe("weapon-evolve");
+    expect(evos[0].kind === "weapon-evolve" && evos[0].into).toBe("sunlance");
+  });
+
+  it("replaces the base weapon in-place on evolve, keeping slot count", () => {
+    const { loadout, player } = freshLoadout();
+    masterStarter(loadout);
+    loadout.passives.set("keenEdge", 3);
+    const evo = loadout.getEvolutions()[0];
+    loadout.applyDraft(evo, player);
+    expect(loadout.weapons).toHaveLength(1);
+    expect(loadout.weapons[0].def.id).toBe("sunlance");
+    expect(loadout.weapons[0].level).toBe(1);
+    // No longer eligible (evolved form has no further evolution).
+    expect(loadout.getEvolutions()).toHaveLength(0);
+  });
+
+  it("guarantees an available evolution appears in the draft", () => {
+    const { loadout } = freshLoadout();
+    masterStarter(loadout);
+    loadout.passives.set("keenEdge", 3);
+    const rng = new Rng(123);
+    const opts = loadout.rollDraft(rng, 3);
+    expect(opts.some((o) => o.kind === "weapon-evolve")).toBe(true);
+  });
+
+  it("never offers an evolved form as a fresh weapon pick", () => {
+    const { loadout, player } = freshLoadout();
+    const rng = new Rng(5);
+    const evolvedIds = new Set([
+      "sunlance",
+      "prismaticStorm",
+      "aegisCorona",
+      "cataclysm",
+      "solaris",
+    ]);
+    for (let i = 0; i < 80; i++) {
+      const opts = loadout.rollDraft(rng, 3);
+      if (opts.length === 0) break;
+      for (const o of opts) {
+        if (o.kind === "weapon-new") expect(evolvedIds.has(o.id)).toBe(false);
+      }
+      loadout.applyDraft(opts[0], player);
+    }
+  });
+});

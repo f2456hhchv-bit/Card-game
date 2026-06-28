@@ -4,6 +4,35 @@
 
 Observations from playtests, and the actions they drive. Newest first.
 
+## 2026-06-28 — M2 Weapon Evolution + draft flow
+
+**Method:** Automated browser playthrough (headless Chromium) of a real run to
+the first level-up draft, plus unit + integration tests for evolution.
+
+**Observed:**
+- Draft flow works end-to-end: leveling opens the draft (sim freezes), three
+  cards render with correct accent colours / kind labels / effect notes, picking
+  applies the choice and resumes play. No console errors.
+- Evolution logic verified by tests: eligibility (weapon L8 + relic L3), in-place
+  replacement, evolved forms excluded from fresh picks, and an available
+  evolution is guaranteed into the draft. An evolved weapon fires valid
+  projectiles in the live simulation (integration test).
+- **XP felt lossy when moving in one direction:** kiting in a wide arc, the
+  Warden outran XP shards (they drop behind), so 6 kills yielded 0 collected XP
+  in that pattern. A human doubles back, but base generosity was a touch low.
+
+**Actions taken:**
+- Base pickup radius 64 → 80 (see BalancingNotes change log).
+- Shipped the full Weapon Evolution system (5 pairings) + golden evolution card.
+
+**Open questions for next playtest:**
+1. Does an evolution power spike *feel* as triumphant as intended in live play?
+2. Is the relic-gate (L3) discoverable, or do players need a hint/telegraph that
+   a weapon is "evolution-ready"? (Candidate: mark masterable weapons in the HUD.)
+3. With pickup radius 80, does early XP flow feel right without trivialising
+   Lodestone?
+
+
 ## 2026-06-28 — v0.1 developer smoke + first-loop review
 
 **Method:** Automated browser smoke test (headless Chromium) plus design

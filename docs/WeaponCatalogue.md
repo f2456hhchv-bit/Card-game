@@ -45,11 +45,35 @@ pairs with anything that keeps enemies close.
 
 > Full per-level tables live in `weaponDefs.ts`; that file is authoritative.
 
-## Mastery
-Reaching **level 8** is a weapon's "mastery" tier. In **M2**, a mastered weapon
-paired with a specific relic will become eligible to **evolve** into a
-signature, dramatically stronger form. Pairings are TBD and will be documented
-here when implemented.
+## Mastery & Evolution ✅ implemented (M2)
+
+Reaching **level 8** is a weapon's **mastery** tier. A mastered weapon paired
+with its specific **relic at level 3+** becomes eligible to **evolve** into a
+signature, dramatically stronger form. When an evolution is available, a
+golden **★ Evolution ★** card is *guaranteed* to appear in the next level-up
+draft (so it can't be missed). Choosing it replaces the base weapon in-place
+with its evolved form at level 1; the paired relic is kept.
+
+Evolved forms reuse existing firing patterns (no new engine code) but with much
+higher stats and a distinct golden-tier identity, and they are **excluded from
+the normal "new weapon" draft pool** — they are only reachable by evolving.
+
+| Base weapon (L8) | + Relic (L3) | → Evolved form | Identity |
+| --- | --- | --- | --- |
+| Lumen Bolt | Keen Edge | **Sunlance** | Piercing daylight lance volley |
+| Prism Shards | Resonator | **Prismatic Storm** | A relentless storm front of shards |
+| Warden's Halo | Quickening Charm | **Aegis Corona** | An encircling crown of blazing suns |
+| Nova Pulse | Focusing Lens | **Cataclysm** | World-shaking radial detonations |
+| Radiance | Ember Heart | **Solaris** | A captive sun that scours the dark |
+
+Evolved weapons have **5 levels** of their own (`Evolved → Zenith`). Full tables
+in `weaponDefs.ts` (entries flagged `evolved: true`).
+
+### Design intent
+Evolution is the genre's signature payoff: a build "coming together" into a
+brief, glorious power spike. Requiring a *specific relic* makes builds
+intentional — you steer your drafts toward an evolution, rather than stumbling
+into it. The guaranteed golden card ensures the moment always lands.
 
 ## Slots
 Max **6 weapon slots** and **6 relic slots** per run. Once full, the draft only

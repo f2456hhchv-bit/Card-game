@@ -113,8 +113,10 @@ and scheduled **elite** spawns. A soft enemy cap protects performance.
 - **Draft:** Each level-up pauses the action and offers three choices: new
   weapons, weapon upgrades, new relics, or relic upgrades. Six weapon slots and
   six relic slots.
-- **Weapon Evolution (planned):** Maxed weapons paired with a specific relic
-  evolve into a powered-up form — the genre's signature build payoff.
+- **Weapon Evolution ✅:** Maxed weapons paired with a specific relic (L3+)
+  evolve into a powered-up signature form — the genre's signature build payoff.
+  Evolution-ready weapons guarantee a golden draft card. See
+  `docs/WeaponCatalogue.md` for pairings.
 
 ---
 

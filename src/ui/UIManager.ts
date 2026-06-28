@@ -252,16 +252,28 @@ export class UIManager {
     for (const opt of options) {
       const card = this.el("div", "card");
       card.style.setProperty("--card-accent", `hsl(${opt.hue} 80% 65%)`);
+      // Evolutions get a distinct golden, glowing treatment.
+      if (opt.kind === "weapon-evolve") card.classList.add("evolve");
 
       const icon = this.el("div", "card-icon", opt.name.slice(0, 2).toUpperCase());
-      const kindLabel =
-        opt.kind === "weapon-new"
-          ? "New Weapon"
-          : opt.kind === "weapon-up"
-            ? `Weapon · Lv ${opt.level}`
-            : opt.kind === "passive-new"
-              ? "New Relic"
-              : `Relic · Lv ${opt.level}`;
+      let kindLabel: string;
+      switch (opt.kind) {
+        case "weapon-new":
+          kindLabel = "New Weapon";
+          break;
+        case "weapon-up":
+          kindLabel = `Weapon · Lv ${opt.level}`;
+          break;
+        case "passive-new":
+          kindLabel = "New Relic";
+          break;
+        case "passive-up":
+          kindLabel = `Relic · Lv ${opt.level}`;
+          break;
+        case "weapon-evolve":
+          kindLabel = "★ Evolution ★";
+          break;
+      }
       const kind = this.el("div", "card-kind", kindLabel);
       const name = this.el("div", "card-name", opt.name);
       const note = this.el("div", "card-note", opt.note);

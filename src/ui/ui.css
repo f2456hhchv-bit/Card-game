@@ -309,6 +309,36 @@
   line-height: 1.35;
 }
 
+/* Evolution cards — rare, build-defining; make them unmistakable. */
+.card.evolve {
+  border-top-width: 4px;
+  border-color: #ffd166;
+  background: linear-gradient(180deg, rgba(255, 209, 102, 0.16), var(--ui-panel));
+  box-shadow: 0 0 22px rgba(255, 209, 102, 0.3);
+  animation: evolve-pulse 1.6s ease-in-out infinite;
+}
+.card.evolve .card-kind {
+  color: #ffd166;
+  font-weight: 800;
+}
+.card.evolve .card-note {
+  color: #ffe9a8;
+}
+@keyframes evolve-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 22px rgba(255, 209, 102, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 34px rgba(255, 209, 102, 0.55);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card.evolve {
+    animation: none;
+  }
+}
+
 /* Settings rows. */
 .settings {
   display: flex;

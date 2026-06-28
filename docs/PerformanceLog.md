@@ -10,12 +10,14 @@ Tracks performance targets, measurements, and optimisation decisions.
 - Fast load: tiny static bundle, no network at runtime.
 - Scalable to high enemy counts (cap currently 900).
 
-## Bundle size (production build, v0.1)
-| Asset | Raw | Gzipped |
-| --- | --- | --- |
-| JS | 54.3 KB | 17.2 KB |
-| CSS | 5.9 KB | 1.9 KB |
-| HTML | 3.1 KB | 1.3 KB |
+## Bundle size (production build)
+| Build | Asset | Raw | Gzipped |
+| --- | --- | --- | --- |
+| v0.1 | JS | 54.3 KB | 17.2 KB |
+| v0.2 (evolution) | JS | 58.9 KB | 18.4 KB |
+| v0.2 | CSS | 6.4 KB | 2.0 KB |
+| v0.2 | HTML | 3.4 KB | 1.5 KB |
+| v0.2 | single-file HTML | — | ~20 KB |
 
 No image/audio/font assets — all visuals and sound are procedural.
 

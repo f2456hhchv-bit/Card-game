@@ -44,22 +44,24 @@ Goal: a complete, fun, self-contained core loop that proves the architecture.
 
 ---
 
-## ▶ M2 — Depth & Identity (v0.2) — NEXT
+## ▶ M2 — Depth & Identity (v0.2) — IN PROGRESS
 
 Goal: the build-defining payoff and a first marquee encounter.
 
-- [ ] Weapon evolution system + UI for evolved drafts
-- [ ] Define evolution pairings (weapon max + specific relic)
+- [x] Weapon evolution system + UI for evolved drafts
+- [x] Define evolution pairings (weapon max + specific relic) — 5 pairings
+- [x] Evolved forms excluded from normal pool; guaranteed evolution draft card
+- [x] Tests for evolution eligibility & application (+ in-sim firing)
 - [ ] First boss: telegraphed attacks, phases, arena event
 - [ ] Ranged `shooter` enemy archetype + enemy projectiles
 - [ ] 2–3 new weapons, 2–3 new relics
 - [ ] On-screen pause button; touch settings polish
 - [ ] First-run tutorial / control hints
-- [ ] Tests for evolution eligibility & boss state machine
-- [ ] Update all catalogues + balancing notes
+- [ ] Boss state-machine tests
+- [x] Update affected catalogues + balancing notes
 
 **Definition of done:** a run can reach an evolved weapon and a boss fight, both
-feel great, docs updated, build + tests green.
+feel great, docs updated, build + tests green. (Evolution: done. Boss: next.)
 
 ---
 

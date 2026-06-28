@@ -52,5 +52,21 @@ feel too "drafty" late, raise the quadratic term; if power plateaus, lower it.
 - Orbit re-hit timer (0.35s) is a DPS lever that interacts with enemy density;
   validate at the enemy cap.
 
+## Weapon evolution tuning (M2, first pass)
+- Evolved forms are roughly **1.5–2× the base L8 damage** at their L1, scaling to
+  a strong "Zenith" L5. They reuse base firing patterns, so the jump is in
+  damage / count / pierce / area / cadence, plus a bigger visual identity.
+- Eligibility = base weapon L8 **and** paired relic L3. The relic gate forces an
+  intentional build path rather than an accidental evolution.
+- **To watch:** evolved Aegis Corona (orbit) + high Area, and Solaris (aura) +
+  Area, are the most likely to over-scale; validate at the enemy cap once boss
+  pacing lands. Evolved Cataclysm knockback (200+) may trivialise surges —
+  revisit alongside the boss.
+
 ## Change log
-- **2026-06-28** — Initial M1 tuning pass established (this document).
+- **2026-06-28** — Initial M1 tuning pass established.
+- **2026-06-28** — Base pickup radius 64 → 80. Playtest showed XP felt lossy
+  when moving in one direction early (you outrun shards before they home). A
+  modest, universal generosity that improves early-game feel without
+  trivialising Lodestone. Logged from a developer playtest.
+- **2026-06-28** — Added first-pass tuning for the 5 evolved weapons (M2).
