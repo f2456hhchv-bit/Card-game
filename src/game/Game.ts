@@ -44,6 +44,7 @@ export class Game {
 
     this.ui = new UIManager(uiParent, this.save, this.audio, {
       onStart: () => this.startRun(),
+      onPause: () => this.pause(),
       onResume: () => this.resume(),
       onRestart: () => this.startRun(),
       onToMenu: () => this.toMenu(),

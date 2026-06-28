@@ -60,7 +60,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: min(680px, 92vw);
+  /* Narrow enough that the level/kills text clears the top corners (weapon bar
+     was moved to the bottom, pause button lives top-right). */
+  width: min(520px, 66vw);
   font-variant-numeric: tabular-nums;
 }
 .hud-level {
@@ -143,9 +145,43 @@
   transition: width 0.15s ease;
 }
 
+/* On-screen pause button (top-right). Generous tap target for touch. */
+.pause-btn {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 10px) + 6px);
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(174, 185, 255, 0.3);
+  background: rgba(16, 20, 38, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pause-btn .bar {
+  width: 5px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--ui-accent-bright);
+}
+.pause-btn:hover {
+  background: rgba(125, 140, 255, 0.3);
+  box-shadow: 0 0 16px rgba(125, 140, 255, 0.3);
+}
+.pause-btn:active {
+  transform: scale(0.92);
+}
+
 .perf {
   position: absolute;
-  top: env(safe-area-inset-top, 10px);
+  top: calc(env(safe-area-inset-top, 10px) + 60px);
   right: 12px;
   font-size: 0.72rem;
   color: var(--ui-text-dim);
@@ -157,15 +193,19 @@
   display: none;
 }
 
-/* Weapon mini-icons (top-left). */
+/* Weapon mini-icons — sit just above the health bar, centred. Keeping them out
+   of the top corners avoids colliding with the level label and pause button on
+   narrow phone screens. */
 .loadout-bar {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 10px) + 8px);
-  left: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom, 14px) + 56px);
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  max-width: 40vw;
+  justify-content: center;
+  max-width: min(520px, 92vw);
 }
 .slot {
   width: 30px;

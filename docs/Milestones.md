@@ -58,7 +58,8 @@ Goal: the build-defining payoff and a first marquee encounter.
 - [x] Debug console hook (`#dev`) for playtesting (spawnBoss/addLevel/giveWeapon)
 - [~] New content: Arc Coil (chain) weapon + Tempest Coil evolution; Tidal Charm
       and Echo Stone relics. (More weapons/relics still welcome.)
-- [ ] On-screen pause button; touch settings polish
+- [x] On-screen pause button (touch) + mobile HUD layout pass (no corner overlap)
+- [ ] Touch settings polish
 - [ ] First-run tutorial / control hints
 - [x] Update affected catalogues + balancing notes
 - [x] **Fix:** single-file build infinite-spinner on `file://` (BUG-002)

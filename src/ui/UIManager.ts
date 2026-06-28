@@ -14,6 +14,7 @@ import { formatTime } from "../core/format";
  */
 export interface UICallbacks {
   onStart(): void;
+  onPause(): void;
   onResume(): void;
   onRestart(): void;
   onToMenu(): void;
@@ -122,7 +123,16 @@ export class UIManager {
     this.perf = this.el("div", "perf hidden");
     this.flash = this.el("div", "fade-flash");
 
-    hud.append(top, this.bossBar, hpWrap, this.loadoutBar, this.perf, this.flash);
+    // On-screen pause button (essential on touch — there's no keyboard).
+    const pauseBtn = this.el("button", "pause-btn");
+    pauseBtn.setAttribute("aria-label", "Pause");
+    pauseBtn.innerHTML = '<span class="bar"></span><span class="bar"></span>';
+    pauseBtn.addEventListener("click", () => {
+      this.audio.select();
+      this.cb.onPause();
+    });
+
+    hud.append(top, this.bossBar, hpWrap, this.loadoutBar, pauseBtn, this.perf, this.flash);
     this.root.appendChild(hud);
     this.hud = hud;
   }

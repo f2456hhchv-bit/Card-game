@@ -7,8 +7,6 @@ address them. (Defects go in `docs/BugTracker.md`.)
 
 ## Current limitations (v0.1)
 
-- **No pause button on touch yet.** Touch players can't pause without a keyboard.
-  → On-screen pause button planned in M2.
 - **No tutorial.** Controls are shown only in the README. → First-run onboarding
   in M2.
 - **One boss type.** "The Maw" is the only boss; later encounters reuse it with
