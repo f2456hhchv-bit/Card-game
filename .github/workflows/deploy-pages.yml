@@ -1,0 +1,66 @@
+# Builds AFTERLIGHT and publishes it to GitHub Pages so it can be played from a
+# plain web link (e.g. on a phone) — no install, no local files.
+#
+# Requires the repository to be public (free GitHub Pages) or a paid plan for
+# private Pages. `configure-pages` with enablement:true turns Pages on
+# automatically the first time this runs.
+#
+# Runs on demand (workflow_dispatch) and on every push to the default branch so
+# the hosted game stays up to date.
+name: Deploy AFTERLIGHT to GitHub Pages
+
+# NOTE: auto-deploy on push will be enabled once Pages is confirmed working;
+# kept to manual trigger for now so it can't fail before the repo is public.
+on:
+  workflow_dispatch:
+
+# Permissions the Pages deployment needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment; newer pushes supersede in-flight ones.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
