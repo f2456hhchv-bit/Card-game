@@ -193,6 +193,49 @@
   display: none;
 }
 
+/* First-run coach hints — non-blocking banner near the top. */
+.coach-hint {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 10px) + 70px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(560px, 88vw);
+  text-align: center;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgba(16, 20, 38, 0.78);
+  border: 1px solid rgba(174, 185, 255, 0.28);
+  backdrop-filter: blur(5px);
+  color: var(--ui-text);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  pointer-events: none; /* never block dragging-to-move */
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  animation: hint-in 0.35s ease;
+}
+.coach-hint.hidden {
+  opacity: 0;
+  display: none;
+}
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach-hint {
+    animation: none;
+  }
+}
+
 /* Weapon mini-icons — sit just above the health bar, centred. Keeping them out
    of the top corners avoids colliding with the level label and pause button on
    narrow phone screens. */

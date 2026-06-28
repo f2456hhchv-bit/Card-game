@@ -21,6 +21,8 @@ interface SaveData {
   totalKills: number;         // lifetime kills across all runs
   runsPlayed: number;         // lifetime run count
   achievements: string[];     // unlocked achievement ids
+  tutorialSeen: boolean;      // first-run coach hints shown (skipped for
+                              // returning profiles via migration)
   audio: {
     master: number;           // 0..1
     sfx: number;              // 0..1

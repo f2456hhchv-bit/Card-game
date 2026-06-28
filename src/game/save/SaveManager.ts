@@ -30,6 +30,8 @@ export interface SaveData {
   runsPlayed: number;
   /** Unlocked achievement ids. */
   achievements: string[];
+  /** Whether the first-run control hints have been shown. */
+  tutorialSeen: boolean;
   audio: AudioSettings;
   accessibility: AccessibilitySettings;
 }
@@ -43,6 +45,7 @@ function defaultSave(): SaveData {
     totalKills: 0,
     runsPlayed: 0,
     achievements: [],
+    tutorialSeen: false,
     audio: { master: 0.8, sfx: 0.9, music: 0.5, muted: false },
     accessibility: {
       reduceMotion: false,
@@ -75,10 +78,15 @@ export class SaveManager {
   /** Merge an unknown/old save onto current defaults, filling gaps. */
   private migrate(parsed: Partial<SaveData>): SaveData {
     const base = defaultSave();
+    // Returning players (who already have runs) shouldn't be shown the new
+    // first-run tutorial; only brand-new profiles get it.
+    const tutorialSeen =
+      parsed.tutorialSeen ?? (parsed.runsPlayed ?? 0) > 0;
     return {
       ...base,
       ...parsed,
       version: SAVE_VERSION,
+      tutorialSeen,
       audio: { ...base.audio, ...(parsed.audio ?? {}) },
       accessibility: { ...base.accessibility, ...(parsed.accessibility ?? {}) },
       achievements: parsed.achievements ?? [],

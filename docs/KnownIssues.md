@@ -7,8 +7,6 @@ address them. (Defects go in `docs/BugTracker.md`.)
 
 ## Current limitations (v0.1)
 
-- **No tutorial.** Controls are shown only in the README. → First-run onboarding
-  in M2.
 - **One boss type.** "The Maw" is the only boss; later encounters reuse it with
   scaled HP. → More bosses planned (data/controller split already supports it).
 - **No "evolution-ready" telegraph.** Players may not realise a weapon can evolve

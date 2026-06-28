@@ -34,6 +34,12 @@ export class Game {
   private draftQueue = 0;
   private shakeRand = Math.random;
 
+  // First-run tutorial (non-blocking coach hints).
+  private tutorialActive = false;
+  private tutorialStep = 0;
+  private tutorialStepTime = 0;
+  private tutorialMoveTime = 0;
+
   constructor(canvas: HTMLCanvasElement, uiParent: HTMLElement) {
     this.renderer = new Renderer(canvas);
     this.input = new Input(canvas);
@@ -145,17 +151,26 @@ export class Game {
     this.ui.hideDraft();
     this.ui.hidePause();
     this.ui.hideBossBar();
+    this.ui.hideHint();
     this.ui.showHUD();
     this.state = "playing";
+
+    // First run only: kick off the coach-hint sequence.
+    this.tutorialActive = !this.save.data.tutorialSeen;
+    this.tutorialStep = 0;
+    this.tutorialStepTime = 0;
+    this.tutorialMoveTime = 0;
   }
 
   private toMenu(): void {
     this.state = "menu";
+    this.tutorialActive = false;
     this.ui.hideHUD();
     this.ui.hidePause();
     this.ui.hideGameOver();
     this.ui.hideDraft();
     this.ui.hideBossBar();
+    this.ui.hideHint();
     this.ui.showMenu();
   }
 
@@ -232,9 +247,59 @@ export class Game {
       const acc = this.save.data.accessibility;
       const shakeScale = acc.screenShake ? 1 : 0;
       this.camera.updateShake(dt, this.shakeRand, shakeScale);
+      if (this.tutorialActive) this.updateTutorial(dt);
       // Surface any pending level-up draft (pauses the sim).
       this.openDraftIfPending();
     }
+  }
+
+  /**
+   * First-run coach hints — a short, non-blocking sequence that advances on the
+   * player actually doing the thing (or a timeout), then never shows again.
+   */
+  private updateTutorial(dt: number): void {
+    this.tutorialStepTime += dt;
+    const moving = this.input.moveX !== 0 || this.input.moveY !== 0;
+    if (moving) this.tutorialMoveTime += dt;
+
+    switch (this.tutorialStep) {
+      case 0: {
+        const touch = (navigator.maxTouchPoints ?? 0) > 0;
+        this.ui.showHint(
+          touch
+            ? "Drag anywhere to move — your weapon fires on its own"
+            : "Use WASD or arrow keys to move — your weapon fires on its own",
+        );
+        // Advance once they've moved for a moment, or after a grace period.
+        if (this.tutorialMoveTime > 1.4 || this.tutorialStepTime > 9) this.nextHint();
+        break;
+      }
+      case 1: {
+        this.ui.showHint("Defeat the Hollow and gather the light they drop");
+        if (this.world.stats.xpCollected > 0 || this.tutorialStepTime > 8) this.nextHint();
+        break;
+      }
+      case 2: {
+        this.ui.showHint("Fill the bar to level up, then choose a power-up");
+        if (this.world.player.level >= 2 || this.tutorialStepTime > 10) this.nextHint();
+        break;
+      }
+      default: {
+        this.finishTutorial();
+      }
+    }
+  }
+
+  private nextHint(): void {
+    this.tutorialStep++;
+    this.tutorialStepTime = 0;
+  }
+
+  private finishTutorial(): void {
+    this.tutorialActive = false;
+    this.ui.hideHint();
+    this.save.data.tutorialSeen = true;
+    this.save.save();
   }
 
   // ---- Render ------------------------------------------------------------

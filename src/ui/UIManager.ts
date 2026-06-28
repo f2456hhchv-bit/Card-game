@@ -38,6 +38,7 @@ export class UIManager {
   private loadoutBar!: HTMLDivElement;
   private perf!: HTMLDivElement;
   private flash!: HTMLDivElement;
+  private hint!: HTMLDivElement;
   private bossBar!: HTMLDivElement;
   private bossName!: HTMLDivElement;
   private bossFill!: HTMLDivElement;
@@ -122,6 +123,7 @@ export class UIManager {
     this.loadoutBar = this.el("div", "loadout-bar");
     this.perf = this.el("div", "perf hidden");
     this.flash = this.el("div", "fade-flash");
+    this.hint = this.el("div", "coach-hint hidden");
 
     // On-screen pause button (essential on touch — there's no keyboard).
     const pauseBtn = this.el("button", "pause-btn");
@@ -132,9 +134,22 @@ export class UIManager {
       this.cb.onPause();
     });
 
-    hud.append(top, this.bossBar, hpWrap, this.loadoutBar, pauseBtn, this.perf, this.flash);
+    hud.append(top, this.bossBar, this.hint, hpWrap, this.loadoutBar, pauseBtn, this.perf, this.flash);
     this.root.appendChild(hud);
     this.hud = hud;
+  }
+
+  private currentHint = "";
+  /** Show a non-blocking coach hint (pointer-events pass through). */
+  showHint(text: string): void {
+    if (this.currentHint === text) return;
+    this.currentHint = text;
+    this.hint.textContent = text;
+    this.hint.classList.remove("hidden");
+  }
+  hideHint(): void {
+    this.currentHint = "";
+    this.hint.classList.add("hidden");
   }
 
   /** Show the boss bar with a name; called when a boss spawns. */
