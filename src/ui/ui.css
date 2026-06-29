@@ -344,6 +344,14 @@
   padding: 11px 22px;
 }
 
+.daily-line {
+  margin-top: 2px;
+  color: var(--ui-text-dim);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
 .menu-stats {
   display: flex;
   gap: 28px;

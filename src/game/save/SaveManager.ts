@@ -38,6 +38,8 @@ export interface SaveData {
   wardens: string[];
   /** Currently selected Warden id. */
   selectedWarden: string;
+  /** Today's Daily Run best (resets when the date rolls over). */
+  daily: { date: string; bestTime: number; bestKills: number };
   audio: AudioSettings;
   accessibility: AccessibilitySettings;
 }
@@ -55,6 +57,7 @@ function defaultSave(): SaveData {
     meta: {},
     wardens: ["lumen"],
     selectedWarden: "lumen",
+    daily: { date: "", bestTime: 0, bestKills: 0 },
     audio: { master: 0.8, sfx: 0.9, music: 0.5, muted: false },
     accessibility: {
       reduceMotion: false,
@@ -99,6 +102,7 @@ export class SaveManager {
       meta: parsed.meta ?? {},
       wardens: parsed.wardens ?? ["lumen"],
       selectedWarden: parsed.selectedWarden ?? "lumen",
+      daily: parsed.daily ?? { date: "", bestTime: 0, bestKills: 0 },
       audio: { ...base.audio, ...(parsed.audio ?? {}) },
       accessibility: { ...base.accessibility, ...(parsed.accessibility ?? {}) },
       achievements: parsed.achievements ?? [],
@@ -126,6 +130,27 @@ export class SaveManager {
     const newBestKills = kills > d.bestKills;
     if (newBestTime) d.bestTime = timeSeconds;
     if (newBestKills) d.bestKills = kills;
+    this.save();
+    return { newBestTime, newBestKills };
+  }
+
+  /**
+   * Record a Daily Run result. Resets the day's best when the date rolls over,
+   * then keeps the best time/kills for that date. Returns whether a record fell.
+   */
+  recordDaily(
+    date: string,
+    timeSeconds: number,
+    kills: number,
+  ): { newBestTime: boolean; newBestKills: boolean } {
+    const d = this.data;
+    if (d.daily.date !== date) {
+      d.daily = { date, bestTime: 0, bestKills: 0 };
+    }
+    const newBestTime = timeSeconds > d.daily.bestTime;
+    const newBestKills = kills > d.daily.bestKills;
+    if (newBestTime) d.daily.bestTime = timeSeconds;
+    if (newBestKills) d.daily.bestKills = kills;
     this.save();
     return { newBestTime, newBestKills };
   }

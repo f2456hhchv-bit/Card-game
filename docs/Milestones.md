@@ -87,8 +87,8 @@ Goal: replace placeholder geometry with premium, original procedural art.
 - [x] Light Motes shop: 9 permanent meta-upgrades, persisted, applied each run
 - [x] Second boss: **The Choir** (ranged, summons Casters); bosses now alternate
 - [x] Unlockable **Wardens** (4 characters, distinct starter weapon + perk)
+- [x] Offline-seeded **Daily Run** (fixed daily seed, equal footing, daily best)
 - [ ] Stage modifiers / more Wardens & weapons
-- [ ] Offline-seeded Daily Run
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen
 - [ ] Expanded achievement set

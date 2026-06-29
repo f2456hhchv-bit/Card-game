@@ -4,6 +4,26 @@
 
 Observations from playtests, and the actions they drive. Newest first.
 
+## 2026-06-29 — Offline Daily Run
+
+**Method:** In-browser flow + unit tests (seed determinism, daily-best record).
+
+**Observed:**
+- The Daily Run starts from a date-seeded world and is played on equal footing —
+  verified it ignores owned meta (Might 5 → damageMult 1) and forces the default
+  Lumen Warden even when Surge is selected. Game-over reads "DAILY RUN — THE
+  LIGHT FADES", the result records under today's date, and the menu line updates
+  to "Today's Daily — best …". No console errors.
+- Unit test confirms re-seeding from the same date yields identical early spawn
+  counts, validating the deterministic seed → spawn stream.
+
+**Design read / open questions:**
+1. Should Daily allow the player's *selected* Warden (just no meta), or stay
+   strictly Lumen? Current choice favours maximum fairness.
+2. A daily streak counter / shareable score would deepen the hook (future).
+3. True cross-player identical runs would need replay validation — out of scope;
+   seed-based daily is the pragmatic standard.
+
 ## 2026-06-29 — Second boss (The Choir) + Wardens
 
 **Method:** In-browser screenshots/flows of both features.

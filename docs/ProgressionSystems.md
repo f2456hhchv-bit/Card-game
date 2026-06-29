@@ -113,7 +113,20 @@ Selection + unlock state live in the save (`selectedWarden`, `wardens[]`).
 The perk applies in `Loadout.recomputeStats` in the order **base → Warden perk →
 meta upgrades → in-run relics**. Selected via the main-menu **Wardens** screen.
 
-**Planned (M3+):** stage modifiers, more Wardens/weapons, offline Daily Run.
+### Daily Run ✅
+A once-a-day challenge seeded from the **local calendar date**
+(`Rng.seedFromString("YYYY-MM-DD")` → `World.reseed`), so the run's generated
+content is the same for a given day. It is played on **equal footing** — the
+default Warden (Lumen) and **no permanent meta-upgrades** — making it a pure
+skill challenge rather than a meta-power flex. The day's **best time/kills** are
+tracked in `save.daily` (reset when the date rolls over) and shown on the menu.
+
+> Note: this is *seed-based* (everyone gets the same daily seed), not lockstep-
+> identical across players — fully verified identical outcomes would need replay
+> validation, which is out of scope. Determinism of the seed → spawn stream is
+> unit-tested.
+
+**Planned (M3+):** stage modifiers, more Wardens/weapons, daily streaks.
 
 ### Records & Achievements
 - **Records:** best survival time, most kills — shown on the main menu.

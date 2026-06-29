@@ -149,6 +149,11 @@ export class World {
     return ARENA_RADIUS;
   }
 
+  /** Re-seed the world RNG (used to start a deterministic Daily Run). */
+  reseed(seed: number): void {
+    this.rng.setState(seed);
+  }
+
   getOrbitOrbs(): readonly OrbitOrb[] {
     return this.orbitOrbs;
   }

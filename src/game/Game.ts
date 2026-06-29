@@ -9,7 +9,16 @@ import { SaveManager } from "./save/SaveManager";
 import { UIManager } from "../ui/UIManager";
 import type { DraftOption } from "./Loadout";
 import { metaMoteMultiplier } from "./data/metaDefs";
+import { Rng } from "../core/math/Rng";
 import { clamp } from "../core/math/MathUtils";
+
+/** Local calendar date as YYYY-MM-DD — the Daily Run seed source. */
+function dailyDateString(): string {
+  const d = new Date();
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 /** High-level game states. The simulation only advances while `playing`. */
 export type GameState = "menu" | "playing" | "paused" | "draft" | "gameover";
@@ -35,6 +44,9 @@ export class Game {
   private draftQueue = 0;
   private shakeRand = Math.random;
 
+  /** True while the current run is a Daily Run (fixed seed, equal footing). */
+  private isDailyRun = false;
+
   // First-run tutorial (non-blocking coach hints).
   private tutorialActive = false;
   private tutorialStep = 0;
@@ -50,10 +62,11 @@ export class Game {
     this.audio.settings = this.save.data.audio;
 
     this.ui = new UIManager(uiParent, this.save, this.audio, {
-      onStart: () => this.startRun(),
+      onStart: () => this.startRun(false),
+      onStartDaily: () => this.startRun(true),
       onPause: () => this.pause(),
       onResume: () => this.resume(),
-      onRestart: () => this.startRun(),
+      onRestart: () => this.startRun(this.isDailyRun),
       onToMenu: () => this.toMenu(),
       onPickDraft: (opt) => this.pickDraft(opt),
     });
@@ -141,12 +154,22 @@ export class Game {
 
   // ---- State transitions -------------------------------------------------
 
-  private startRun(): void {
+  private startRun(daily = false): void {
     this.audio.unlock();
-    // Apply permanent meta-upgrades + selected Warden to this run before reset.
-    this.world.metaLevels = this.save.data.meta;
-    this.world.selectedWarden = this.save.data.selectedWarden;
-    this.world.reset();
+    this.isDailyRun = daily;
+    if (daily) {
+      // Daily Run: a fair, equal challenge — fixed daily seed, default Warden,
+      // and no permanent meta-upgrades, so the run is the same for everyone.
+      this.world.metaLevels = {};
+      this.world.selectedWarden = "lumen";
+      this.world.reset();
+      this.world.reseed(Rng.seedFromString(dailyDateString()));
+    } else {
+      // Apply permanent meta-upgrades + selected Warden before resetting.
+      this.world.metaLevels = this.save.data.meta;
+      this.world.selectedWarden = this.save.data.selectedWarden;
+      this.world.reset();
+    }
     this.camera.snapTo(this.world.player.x, this.world.player.y);
     this.draftQueue = 0;
     this.applyAccessibility();
@@ -229,9 +252,12 @@ export class Game {
     const base = stats.elapsed * 0.5 + stats.kills * 0.2;
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     const records = this.save.recordRun(stats.elapsed, stats.kills, motes);
+    if (this.isDailyRun) {
+      this.save.recordDaily(dailyDateString(), stats.elapsed, stats.kills);
+    }
     this.checkAchievements();
     this.ui.hideHUD();
-    this.ui.showGameOver(stats, motes, records);
+    this.ui.showGameOver(stats, motes, records, this.isDailyRun);
   }
 
   private checkAchievements(): void {

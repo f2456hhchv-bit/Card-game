@@ -24,10 +24,12 @@ The vertical slice: a genuinely fun, complete core loop.
 - On-screen pause button + settings polish for touch
 - Tutorial / first-run onboarding
 
-## Later (v0.3) — Meta & Variety
-- Light Motes shop: unlockable Wardens, starting weapons, modifiers
-- **Daily Run** (offline-seeded from the date)
-- Challenge runs / mutators
+## Now (v0.3) — Meta & Variety (in progress)
+- ✅ Light Motes shop (9 permanent meta-upgrades)
+- ✅ Unlockable Wardens (4 characters, distinct starter + perk)
+- ✅ Second boss (The Choir); bosses alternate by encounter
+- ✅ **Daily Run** (offline-seeded from the date, equal footing, daily best)
+- Stage modifiers / mutators
 - Multiple stages with distinct visuals and enemy pools
 - Statistics screen and expanded achievements
 

@@ -21,9 +21,10 @@ Tracks performance targets, measurements, and optimisation decisions.
 | v0.2 (weapon FX + howto) | JS | 90.6 KB | 26.9 KB |
 | v0.3 (motes shop) | JS | 96.9 KB | 28.5 KB |
 | v0.3 (boss 2 + wardens) | JS | 101.8 KB | 29.8 KB |
+| v0.3 (daily run) | JS | 103.4 KB | 30.2 KB |
 | v0.3 | CSS | ~10 KB | ~2.7 KB |
 | v0.3 | HTML | 4.9 KB | 2.0 KB |
-| v0.3 | single-file HTML | ~104 KB | ~30 KB |
+| v0.3 | single-file HTML | ~106 KB | ~31 KB |
 
 > Single-file build is a classic IIFE (es2019) for `file://` compatibility; the
 > served build uses ES modules. See ArchitectureNotes / BUG-002.

@@ -17,6 +17,7 @@ import { formatTime } from "../core/format";
  */
 export interface UICallbacks {
   onStart(): void;
+  onStartDaily(): void;
   onPause(): void;
   onResume(): void;
   onRestart(): void;
@@ -247,6 +248,11 @@ export class UIManager {
     const play = this.el("button", "btn", "Begin Vigil");
     play.addEventListener("click", () => this.cb.onStart());
 
+    const dailyBtn = this.el("button", "btn secondary", "Daily Run");
+    dailyBtn.addEventListener("click", () => this.cb.onStartDaily());
+    const dailyLine = this.el("div", "daily-line");
+    dailyLine.id = "daily-line";
+
     const wardensBtn = this.el("button", "btn secondary", "Wardens");
     wardensBtn.addEventListener("click", () => this.openWardens());
 
@@ -264,11 +270,19 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, wardensBtn, shopBtn, howBtn, settingsBtn);
+    btnRow.append(play, dailyBtn, wardensBtn, shopBtn, howBtn, settingsBtn);
 
-    o.append(title, sub, stats, btnRow);
+    o.append(title, sub, stats, btnRow, dailyLine);
     this.root.appendChild(o);
     this.menu = o;
+  }
+
+  /** Today's local date as YYYY-MM-DD, matching Game's Daily Run seed. */
+  private todayString(): string {
+    const d = new Date();
+    const m = `${d.getMonth() + 1}`.padStart(2, "0");
+    const day = `${d.getDate()}`.padStart(2, "0");
+    return `${d.getFullYear()}-${m}-${day}`;
   }
 
   // ---- How to Play -------------------------------------------------------
@@ -502,6 +516,17 @@ export class UIManager {
       stat("Runs", `${d.runsPlayed}`),
       stat("Light Motes", `${d.motes}`),
     );
+
+    const dailyLine = this.menu.querySelector("#daily-line");
+    if (dailyLine) {
+      const today = this.todayString();
+      if (d.daily.date === today && (d.daily.bestTime > 0 || d.daily.bestKills > 0)) {
+        dailyLine.textContent =
+          `Today's Daily — best ${formatTime(d.daily.bestTime)} · ${d.daily.bestKills} felled`;
+      } else {
+        dailyLine.textContent = "Daily Run — a fair, fixed challenge. Not played today.";
+      }
+    }
   }
 
   showMenu(): void {
@@ -615,7 +640,10 @@ export class UIManager {
     stats: RunStats,
     motesEarned: number,
     records: { newBestTime: boolean; newBestKills: boolean },
+    daily = false,
   ): void {
+    const title = this.gameover.querySelector("#go-title");
+    if (title) title.textContent = daily ? "DAILY RUN — THE LIGHT FADES" : "THE LIGHT FADES";
     const container = this.gameover.querySelector("#go-stats");
     if (container) {
       const stat = (label: string, value: string, highlight = false) => {

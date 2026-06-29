@@ -26,6 +26,7 @@ interface SaveData {
   meta: Record<string, number>; // permanent meta-upgrade levels (metaDefs id→lvl)
   wardens: string[];          // unlocked Warden ids (default ["lumen"])
   selectedWarden: string;     // active Warden id (default "lumen")
+  daily: { date: string; bestTime: number; bestKills: number }; // today's Daily best
   audio: {
     master: number;           // 0..1
     sfx: number;              // 0..1
