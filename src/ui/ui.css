@@ -559,6 +559,15 @@
   color: var(--ui-good);
   cursor: default;
 }
+.warden-card.selected {
+  box-shadow: 0 0 0 2px var(--card-accent),
+    0 0 22px color-mix(in srgb, var(--card-accent) 40%, transparent);
+}
+.warden-weapon {
+  font-size: 0.78rem;
+  color: var(--ui-text-dim);
+  font-style: italic;
+}
 
 /* Settings rows. */
 .settings {

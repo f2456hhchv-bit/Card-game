@@ -66,13 +66,15 @@ export class BossController {
   }
 
   private phaseCadence(): number {
-    return this.phase === 0 ? 2.6 : this.phase === 1 ? 2.0 : 1.5;
+    const base = this.phase === 0 ? 2.6 : this.phase === 1 ? 2.0 : 1.5;
+    return base * this.def.cadenceMult;
   }
   private phaseTelegraph(): number {
     return this.phase === 0 ? 0.7 : this.phase === 1 ? 0.6 : 0.5;
   }
   private projectileSpeed(): number {
-    return this.phase === 0 ? 150 : this.phase === 1 ? 175 : 205;
+    const base = this.phase === 0 ? 150 : this.phase === 1 ? 175 : 205;
+    return base * this.def.projectileSpeedMult;
   }
 
   update(boss: Enemy, ctx: BossContext, dt: number): void {
@@ -121,11 +123,11 @@ export class BossController {
 
   /** On phase change, summon a wave of adds to ramp the pressure. */
   private onEnterPhase(boss: Enemy, ctx: BossContext): void {
-    const count = this.phase === 1 ? 4 : 6;
+    const count = this.phase === 1 ? this.def.addCounts[0] : this.def.addCounts[1];
     for (let i = 0; i < count; i++) {
       const a = (i / count) * TAU + ctx.rng.angle();
       const r = boss.radius + 60;
-      ctx.spawnAdd("husk", boss.x + Math.cos(a) * r, boss.y + Math.sin(a) * r);
+      ctx.spawnAdd(this.def.addType, boss.x + Math.cos(a) * r, boss.y + Math.sin(a) * r);
     }
     // Brief reprieve from ranged fire right after a summon.
     this.attackTimer = Math.max(this.attackTimer, 1.0);

@@ -97,8 +97,23 @@ purchase state in `save.meta` (id → level). Each upgrade has escalating costs.
 Meta upgrades apply in `Loadout.recomputeStats` (base → meta → in-run relics),
 wired via `World.metaLevels` which `Game` sets from the save each run.
 
-**Planned (M3+):** unlockable starting weapons / alternate Wardens / stage
-modifiers spent with Motes, alongside these stat upgrades.
+### Wardens ✅ (character select)
+Source of truth: `src/game/data/wardenDefs.ts`. Each **Warden** is a playable
+character with a different **starting weapon** and a small permanent **perk**
+(stat tilt). The first (Lumen) is free; others are unlocked with Light Motes.
+Selection + unlock state live in the save (`selectedWarden`, `wardens[]`).
+
+| Warden | Starter | Perk | Unlock |
+| --- | --- | --- | --- |
+| Lumen | Lumen Bolt | Balanced | free |
+| Vesper | Prism Shards | +15% Area, −10 Max HP | 250 |
+| Pyre | Nova Pulse | +12% Damage, −8% Move Speed | 350 |
+| Surge | Arc Coil | +12% Attack Speed, −15 Max HP | 350 |
+
+The perk applies in `Loadout.recomputeStats` in the order **base → Warden perk →
+meta upgrades → in-run relics**. Selected via the main-menu **Wardens** screen.
+
+**Planned (M3+):** stage modifiers, more Wardens/weapons, offline Daily Run.
 
 ### Records & Achievements
 - **Records:** best survival time, most kills — shown on the main menu.

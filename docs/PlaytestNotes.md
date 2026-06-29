@@ -4,6 +4,27 @@
 
 Observations from playtests, and the actions they drive. Newest first.
 
+## 2026-06-29 — Second boss (The Choir) + Wardens
+
+**Method:** In-browser screenshots/flows of both features.
+
+**Observed:**
+- **The Choir** reads as clearly distinct from The Maw: a cyan ring-of-eyes
+  silhouette (vs the spiked eye), faster bullets, and it summons Casters instead
+  of Husks — a bullet-dense fight rather than a melee swarm. Bosses now alternate
+  by encounter (Maw → Choir → Maw …), adding real late-run variety.
+- **Wardens** screen is clean and consistent with the shop: 4 characters with a
+  distinct starter weapon + perk. Verified unlock (Vesper −250 Motes, auto-
+  selected) and that selecting changes the run's starting weapon and applies the
+  perk (Surge → Arc Coil start + attack-speed perk). No console errors.
+
+**Design read / open questions:**
+1. Is the Choir's bullet density fair at the 6:00 timing, or too punishing for a
+   developing build? Needs live tuning.
+2. Warden balance: are the perks meaningful without being strictly better/worse?
+   Watch Surge (fragile) vs Pyre (slow) pick rates.
+3. Next M3: stage modifiers / offline Daily Run; more Wardens.
+
 ## 2026-06-29 — Light Motes shop (meta-progression, M3)
 
 **Method:** In-browser test of the shop purchase flow (seeded 1000 Motes).

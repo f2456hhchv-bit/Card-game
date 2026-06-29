@@ -80,8 +80,19 @@ phases gated by HP:
 Base 1600 HP, contact damage 22, projectile damage 12 (all scale up). Tuning in
 `src/game/data/bossDefs.ts`.
 
-> M2 ships this one fully-realised boss; the data/controller split lets more be
-> added with only new tuning. More bosses are tracked in the Roadmap.
+### The Choir — *Hollow Chorus* (`theChoir`)
+A fast, hovering ring studded with glowing eyes (a visually distinct cyan
+sprite). Where the Maw is a melee bruiser, the Choir is a **ranged terror**:
+faster bullets (×1.3 speed), a tighter attack cadence (×0.82), and it summons
+**Casters** (which themselves fire) on phase entry instead of melee Husks — a
+very different, bullet-dense fight. Base 1450 HP, contact 18, projectiles 11.
+
+Bosses **alternate by encounter** (`bossForEncounter` cycles the roster): The
+Maw at 3:00, The Choir at 6:00, The Maw at 9:00, and so on.
+
+> The data/controller split (`bossDefs` tuning + shared `BossController`) lets
+> new bosses be added with only new data + a sprite. More are tracked in the
+> Roadmap.
 
 ## Enemy projectiles ✅
 Hostile projectiles (`EnemyProjectile`) are pooled and tested against the

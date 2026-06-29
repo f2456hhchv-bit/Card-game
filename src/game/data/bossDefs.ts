@@ -3,9 +3,9 @@
  * run. A boss is realised as a special `Enemy` (with `isBoss = true`) driven by
  * the `BossController` state machine; this def supplies its identity and tuning.
  *
- * M2 ships one fully-realised boss, "The Maw". The structure is data-driven so
- * additional bosses can be added without controller changes beyond new attack
- * tuning.
+ * The roster cycles by encounter index, so successive bosses alternate for
+ * variety. Per-boss tuning (summon type/counts, attack cadence, projectile
+ * speed) lets bosses feel distinct without controller changes.
  */
 export interface BossDef {
   id: string;
@@ -21,6 +21,14 @@ export interface BossDef {
   hue: number;
   /** Damage of the boss's fired projectiles (scaled with time). */
   projectileDamage: number;
+  /** Enemy type summoned on phase transitions. */
+  addType: string;
+  /** Adds summoned entering phase 2 and phase 3 respectively. */
+  addCounts: [number, number];
+  /** Multiplier on projectile speed (>1 = faster, more dangerous bullets). */
+  projectileSpeedMult: number;
+  /** Multiplier on attack cadence (<1 = attacks more often). */
+  cadenceMult: number;
 }
 
 export const BOSS_DEFS: Record<string, BossDef> = {
@@ -34,6 +42,27 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     contactDamage: 22,
     hue: 292,
     projectileDamage: 12,
+    addType: "husk",
+    addCounts: [4, 6],
+    projectileSpeedMult: 1,
+    cadenceMult: 1,
+  },
+  theChoir: {
+    id: "theChoir",
+    name: "The Choir",
+    title: "Hollow Chorus",
+    baseHp: 1450,
+    speed: 60,
+    radius: 50,
+    contactDamage: 18,
+    hue: 196,
+    projectileDamage: 11,
+    // Summons ranged Casters — a very different, bullet-dense pressure than the
+    // Maw's melee Husk swarm. Fewer of them since each one also fires.
+    addType: "caster",
+    addCounts: [2, 3],
+    projectileSpeedMult: 1.3,
+    cadenceMult: 0.82,
   },
 };
 

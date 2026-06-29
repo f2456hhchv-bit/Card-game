@@ -9,6 +9,7 @@ import {
 } from "./data/weaponDefs";
 import { PASSIVE_DEFS, PASSIVE_LIST } from "./data/passiveDefs";
 import { applyMeta } from "./data/metaDefs";
+import { getWarden } from "./data/wardenDefs";
 import { clamp } from "../core/math/MathUtils";
 
 /** A live weapon the Warden carries, with its current level and fire timer. */
@@ -72,11 +73,14 @@ export class Loadout {
   readonly passives = new Map<string, number>();
   /** Permanent meta-upgrade levels (set by World from the save each run). */
   metaLevels: Record<string, number> = {};
+  /** Selected Warden id (set by World from the save each run). */
+  wardenId = "lumen";
 
   reset(): void {
     this.weapons.length = 0;
     this.passives.clear();
-    const starter = getStarterWeapon();
+    const starterId = getWarden(this.wardenId).starterWeapon;
+    const starter = WEAPON_DEFS[starterId] ?? getStarterWeapon();
     this.weapons.push({ def: starter, level: 1, cooldownRemaining: 0 });
   }
 
@@ -100,7 +104,8 @@ export class Loadout {
    */
   recomputeStats(player: Player): void {
     const s = { ...player.base };
-    // Permanent meta-upgrades apply to the base before in-run relics.
+    // Order: base → Warden perk → permanent meta → in-run relics.
+    getWarden(this.wardenId).applyPerk?.(s);
     applyMeta(s, this.metaLevels);
     for (const [id, level] of this.passives) {
       const def = PASSIVE_DEFS[id];

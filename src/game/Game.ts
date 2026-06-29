@@ -143,8 +143,9 @@ export class Game {
 
   private startRun(): void {
     this.audio.unlock();
-    // Apply permanent meta-upgrades to this run before resetting the world.
+    // Apply permanent meta-upgrades + selected Warden to this run before reset.
     this.world.metaLevels = this.save.data.meta;
+    this.world.selectedWarden = this.save.data.selectedWarden;
     this.world.reset();
     this.camera.snapTo(this.world.player.x, this.world.player.y);
     this.draftQueue = 0;

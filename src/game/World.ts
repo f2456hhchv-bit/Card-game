@@ -69,6 +69,8 @@ export class World {
 
   /** Permanent meta-upgrade levels, supplied by Game from the save profile. */
   metaLevels: Record<string, number> = {};
+  /** Selected Warden id, supplied by Game from the save profile. */
+  selectedWarden = "lumen";
 
   readonly enemies: Enemy[] = [];
   readonly projectiles: Projectile[] = [];
@@ -178,8 +180,9 @@ export class World {
     this.arcs.length = 0;
 
     this.player.reset();
-    this.loadout.reset();
     this.loadout.metaLevels = this.metaLevels;
+    this.loadout.wardenId = this.selectedWarden;
+    this.loadout.reset();
     this.loadout.recomputeStats(this.player);
     this.player.hp = this.player.stats.maxHp;
     this.spawnDirector.reset();

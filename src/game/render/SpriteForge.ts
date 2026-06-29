@@ -461,6 +461,46 @@ function bakeMaw(hue: number): Sprite {
   });
 }
 
+/** The Choir (boss) — a hovering ring studded with glowing eyes. */
+function bakeChoir(hue: number): Sprite {
+  return bake((ctx) => {
+    glow(ctx, BODY_R * 1.7, hue, 0.4);
+    // Thick dark annulus with a rim-light.
+    ctx.lineWidth = BODY_R * 0.42;
+    const ringR = BODY_R * 0.74;
+    const rg = ctx.createLinearGradient(0, -ringR, 0, ringR);
+    rg.addColorStop(0, hsl(hue, 60, 42));
+    rg.addColorStop(1, hsl(hue, 70, 16));
+    ctx.strokeStyle = rg;
+    ctx.beginPath();
+    ctx.arc(0, 0, ringR, 0, TAU);
+    ctx.stroke();
+    // Outer rim highlight.
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = hsl(hue, 90, 70, 0.8);
+    ctx.beginPath();
+    ctx.arc(0, 0, ringR + BODY_R * 0.21, 0, TAU);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, ringR - BODY_R * 0.21, 0, TAU);
+    ctx.stroke();
+    // A chorus of eyes around the ring.
+    const eyes = 6;
+    for (let i = 0; i < eyes; i++) {
+      const a = (i / eyes) * TAU;
+      eye(ctx, Math.cos(a) * ringR, Math.sin(a) * ringR, BODY_R * 0.13, hue + 18);
+    }
+    // Central void with a faint singing glow.
+    const cg = ctx.createRadialGradient(0, 0, 0, 0, 0, BODY_R * 0.42);
+    cg.addColorStop(0, hsl(hue, 100, 70, 0.5));
+    cg.addColorStop(1, hsl(hue, 100, 60, 0));
+    ctx.fillStyle = cg;
+    ctx.beginPath();
+    ctx.arc(0, 0, BODY_R * 0.42, 0, TAU);
+    ctx.fill();
+  });
+}
+
 // ---- Pickups ----------------------------------------------------------------
 
 function bakeXpShard(): Sprite {
@@ -506,8 +546,8 @@ function bakeBauble(hue: number, glyph: string): Sprite {
 export class SpriteForge {
   readonly warden: Sprite;
   readonly shadow: Sprite;
-  readonly boss: Sprite;
-  readonly bossFlash: Sprite;
+  private readonly bosses = new Map<string, Sprite>();
+  private readonly bossFlashes = new Map<string, Sprite>();
   private readonly enemies = new Map<string, Sprite>();
   private readonly enemyFlash = new Map<string, Sprite>();
   private readonly pickups = new Map<string, Sprite>();
@@ -515,8 +555,18 @@ export class SpriteForge {
   constructor() {
     this.warden = bakeWarden();
     this.shadow = bakeShadow();
-    this.boss = bakeMaw(292);
-    this.bossFlash = whiteMask(this.boss);
+
+    // Boss sprites, keyed by boss id.
+    const bossBakers: Record<string, (hue: number) => Sprite> = {
+      theMaw: bakeMaw,
+      theChoir: bakeChoir,
+    };
+    const bossHues: Record<string, number> = { theMaw: 292, theChoir: 196 };
+    for (const id of Object.keys(bossBakers)) {
+      const s = bossBakers[id](bossHues[id]);
+      this.bosses.set(id, s);
+      this.bossFlashes.set(id, whiteMask(s));
+    }
 
     const defs: Record<string, (hue: number) => Sprite> = {
       drifter: bakeDrifter,
@@ -555,6 +605,12 @@ export class SpriteForge {
   }
   enemyWhite(typeId: string): Sprite {
     return this.enemyFlash.get(typeId) ?? this.enemyFlash.get("drifter")!;
+  }
+  bossSprite(id: string): Sprite {
+    return this.bosses.get(id) ?? this.bosses.get("theMaw")!;
+  }
+  bossWhite(id: string): Sprite {
+    return this.bossFlashes.get(id) ?? this.bossFlashes.get("theMaw")!;
   }
   pickup(kind: string): Sprite {
     return this.pickups.get(kind) ?? this.pickups.get("xp")!;

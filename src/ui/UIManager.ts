@@ -4,6 +4,8 @@ import type { DraftOption } from "../game/Loadout";
 import type { SaveManager } from "../game/save/SaveManager";
 import type { AudioManager } from "../game/audio/AudioManager";
 import { META_LIST } from "../game/data/metaDefs";
+import { WARDEN_LIST } from "../game/data/wardenDefs";
+import { WEAPON_DEFS } from "../game/data/weaponDefs";
 import { formatTime } from "../core/format";
 
 /**
@@ -88,6 +90,7 @@ export class UIManager {
     this.buildSettings();
     this.buildHowTo();
     this.buildShop();
+    this.buildWardens();
   }
 
   // ---- HUD ---------------------------------------------------------------
@@ -244,6 +247,9 @@ export class UIManager {
     const play = this.el("button", "btn", "Begin Vigil");
     play.addEventListener("click", () => this.cb.onStart());
 
+    const wardensBtn = this.el("button", "btn secondary", "Wardens");
+    wardensBtn.addEventListener("click", () => this.openWardens());
+
     const shopBtn = this.el("button", "btn secondary", "Shop");
     shopBtn.addEventListener("click", () => this.openShop());
 
@@ -258,7 +264,7 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, shopBtn, howBtn, settingsBtn);
+    btnRow.append(play, wardensBtn, shopBtn, howBtn, settingsBtn);
 
     o.append(title, sub, stats, btnRow);
     this.root.appendChild(o);
@@ -386,6 +392,96 @@ export class UIManager {
   private closeShop(): void {
     this.shop.classList.add("hidden");
     this.refreshMenuStats(); // balance may have changed
+    this.menu.classList.remove("hidden");
+  }
+
+  // ---- Wardens (character select) ----------------------------------------
+
+  private wardens!: HTMLDivElement;
+  private wardensBalance!: HTMLDivElement;
+  private wardensGrid!: HTMLDivElement;
+
+  private buildWardens(): void {
+    const o = this.el("div", "overlay hidden");
+    const title = this.el("h2", undefined, "WARDENS");
+    this.wardensBalance = this.el("div", "shop-balance");
+    this.wardensGrid = this.el("div", "shop-grid");
+    const back = this.el("button", "btn", "Back");
+    back.addEventListener("click", () => this.closeWardens());
+    o.append(title, this.wardensBalance, this.wardensGrid, back);
+    this.root.appendChild(o);
+    this.wardens = o;
+  }
+
+  private refreshWardens(): void {
+    const d = this.save.data;
+    this.wardensBalance.textContent = `✦ ${d.motes} Light Motes`;
+    this.wardensGrid.replaceChildren();
+    for (const def of WARDEN_LIST) {
+      const unlocked = d.wardens.includes(def.id);
+      const selected = d.selectedWarden === def.id;
+      const starter = WEAPON_DEFS[def.starterWeapon]?.name ?? def.starterWeapon;
+
+      const card = this.el("div", "shop-card warden-card");
+      card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
+      if (selected) card.classList.add("selected");
+
+      const head = this.el("div", "shop-card-head");
+      head.append(
+        this.el("div", "shop-name", def.name),
+        this.el("div", "shop-level", selected ? "★ Selected" : unlocked ? "Owned" : "Locked"),
+      );
+      const desc = this.el("div", "shop-desc", def.description);
+      const perk = this.el("div", "shop-next", def.perk);
+      const weap = this.el("div", "warden-weapon", `Starts with: ${starter}`);
+
+      const btn = this.el("button", "btn buy");
+      if (selected) {
+        btn.textContent = "SELECTED";
+        btn.classList.add("maxed");
+        btn.disabled = true;
+      } else if (unlocked) {
+        btn.textContent = "Select";
+        btn.addEventListener("click", () => this.selectWarden(def.id));
+      } else {
+        btn.textContent = `✦ ${def.unlockCost}`;
+        const affordable = d.motes >= def.unlockCost;
+        btn.disabled = !affordable;
+        if (!affordable) btn.classList.add("cant-afford");
+        btn.addEventListener("click", () => this.unlockWarden(def.id));
+      }
+      card.append(head, desc, perk, weap, btn);
+      this.wardensGrid.appendChild(card);
+    }
+  }
+
+  private selectWarden(id: string): void {
+    this.save.data.selectedWarden = id;
+    this.save.save();
+    this.audio.select();
+    this.refreshWardens();
+  }
+
+  private unlockWarden(id: string): void {
+    const d = this.save.data;
+    const def = WARDEN_LIST.find((w) => w.id === id);
+    if (!def || d.wardens.includes(id) || d.motes < def.unlockCost) return;
+    d.motes -= def.unlockCost;
+    d.wardens.push(id);
+    d.selectedWarden = id; // auto-select the newly unlocked Warden
+    this.save.save();
+    this.audio.levelUp();
+    this.refreshWardens();
+  }
+
+  private openWardens(): void {
+    this.refreshWardens();
+    this.menu.classList.add("hidden");
+    this.wardens.classList.remove("hidden");
+  }
+  private closeWardens(): void {
+    this.wardens.classList.add("hidden");
+    this.refreshMenuStats();
     this.menu.classList.remove("hidden");
   }
 

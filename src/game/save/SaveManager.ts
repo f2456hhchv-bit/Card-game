@@ -34,6 +34,10 @@ export interface SaveData {
   tutorialSeen: boolean;
   /** Permanent meta-upgrade levels, keyed by upgrade id (see metaDefs). */
   meta: Record<string, number>;
+  /** Unlocked Warden ids. */
+  wardens: string[];
+  /** Currently selected Warden id. */
+  selectedWarden: string;
   audio: AudioSettings;
   accessibility: AccessibilitySettings;
 }
@@ -49,6 +53,8 @@ function defaultSave(): SaveData {
     achievements: [],
     tutorialSeen: false,
     meta: {},
+    wardens: ["lumen"],
+    selectedWarden: "lumen",
     audio: { master: 0.8, sfx: 0.9, music: 0.5, muted: false },
     accessibility: {
       reduceMotion: false,
@@ -91,6 +97,8 @@ export class SaveManager {
       version: SAVE_VERSION,
       tutorialSeen,
       meta: parsed.meta ?? {},
+      wardens: parsed.wardens ?? ["lumen"],
+      selectedWarden: parsed.selectedWarden ?? "lumen",
       audio: { ...base.audio, ...(parsed.audio ?? {}) },
       accessibility: { ...base.accessibility, ...(parsed.accessibility ?? {}) },
       achievements: parsed.achievements ?? [],

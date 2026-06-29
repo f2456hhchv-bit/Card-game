@@ -201,9 +201,17 @@ export class GameRenderer {
     }
 
     const rot = this.reduceMotion ? 0 : t * 0.35;
-    this.blit(ctx, this.forge.boss, x, y, r * 1.2, rot);
+    this.blit(ctx, this.forge.bossSprite(boss.typeId), x, y, r * 1.2, rot);
     if (boss.hitFlash > 0) {
-      this.blit(ctx, this.forge.bossFlash, x, y, r * 1.2, rot, Math.min(1, boss.hitFlash / 0.08));
+      this.blit(
+        ctx,
+        this.forge.bossWhite(boss.typeId),
+        x,
+        y,
+        r * 1.2,
+        rot,
+        Math.min(1, boss.hitFlash / 0.08),
+      );
     }
   }
 
