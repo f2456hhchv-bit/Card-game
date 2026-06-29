@@ -58,7 +58,7 @@ export class SpawnDirector {
   }
 
   private availableDefs(minutes: number): EnemyDef[] {
-    return ENEMY_LIST.filter((d) => minutes >= d.unlockAtMinutes);
+    return ENEMY_LIST.filter((d) => !d.summonOnly && minutes >= d.unlockAtMinutes);
   }
 
   /**

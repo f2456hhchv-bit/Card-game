@@ -779,6 +779,16 @@ export class World {
       this.onBossDefeated(e);
     } else {
       this.dropLoot(e);
+      // Splitters burst into a cluster of smaller enemies on death.
+      const def = ENEMY_DEFS[e.typeId];
+      if (def?.splitInto && !e.isElite) {
+        const count = def.splitCount ?? 2;
+        for (let i = 0; i < count; i++) {
+          const a = (i / count) * TAU + this.rng.range(-0.4, 0.4);
+          const d = e.radius + 6;
+          this.spawnAdd(def.splitInto, e.x + Math.cos(a) * d, e.y + Math.sin(a) * d);
+        }
+      }
     }
 
     // Remove from the live list (swap-pop) and recycle.
@@ -915,6 +925,31 @@ export class World {
       pt.hue = 48; // warm gold, matching crit numbers
       pt.alpha = 1;
       pt.drag = 0.85;
+      pt.shape = "spark";
+      pt.active = true;
+      this.particles.push(pt);
+    }
+  }
+
+  /** A celebratory golden burst at the Warden — used when a weapon evolves. */
+  spawnEvolveBurst(): void {
+    const p = this.player;
+    this.spawnRing(p.x, p.y, 48, p.radius * 1.1, 0.7);
+    this.spawnRing(p.x, p.y, 45, p.radius * 0.7, 0.9);
+    for (let i = 0; i < 26; i++) {
+      const pt = this.particlePool.obtain();
+      const a = this.rng.angle();
+      const sp = this.rng.range(80, 280);
+      pt.x = p.x;
+      pt.y = p.y;
+      pt.vx = Math.cos(a) * sp;
+      pt.vy = Math.sin(a) * sp;
+      pt.life = 0;
+      pt.maxLife = this.rng.range(0.4, 0.8);
+      pt.size = this.rng.range(2, 4.5);
+      pt.hue = this.rng.range(44, 54);
+      pt.alpha = 1;
+      pt.drag = 0.9;
       pt.shape = "spark";
       pt.active = true;
       this.particles.push(pt);

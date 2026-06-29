@@ -29,6 +29,8 @@ scales HP and damage upward over time (see `docs/BalancingNotes.md`).
 | `lunger` | Lunger | charger | 22 | 70 | 14 | 14 | 3 | 340 | 35 | 3:30 |
 | `wisp` | Wisp | orbiter | 16 | 96 | 8 | 11 | 2 | 160 | 30 | 5:00 |
 | `caster` | Caster | shooter | 20 | 70 | 10 | 13 | 4 | 320 | 28 | 4:00 |
+| `spore` | Spore | chase | 30 | 50 | 10 | 17 | 3 | 95 | 32 | 2:30 |
+| `sporeling` | Sporeling | chase | 5 | 118 | 6 | 8 | 1 | 85 | — | split-only |
 
 - **Weight** = relative spawn frequency among currently-unlocked types.
 - **Unlocks** = run-time minute the type begins appearing.
@@ -40,6 +42,11 @@ scales HP and damage upward over time (see `docs/BalancingNotes.md`).
 - **Wisp:** punishes tunnel vision; can't be out-run in a straight line.
 - **Caster:** the first *ranged* threat — adds bullets to dodge, so the player
   can no longer treat empty space as safe. Strafes and keeps its distance.
+- **Spore:** a slow lumpy sac that **bursts into 3 fast Sporelings** when killed
+  (`splitInto`/`splitCount` in the def). Punishes ignoring it and creates sudden
+  swarm pressure — killing it without AoE just trades one threat for three
+  faster ones. Elite Spores don't split (avoids run-away counts). Sporelings are
+  `summonOnly`, so the spawn director never spawns them directly.
 
 ## Elites
 Any archetype can spawn as an **elite**: larger, glowing, with a shadowed

@@ -205,6 +205,12 @@ export class Game {
   private pickDraft(option: DraftOption): void {
     this.world.loadout.applyDraft(option, this.world.player);
     this.draftQueue = Math.max(0, this.draftQueue - 1);
+    // A weapon evolution is a build-defining moment — celebrate it.
+    if (option.kind === "weapon-evolve") {
+      this.world.spawnEvolveBurst();
+      this.camera.addShake(10, 0.5);
+      this.audio.evolveFanfare();
+    }
     this.ui.hideDraft();
     this.state = "playing";
     // Immediately surface the next draft if more level-ups are queued.

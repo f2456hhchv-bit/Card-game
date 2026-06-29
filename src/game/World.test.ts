@@ -105,6 +105,25 @@ describe("World — combat integration", () => {
     expect(world.stats.damageDealt).toBeGreaterThan(0); // chain dealt damage
   });
 
+  it("a Spore bursts into Sporelings when destroyed", () => {
+    const world = new World(21);
+    world.reset();
+    // Spawn a Spore directly (spawnAdd is internal; cast for the test).
+    (world as unknown as { spawnAdd(id: string, x: number, y: number): void }).spawnAdd(
+      "spore",
+      0,
+      0,
+    );
+    const spore = world.enemies.find((e) => e.typeId === "spore");
+    expect(spore).toBeDefined();
+    world.damageEnemy(spore!, 99999, false, 0, 0);
+    const sporelings = world.enemies.filter((e) => e.typeId === "sporeling");
+    expect(sporelings.length).toBe(3);
+    // The split product is summon-only and must not chain-split further.
+    world.damageEnemy(sporelings[0], 99999, false, 0, 0);
+    expect(world.enemies.filter((e) => e.typeId === "sporeling").length).toBe(2);
+  });
+
   it("kills award XP and can trigger a level-up draft", () => {
     const world = new World(99);
     world.reset();

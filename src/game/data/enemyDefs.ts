@@ -20,6 +20,11 @@ export interface EnemyDef {
   weight: number;
   /** Minutes into the run before this type begins appearing. */
   unlockAtMinutes: number;
+  /** If true, never spawned by the director directly — only summoned/split. */
+  summonOnly?: boolean;
+  /** On death, spawn this many of `splitInto` (a splitter enemy). */
+  splitInto?: string;
+  splitCount?: number;
 }
 
 /**
@@ -104,6 +109,36 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     hue: 320,
     weight: 28,
     unlockAtMinutes: 4,
+  },
+  spore: {
+    id: "spore",
+    name: "Spore",
+    behaviour: "chase",
+    hp: 30,
+    speed: 50,
+    damage: 10,
+    radius: 17,
+    xpValue: 3,
+    hue: 95,
+    weight: 32,
+    unlockAtMinutes: 2.5,
+    // Bursts into a cluster of fast Sporelings when destroyed.
+    splitInto: "sporeling",
+    splitCount: 3,
+  },
+  sporeling: {
+    id: "sporeling",
+    name: "Sporeling",
+    behaviour: "chase",
+    hp: 5,
+    speed: 118,
+    damage: 6,
+    radius: 8,
+    xpValue: 1,
+    hue: 85,
+    weight: 0,
+    unlockAtMinutes: 0,
+    summonOnly: true, // only created by a Spore splitting
   },
 };
 

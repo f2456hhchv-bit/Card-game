@@ -358,6 +358,76 @@ function bakeCaster(hue: number): Sprite {
   });
 }
 
+/** Spore — a bulbous, lumpy sac that bursts on death; glowing pods. */
+function bakeSpore(hue: number): Sprite {
+  return bake((ctx) => {
+    glow(ctx, BODY_R * 1.3, hue, 0.18);
+    const g = ctx.createRadialGradient(-BODY_R * 0.2, -BODY_R * 0.2, BODY_R * 0.2, 0, 0, BODY_R);
+    g.addColorStop(0, hsl(hue, 55, 45));
+    g.addColorStop(1, hsl(hue, 65, 20));
+    ctx.fillStyle = g;
+    ctx.strokeStyle = hsl(hue, 70, 58, 0.85);
+    ctx.lineWidth = 2;
+    // Lumpy blob: a circle perturbed by low-frequency bumps.
+    ctx.beginPath();
+    const n = 14;
+    for (let i = 0; i <= n; i++) {
+      const a = (i / n) * TAU;
+      const rr = BODY_R * (0.82 + 0.16 * Math.sin(a * 3) + 0.06 * Math.cos(a * 5));
+      const px = Math.cos(a) * rr;
+      const py = Math.sin(a) * rr;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Glowing pods (the seeds that will burst out).
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * TAU + 0.6;
+      const px = Math.cos(a) * BODY_R * 0.4;
+      const py = Math.sin(a) * BODY_R * 0.4;
+      ctx.save();
+      ctx.shadowColor = hsl(hue + 10, 100, 70, 1);
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = hsl(hue + 10, 100, 72, 1);
+      ctx.beginPath();
+      ctx.arc(px, py, BODY_R * 0.13, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
+    eye(ctx, 0, -BODY_R * 0.05, BODY_R * 0.14, hue + 20);
+  });
+}
+
+/** Sporeling — a tiny, fast spiked seed. */
+function bakeSporeling(hue: number): Sprite {
+  return bake((ctx) => {
+    glow(ctx, BODY_R * 0.9, hue, 0.25);
+    ctx.fillStyle = hsl(hue, 70, 50);
+    ctx.strokeStyle = hsl(hue, 85, 68, 0.9);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const rr = i % 2 === 0 ? BODY_R * 0.85 : BODY_R * 0.45;
+      const a = (i / 10) * TAU;
+      const px = Math.cos(a) * rr;
+      const py = Math.sin(a) * rr;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = hsl(hue + 10, 100, 75, 1);
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(0, 0, BODY_R * 0.2, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
 /** The Maw (boss) — a roiling spiked mass with a great central eye. */
 function bakeMaw(hue: number): Sprite {
   return bake((ctx) => {
@@ -455,6 +525,8 @@ export class SpriteForge {
       lunger: bakeLunger,
       wisp: bakeWisp,
       caster: bakeCaster,
+      spore: bakeSpore,
+      sporeling: bakeSporeling,
     };
     const hues: Record<string, number> = {
       drifter: 280,
@@ -463,6 +535,8 @@ export class SpriteForge {
       lunger: 340,
       wisp: 160,
       caster: 320,
+      spore: 95,
+      sporeling: 85,
     };
     for (const id of Object.keys(defs)) {
       const s = defs[id](hues[id]);

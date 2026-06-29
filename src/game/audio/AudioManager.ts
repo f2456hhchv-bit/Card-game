@@ -147,6 +147,17 @@ export class AudioManager {
     setTimeout(() => this.tone(880, 0.3, "sine", 0.26), 240);
   }
 
+  /** Grand rising fanfare when a weapon evolves. */
+  evolveFanfare(): void {
+    const notes = [523, 659, 784, 1047];
+    notes.forEach((f, i) => {
+      setTimeout(() => {
+        this.tone(f, 0.22, "triangle", 0.22);
+        this.tone(f * 1.005, 0.22, "sine", 0.12);
+      }, i * 80);
+    });
+  }
+
   /** Sparse ambient pulse, advanced from the render loop. */
   updateMusic(frameDt: number, intensity: number): void {
     if (!this.ctx || !this.musicGain || this.settings.muted) return;
