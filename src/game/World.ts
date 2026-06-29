@@ -45,6 +45,10 @@ export interface GameEvents {
   bombDetonate: { x: number; y: number };
   bossSpawned: { name: string; title: string };
   bossDefeated: { x: number; y: number };
+  /** Aegis perk fired: the Warden cheated death this run. */
+  revived: { x: number; y: number };
+  /** Overdrive perk fired: a light pulse damaged nearby foes. */
+  pulse: { x: number; y: number; radius: number };
 }
 
 /** Position of an orbit-weapon orb, mirrored out for the renderer. */
@@ -70,8 +74,22 @@ export class World {
 
   /** Permanent meta-upgrade levels, supplied by Game from the save profile. */
   metaLevels: Record<string, number> = {};
+  /** Ship module gear, supplied by Game from the save profile. */
+  modules: Record<string, import("./data/gearDefs").ModuleState> = {};
   /** Selected Warden id, supplied by Game from the save profile. */
   selectedWarden = "lumen";
+
+  /** Reactor "Overdrive" pulse timer (seconds until next pulse). */
+  private pulseTimer = 0;
+  /** Visual radius of the last Overdrive pulse (read by the renderer). */
+  pulseFx = 0;
+  /** Aegis "revive" charges remaining this run (from Plating perk). */
+  private revivesLeft = 0;
+
+  /** How often the Overdrive light pulse fires, in seconds. */
+  private static readonly PULSE_INTERVAL = 3;
+  /** World-unit radius of the Overdrive light pulse. */
+  private static readonly PULSE_RADIUS = 150;
 
   readonly enemies: Enemy[] = [];
   readonly projectiles: Projectile[] = [];
@@ -188,10 +206,15 @@ export class World {
 
     this.player.reset();
     this.loadout.metaLevels = this.metaLevels;
+    this.loadout.modules = this.modules;
     this.loadout.wardenId = this.selectedWarden;
     this.loadout.reset();
     this.loadout.recomputeStats(this.player);
     this.player.hp = this.player.stats.maxHp;
+    // Snapshot the run's revive charges from the merged stat block.
+    this.revivesLeft = this.player.stats.revive;
+    this.pulseTimer = World.PULSE_INTERVAL;
+    this.pulseFx = 0;
     this.spawnDirector.reset();
 
     this.stats.elapsed = 0;
@@ -302,6 +325,38 @@ export class World {
     this.updateEnemies(dt);
     this.updateEnemyProjectiles(dt);
     this.updatePickups(dt);
+    this.updateOverdrive(dt);
+  }
+
+  /**
+   * Reactor "Overdrive" perk: periodically emit a light pulse that damages
+   * every enemy within range. Inert unless the perk is unlocked (pulseDamage>0).
+   */
+  private updateOverdrive(dt: number): void {
+    const dmg = this.player.stats.pulseDamage;
+    if (dmg <= 0) return;
+    this.pulseTimer -= dt;
+    if (this.pulseTimer > 0) return;
+    this.pulseTimer = World.PULSE_INTERVAL;
+
+    const px = this.player.x;
+    const py = this.player.y;
+    const r = World.PULSE_RADIUS * Math.sqrt(this.player.stats.areaMult);
+    const r2 = r * r;
+    const scaled = dmg * this.player.stats.damageMult;
+    const near = this.enemyGrid.query(px, py, r);
+    for (let i = 0; i < near.length; i++) {
+      const e = near[i];
+      if (!e.active) continue;
+      const dx = e.x - px;
+      const dy = e.y - py;
+      if (dx * dx + dy * dy > r2) continue;
+      const inv = 1 / (Math.hypot(dx, dy) || 1);
+      this.damageEnemy(e, scaled, false, dx * inv * 90, dy * inv * 90);
+    }
+    this.pulseFx = r;
+    this.spawnRing(px, py, 30, r, 0.45);
+    this.events.emit("pulse", { x: px, y: py, radius: r });
   }
 
   // ---- Boss lifecycle ----------------------------------------------------
@@ -874,10 +929,19 @@ export class World {
     if (p.invuln > 0 || this.isDead) return;
     const reduced = amount * (1 - p.stats.armor);
     p.hp -= reduced;
-    p.invuln = 0.5;
+    p.invuln = p.stats.iframes;
     p.hitFlash = 0.25;
     this.events.emit("playerHit", { damage: reduced });
     if (p.hp <= 0) {
+      // Aegis (Plating max-grade): cheat death once per run, recover to 35% HP.
+      if (this.revivesLeft > 0) {
+        this.revivesLeft--;
+        p.hp = p.stats.maxHp * 0.35;
+        p.invuln = 1.5;
+        this.spawnRing(p.x, p.y, 210, p.radius * 1.4, 0.8);
+        this.events.emit("revived", { x: p.x, y: p.y });
+        return;
+      }
       p.hp = 0;
       this.isDead = true;
       this.events.emit("playerDied", {});
@@ -992,6 +1056,10 @@ export class World {
 
   /** Cosmetic update — runs on real frame time for smoothness. */
   updateCosmetic(frameDt: number): void {
+    // Fade the Overdrive pulse marker the renderer reads.
+    if (this.pulseFx > 0) {
+      this.pulseFx = Math.max(0, this.pulseFx - frameDt * 600);
+    }
     // Particles.
     const ps = this.particles;
     for (let i = ps.length - 1; i >= 0; i--) {

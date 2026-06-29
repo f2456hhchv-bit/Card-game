@@ -124,6 +124,68 @@ describe("World — combat integration", () => {
     expect(world.enemies.filter((e) => e.typeId === "sporeling").length).toBe(2);
   });
 
+  it("Aegis (Plating max grade) cheats death once, then dies on the next lethal hit", () => {
+    const world = new World(123);
+    world.modules = { plating: { grade: 5, dupes: 0 } };
+    world.reset();
+    expect(world.player.stats.revive).toBe(1);
+
+    let revived = 0;
+    let died = false;
+    world.events.on("revived", () => revived++);
+    world.events.on("playerDied", () => (died = true));
+
+    // First lethal hit is survived at 35% HP.
+    world.player.invuln = 0;
+    world.damagePlayer(1e9);
+    expect(revived).toBe(1);
+    expect(died).toBe(false);
+    expect(world.isDead).toBe(false);
+    expect(world.player.hp).toBeCloseTo(world.player.stats.maxHp * 0.35);
+
+    // Second lethal hit (after the i-frames lapse) actually kills.
+    world.player.invuln = 0;
+    world.damagePlayer(1e9);
+    expect(died).toBe(true);
+    expect(world.isDead).toBe(true);
+  });
+
+  it("Overdrive (Reactor max grade) emits a damaging pulse around the ship", () => {
+    const world = new World(456);
+    world.modules = { reactor: { grade: 5, dupes: 0 } };
+    world.reset();
+    expect(world.player.stats.pulseDamage).toBeGreaterThan(0);
+
+    // Put an enemy point-blank and make the Warden unkillable.
+    world.player.stats.maxHp = 1e9;
+    world.player.hp = 1e9;
+    (world as unknown as { spawnAdd(id: string, x: number, y: number): void }).spawnAdd(
+      "husk",
+      20,
+      0,
+    );
+    const enemy = world.enemies[0];
+    const startHp = enemy.hp;
+    let pulsed = false;
+    world.events.on("pulse", () => (pulsed = true));
+
+    // Step past the pulse interval (3s).
+    for (let i = 0; i < 60 * 4 && !pulsed; i++) world.step(1 / 60, STILL);
+    expect(pulsed).toBe(true);
+    expect(enemy.hp).toBeLessThan(startHp);
+  });
+
+  it("uses the player's iframes stat for the post-hit invulnerability window", () => {
+    const world = new World(77);
+    world.modules = { thrusters: { grade: 5, dupes: 0 } }; // Slipstream: +iframes
+    world.reset();
+    world.player.invuln = 0;
+    world.player.hp = world.player.stats.maxHp;
+    world.damagePlayer(5);
+    expect(world.player.invuln).toBeCloseTo(world.player.stats.iframes);
+    expect(world.player.stats.iframes).toBeGreaterThan(0.5); // boosted by Slipstream
+  });
+
   it("kills award XP and can trigger a level-up draft", () => {
     const world = new World(99);
     world.reset();

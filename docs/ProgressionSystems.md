@@ -1,6 +1,6 @@
 # AFTERLIGHT — Progression Systems
 
-**Last updated:** 2026-06-28
+**Last updated:** 2026-06-29
 
 Covers both in-run progression and persistent meta-progression.
 
@@ -112,6 +112,36 @@ Selection + unlock state live in the save (`selectedWarden`, `wardens[]`).
 
 The perk applies in `Loadout.recomputeStats` in the order **base → Warden perk →
 meta upgrades → in-run relics**. Selected via the main-menu **Wardens** screen.
+
+### Ship Modules & the Hangar ✅ (gear + merge/fusion)
+The Guardian is a **starship**, so its equippable gear is **ship systems** rather
+than armour pieces. Source of truth: `src/game/data/gearDefs.ts`; merge state in
+`save.modules` (id → `{ grade, dupes }`).
+
+| Module | Slot | Stats / grade | ★ Max-grade perk |
+| --- | --- | --- | --- |
+| Aegis Plating | Hull | +7 Max HP, +2% armour | **Aegis** — survive one lethal hit/run, recover to 35% HP |
+| Solar Reactor | Core | +4% damage | **Overdrive** — periodic light pulse damages nearby foes |
+| Ion Thrusters | Engines | +3% move speed, +9 pickup radius | **Slipstream** — +0.25s i-frames after each hit |
+| Strike Wings | Wings | +3% attack speed, +2.5% area | **Salvo** — every weapon fires +1 projectile |
+
+**Acquisition & merge loop:** every run drops one random module core at game over
+(`SaveManager.grantModuleDrop`). The **first** core of a type *unlocks* the module
+at **grade 1**; subsequent cores **bank as duplicates**. In the **Hangar** (main
+menu → Hangar) you **merge** banked duplicates to raise grade — `mergeCost(grade)
+= grade`, so **1+2+3+4 = 10 dupes** to take a module from grade 1 to the max grade
+5. Each grade adds its stats; hitting **grade 5 unlocks the signature perk**.
+
+Modules apply in `Loadout.recomputeStats` in the order **base → Warden perk →
+meta upgrades → ship modules → in-run relics** (`applyGear`), wired via
+`World.modules` which `Game` sets from the save each run. Perk runtime lives in
+`World`: Aegis (`revivesLeft` + revive in `damagePlayer`), Overdrive
+(`updateOverdrive` pulse, drawn by `GameRenderer.drawPulse`), Slipstream
+(`p.stats.iframes` drives the post-hit invuln window), Salvo (`extraProjectiles`).
+
+> **Daily Run footing:** modules, like meta-upgrades, are stripped for the Daily
+> Run (`world.modules = {}`) so it stays an equal-footing skill challenge. Cores
+> are still *earned* from a daily's end-of-run drop.
 
 ### Daily Run ✅
 A once-a-day challenge seeded from the **local calendar date**

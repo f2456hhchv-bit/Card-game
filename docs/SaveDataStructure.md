@@ -1,6 +1,6 @@
 # AFTERLIGHT — Save Data Structure
 
-**Last updated:** 2026-06-28 · Source of truth: `src/game/save/SaveManager.ts`
+**Last updated:** 2026-06-29 · Source of truth: `src/game/save/SaveManager.ts`
 
 The game persists a single **profile** to `localStorage`. There is no run-state
 save (runs are single-sitting by design); only meta-progression and settings
@@ -24,6 +24,8 @@ interface SaveData {
   tutorialSeen: boolean;      // first-run coach hints shown (skipped for
                               // returning profiles via migration)
   meta: Record<string, number>; // permanent meta-upgrade levels (metaDefs id→lvl)
+  modules: Record<string, { grade: number; dupes: number }>; // ship-module gear
+                              // (gearDefs id → grade 1..maxGrade + banked dupes)
   wardens: string[];          // unlocked Warden ids (default ["lumen"])
   selectedWarden: string;     // active Warden id (default "lumen")
   daily: { date: string; bestTime: number; bestKills: number }; // today's Daily best

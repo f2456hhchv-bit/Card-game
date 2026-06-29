@@ -29,6 +29,12 @@ export interface DerivedStats {
   /** Crit chance 0..1 and crit damage multiplier. */
   critChance: number;
   critMult: number;
+  /** Invulnerability window (seconds) after taking a hit. */
+  iframes: number;
+  /** One-time revive charges (Plating "Aegis" perk). */
+  revive: number;
+  /** Reactor "Overdrive" perk: damage of the periodic light pulse (0 = off). */
+  pulseDamage: number;
 }
 
 export class Player {
@@ -64,6 +70,9 @@ export class Player {
     armor: 0,
     critChance: 0.05,
     critMult: 1.5,
+    iframes: 0.5,
+    revive: 0,
+    pulseDamage: 0,
   };
 
   /** Live derived stats, recomputed when upgrades change. */

@@ -108,60 +108,109 @@ function eye(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, hue
 
 // ---- The Warden (player) ----------------------------------------------------
 
+/**
+ * The Guardian — a sleek light-fighter starship. Drawn nose-up (−Y); the
+ * renderer rotates it toward the direction of travel. Built from layered hull,
+ * swept wings, glowing engines and a luminous cockpit.
+ */
 function bakeWarden(): Sprite {
   return bake((ctx) => {
-    // Sprite faces "up" (−Y); renderer rotates it toward movement.
-    glow(ctx, BODY_R * 1.7, 220, 0.4);
+    glow(ctx, BODY_R * 1.9, 215, 0.4);
 
-    // Flowing energy mantle behind the body.
-    const mantle = ctx.createLinearGradient(0, -BODY_R, 0, BODY_R);
-    mantle.addColorStop(0, hsl(225, 80, 70, 0.9));
-    mantle.addColorStop(1, hsl(250, 70, 45, 0.7));
-    ctx.fillStyle = mantle;
+    // Engine exhaust glow (behind the ship, additive).
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const ex = ctx.createRadialGradient(0, BODY_R * 0.95, 0, 0, BODY_R * 0.95, BODY_R * 0.7);
+    ex.addColorStop(0, hsl(195, 100, 75, 0.9));
+    ex.addColorStop(1, hsl(210, 100, 60, 0));
+    ctx.fillStyle = ex;
     ctx.beginPath();
-    ctx.moveTo(0, -BODY_R * 1.1);
-    ctx.quadraticCurveTo(BODY_R * 1.05, BODY_R * 0.2, BODY_R * 0.5, BODY_R * 1.15);
-    ctx.quadraticCurveTo(0, BODY_R * 0.7, -BODY_R * 0.5, BODY_R * 1.15);
-    ctx.quadraticCurveTo(-BODY_R * 1.05, BODY_R * 0.2, 0, -BODY_R * 1.1);
+    ctx.ellipse(0, BODY_R * 0.95, BODY_R * 0.42, BODY_R * 0.75, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+
+    // Swept wings (drawn first, behind the fuselage).
+    const wing = ctx.createLinearGradient(-BODY_R, 0, BODY_R, 0);
+    wing.addColorStop(0, hsl(225, 55, 52));
+    wing.addColorStop(0.5, hsl(220, 60, 70));
+    wing.addColorStop(1, hsl(225, 55, 52));
+    ctx.fillStyle = wing;
+    ctx.strokeStyle = hsl(205, 90, 80, 0.9);
+    ctx.lineWidth = 1.6;
+    // Left wing.
+    ctx.beginPath();
+    ctx.moveTo(-BODY_R * 0.16, -BODY_R * 0.1);
+    ctx.lineTo(-BODY_R * 1.0, BODY_R * 0.62);
+    ctx.lineTo(-BODY_R * 0.62, BODY_R * 0.78);
+    ctx.lineTo(-BODY_R * 0.14, BODY_R * 0.5);
     ctx.closePath();
     ctx.fill();
-
-    // Faceted crystal core body.
-    const body = ctx.createLinearGradient(0, -BODY_R, 0, BODY_R);
-    body.addColorStop(0, "#ffffff");
-    body.addColorStop(0.5, hsl(220, 95, 85));
-    body.addColorStop(1, hsl(235, 80, 60));
-    ctx.fillStyle = body;
-    ctx.strokeStyle = hsl(230, 90, 88, 0.9);
-    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Right wing (mirror).
     ctx.beginPath();
-    const pts = 5;
-    for (let i = 0; i < pts * 2; i++) {
-      const rr = i % 2 === 0 ? BODY_R * 0.92 : BODY_R * 0.5;
-      const a = -Math.PI / 2 + (i / (pts * 2)) * TAU;
-      const px = Math.cos(a) * rr;
-      const py = Math.sin(a) * rr;
-      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-    }
+    ctx.moveTo(BODY_R * 0.16, -BODY_R * 0.1);
+    ctx.lineTo(BODY_R * 1.0, BODY_R * 0.62);
+    ctx.lineTo(BODY_R * 0.62, BODY_R * 0.78);
+    ctx.lineTo(BODY_R * 0.14, BODY_R * 0.5);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Bright inner core.
-    ctx.save();
-    ctx.shadowColor = "#cfe0ff";
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = "#ffffff";
+    // Fuselage — a sleek dart from nose (−Y) to tail (+Y).
+    const hull = ctx.createLinearGradient(0, -BODY_R, 0, BODY_R);
+    hull.addColorStop(0, "#ffffff");
+    hull.addColorStop(0.35, hsl(210, 95, 86));
+    hull.addColorStop(1, hsl(228, 70, 52));
+    ctx.fillStyle = hull;
+    ctx.strokeStyle = hsl(205, 95, 88, 0.95);
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(0, 0, BODY_R * 0.34, 0, TAU);
+    ctx.moveTo(0, -BODY_R * 1.05); // nose
+    ctx.quadraticCurveTo(BODY_R * 0.34, -BODY_R * 0.2, BODY_R * 0.3, BODY_R * 0.7);
+    ctx.quadraticCurveTo(BODY_R * 0.22, BODY_R * 0.95, 0, BODY_R * 0.92); // tail
+    ctx.quadraticCurveTo(-BODY_R * 0.22, BODY_R * 0.95, -BODY_R * 0.3, BODY_R * 0.7);
+    ctx.quadraticCurveTo(-BODY_R * 0.34, -BODY_R * 0.2, 0, -BODY_R * 1.05);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Hull ridge highlight.
+    ctx.strokeStyle = hsl(200, 100, 95, 0.7);
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(0, -BODY_R * 0.9);
+    ctx.lineTo(0, BODY_R * 0.5);
+    ctx.stroke();
+
+    // Glowing cockpit canopy near the nose.
+    ctx.save();
+    ctx.shadowColor = "#dff0ff";
+    ctx.shadowBlur = 12;
+    const cock = ctx.createLinearGradient(0, -BODY_R * 0.5, 0, BODY_R * 0.1);
+    cock.addColorStop(0, "#ffffff");
+    cock.addColorStop(1, hsl(195, 100, 70));
+    ctx.fillStyle = cock;
+    ctx.beginPath();
+    ctx.ellipse(0, -BODY_R * 0.28, BODY_R * 0.16, BODY_R * 0.3, 0, 0, TAU);
     ctx.fill();
     ctx.restore();
 
-    // Forward "gaze" notch marking facing direction.
-    ctx.fillStyle = hsl(205, 100, 80, 0.95);
-    ctx.beginPath();
-    ctx.arc(0, -BODY_R * 0.62, BODY_R * 0.12, 0, TAU);
-    ctx.fill();
+    // Twin engine nozzles at the tail.
+    ctx.fillStyle = hsl(210, 60, 40);
+    for (const sx of [-1, 1]) {
+      ctx.beginPath();
+      ctx.ellipse(sx * BODY_R * 0.16, BODY_R * 0.82, BODY_R * 0.09, BODY_R * 0.14, 0, 0, TAU);
+      ctx.fill();
+    }
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = hsl(190, 100, 80, 0.95);
+    for (const sx of [-1, 1]) {
+      ctx.beginPath();
+      ctx.arc(sx * BODY_R * 0.16, BODY_R * 0.82, BODY_R * 0.06, 0, TAU);
+      ctx.fill();
+    }
+    ctx.restore();
   });
 }
 

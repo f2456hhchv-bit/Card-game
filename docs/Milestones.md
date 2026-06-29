@@ -90,6 +90,10 @@ Goal: replace placeholder geometry with premium, original procedural art.
 - [x] Offline-seeded **Daily Run** (fixed daily seed, equal footing, daily best)
 - [x] **Records** screen (lifetime stats) + 12 **achievements** with unlock toasts
 - [x] Richer end-of-run stats (elites, damage)
+- [x] **Ship Modules + Hangar**: 4 equippable ship systems, **merge duplicates**
+      to raise grade, each module's **max grade unlocks a signature perk** (Aegis
+      revive, Overdrive pulse, Slipstream i-frames, Salvo +projectile); cores drop
+      at end of run. Guardian sprite redesigned as a **starship**, rendered larger.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

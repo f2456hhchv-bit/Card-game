@@ -577,6 +577,79 @@
   font-style: italic;
 }
 
+/* Hangar — ship modules. */
+.module-card.locked {
+  opacity: 0.6;
+}
+.module-card.selected {
+  box-shadow: 0 0 0 2px var(--card-accent),
+    0 0 22px color-mix(in srgb, var(--card-accent) 40%, transparent);
+}
+.module-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.module-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--card-accent) 70%, transparent));
+}
+.module-slot {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--card-accent);
+  font-weight: 800;
+  opacity: 0.85;
+}
+.grade-pips {
+  display: flex;
+  gap: 5px;
+  margin: 2px 0;
+}
+.grade-pips .pip {
+  width: 22px;
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.grade-pips .pip.on {
+  background: var(--card-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--card-accent) 60%, transparent);
+}
+.module-perk {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 9px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  opacity: 0.7;
+}
+.module-perk.unlocked {
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--card-accent) 60%, transparent);
+  background: color-mix(in srgb, var(--card-accent) 12%, transparent);
+  opacity: 1;
+}
+.module-perk .perk-tag {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--card-accent);
+}
+.module-perk .perk-text {
+  font-size: 0.78rem;
+  color: var(--ui-text-dim);
+  line-height: 1.3;
+}
+.module-perk.unlocked .perk-text {
+  color: var(--ui-text);
+}
+
 /* Achievement toasts. */
 .toast-layer {
   position: absolute;

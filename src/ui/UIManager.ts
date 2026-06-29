@@ -6,6 +6,7 @@ import type { AudioManager } from "../game/audio/AudioManager";
 import { META_LIST } from "../game/data/metaDefs";
 import { WARDEN_LIST } from "../game/data/wardenDefs";
 import { WEAPON_DEFS } from "../game/data/weaponDefs";
+import { GEAR_LIST, mergeCost } from "../game/data/gearDefs";
 import { ACHIEVEMENT_DEFS } from "../game/data/achievementDefs";
 import { formatTime } from "../core/format";
 
@@ -93,6 +94,7 @@ export class UIManager {
     this.buildHowTo();
     this.buildShop();
     this.buildWardens();
+    this.buildHangar();
     this.buildRecords();
     this.toastLayer = this.el("div", "toast-layer");
     this.root.appendChild(this.toastLayer);
@@ -283,6 +285,9 @@ export class UIManager {
     const wardensBtn = this.el("button", "btn secondary", "Wardens");
     wardensBtn.addEventListener("click", () => this.openWardens());
 
+    const hangarBtn = this.el("button", "btn secondary", "Hangar");
+    hangarBtn.addEventListener("click", () => this.openHangar());
+
     const recordsBtn = this.el("button", "btn secondary", "Records");
     recordsBtn.addEventListener("click", () => this.openRecords());
 
@@ -300,7 +305,7 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, dailyBtn, wardensBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
+    btnRow.append(play, dailyBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
 
     o.append(title, sub, stats, btnRow, dailyLine);
     this.root.appendChild(o);
@@ -526,6 +531,113 @@ export class UIManager {
   private closeWardens(): void {
     this.wardens.classList.add("hidden");
     this.refreshMenuStats();
+    this.menu.classList.remove("hidden");
+  }
+
+  // ---- Hangar (ship modules + merge) -------------------------------------
+
+  private hangar!: HTMLDivElement;
+  private hangarGrid!: HTMLDivElement;
+
+  private buildHangar(): void {
+    const o = this.el("div", "overlay hidden");
+    const title = this.el("h2", undefined, "HANGAR");
+    const sub = this.el(
+      "div",
+      "subtitle",
+      "Salvaged ship modules. Merge duplicate cores to raise a module's grade — each grade adds power, and reaching max grade unlocks a signature system.",
+    );
+    this.hangarGrid = this.el("div", "shop-grid");
+    const back = this.el("button", "btn", "Back");
+    back.addEventListener("click", () => this.closeHangar());
+    o.append(title, sub, this.hangarGrid, back);
+    this.root.appendChild(o);
+    this.hangar = o;
+  }
+
+  private refreshHangar(): void {
+    const d = this.save.data;
+    this.hangarGrid.replaceChildren();
+    for (const def of GEAR_LIST) {
+      const m = d.modules[def.id] ?? { grade: 0, dupes: 0 };
+      const owned = m.grade > 0;
+      const maxed = m.grade >= def.maxGrade;
+
+      const card = this.el("div", "shop-card module-card");
+      card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
+      if (!owned) card.classList.add("locked");
+      if (maxed) card.classList.add("selected");
+
+      const head = this.el("div", "shop-card-head");
+      const nameWrap = this.el("div", "module-name-wrap");
+      nameWrap.append(
+        this.el("span", "module-icon", def.icon),
+        this.el("div", "shop-name", owned ? def.name : "??? Module"),
+      );
+      head.append(
+        nameWrap,
+        this.el("div", "shop-level", owned ? `Grade ${m.grade}/${def.maxGrade}` : "Unowned"),
+      );
+
+      // Grade pips show progress toward max grade at a glance.
+      const pips = this.el("div", "grade-pips");
+      for (let i = 1; i <= def.maxGrade; i++) {
+        const pip = this.el("div", `pip${i <= m.grade ? " on" : ""}`);
+        pips.appendChild(pip);
+      }
+
+      const slot = this.el("div", "module-slot", def.slot);
+      const desc = this.el("div", "shop-desc", owned ? def.description : "Salvage one from a run to reveal it.");
+
+      // Signature perk line — dim until unlocked at max grade.
+      const perk = this.el("div", `module-perk${maxed ? " unlocked" : ""}`);
+      perk.append(
+        this.el("span", "perk-tag", maxed ? "★ UNLOCKED" : `★ Grade ${def.maxGrade}`),
+        this.el("span", "perk-text", `${def.perk.name} — ${def.perk.description}`),
+      );
+
+      const btn = this.el("button", "btn buy");
+      if (!owned) {
+        btn.textContent = "Locked";
+        btn.disabled = true;
+        btn.classList.add("cant-afford");
+      } else if (maxed) {
+        btn.textContent = "MAX GRADE";
+        btn.classList.add("maxed");
+        btn.disabled = true;
+      } else {
+        const cost = mergeCost(m.grade);
+        const canMerge = m.dupes >= cost;
+        btn.textContent = `Merge ⬡ ${m.dupes}/${cost}`;
+        btn.disabled = !canMerge;
+        if (!canMerge) btn.classList.add("cant-afford");
+        btn.addEventListener("click", () => this.mergeModule(def.id));
+      }
+
+      card.append(head, pips, slot, desc, perk, btn);
+      this.hangarGrid.appendChild(card);
+    }
+  }
+
+  private mergeModule(id: string): void {
+    const newGrade = this.save.mergeModule(id);
+    if (newGrade === null) return;
+    this.audio.levelUp();
+    const def = GEAR_LIST.find((g) => g.id === id);
+    if (def && newGrade >= def.maxGrade) {
+      // Hitting max grade unlocks the signature perk — celebrate it.
+      this.showToast(def.icon, `${def.name} — Grade ${newGrade}`, `${def.perk.name} unlocked: ${def.perk.description}`);
+    }
+    this.refreshHangar();
+  }
+
+  private openHangar(): void {
+    this.refreshHangar();
+    this.menu.classList.add("hidden");
+    this.hangar.classList.remove("hidden");
+  }
+  private closeHangar(): void {
+    this.hangar.classList.add("hidden");
     this.menu.classList.remove("hidden");
   }
 

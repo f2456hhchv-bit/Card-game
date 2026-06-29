@@ -9,6 +9,7 @@ import {
 } from "./data/weaponDefs";
 import { PASSIVE_DEFS, PASSIVE_LIST } from "./data/passiveDefs";
 import { applyMeta } from "./data/metaDefs";
+import { applyGear, type ModuleState } from "./data/gearDefs";
 import { getWarden } from "./data/wardenDefs";
 import { clamp } from "../core/math/MathUtils";
 
@@ -73,6 +74,8 @@ export class Loadout {
   readonly passives = new Map<string, number>();
   /** Permanent meta-upgrade levels (set by World from the save each run). */
   metaLevels: Record<string, number> = {};
+  /** Ship module gear (set by World from the save each run). */
+  modules: Record<string, ModuleState> = {};
   /** Selected Warden id (set by World from the save each run). */
   wardenId = "lumen";
 
@@ -104,9 +107,10 @@ export class Loadout {
    */
   recomputeStats(player: Player): void {
     const s = { ...player.base };
-    // Order: base → Warden perk → permanent meta → in-run relics.
+    // Order: base → Warden perk → permanent meta → ship modules → in-run relics.
     getWarden(this.wardenId).applyPerk?.(s);
     applyMeta(s, this.metaLevels);
+    applyGear(s, this.modules);
     for (const [id, level] of this.passives) {
       const def = PASSIVE_DEFS[id];
       if (def) def.apply(s, level);

@@ -1,5 +1,6 @@
 import type { AudioSettings } from "../audio/AudioManager";
 import type { RunStats } from "../World";
+import { GEAR_DEFS, GEAR_LIST, mergeCost, type ModuleState } from "../data/gearDefs";
 
 /**
  * Persistent profile saved to localStorage. This is the meta-progression and
@@ -42,6 +43,8 @@ export interface SaveData {
   tutorialSeen: boolean;
   /** Permanent meta-upgrade levels, keyed by upgrade id (see metaDefs). */
   meta: Record<string, number>;
+  /** Ship module gear state, keyed by module id (grade + banked duplicates). */
+  modules: Record<string, ModuleState>;
   /** Unlocked Warden ids. */
   wardens: string[];
   /** Currently selected Warden id. */
@@ -64,6 +67,7 @@ function defaultSave(): SaveData {
     achievements: [],
     tutorialSeen: false,
     meta: {},
+    modules: {},
     wardens: ["lumen"],
     selectedWarden: "lumen",
     daily: { date: "", bestTime: 0, bestKills: 0 },
@@ -109,6 +113,7 @@ export class SaveManager {
       version: SAVE_VERSION,
       tutorialSeen,
       meta: parsed.meta ?? {},
+      modules: parsed.modules ?? {},
       lifetime: parsed.lifetime ?? { time: 0, damage: 0, bosses: 0, elites: 0 },
       wardens: parsed.wardens ?? ["lumen"],
       selectedWarden: parsed.selectedWarden ?? "lumen",
@@ -167,6 +172,35 @@ export class SaveManager {
     if (newBestKills) d.daily.bestKills = kills;
     this.save();
     return { newBestTime, newBestKills };
+  }
+
+  /** Grant a random ship-module drop. New module → grade 1; else a duplicate. */
+  grantModuleDrop(): { id: string; isNew: boolean } {
+    const def = GEAR_LIST[Math.floor(Math.random() * GEAR_LIST.length)];
+    const m = this.data.modules[def.id] ?? { grade: 0, dupes: 0 };
+    let isNew = false;
+    if (m.grade === 0) {
+      m.grade = 1;
+      isNew = true;
+    } else {
+      m.dupes++;
+    }
+    this.data.modules[def.id] = m;
+    this.save();
+    return { id: def.id, isNew };
+  }
+
+  /** Merge banked duplicates to raise a module's grade. Returns the new grade. */
+  mergeModule(id: string): number | null {
+    const def = GEAR_DEFS[id];
+    const m = this.data.modules[id];
+    if (!def || !m || m.grade >= def.maxGrade) return null;
+    const cost = mergeCost(m.grade);
+    if (m.dupes < cost) return null;
+    m.dupes -= cost;
+    m.grade++;
+    this.save();
+    return m.grade;
   }
 
   unlockAchievement(id: string): boolean {

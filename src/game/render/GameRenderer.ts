@@ -31,6 +31,7 @@ export class GameRenderer {
     this.drawArenaBoundary(ctx, camera, world);
     this.drawPickups(ctx, camera, world);
     this.drawAura(ctx, camera, world);
+    this.drawPulse(ctx, camera, world);
     this.drawEnemies(ctx, camera, world);
     this.drawBoss(ctx, camera, world);
     this.drawOrbitOrbs(ctx, camera, world);
@@ -116,8 +117,9 @@ export class GameRenderer {
     }
 
     // Body sprite faces up; rotate toward facing. Invuln blink after a hit.
+    // Rendered noticeably larger than the hitbox so the ship reads big on screen.
     const blink = p.invuln > 0 && Math.sin(p.invuln * 40) < -0.2 ? 0.45 : 1;
-    this.blit(ctx, this.forge.warden, x, y, r * 1.25, p.facing + Math.PI / 2, blink);
+    this.blit(ctx, this.forge.warden, x, y, r * 2.0, p.facing + Math.PI / 2, blink);
   }
 
   private drawEnemies(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
@@ -414,6 +416,29 @@ export class GameRenderer {
     g.addColorStop(0, `hsla(${world.auraHue} 90% 60% / 0.18)`);
     g.addColorStop(0.8, `hsla(${world.auraHue} 90% 60% / 0.08)`);
     g.addColorStop(1, `hsla(${world.auraHue} 90% 60% / 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /** Overdrive light pulse: a bright expanding ring at the moment it fires. */
+  private drawPulse(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
+    if (world.pulseFx <= 0) return;
+    const x = camera.worldToScreenX(world.player.x);
+    const y = camera.worldToScreenY(world.player.y);
+    const r = world.pulseFx * camera.zoom;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "hsla(35 100% 70% / 0.8)";
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, TAU);
+    ctx.stroke();
+    const g = ctx.createRadialGradient(x, y, r * 0.5, x, y, r);
+    g.addColorStop(0, "hsla(35 100% 65% / 0)");
+    g.addColorStop(1, "hsla(35 100% 65% / 0.22)");
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, TAU);

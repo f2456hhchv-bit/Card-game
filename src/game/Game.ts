@@ -9,6 +9,7 @@ import { SaveManager } from "./save/SaveManager";
 import { UIManager } from "../ui/UIManager";
 import type { DraftOption } from "./Loadout";
 import { metaMoteMultiplier } from "./data/metaDefs";
+import { GEAR_DEFS } from "./data/gearDefs";
 import { WARDEN_LIST } from "./data/wardenDefs";
 import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
 import { Rng } from "../core/math/Rng";
@@ -154,6 +155,12 @@ export class Game {
       this.camera.addShake(20, 0.8);
       this.checkAchievements(); // immediate boss-kill toasts
     });
+    e.on("revived", () => {
+      // Aegis save — a dramatic beat the player should feel.
+      this.audio.evolveFanfare();
+      this.camera.addShake(14, 0.7);
+      this.ui.flashDamage();
+    });
     e.on("playerDied", () => this.onPlayerDied());
   }
 
@@ -167,12 +174,14 @@ export class Game {
       // Daily Run: a fair, equal challenge — fixed daily seed, default Warden,
       // and no permanent meta-upgrades, so the run is the same for everyone.
       this.world.metaLevels = {};
+      this.world.modules = {};
       this.world.selectedWarden = "lumen";
       this.world.reset();
       this.world.reseed(Rng.seedFromString(dailyDateString()));
     } else {
-      // Apply permanent meta-upgrades + selected Warden before resetting.
+      // Apply permanent meta-upgrades, ship modules + selected Warden.
       this.world.metaLevels = this.save.data.meta;
+      this.world.modules = this.save.data.modules;
       this.world.selectedWarden = this.save.data.selectedWarden;
       this.world.reset();
     }
@@ -262,6 +271,18 @@ export class Game {
     const records = this.save.recordRun(stats, motes);
     if (this.isDailyRun) {
       this.save.recordDaily(dailyDateString(), stats.elapsed, stats.kills);
+    }
+    // Salvage a ship module from the wreck — every run advances the Hangar.
+    const drop = this.save.grantModuleDrop();
+    const def = GEAR_DEFS[drop.id];
+    if (def) {
+      this.ui.showToast(
+        def.icon,
+        drop.isNew ? `${def.name} acquired` : `${def.name} core`,
+        drop.isNew
+          ? `New module unlocked — equip it in the Hangar.`
+          : `Duplicate core banked. Merge it in the Hangar to upgrade.`,
+      );
     }
     this.checkAchievements();
     this.ui.hideHUD();
