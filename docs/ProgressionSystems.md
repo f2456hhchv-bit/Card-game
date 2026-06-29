@@ -128,10 +128,18 @@ tracked in `save.daily` (reset when the date rolls over) and shown on the menu.
 
 **Planned (M3+):** stage modifiers, more Wardens/weapons, daily streaks.
 
-### Records & Achievements
-- **Records:** best survival time, most kills — shown on the main menu.
-- **Achievements** (current): `centurion` (100 kills), `five-minute-vigil`,
-  `ten-minute-vigil`, `ascendant` (reach level 20). Stored as unlocked ids.
+### Records & Achievements ✅
+- **Records screen** (main menu → Records): lifetime aggregates — best time, most
+  felled, runs, total felled, bosses slain, time played — plus the full
+  achievement grid (unlocked lit, locked dimmed with a lock). Lifetime totals
+  live in `save.lifetime`, updated by `recordRun`.
+- **Achievements** (12, in `achievementDefs.ts`): each has a `check(ctx)`
+  predicate over the just-finished run + lifetime/profile totals. Awarded the
+  moment they're satisfied — checked at game over and on key events (boss defeat,
+  weapon evolution) for immediate **toast** notifications. Examples: First Light,
+  Centurion (100/run), Swarmbreaker (400/run), Keeper (5m), Lightwarden (10m),
+  Ascendant (lvl 20), Boss Slayer, Hollowbane (5 bosses lifetime), Transcendent
+  (evolve), Devotee (daily), Collector (all Wardens), Investor (10 meta levels).
 
 See `docs/SaveDataStructure.md` for the persisted schema.
 

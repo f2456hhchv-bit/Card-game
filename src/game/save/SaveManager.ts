@@ -1,4 +1,5 @@
 import type { AudioSettings } from "../audio/AudioManager";
+import type { RunStats } from "../World";
 
 /**
  * Persistent profile saved to localStorage. This is the meta-progression and
@@ -28,6 +29,13 @@ export interface SaveData {
   totalKills: number;
   /** Total runs played. */
   runsPlayed: number;
+  /** Lifetime aggregates across all runs. */
+  lifetime: {
+    time: number; // total seconds survived
+    damage: number; // total damage dealt
+    bosses: number; // bosses defeated
+    elites: number; // elites felled
+  };
   /** Unlocked achievement ids. */
   achievements: string[];
   /** Whether the first-run control hints have been shown. */
@@ -52,6 +60,7 @@ function defaultSave(): SaveData {
     bestKills: 0,
     totalKills: 0,
     runsPlayed: 0,
+    lifetime: { time: 0, damage: 0, bosses: 0, elites: 0 },
     achievements: [],
     tutorialSeen: false,
     meta: {},
@@ -100,6 +109,7 @@ export class SaveManager {
       version: SAVE_VERSION,
       tutorialSeen,
       meta: parsed.meta ?? {},
+      lifetime: parsed.lifetime ?? { time: 0, damage: 0, bosses: 0, elites: 0 },
       wardens: parsed.wardens ?? ["lumen"],
       selectedWarden: parsed.selectedWarden ?? "lumen",
       daily: parsed.daily ?? { date: "", bestTime: 0, bestKills: 0 },
@@ -118,18 +128,22 @@ export class SaveManager {
   }
 
   /** Record the outcome of a finished run and persist. Returns new records. */
-  recordRun(timeSeconds: number, kills: number, motesEarned: number): {
+  recordRun(stats: RunStats, motesEarned: number): {
     newBestTime: boolean;
     newBestKills: boolean;
   } {
     const d = this.data;
     d.runsPlayed++;
-    d.totalKills += kills;
+    d.totalKills += stats.kills;
     d.motes += motesEarned;
-    const newBestTime = timeSeconds > d.bestTime;
-    const newBestKills = kills > d.bestKills;
-    if (newBestTime) d.bestTime = timeSeconds;
-    if (newBestKills) d.bestKills = kills;
+    d.lifetime.time += stats.elapsed;
+    d.lifetime.damage += stats.damageDealt;
+    d.lifetime.bosses += stats.bossKills;
+    d.lifetime.elites += stats.eliteKills;
+    const newBestTime = stats.elapsed > d.bestTime;
+    const newBestKills = stats.kills > d.bestKills;
+    if (newBestTime) d.bestTime = stats.elapsed;
+    if (newBestKills) d.bestKills = stats.kills;
     this.save();
     return { newBestTime, newBestKills };
   }

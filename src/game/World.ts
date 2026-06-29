@@ -28,6 +28,7 @@ export interface RunStats {
   elapsed: number;
   kills: number;
   eliteKills: number;
+  bossKills: number;
   damageDealt: number;
   xpCollected: number;
   level: number;
@@ -116,6 +117,7 @@ export class World {
     elapsed: 0,
     kills: 0,
     eliteKills: 0,
+    bossKills: 0,
     damageDealt: 0,
     xpCollected: 0,
     level: 1,
@@ -195,6 +197,7 @@ export class World {
     this.stats.elapsed = 0;
     this.stats.kills = 0;
     this.stats.eliteKills = 0;
+    this.stats.bossKills = 0;
     this.stats.damageDealt = 0;
     this.stats.xpCollected = 0;
     this.stats.level = 1;
@@ -817,6 +820,7 @@ export class World {
   private onBossDefeated(e: Enemy): void {
     this.boss = null;
     this.bossController = null;
+    this.stats.bossKills++;
     this.events.emit("bossDefeated", { x: e.x, y: e.y });
 
     // Generous reward: a fan of XP shards plus guaranteed support drops.

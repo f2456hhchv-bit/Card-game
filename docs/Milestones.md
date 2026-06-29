@@ -88,6 +88,8 @@ Goal: replace placeholder geometry with premium, original procedural art.
 - [x] Second boss: **The Choir** (ranged, summons Casters); bosses now alternate
 - [x] Unlockable **Wardens** (4 characters, distinct starter weapon + perk)
 - [x] Offline-seeded **Daily Run** (fixed daily seed, equal footing, daily best)
+- [x] **Records** screen (lifetime stats) + 12 **achievements** with unlock toasts
+- [x] Richer end-of-run stats (elites, damage)
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

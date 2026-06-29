@@ -4,6 +4,28 @@
 
 Observations from playtests, and the actions they drive. Newest first.
 
+## 2026-06-29 — Stats & achievements
+
+**Method:** In-browser screenshots (Records screen, live toasts) + unit tests.
+
+**Observed:**
+- **Records** screen reads as a satisfying career hub: lifetime stats (best time,
+  most felled, runs, total felled, bosses, time played) over a 12-achievement
+  grid (unlocked lit/gold, locked dimmed with a lock; "6/12" header).
+- **Toasts** fire immediately in-run on triggering events (verified First Light +
+  Boss Slayer stacking on a boss defeat) — strong dopamine feedback. They also
+  catch end-of-run unlocks at game over.
+- Enriched game-over now shows Elites and Damage alongside time/kills/level/motes.
+- No console errors; 71 tests pass (+6 achievement predicate tests).
+
+**Design read / open questions:**
+1. Toasts briefly overlap the top HUD — acceptable for transient popups, but a
+   slightly lower anchor could be cleaner on tiny screens.
+2. Old achievement ids (from the previous 4) are orphaned in saves; harmless but
+   noted. Consider a one-time mapping if it ever matters.
+3. Next: a couple of harder "mastery" achievements + a stats line for favourite
+   weapon; or stage modifiers.
+
 ## 2026-06-29 — Offline Daily Run
 
 **Method:** In-browser flow + unit tests (seed determinism, daily-best record).

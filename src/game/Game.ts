@@ -9,6 +9,8 @@ import { SaveManager } from "./save/SaveManager";
 import { UIManager } from "../ui/UIManager";
 import type { DraftOption } from "./Loadout";
 import { metaMoteMultiplier } from "./data/metaDefs";
+import { WARDEN_LIST } from "./data/wardenDefs";
+import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
 import { Rng } from "../core/math/Rng";
 import { clamp } from "../core/math/MathUtils";
 
@@ -46,6 +48,8 @@ export class Game {
 
   /** True while the current run is a Daily Run (fixed seed, equal footing). */
   private isDailyRun = false;
+  /** Whether a weapon was evolved this run (for the achievement). */
+  private runEvolved = false;
 
   // First-run tutorial (non-blocking coach hints).
   private tutorialActive = false;
@@ -148,6 +152,7 @@ export class Game {
       this.ui.hideBossBar();
       this.audio.bossDown();
       this.camera.addShake(20, 0.8);
+      this.checkAchievements(); // immediate boss-kill toasts
     });
     e.on("playerDied", () => this.onPlayerDied());
   }
@@ -157,6 +162,7 @@ export class Game {
   private startRun(daily = false): void {
     this.audio.unlock();
     this.isDailyRun = daily;
+    this.runEvolved = false;
     if (daily) {
       // Daily Run: a fair, equal challenge — fixed daily seed, default Warden,
       // and no permanent meta-upgrades, so the run is the same for everyone.
@@ -237,6 +243,8 @@ export class Game {
       this.world.spawnEvolveBurst();
       this.camera.addShake(10, 0.5);
       this.audio.evolveFanfare();
+      this.runEvolved = true;
+      this.checkAchievements(); // immediate toast for the evolution achievement
     }
     this.ui.hideDraft();
     this.state = "playing";
@@ -251,7 +259,7 @@ export class Game {
     // Reward: motes scale with time survived and kills, boosted by Fortune.
     const base = stats.elapsed * 0.5 + stats.kills * 0.2;
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
-    const records = this.save.recordRun(stats.elapsed, stats.kills, motes);
+    const records = this.save.recordRun(stats, motes);
     if (this.isDailyRun) {
       this.save.recordDaily(dailyDateString(), stats.elapsed, stats.kills);
     }
@@ -260,12 +268,34 @@ export class Game {
     this.ui.showGameOver(stats, motes, records, this.isDailyRun);
   }
 
-  private checkAchievements(): void {
+  private achievementContext(): AchievementContext {
     const s = this.world.stats;
-    if (s.kills >= 100) this.save.unlockAchievement("centurion");
-    if (s.elapsed >= 300) this.save.unlockAchievement("five-minute-vigil");
-    if (s.elapsed >= 600) this.save.unlockAchievement("ten-minute-vigil");
-    if (s.level >= 20) this.save.unlockAchievement("ascendant");
+    const d = this.save.data;
+    const metaPurchases = Object.values(d.meta).reduce((a, b) => a + b, 0);
+    return {
+      runTime: s.elapsed,
+      runKills: s.kills,
+      runEliteKills: s.eliteKills,
+      runBossKills: s.bossKills,
+      runLevel: s.level,
+      runEvolved: this.runEvolved,
+      runDaily: this.isDailyRun,
+      lifetimeBosses: d.lifetime.bosses + s.bossKills,
+      metaPurchases,
+      wardensUnlocked: d.wardens.length,
+      wardensTotal: WARDEN_LIST.length,
+    };
+  }
+
+  /** Evaluate all achievements; award + toast any newly unlocked. */
+  private checkAchievements(): void {
+    const ctx = this.achievementContext();
+    for (const def of ACHIEVEMENT_DEFS) {
+      if (!def.check(ctx)) continue;
+      if (this.save.unlockAchievement(def.id)) {
+        this.ui.showToast(def.icon, def.name, def.description);
+      }
+    }
   }
 
   // ---- Fixed-step update -------------------------------------------------

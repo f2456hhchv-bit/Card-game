@@ -27,6 +27,7 @@ interface SaveData {
   wardens: string[];          // unlocked Warden ids (default ["lumen"])
   selectedWarden: string;     // active Warden id (default "lumen")
   daily: { date: string; bestTime: number; bestKills: number }; // today's Daily best
+  lifetime: { time: number; damage: number; bosses: number; elites: number }; // career totals
   audio: {
     master: number;           // 0..1
     sfx: number;              // 0..1

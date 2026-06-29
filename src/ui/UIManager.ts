@@ -6,6 +6,7 @@ import type { AudioManager } from "../game/audio/AudioManager";
 import { META_LIST } from "../game/data/metaDefs";
 import { WARDEN_LIST } from "../game/data/wardenDefs";
 import { WEAPON_DEFS } from "../game/data/weaponDefs";
+import { ACHIEVEMENT_DEFS } from "../game/data/achievementDefs";
 import { formatTime } from "../core/format";
 
 /**
@@ -92,6 +93,32 @@ export class UIManager {
     this.buildHowTo();
     this.buildShop();
     this.buildWardens();
+    this.buildRecords();
+    this.toastLayer = this.el("div", "toast-layer");
+    this.root.appendChild(this.toastLayer);
+  }
+
+  // ---- Achievement toasts ------------------------------------------------
+
+  private toastLayer!: HTMLDivElement;
+
+  /** Pop a transient achievement-unlock notification. */
+  showToast(icon: string, name: string, description: string): void {
+    const t = this.el("div", "toast");
+    const ic = this.el("div", "toast-icon", icon);
+    const body = this.el("div", "toast-body");
+    body.append(
+      this.el("div", "toast-title", "Achievement Unlocked"),
+      this.el("div", "toast-name", name),
+      this.el("div", "toast-desc", description),
+    );
+    t.append(ic, body);
+    this.toastLayer.appendChild(t);
+    this.audio.levelUp();
+    // Enter, hold, leave, remove.
+    requestAnimationFrame(() => t.classList.add("show"));
+    setTimeout(() => t.classList.remove("show"), 3600);
+    setTimeout(() => t.remove(), 4100);
   }
 
   // ---- HUD ---------------------------------------------------------------
@@ -256,6 +283,9 @@ export class UIManager {
     const wardensBtn = this.el("button", "btn secondary", "Wardens");
     wardensBtn.addEventListener("click", () => this.openWardens());
 
+    const recordsBtn = this.el("button", "btn secondary", "Records");
+    recordsBtn.addEventListener("click", () => this.openRecords());
+
     const shopBtn = this.el("button", "btn secondary", "Shop");
     shopBtn.addEventListener("click", () => this.openShop());
 
@@ -270,7 +300,7 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, dailyBtn, wardensBtn, shopBtn, howBtn, settingsBtn);
+    btnRow.append(play, dailyBtn, wardensBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
 
     o.append(title, sub, stats, btnRow, dailyLine);
     this.root.appendChild(o);
@@ -499,6 +529,72 @@ export class UIManager {
     this.menu.classList.remove("hidden");
   }
 
+  // ---- Records (lifetime stats + achievements) ---------------------------
+
+  private records!: HTMLDivElement;
+  private recordsStats!: HTMLDivElement;
+  private recordsGrid!: HTMLDivElement;
+
+  private buildRecords(): void {
+    const o = this.el("div", "overlay hidden");
+    const title = this.el("h2", undefined, "RECORDS");
+    this.recordsStats = this.el("div", "records-stats");
+    const achHead = this.el("div", "records-ach-head", "Achievements");
+    this.recordsGrid = this.el("div", "ach-grid");
+    const back = this.el("button", "btn", "Back");
+    back.addEventListener("click", () => this.closeRecords());
+    o.append(title, this.recordsStats, achHead, this.recordsGrid, back);
+    this.root.appendChild(o);
+    this.records = o;
+  }
+
+  private refreshRecords(): void {
+    const d = this.save.data;
+    const stat = (label: string, value: string) => {
+      const s = this.el("div", "stat");
+      s.append(this.el("b", undefined, value), this.el("span", undefined, label));
+      return s;
+    };
+    const hrs = Math.floor(d.lifetime.time / 3600);
+    const mins = Math.floor((d.lifetime.time % 3600) / 60);
+    this.recordsStats.replaceChildren(
+      stat("Best Time", formatTime(d.bestTime)),
+      stat("Most Felled", `${d.bestKills}`),
+      stat("Runs", `${d.runsPlayed}`),
+      stat("Total Felled", `${d.totalKills}`),
+      stat("Bosses Slain", `${d.lifetime.bosses}`),
+      stat("Time Played", hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`),
+    );
+
+    const unlocked = new Set(d.achievements);
+    const done = ACHIEVEMENT_DEFS.filter((a) => unlocked.has(a.id)).length;
+    this.recordsGrid.replaceChildren();
+    for (const a of ACHIEVEMENT_DEFS) {
+      const got = unlocked.has(a.id);
+      const card = this.el("div", `ach-card${got ? " got" : ""}`);
+      const icon = this.el("div", "ach-icon", got ? a.icon : "🔒");
+      const body = this.el("div", "ach-body");
+      body.append(
+        this.el("div", "ach-name", a.name),
+        this.el("div", "ach-desc", a.description),
+      );
+      card.append(icon, body);
+      this.recordsGrid.appendChild(card);
+    }
+    const head = this.records.querySelector(".records-ach-head");
+    if (head) head.textContent = `Achievements — ${done}/${ACHIEVEMENT_DEFS.length}`;
+  }
+
+  private openRecords(): void {
+    this.refreshRecords();
+    this.menu.classList.add("hidden");
+    this.records.classList.remove("hidden");
+  }
+  private closeRecords(): void {
+    this.records.classList.add("hidden");
+    this.menu.classList.remove("hidden");
+  }
+
   private refreshMenuStats(): void {
     const d = this.save.data;
     const container = this.menu.querySelector("#menu-stats");
@@ -654,10 +750,16 @@ export class UIManager {
         s.append(b, l);
         return s;
       };
+      const dmg =
+        stats.damageDealt >= 100000
+          ? `${(stats.damageDealt / 1000).toFixed(0)}k`
+          : `${Math.round(stats.damageDealt)}`;
       container.replaceChildren(
         stat("Survived", formatTime(stats.elapsed), records.newBestTime),
         stat("Felled", `${stats.kills}`, records.newBestKills),
+        stat("Elites", `${stats.eliteKills}`),
         stat("Level", `${stats.level}`),
+        stat("Damage", dmg),
         stat("Motes", `+${motesEarned}`),
       );
     }
