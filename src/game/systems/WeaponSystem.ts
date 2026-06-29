@@ -202,6 +202,7 @@ export class WeaponSystem {
     p.weaponSeq = seq;
     p.rotation = angle;
     p.rotationSpeed = w.def.style === "shard" ? 14 : 0;
+    p.evolved = w.def.evolved ?? false;
     p.active = true;
   }
 

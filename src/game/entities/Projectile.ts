@@ -31,10 +31,13 @@ export class Projectile implements SpatialEntity {
   /** Spin for visual flair. */
   rotation = 0;
   rotationSpeed = 0;
+  /** Fired by an evolved weapon — gets a brighter, larger signature look. */
+  evolved = false;
 
   reset(): void {
     this.active = false;
     this.crit = false;
     this.rotation = 0;
+    this.evolved = false;
   }
 }

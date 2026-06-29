@@ -4,6 +4,28 @@
 
 Observations from playtests, and the actions they drive. Newest first.
 
+## 2026-06-28 — Weapon-feel FX + How to Play
+
+**Method:** In-browser screenshots of the new projectile effects and the How to
+Play screen.
+
+**Observed:**
+- Projectiles now read as fast and alive: each has a tapered **comet trail** in
+  its travel direction. **Evolved weapons** get a distinct signature — larger,
+  brighter, with a spinning glint ring (Sunlance looked great: golden bolts with
+  long tails and sparkle rings). Crits throw warm gold sparks; elite/boss deaths
+  emit an expanding shockwave ring.
+- The **How to Play** screen (reached from the main menu) is clear and adapts its
+  text to touch vs keyboard. Gives new/returning players a reference any time
+  (complements the one-time first-run hints).
+- No console errors; 52 tests pass.
+
+**Open questions:**
+1. Are trails too busy at very high projectile counts? (Watch on a dense run.)
+2. Should each base weapon get a more bespoke projectile shape (beam for
+   Sunlance, etc.) rather than shared bolt/orb/shard styles?
+3. Next: boss attack telegraph flourishes; weapon-evolution pickup moment FX.
+
 ## 2026-06-28 — Visual Overhaul v1 + live web hosting
 
 **Method:** User feedback ("don't like the basic graphics… want original

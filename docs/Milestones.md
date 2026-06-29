@@ -60,6 +60,9 @@ Goal: the build-defining payoff and a first marquee encounter.
       and Echo Stone relics. (More weapons/relics still welcome.)
 - [x] On-screen pause button (touch) + mobile HUD layout pass (no corner overlap)
 - [x] First-run tutorial / control hints (non-blocking coach hints, persisted)
+- [x] "How to Play" menu screen (adapts to touch/keyboard)
+- [x] Weapon-feel FX: projectile comet trails, evolved signature glints,
+      crit sparks, death/elite/boss shockwave rings
 - [ ] Touch settings polish
 - [x] Update affected catalogues + balancing notes
 - [x] **Fix:** single-file build infinite-spinner on `file://` (BUG-002)

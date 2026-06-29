@@ -207,6 +207,40 @@ export class GameRenderer {
     }
   }
 
+  /** A tapered comet trail behind a moving projectile, in its travel direction. */
+  private projectileTrail(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    r: number,
+    hue: number,
+    sat: number,
+    lum: number,
+    evolved: boolean,
+    zoom: number,
+  ): void {
+    const sp = Math.hypot(vx, vy);
+    if (sp < 1) return;
+    const ang = Math.atan2(vy, vx);
+    const len = (Math.min(46, sp * 0.035) * (evolved ? 1.7 : 1) + r * 1.4) * zoom;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(ang);
+    const g = ctx.createLinearGradient(0, 0, -len, 0);
+    g.addColorStop(0, `hsla(${hue} ${sat}% ${lum}% / 0.8)`);
+    g.addColorStop(1, `hsla(${hue} ${sat}% ${lum}% / 0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(0, -r * 0.8);
+    ctx.lineTo(-len, 0);
+    ctx.lineTo(0, r * 0.8);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
   private drawProjectiles(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
@@ -214,9 +248,12 @@ export class GameRenderer {
       const p = world.projectiles[i];
       const x = camera.worldToScreenX(p.x);
       const y = camera.worldToScreenY(p.y);
-      const r = p.radius * camera.zoom;
-      const sat = p.crit ? 100 : 90;
-      const lum = p.crit ? 78 : 66;
+      const r = p.radius * camera.zoom * (p.evolved ? 1.2 : 1);
+      const sat = p.crit ? 100 : 92;
+      const lum = p.crit ? 80 : 66;
+
+      this.projectileTrail(ctx, x, y, p.vx, p.vy, r, p.hue, sat, lum, p.evolved, camera.zoom);
+
       if (p.style === "shard") {
         ctx.save();
         ctx.translate(x, y);
@@ -229,20 +266,44 @@ export class GameRenderer {
         ctx.lineTo(-r * 0.7, 0);
         ctx.closePath();
         ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.4, 0, TAU);
+        ctx.fill();
         ctx.restore();
       } else {
         // Soft glow + bright core.
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.8);
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.9);
         g.addColorStop(0, `hsl(${p.hue} ${sat}% ${lum}%)`);
         g.addColorStop(1, `hsla(${p.hue} ${sat}% ${lum}% / 0)`);
         ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(x, y, r * 1.8, 0, TAU);
+        ctx.arc(x, y, r * 1.9, 0, TAU);
         ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
         ctx.beginPath();
-        ctx.arc(x, y, r * 0.5, 0, TAU);
+        ctx.arc(x, y, r * (p.evolved ? 0.6 : 0.5), 0, TAU);
         ctx.fill();
+      }
+
+      // Evolved signature: a bright spinning glint ring on the head.
+      if (p.evolved) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(world.stats.elapsed * 6 + i);
+        ctx.strokeStyle = `hsla(${p.hue} 100% 85% / 0.9)`;
+        ctx.lineWidth = 1.5 * camera.zoom;
+        ctx.beginPath();
+        for (let s = 0; s < 8; s++) {
+          const rr = s % 2 === 0 ? r * 1.5 : r * 0.9;
+          const a = (s / 8) * TAU;
+          const px = Math.cos(a) * rr;
+          const py = Math.sin(a) * rr;
+          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
       }
     }
     ctx.restore();
@@ -375,6 +436,18 @@ export class GameRenderer {
       const p = world.particles[i];
       const x = camera.worldToScreenX(p.x);
       const y = camera.worldToScreenY(p.y);
+      if (p.shape === "ring") {
+        // Expanding shockwave: grows and fades over its life.
+        const t = p.maxLife > 0 ? p.life / p.maxLife : 1;
+        const rr = (p.size + p.size * 2.2 * t) * camera.zoom;
+        ctx.globalAlpha = Math.max(0, (1 - t) * 0.7);
+        ctx.strokeStyle = `hsl(${p.hue} 95% 72%)`;
+        ctx.lineWidth = Math.max(0.5, (3 * (1 - t) + 0.5) * camera.zoom);
+        ctx.beginPath();
+        ctx.arc(x, y, rr, 0, TAU);
+        ctx.stroke();
+        continue;
+      }
       ctx.globalAlpha = Math.max(0, p.alpha);
       const r = p.size * camera.zoom;
       const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.6);

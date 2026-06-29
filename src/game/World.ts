@@ -764,6 +764,7 @@ export class World {
     e.knockY += knockY;
     this.stats.damageDealt += amount;
     this.spawnDamageNumber(e.x, e.y - e.radius, Math.round(amount), crit);
+    if (crit) this.spawnCritSparks(e.x, e.y);
     if (e.hp <= 0) this.killEnemy(e);
   }
 
@@ -892,6 +893,50 @@ export class World {
       pt.active = true;
       this.particles.push(pt);
     }
+    // A shockwave ring punctuates bigger kills.
+    if (e.isElite || e.isBoss) {
+      this.spawnRing(e.x, e.y, e.hue, e.radius * 0.8, e.isBoss ? 0.7 : 0.5);
+    }
+  }
+
+  /** A few small bright sparks at a crit impact. */
+  private spawnCritSparks(x: number, y: number): void {
+    for (let i = 0; i < 4; i++) {
+      const pt = this.particlePool.obtain();
+      const a = this.rng.angle();
+      const sp = this.rng.range(60, 180);
+      pt.x = x;
+      pt.y = y;
+      pt.vx = Math.cos(a) * sp;
+      pt.vy = Math.sin(a) * sp;
+      pt.life = 0;
+      pt.maxLife = this.rng.range(0.18, 0.34);
+      pt.size = this.rng.range(1.5, 3);
+      pt.hue = 48; // warm gold, matching crit numbers
+      pt.alpha = 1;
+      pt.drag = 0.85;
+      pt.shape = "spark";
+      pt.active = true;
+      this.particles.push(pt);
+    }
+  }
+
+  /** An expanding shockwave ring. */
+  private spawnRing(x: number, y: number, hue: number, size: number, maxLife: number): void {
+    const pt = this.particlePool.obtain();
+    pt.x = x;
+    pt.y = y;
+    pt.vx = 0;
+    pt.vy = 0;
+    pt.life = 0;
+    pt.maxLife = maxLife;
+    pt.size = size;
+    pt.hue = hue;
+    pt.alpha = 1;
+    pt.drag = 1;
+    pt.shape = "ring";
+    pt.active = true;
+    this.particles.push(pt);
   }
 
   /** Cosmetic update — runs on real frame time for smoothness. */

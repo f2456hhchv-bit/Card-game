@@ -85,6 +85,7 @@ export class UIManager {
     this.buildPause();
     this.buildGameOver();
     this.buildSettings();
+    this.buildHowTo();
   }
 
   // ---- HUD ---------------------------------------------------------------
@@ -241,6 +242,9 @@ export class UIManager {
     const play = this.el("button", "btn", "Begin Vigil");
     play.addEventListener("click", () => this.cb.onStart());
 
+    const howBtn = this.el("button", "btn secondary", "How to Play");
+    howBtn.addEventListener("click", () => this.openHowTo());
+
     const settingsBtn = this.el("button", "btn secondary", "Settings");
     settingsBtn.addEventListener("click", () => this.openSettings());
 
@@ -249,11 +253,51 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, settingsBtn);
+    btnRow.append(play, howBtn, settingsBtn);
 
     o.append(title, sub, stats, btnRow);
     this.root.appendChild(o);
     this.menu = o;
+  }
+
+  // ---- How to Play -------------------------------------------------------
+
+  private howto!: HTMLDivElement;
+  private buildHowTo(): void {
+    const o = this.el("div", "overlay hidden");
+    const title = this.el("h2", undefined, "HOW TO PLAY");
+
+    const list = this.el("div", "howto");
+    const row = (icon: string, text: string) => {
+      const r = this.el("div", "howto-row");
+      r.append(this.el("div", "howto-icon", icon), this.el("div", "howto-text", text));
+      return r;
+    };
+    const touch = (navigator.maxTouchPoints ?? 0) > 0;
+    list.append(
+      row("🕹", touch ? "Drag anywhere to move." : "Move with WASD or the arrow keys."),
+      row("✦", "Your weapons fire automatically — focus on positioning and dodging."),
+      row("◆", "Defeat the Hollow to drop light shards. Walk over them to gain XP."),
+      row("⬆", "Each level-up, choose one of three power-ups. Build synergies!"),
+      row("★", "Max a weapon + its paired relic to evolve it into a signature form."),
+      row("⏸", touch ? "Tap the pause button (top-right) to pause." : "Press Esc or P to pause."),
+      row("☠", "A boss, The Maw, arrives at 3:00. Hold back the dark as long as you can."),
+    );
+
+    const back = this.el("button", "btn", "Back");
+    back.addEventListener("click", () => this.closeHowTo());
+    o.append(title, list, back);
+    this.root.appendChild(o);
+    this.howto = o;
+  }
+
+  private openHowTo(): void {
+    this.menu.classList.add("hidden");
+    this.howto.classList.remove("hidden");
+  }
+  private closeHowTo(): void {
+    this.howto.classList.add("hidden");
+    this.menu.classList.remove("hidden");
   }
 
   private refreshMenuStats(): void {
