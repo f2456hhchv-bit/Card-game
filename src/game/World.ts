@@ -67,6 +67,9 @@ export class World {
   readonly events = new EventBus<GameEvents>();
   readonly rng: Rng;
 
+  /** Permanent meta-upgrade levels, supplied by Game from the save profile. */
+  metaLevels: Record<string, number> = {};
+
   readonly enemies: Enemy[] = [];
   readonly projectiles: Projectile[] = [];
   readonly enemyProjectiles: EnemyProjectile[] = [];
@@ -176,6 +179,7 @@ export class World {
 
     this.player.reset();
     this.loadout.reset();
+    this.loadout.metaLevels = this.metaLevels;
     this.loadout.recomputeStats(this.player);
     this.player.hp = this.player.stats.maxHp;
     this.spawnDirector.reset();

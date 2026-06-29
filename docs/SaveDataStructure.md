@@ -23,6 +23,7 @@ interface SaveData {
   achievements: string[];     // unlocked achievement ids
   tutorialSeen: boolean;      // first-run coach hints shown (skipped for
                               // returning profiles via migration)
+  meta: Record<string, number>; // permanent meta-upgrade levels (metaDefs id→lvl)
   audio: {
     master: number;           // 0..1
     sfx: number;              // 0..1

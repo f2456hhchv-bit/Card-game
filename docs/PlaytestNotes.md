@@ -4,6 +4,24 @@
 
 Observations from playtests, and the actions they drive. Newest first.
 
+## 2026-06-29 — Light Motes shop (meta-progression, M3)
+
+**Method:** In-browser test of the shop purchase flow (seeded 1000 Motes).
+
+**Observed:**
+- The shop (main menu → Shop) lists 9 permanent upgrades as clean cards with
+  cost/level/effect. Buying Might deducted the cost (1000 → 960), bumped its
+  level (0/5 → 1/5), and persisted to the save (`meta.might = 1`). No errors.
+- This is the first real long-term hook: Motes you already earn now buy
+  permanent power, giving a reason to keep running. Fortune compounds the
+  economy (more Motes per run).
+
+**Design read / open questions:**
+1. Economy balance: is ~210 Motes per good run vs. 28–90 per upgrade level the
+   right pace? Needs real-play tuning (track first full-clear of the shop).
+2. Should there be a one-time "respec/refund" so players can experiment?
+3. Next M3: unlockable starting weapons / alternate Wardens; offline Daily Run.
+
 ## 2026-06-28 — Weapon-feel FX + How to Play
 
 **Method:** In-browser screenshots of the new projectile effects and the How to

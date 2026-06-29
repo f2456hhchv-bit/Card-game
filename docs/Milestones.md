@@ -83,8 +83,9 @@ Goal: replace placeholder geometry with premium, original procedural art.
 - [x] Auto-deploy to GitHub Pages on push (live web link stays current)
 - [x] Verified in-browser (no errors, 60 FPS under software rendering)
 
-## M3 — Meta & Variety (v0.3) — PLANNED
-- [ ] Light Motes shop + persistent unlocks
+## ▶ M3 — Meta & Variety (v0.3) — IN PROGRESS
+- [x] Light Motes shop: 9 permanent meta-upgrades, persisted, applied each run
+- [ ] Unlockable starting weapons / alternate Wardens / stage modifiers
 - [ ] Offline-seeded Daily Run
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

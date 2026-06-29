@@ -8,6 +8,7 @@ import { AudioManager } from "./audio/AudioManager";
 import { SaveManager } from "./save/SaveManager";
 import { UIManager } from "../ui/UIManager";
 import type { DraftOption } from "./Loadout";
+import { metaMoteMultiplier } from "./data/metaDefs";
 import { clamp } from "../core/math/MathUtils";
 
 /** High-level game states. The simulation only advances while `playing`. */
@@ -142,6 +143,8 @@ export class Game {
 
   private startRun(): void {
     this.audio.unlock();
+    // Apply permanent meta-upgrades to this run before resetting the world.
+    this.world.metaLevels = this.save.data.meta;
     this.world.reset();
     this.camera.snapTo(this.world.player.x, this.world.player.y);
     this.draftQueue = 0;
@@ -221,8 +224,9 @@ export class Game {
     this.audio.gameOver();
     this.state = "gameover";
     const stats = this.world.stats;
-    // Reward: motes scale with time survived and kills.
-    const motes = Math.floor(stats.elapsed * 0.5 + stats.kills * 0.2);
+    // Reward: motes scale with time survived and kills, boosted by Fortune.
+    const base = stats.elapsed * 0.5 + stats.kills * 0.2;
+    const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     const records = this.save.recordRun(stats.elapsed, stats.kills, motes);
     this.checkAchievements();
     this.ui.hideHUD();

@@ -8,6 +8,7 @@ import {
   type WeaponLevel,
 } from "./data/weaponDefs";
 import { PASSIVE_DEFS, PASSIVE_LIST } from "./data/passiveDefs";
+import { applyMeta } from "./data/metaDefs";
 import { clamp } from "../core/math/MathUtils";
 
 /** A live weapon the Warden carries, with its current level and fire timer. */
@@ -69,6 +70,8 @@ export class Loadout {
   readonly weapons: OwnedWeapon[] = [];
   /** passive id -> level */
   readonly passives = new Map<string, number>();
+  /** Permanent meta-upgrade levels (set by World from the save each run). */
+  metaLevels: Record<string, number> = {};
 
   reset(): void {
     this.weapons.length = 0;
@@ -97,6 +100,8 @@ export class Loadout {
    */
   recomputeStats(player: Player): void {
     const s = { ...player.base };
+    // Permanent meta-upgrades apply to the base before in-run relics.
+    applyMeta(s, this.metaLevels);
     for (const [id, level] of this.passives) {
       const def = PASSIVE_DEFS[id];
       if (def) def.apply(s, level);

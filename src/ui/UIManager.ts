@@ -3,6 +3,7 @@ import type { Loadout } from "../game/Loadout";
 import type { DraftOption } from "../game/Loadout";
 import type { SaveManager } from "../game/save/SaveManager";
 import type { AudioManager } from "../game/audio/AudioManager";
+import { META_LIST } from "../game/data/metaDefs";
 import { formatTime } from "../core/format";
 
 /**
@@ -86,6 +87,7 @@ export class UIManager {
     this.buildGameOver();
     this.buildSettings();
     this.buildHowTo();
+    this.buildShop();
   }
 
   // ---- HUD ---------------------------------------------------------------
@@ -242,6 +244,9 @@ export class UIManager {
     const play = this.el("button", "btn", "Begin Vigil");
     play.addEventListener("click", () => this.cb.onStart());
 
+    const shopBtn = this.el("button", "btn secondary", "Shop");
+    shopBtn.addEventListener("click", () => this.openShop());
+
     const howBtn = this.el("button", "btn secondary", "How to Play");
     howBtn.addEventListener("click", () => this.openHowTo());
 
@@ -253,7 +258,7 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, howBtn, settingsBtn);
+    btnRow.append(play, shopBtn, howBtn, settingsBtn);
 
     o.append(title, sub, stats, btnRow);
     this.root.appendChild(o);
@@ -297,6 +302,90 @@ export class UIManager {
   }
   private closeHowTo(): void {
     this.howto.classList.add("hidden");
+    this.menu.classList.remove("hidden");
+  }
+
+  // ---- Light Motes shop --------------------------------------------------
+
+  private shop!: HTMLDivElement;
+  private shopBalance!: HTMLDivElement;
+  private shopGrid!: HTMLDivElement;
+
+  private buildShop(): void {
+    const o = this.el("div", "overlay hidden");
+    const title = this.el("h2", undefined, "LIGHT MOTES");
+    this.shopBalance = this.el("div", "shop-balance");
+    this.shopGrid = this.el("div", "shop-grid");
+    const back = this.el("button", "btn", "Back");
+    back.addEventListener("click", () => this.closeShop());
+    o.append(title, this.shopBalance, this.shopGrid, back);
+    this.root.appendChild(o);
+    this.shop = o;
+  }
+
+  private refreshShop(): void {
+    const d = this.save.data;
+    this.shopBalance.textContent = `✦ ${d.motes} Light Motes`;
+    this.shopGrid.replaceChildren();
+    for (const def of META_LIST) {
+      const level = d.meta[def.id] ?? 0;
+      const maxed = level >= def.maxLevel;
+      const cost = maxed ? 0 : def.cost(level);
+
+      const card = this.el("div", "shop-card");
+      card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
+      const head = this.el("div", "shop-card-head");
+      head.append(
+        this.el("div", "shop-name", def.name),
+        this.el("div", "shop-level", `Lv ${level}/${def.maxLevel}`),
+      );
+      const desc = this.el("div", "shop-desc", def.description);
+      const next = this.el(
+        "div",
+        "shop-next",
+        maxed ? "Fully upgraded" : `Next: ${def.note(level + 1)}`,
+      );
+
+      const buy = this.el("button", "btn buy");
+      if (maxed) {
+        buy.textContent = "MAX";
+        buy.classList.add("maxed");
+        buy.disabled = true;
+      } else {
+        buy.textContent = `✦ ${cost}`;
+        const affordable = d.motes >= cost;
+        buy.disabled = !affordable;
+        if (!affordable) buy.classList.add("cant-afford");
+        buy.addEventListener("click", () => this.purchase(def.id));
+      }
+      card.append(head, desc, next, buy);
+      this.shopGrid.appendChild(card);
+    }
+  }
+
+  private purchase(id: string): void {
+    const d = this.save.data;
+    const def = META_LIST.find((m) => m.id === id);
+    if (!def) return;
+    const level = d.meta[id] ?? 0;
+    if (level >= def.maxLevel) return;
+    const cost = def.cost(level);
+    if (d.motes < cost) return;
+    d.motes -= cost;
+    d.meta[id] = level + 1;
+    this.save.save();
+    this.audio.select();
+    this.refreshShop();
+  }
+
+  private openShop(): void {
+    this.refreshShop();
+    this.menu.classList.add("hidden");
+    this.shop.classList.remove("hidden");
+  }
+  private closeShop(): void {
+    this.shop.classList.add("hidden");
+    this.refreshMenuStats(); // balance may have changed
     this.menu.classList.remove("hidden");
   }
 

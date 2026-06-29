@@ -73,10 +73,32 @@ Special drop chances are far higher from elites (see `World.dropLoot`).
 
 ## Meta-progression (persistent)
 
-### Light Motes
-Soft currency earned per run: `floor(seconds·0.5 + kills·0.2)`. Persisted in the
-save profile. **Shop (M3)** will spend Motes on permanent unlocks: alternate
-Wardens, starting weapons, and stage modifiers.
+### Light Motes & the Shop ✅
+Soft currency earned per run: `floor((seconds·0.5 + kills·0.2) · fortuneMult)`.
+Persisted in the save profile (`save.motes`).
+
+The **Shop** (main menu → Shop) spends Motes on **permanent meta-upgrades** that
+apply to the Warden's *base* stats at the start of every future run — the
+long-term "one more run" hook. Source of truth: `src/game/data/metaDefs.ts`;
+purchase state in `save.meta` (id → level). Each upgrade has escalating costs.
+
+| Upgrade | Effect / level | Max |
+| --- | --- | --- |
+| Might | +5% damage | 5 |
+| Vigor | +8 Max HP | 5 |
+| Haste | +4% move speed | 5 |
+| Alacrity | +4% attack speed | 5 |
+| Greed | +6% XP gain | 5 |
+| Resilience | +3% armor | 5 |
+| Magnetism | +12 pickup radius | 5 |
+| Recovery | +0.3 regen/s | 3 |
+| Fortune | +8% Motes earned (compounds the economy) | 5 |
+
+Meta upgrades apply in `Loadout.recomputeStats` (base → meta → in-run relics),
+wired via `World.metaLevels` which `Game` sets from the save each run.
+
+**Planned (M3+):** unlockable starting weapons / alternate Wardens / stage
+modifiers spent with Motes, alongside these stat upgrades.
 
 ### Records & Achievements
 - **Records:** best survival time, most kills — shown on the main menu.

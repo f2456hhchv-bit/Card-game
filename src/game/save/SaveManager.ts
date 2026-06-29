@@ -32,6 +32,8 @@ export interface SaveData {
   achievements: string[];
   /** Whether the first-run control hints have been shown. */
   tutorialSeen: boolean;
+  /** Permanent meta-upgrade levels, keyed by upgrade id (see metaDefs). */
+  meta: Record<string, number>;
   audio: AudioSettings;
   accessibility: AccessibilitySettings;
 }
@@ -46,6 +48,7 @@ function defaultSave(): SaveData {
     runsPlayed: 0,
     achievements: [],
     tutorialSeen: false,
+    meta: {},
     audio: { master: 0.8, sfx: 0.9, music: 0.5, muted: false },
     accessibility: {
       reduceMotion: false,
@@ -87,6 +90,7 @@ export class SaveManager {
       ...parsed,
       version: SAVE_VERSION,
       tutorialSeen,
+      meta: parsed.meta ?? {},
       audio: { ...base.audio, ...(parsed.audio ?? {}) },
       accessibility: { ...base.accessibility, ...(parsed.accessibility ?? {}) },
       achievements: parsed.achievements ?? [],
