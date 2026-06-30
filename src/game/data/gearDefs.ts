@@ -422,6 +422,16 @@ export function mergeCost(grade: number): number {
   return grade;
 }
 
+/** Alloy yielded per banked duplicate when dismantled (scales with rarity). */
+export function dismantleValue(rarity: number): number {
+  return 1 + rarity; // Common 1 … Legendary 4 per core
+}
+
+/** Alloy cost to reroll an item's affixes (scales with rarity; Common = n/a). */
+export function rerollCost(rarity: number): number {
+  return [0, 4, 10, 25][rarity] ?? 0;
+}
+
 /** Equipped map: slot → item id (or null when the slot is empty). */
 export type EquipMap = Record<GearSlot, string | null>;
 

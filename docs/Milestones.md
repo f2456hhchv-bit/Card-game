@@ -118,6 +118,8 @@ Goal: replace placeholder geometry with premium, original procedural art.
       timers (force a new item / a Rare+ after dry streaks).
 - [x] **Gear affixes**: rolled bonus sub-stats, count = rarity tier (0–3), from an
       11-stat pool; a second build-depth axis shown in the Hangar.
+- [x] **Salvage & reroll economy**: dismantle spare cores into **Alloy**, spend it
+      to **reroll** an item's affixes — agency over drop RNG.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette

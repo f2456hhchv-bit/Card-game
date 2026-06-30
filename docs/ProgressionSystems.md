@@ -160,6 +160,14 @@ The Hangar lists each item's affixes; they apply in `applyGear` via `applyAffixe
 after the slot/rarity stats. This gives two items of the same slot/grade distinct,
 build-defining rolls.
 
+**Salvage & reroll (Alloy economy).** Spare duplicate cores you don't need for
+merging can be **dismantled into Alloy** (`SaveManager.dismantleDupes`,
+`dismantleValue = 1 + rarity` per core, stored in `save.alloy`). Alloy is spent to
+**reroll** an item's affixes (`rerollAffixes`, cost `rerollCost(rarity)` = 4/10/25
+for Rare/Epic/Legendary), giving the player agency to turn a bad roll into a good
+one — a deterministic counterweight to drop RNG. Surfaced in the Hangar with an
+Alloy balance and per-item **Salvage**/**Reroll** buttons.
+
 **Acquisition & merge loop:** an item salvage (`SaveManager.grantItemDrop`) is
 granted both at **game over** *and* on **every boss kill** (`Game.salvageGear`),
 so bosses meaningfully advance set completion. The **first** of an item *unlocks*

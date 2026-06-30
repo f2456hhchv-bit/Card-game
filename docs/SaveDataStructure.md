@@ -15,7 +15,8 @@ survive.
 ```ts
 interface SaveData {
   version: number;            // schema version, for migration
-  motes: number;              // persistent soft currency
+  motes: number;              // persistent soft currency (light motes)
+  alloy: number;              // salvage currency for rerolling affixes
   bestTime: number;           // best survival time, seconds
   bestKills: number;          // most kills in one run
   totalKills: number;         // lifetime kills across all runs

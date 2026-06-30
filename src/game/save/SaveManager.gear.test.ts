@@ -119,6 +119,45 @@ describe("SaveManager — gear inventory & equip", () => {
     }
   });
 
+  it("dismantles banked cores into Alloy scaled by rarity", () => {
+    const sm = new SaveManager();
+    const id = itemId("solaris", "core");
+    sm.data.gear.inventory[id] = { grade: 2, dupes: 5, rarity: 2 }; // Epic → 3/core
+    const gained = sm.dismantleDupes(id);
+    expect(gained).toBe(15); // 5 × (1 + 2)
+    expect(sm.data.alloy).toBe(15);
+    expect(sm.data.gear.inventory[id].dupes).toBe(0);
+    // Nothing to dismantle now.
+    expect(sm.dismantleDupes(id)).toBeNull();
+  });
+
+  it("rerolls affixes for Alloy and refuses when too poor or Common", () => {
+    const sm = new SaveManager();
+    const id = itemId("zephyr", "wings");
+    sm.data.gear.inventory[id] = {
+      grade: 1,
+      dupes: 0,
+      rarity: 2, // Epic → 2 affixes, reroll cost 10
+      affixes: [{ id: "hp", value: 10 }, { id: "dmg", value: 0.03 }],
+    };
+    // Too poor.
+    sm.data.alloy = 5;
+    expect(sm.rerollAffixes(id)).toBeNull();
+    expect(sm.data.alloy).toBe(5);
+
+    // Affordable → spends and rerolls to the same count.
+    sm.data.alloy = 30;
+    const count = sm.rerollAffixes(id);
+    expect(count).toBe(2);
+    expect(sm.data.alloy).toBe(20);
+    expect(sm.data.gear.inventory[id].affixes?.length).toBe(2);
+
+    // Common items have no affixes to reroll.
+    const cid = itemId("salvager", "hull");
+    sm.data.gear.inventory[cid] = { grade: 1, dupes: 0, rarity: 0, affixes: [] };
+    expect(sm.rerollAffixes(cid)).toBeNull();
+  });
+
   it("cannot merge past max grade", () => {
     const sm = new SaveManager();
     const id = itemId("solaris", "core");

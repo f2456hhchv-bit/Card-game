@@ -18,6 +18,7 @@ import {
   rarityColor,
   rarityMult,
   affixText,
+  rerollCost,
 } from "../game/data/gearDefs";
 import { ACHIEVEMENT_DEFS } from "../game/data/achievementDefs";
 import { STAGE_LIST, getStage, isStageUnlocked } from "../game/data/stageDefs";
@@ -614,6 +615,7 @@ export class UIManager {
   private hangar!: HTMLDivElement;
   private hangarEquip!: HTMLDivElement;
   private hangarSets!: HTMLDivElement;
+  private hangarBalance!: HTMLDivElement;
 
   private buildHangar(): void {
     const o = this.el("div", "overlay hidden");
@@ -621,20 +623,22 @@ export class UIManager {
     const sub = this.el(
       "div",
       "subtitle",
-      "Equip one item per ship slot. Merge duplicate cores to raise an item's grade — and equip a full set of 4 for a powerful set bonus.",
+      "Equip one per slot · merge cores for grade · complete a set for its bonus · salvage spare cores into Alloy to reroll affixes.",
     );
+    this.hangarBalance = this.el("div", "shop-balance");
     // Equipped loadout summary (4 slots + active set bonuses).
     this.hangarEquip = this.el("div", "equip-panel");
     // The collected inventory, grouped by set.
     this.hangarSets = this.el("div", "set-list");
     const back = this.el("button", "btn", "Back");
     back.addEventListener("click", () => this.closeHangar());
-    o.append(title, sub, this.hangarEquip, this.hangarSets, back);
+    o.append(title, sub, this.hangarBalance, this.hangarEquip, this.hangarSets, back);
     this.root.appendChild(o);
     this.hangar = o;
   }
 
   private refreshHangar(): void {
+    this.hangarBalance.textContent = `⬢ ${this.save.data.alloy} Alloy`;
     this.refreshEquipPanel();
     this.refreshSetList();
   }
@@ -801,7 +805,29 @@ export class UIManager {
           actions.appendChild(lock);
         }
 
+        // Second action row: salvage spare cores into Alloy, and reroll affixes.
+        const actions2 = this.el("div", "item-actions");
+        if (isOwned && m.dupes > 0) {
+          const sv = this.el("button", "btn mini");
+          sv.textContent = `Salvage ⬡${m.dupes}`;
+          sv.title = "Dismantle banked cores into Alloy";
+          sv.addEventListener("click", () => this.salvageDupes(def.id));
+          actions2.appendChild(sv);
+        }
+        if (isOwned && rarity >= 1) {
+          const cost = rerollCost(rarity);
+          const rr = this.el("button", "btn mini");
+          const canAfford = this.save.data.alloy >= cost;
+          rr.textContent = `Reroll ⬢${cost}`;
+          rr.title = "Reroll this item's affixes";
+          rr.disabled = !canAfford;
+          if (!canAfford) rr.classList.add("cant-afford");
+          rr.addEventListener("click", () => this.rerollAffixes(def.id));
+          actions2.appendChild(rr);
+        }
+
         card.append(top, grade, pips, stat, affixWrap, actions);
+        if (actions2.childElementCount > 0) card.append(actions2);
         grid.appendChild(card);
       }
 
@@ -813,6 +839,19 @@ export class UIManager {
   private equipItem(id: string): void {
     if (!this.save.equipItem(id)) return;
     this.audio.select();
+    this.refreshHangar();
+  }
+
+  private salvageDupes(id: string): void {
+    const gained = this.save.dismantleDupes(id);
+    if (gained === null) return;
+    this.audio.select();
+    this.refreshHangar();
+  }
+
+  private rerollAffixes(id: string): void {
+    if (this.save.rerollAffixes(id) === null) return;
+    this.audio.levelUp();
     this.refreshHangar();
   }
 

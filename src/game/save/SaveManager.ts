@@ -9,6 +9,8 @@ import {
   mergeCost,
   rollRarity,
   rollAffixes,
+  dismantleValue,
+  rerollCost,
   type EquipMap,
   type GearSlot,
   type ModuleState,
@@ -34,6 +36,8 @@ export interface SaveData {
   version: number;
   /** Persistent soft currency earned from runs (light motes). */
   motes: number;
+  /** Salvage currency from dismantling spare gear cores (used to reroll affixes). */
+  alloy: number;
   /** Best survival time in seconds. */
   bestTime: number;
   /** Most kills in a single run. */
@@ -84,6 +88,7 @@ function defaultSave(): SaveData {
   return {
     version: SAVE_VERSION,
     motes: 0,
+    alloy: 0,
     bestTime: 0,
     bestKills: 0,
     totalKills: 0,
@@ -145,6 +150,7 @@ export class SaveManager {
       ...parsed,
       version: SAVE_VERSION,
       tutorialSeen,
+      alloy: parsed.alloy ?? 0,
       meta: parsed.meta ?? {},
       gear: this.migrateGear(parsed),
       bossRushBest: parsed.bossRushBest ?? 0,
@@ -340,6 +346,32 @@ export class SaveManager {
     m.grade++;
     this.save();
     return m.grade;
+  }
+
+  /** Dismantle all banked duplicate cores of an item into Alloy. */
+  dismantleDupes(id: string): number | null {
+    const m = this.data.gear.inventory[id];
+    if (!m || m.dupes <= 0) return null;
+    const gain = m.dupes * dismantleValue(m.rarity ?? 0);
+    m.dupes = 0;
+    this.data.alloy += gain;
+    this.save();
+    return gain;
+  }
+
+  /** Reroll an item's affixes for Alloy. Returns the new affix count, or null. */
+  rerollAffixes(id: string): number | null {
+    const m = this.data.gear.inventory[id];
+    if (!m || m.grade <= 0) return null;
+    const rarity = m.rarity ?? 0;
+    if (rarity < 1) return null; // Common has no affixes to reroll
+    const cost = rerollCost(rarity);
+    if (this.data.alloy < cost) return null;
+    this.data.alloy -= cost;
+    // A fresh roll (new ids + magnitudes) of the same count for this rarity.
+    m.affixes = rollAffixes(rarity);
+    this.save();
+    return m.affixes.length;
   }
 
   /** Equip an owned item into its slot. Returns false if not owned. */
