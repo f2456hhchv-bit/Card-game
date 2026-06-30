@@ -577,6 +577,11 @@
   font-style: italic;
 }
 
+/* A locked menu button (e.g. Boss Rush before the first boss). */
+.btn.secondary.locked {
+  opacity: 0.5;
+}
+
 /* Stage chooser on the main menu. */
 .stage-row {
   display: flex;
@@ -797,9 +802,26 @@
 .item-card.locked {
   opacity: 0.5;
 }
+.item-card {
+  border-top: 3px solid var(--rarity, rgba(255, 255, 255, 0.12));
+}
 .item-card.equipped {
   box-shadow: 0 0 0 2px var(--card-accent),
     0 0 18px color-mix(in srgb, var(--card-accent) 35%, transparent);
+}
+.item-grade {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rarity-pill {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 5px;
+  border: 1px solid currentColor;
 }
 .item-top {
   display: flex;

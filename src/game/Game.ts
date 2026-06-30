@@ -9,7 +9,14 @@ import { SaveManager } from "./save/SaveManager";
 import { UIManager } from "../ui/UIManager";
 import type { DraftOption } from "./Loadout";
 import { metaMoteMultiplier } from "./data/metaDefs";
-import { GEAR_ITEMS, SET_LIST, emptyEquip, completedSets, maxedItems } from "./data/gearDefs";
+import {
+  GEAR_ITEMS,
+  SET_LIST,
+  emptyEquip,
+  completedSets,
+  maxedItems,
+  rarityName,
+} from "./data/gearDefs";
 import { getStage, isStageUnlocked } from "./data/stageDefs";
 import { WARDEN_LIST } from "./data/wardenDefs";
 import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
@@ -50,6 +57,8 @@ export class Game {
 
   /** True while the current run is a Daily Run (fixed seed, equal footing). */
   private isDailyRun = false;
+  /** True while the current run is a Boss Rush (endless boss gauntlet). */
+  private isBossRush = false;
   /** Whether a weapon was evolved this run (for the achievement). */
   private runEvolved = false;
 
@@ -70,9 +79,10 @@ export class Game {
     this.ui = new UIManager(uiParent, this.save, this.audio, {
       onStart: () => this.startRun(false),
       onStartDaily: () => this.startRun(true),
+      onStartBossRush: () => this.startRun(false, true),
       onPause: () => this.pause(),
       onResume: () => this.resume(),
-      onRestart: () => this.startRun(this.isDailyRun),
+      onRestart: () => this.startRun(this.isDailyRun, this.isBossRush),
       onToMenu: () => this.toMenu(),
       onPickDraft: (opt) => this.pickDraft(opt),
       onGearChanged: () => this.checkAchievements(),
@@ -171,10 +181,12 @@ export class Game {
 
   // ---- State transitions -------------------------------------------------
 
-  private startRun(daily = false): void {
+  private startRun(daily = false, bossRush = false): void {
     this.audio.unlock();
     this.isDailyRun = daily;
+    this.isBossRush = bossRush;
     this.runEvolved = false;
+    this.world.bossRush = bossRush;
     if (daily) {
       // Daily Run: a fair, equal challenge — fixed daily seed, default Warden,
       // and no permanent meta-upgrades, so the run is the same for everyone.
@@ -281,8 +293,9 @@ export class Game {
     this.audio.gameOver();
     this.state = "gameover";
     const stats = this.world.stats;
-    // Reward: motes scale with time survived and kills, boosted by Fortune.
-    const base = stats.elapsed * 0.5 + stats.kills * 0.2;
+    // Reward: motes scale with time survived, kills and bosses felled (the last
+    // makes Boss Rush worthwhile), boosted by Fortune.
+    const base = stats.elapsed * 0.5 + stats.kills * 0.2 + stats.bossKills * 15;
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     const records = this.save.recordRun(stats, motes);
     if (this.isDailyRun) {
@@ -292,7 +305,7 @@ export class Game {
     this.salvageGear();
     this.checkAchievements();
     this.ui.hideHUD();
-    this.ui.showGameOver(stats, motes, records, this.isDailyRun);
+    this.ui.showGameOver(stats, motes, records, this.isDailyRun, this.isBossRush);
   }
 
   /** Grant one gear-item salvage and toast the result (boss kill / run end). */
@@ -300,13 +313,20 @@ export class Game {
     const drop = this.save.grantItemDrop();
     const def = GEAR_ITEMS[drop.id];
     if (!def) return;
-    this.ui.showToast(
-      def.icon,
-      drop.isNew ? `${def.name} found` : `${def.name} core`,
-      drop.isNew
-        ? `New gear unlocked — equip it in the Hangar.`
-        : `Duplicate core banked. Merge it in the Hangar to upgrade.`,
-    );
+    const rarity = rarityName(drop.rarity);
+    let title: string;
+    let body: string;
+    if (drop.isNew) {
+      title = `${rarity} ${def.name} found`;
+      body = "New gear unlocked — equip it in the Hangar.";
+    } else if (drop.rarityUp) {
+      title = `${def.name} → ${rarity}!`;
+      body = "A finer salvage — its rarity (and stats) just rose.";
+    } else {
+      title = `${def.name} core`;
+      body = "Duplicate core banked. Merge it in the Hangar to upgrade.";
+    }
+    this.ui.showToast(def.icon, title, body);
   }
 
   private achievementContext(): AchievementContext {

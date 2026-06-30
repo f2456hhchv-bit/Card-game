@@ -215,6 +215,33 @@ describe("World — combat integration", () => {
     expect(spawnHusk("ember")).toBeGreaterThan(spawnHusk("fade"));
   });
 
+  it("Boss Rush spawns a boss fast, no fodder, and queues the next on defeat", () => {
+    const world = new World(31);
+    world.bossRush = true;
+    world.reset();
+    world.player.stats.maxHp = 1e9;
+    world.player.hp = 1e9;
+
+    // No fodder spawns in rush — only the boss (and its summons) should appear.
+    let spawned = false;
+    world.events.on("bossSpawned", () => (spawned = true));
+    for (let i = 0; i < 60 * 7 && !spawned; i++) world.step(1 / 60, STILL);
+    expect(spawned).toBe(true);
+    // Every live enemy right after the first boss spawns is the boss itself.
+    expect(world.enemies.every((e) => e.isBoss)).toBe(true);
+
+    // Killing the boss queues the next one a few seconds later.
+    const firstBoss = world.boss!;
+    world.damageEnemy(firstBoss, firstBoss.maxHp + 1, false, 0, 0);
+    world.step(1 / 60, STILL);
+    expect(world.bossActive).toBe(false);
+    let respawned = false;
+    world.events.on("bossSpawned", () => (respawned = true));
+    for (let i = 0; i < 60 * 6 && !respawned; i++) world.step(1 / 60, STILL);
+    expect(respawned).toBe(true);
+    expect(world.stats.bossKills).toBe(1);
+  });
+
   it("kills award XP and can trigger a level-up draft", () => {
     const world = new World(99);
     world.reset();

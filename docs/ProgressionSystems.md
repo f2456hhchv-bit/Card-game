@@ -144,6 +144,12 @@ big 4-piece bonus, four of which grant a signature perk):
 
 (6 sets × 4 slots = **24 items** to collect.)
 
+**Rarity** is a second progression axis on top of grade. Every drop rolls a tier
+— **Common ×1.0 · Rare ×1.25 · Epic ×1.6 · Legendary ×2.1** (weights 60/28/10/2,
+`RARITIES`/`rollRarity`) — that multiplies the item's per-grade stats. A luckier
+later roll *upgrades* an owned item's rarity. The Hangar shows a coloured rarity
+pill + edge per item and live, rarity-scaled stat numbers.
+
 **Acquisition & merge loop:** an item salvage (`SaveManager.grantItemDrop`) is
 granted both at **game over** *and* on **every boss kill** (`Game.salvageGear`),
 so bosses meaningfully advance set completion. The **first** of an item *unlocks*
@@ -189,6 +195,15 @@ Each stage headlines its own **bosses** via `StageDef.bossPool`, cycled by
 encounter index (`bossForEncounter(index, pool)`). The Pyre floods the field with
 fast Cinders and rapid bullets; The Forge is a slow siege that summons tanky
 Revenants. Boss sprites reuse the two baked silhouettes with fiery hues.
+
+### Boss Rush ✅ (endless gauntlet)
+An unlockable mode (after the first boss kill) that strips fodder spawns entirely
+and throws **bosses back-to-back, escalating forever** — the first at 5s, each
+next ~4s after the last falls (`World.bossRush`; pacing constants `RUSH_FIRST`/
+`RUSH_GAP`). Boss HP escalates with encounter index, so it's a pure DPS/survival
+check to flex a geared build. Uses the selected stage's boss pool + difficulty
+and your full meta/gear. Motes reward adds **+15 per boss felled**; the game-over
+screen headlines **Bosses**. Entry via the main-menu **Boss Rush** button.
 
 ### Daily Run ✅
 A once-a-day challenge seeded from the **local calendar date**

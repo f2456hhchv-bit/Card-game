@@ -109,6 +109,11 @@ Goal: replace placeholder geometry with premium, original procedural art.
       natives, bosses **The Rime** & **The Nadir**; unlocked at 4 lifetime bosses.
 - [x] **Set-completion achievements**: Quartermaster (a set), Outfitter (all sets),
       Master Smith (max-grade an item) — checked live after Hangar changes. 15 total.
+- [x] **Gear rarity tiers**: every drop rolls Common/Rare/Epic/Legendary (×1.0–×2.1
+      stat multiplier); luckier rolls upgrade an item's rarity. Coloured pills in
+      the Hangar; a second chase axis atop grade-merging.
+- [x] **Boss Rush mode**: endless escalating boss gauntlet (no fodder), unlocked
+      after the first boss kill; +15 motes/boss, game-over headlines Bosses.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

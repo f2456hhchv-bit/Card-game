@@ -14,6 +14,9 @@ import {
   itemId,
   mergeCost,
   setCounts,
+  rarityName,
+  rarityColor,
+  rarityMult,
 } from "../game/data/gearDefs";
 import { ACHIEVEMENT_DEFS } from "../game/data/achievementDefs";
 import { STAGE_LIST, getStage, isStageUnlocked } from "../game/data/stageDefs";
@@ -29,6 +32,7 @@ import { formatTime } from "../core/format";
 export interface UICallbacks {
   onStart(): void;
   onStartDaily(): void;
+  onStartBossRush(): void;
   onPause(): void;
   onResume(): void;
   onRestart(): void;
@@ -61,6 +65,7 @@ export class UIManager {
   private bossFill!: HTMLDivElement;
 
   private menu!: HTMLDivElement;
+  private bossRushBtn!: HTMLButtonElement;
   private draft!: HTMLDivElement;
   private pause!: HTMLDivElement;
   private gameover!: HTMLDivElement;
@@ -297,6 +302,16 @@ export class UIManager {
     const dailyLine = this.el("div", "daily-line");
     dailyLine.id = "daily-line";
 
+    // Boss Rush — unlocked once the player has felled a boss.
+    this.bossRushBtn = this.el("button", "btn secondary", "Boss Rush");
+    this.bossRushBtn.addEventListener("click", () => {
+      if (this.bossRushBtn.classList.contains("locked")) {
+        this.showToast("☠", "Boss Rush locked", "Fell a boss in a normal run to unlock the gauntlet.");
+        return;
+      }
+      this.cb.onStartBossRush();
+    });
+
     const wardensBtn = this.el("button", "btn secondary", "Wardens");
     wardensBtn.addEventListener("click", () => this.openWardens());
 
@@ -320,7 +335,7 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, dailyBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
+    btnRow.append(play, dailyBtn, this.bossRushBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
 
     o.append(title, sub, stats, stageRow, btnRow, dailyLine);
     this.root.appendChild(o);
@@ -639,13 +654,13 @@ export class UIManager {
       if (item) tile.style.setProperty("--card-accent", `hsl(${item.hue} 80% 65%)`);
       tile.append(this.el("div", "equip-slot-icon", meta.icon));
       tile.append(this.el("div", "equip-slot-label", meta.label));
-      tile.append(
-        this.el(
-          "div",
-          "equip-slot-item",
-          item && st ? `${item.name} · G${st.grade}` : "— empty —",
-        ),
+      const itemLine = this.el(
+        "div",
+        "equip-slot-item",
+        item && st ? `${item.name} · G${st.grade}` : "— empty —",
       );
+      if (item && st) itemLine.style.color = rarityColor(st.rarity ?? 0);
+      tile.append(itemLine);
       slots.appendChild(tile);
     }
     this.hangarEquip.appendChild(slots);
@@ -709,8 +724,10 @@ export class UIManager {
         const maxed = m.grade >= def.maxGrade;
         const equipped = g.equipped[slot] === def.id;
 
+        const rarity = m.rarity ?? 0;
         const card = this.el("div", "item-card");
         card.style.setProperty("--card-accent", accent);
+        if (isOwned) card.style.setProperty("--rarity", rarityColor(rarity));
         if (!isOwned) card.classList.add("locked");
         if (equipped) card.classList.add("equipped");
 
@@ -719,16 +736,25 @@ export class UIManager {
           this.el("span", "item-icon", def.icon),
           this.el("div", "item-name", isOwned ? def.name : `${SLOT_META[slot].label}`),
         );
-        const grade = this.el(
-          "div",
-          "item-grade",
-          isOwned ? `Grade ${m.grade}/${def.maxGrade}` : "Not found",
-        );
+        const gradeRow = this.el("div", "item-grade");
+        if (isOwned) {
+          const pill = this.el("span", "rarity-pill", rarityName(rarity));
+          pill.style.color = rarityColor(rarity);
+          pill.style.borderColor = rarityColor(rarity);
+          gradeRow.append(pill, this.el("span", undefined, `G${m.grade}/${def.maxGrade}`));
+        } else {
+          gradeRow.textContent = "Not found";
+        }
+        const grade = gradeRow;
         const pips = this.el("div", "grade-pips small");
         for (let i = 1; i <= def.maxGrade; i++) {
           pips.appendChild(this.el("div", `pip${i <= m.grade ? " on" : ""}`));
         }
-        const stat = this.el("div", "item-stat", isOwned ? def.note(m.grade) : "Salvage one from a run.");
+        const stat = this.el(
+          "div",
+          "item-stat",
+          isOwned ? def.note(m.grade, rarityMult(rarity)) : "Salvage one from a run.",
+        );
 
         const actions = this.el("div", "item-actions");
         if (isOwned) {
@@ -787,7 +813,12 @@ export class UIManager {
     this.audio.levelUp();
     const def = GEAR_ITEMS[id];
     if (def && newGrade >= def.maxGrade) {
-      this.showToast(def.icon, `${def.name} — Grade ${newGrade}`, `Max grade reached: ${def.note(newGrade)}`);
+      const r = this.save.data.gear.inventory[id]?.rarity ?? 0;
+      this.showToast(
+        def.icon,
+        `${def.name} — Grade ${newGrade}`,
+        `Max grade reached: ${def.note(newGrade, rarityMult(r))}`,
+      );
     }
     this.refreshHangar();
     this.cb.onGearChanged(); // may unlock the Master Smith / set achievements
@@ -888,6 +919,11 @@ export class UIManager {
     );
 
     this.refreshStageChooser();
+
+    // Boss Rush unlocks after the first boss kill.
+    const rushUnlocked = d.lifetime.bosses >= 1;
+    this.bossRushBtn.classList.toggle("locked", !rushUnlocked);
+    this.bossRushBtn.textContent = rushUnlocked ? "Boss Rush" : "Boss Rush 🔒";
 
     const dailyLine = this.menu.querySelector("#daily-line");
     if (dailyLine) {
@@ -1013,9 +1049,16 @@ export class UIManager {
     motesEarned: number,
     records: { newBestTime: boolean; newBestKills: boolean },
     daily = false,
+    bossRush = false,
   ): void {
     const title = this.gameover.querySelector("#go-title");
-    if (title) title.textContent = daily ? "DAILY RUN — THE LIGHT FADES" : "THE LIGHT FADES";
+    if (title) {
+      title.textContent = bossRush
+        ? "BOSS RUSH — THE LIGHT FADES"
+        : daily
+          ? "DAILY RUN — THE LIGHT FADES"
+          : "THE LIGHT FADES";
+    }
     const container = this.gameover.querySelector("#go-stats");
     if (container) {
       const stat = (label: string, value: string, highlight = false) => {
@@ -1032,6 +1075,8 @@ export class UIManager {
           : `${Math.round(stats.damageDealt)}`;
       container.replaceChildren(
         stat("Survived", formatTime(stats.elapsed), records.newBestTime),
+        // Boss Rush headlines bosses felled; normal runs headline kills.
+        stat("Bosses", `${stats.bossKills}`, bossRush && stats.bossKills > 0),
         stat("Felled", `${stats.kills}`, records.newBestKills),
         stat("Elites", `${stats.eliteKills}`),
         stat("Level", `${stats.level}`),

@@ -24,6 +24,55 @@ export interface ModuleState {
   grade: number;
   /** Duplicate cores banked toward the next merge. */
   dupes: number;
+  /** Rarity tier index (0=Common … 3=Legendary). Optional for old saves. */
+  rarity?: number;
+}
+
+/**
+ * Rarity tiers — a second progression axis. Every drop rolls a rarity that
+ * multiplies the item's stats; a luckier roll upgrades the item's rarity. This
+ * gives long-tail chase depth on top of grade-merging.
+ */
+export interface RarityTier {
+  name: string;
+  hue: number;
+  sat: number;
+  /** Stat multiplier applied to the item's per-grade contribution. */
+  mult: number;
+  /** Relative drop weight. */
+  weight: number;
+}
+
+export const RARITIES: RarityTier[] = [
+  { name: "Common", hue: 210, sat: 6, mult: 1.0, weight: 60 },
+  { name: "Rare", hue: 205, sat: 80, mult: 1.25, weight: 28 },
+  { name: "Epic", hue: 282, sat: 72, mult: 1.6, weight: 10 },
+  { name: "Legendary", hue: 42, sat: 92, mult: 2.1, weight: 2 },
+];
+
+export function rarityMult(r: number): number {
+  return RARITIES[r]?.mult ?? 1;
+}
+
+export function rarityName(r: number): string {
+  return (RARITIES[r] ?? RARITIES[0]).name;
+}
+
+/** CSS colour for a rarity tier. */
+export function rarityColor(r: number): string {
+  const t = RARITIES[r] ?? RARITIES[0];
+  return `hsl(${t.hue} ${t.sat}% 62%)`;
+}
+
+/** Weighted-random rarity index. `rand` defaults to Math.random (injectable). */
+export function rollRarity(rand: () => number = Math.random): number {
+  const total = RARITIES.reduce((a, t) => a + t.weight, 0);
+  let roll = rand() * total;
+  for (let i = 0; i < RARITIES.length; i++) {
+    roll -= RARITIES[i].weight;
+    if (roll < 0) return i;
+  }
+  return 0;
 }
 
 /** Slot presentation + the base stat each slot grants per grade. */
@@ -34,48 +83,50 @@ export const SLOT_META: Record<
     /** Noun used to build item names, e.g. "Solaris Drive". */
     noun: string;
     icon: string;
-    apply: (s: DerivedStats, grade: number) => void;
-    note: (grade: number) => string;
+    /** @param m rarity stat multiplier (1 = Common). */
+    apply: (s: DerivedStats, grade: number, m: number) => void;
+    note: (grade: number, m: number) => string;
   }
 > = {
   hull: {
     label: "Hull",
     noun: "Hull",
     icon: "🛡",
-    apply: (s, g) => {
-      s.maxHp += 6 * g;
-      s.armor += 0.015 * g;
+    apply: (s, g, m) => {
+      s.maxHp += 6 * g * m;
+      s.armor += 0.015 * g * m;
     },
-    note: (g) => `+${6 * g} HP · +${(1.5 * g).toFixed(1)}% armour`,
+    note: (g, m) => `+${Math.round(6 * g * m)} HP · +${(1.5 * g * m).toFixed(1)}% armour`,
   },
   core: {
     label: "Core",
     noun: "Core",
     icon: "⚛",
-    apply: (s, g) => {
-      s.damageMult *= 1 + 0.035 * g;
+    apply: (s, g, m) => {
+      s.damageMult *= 1 + 0.035 * g * m;
     },
-    note: (g) => `+${(3.5 * g).toFixed(0)}% damage`,
+    note: (g, m) => `+${(3.5 * g * m).toFixed(0)}% damage`,
   },
   engines: {
     label: "Engines",
     noun: "Drive",
     icon: "🚀",
-    apply: (s, g) => {
-      s.moveSpeed *= 1 + 0.025 * g;
-      s.pickupRadius += 8 * g;
+    apply: (s, g, m) => {
+      s.moveSpeed *= 1 + 0.025 * g * m;
+      s.pickupRadius += 8 * g * m;
     },
-    note: (g) => `+${(2.5 * g).toFixed(0)}% speed · +${8 * g} pickup`,
+    note: (g, m) => `+${(2.5 * g * m).toFixed(0)}% speed · +${Math.round(8 * g * m)} pickup`,
   },
   wings: {
     label: "Wings",
     noun: "Wings",
     icon: "🪽",
-    apply: (s, g) => {
-      s.attackSpeedMult *= 1 + 0.025 * g;
-      s.areaMult *= 1 + 0.02 * g;
+    apply: (s, g, m) => {
+      s.attackSpeedMult *= 1 + 0.025 * g * m;
+      s.areaMult *= 1 + 0.02 * g * m;
     },
-    note: (g) => `+${(2.5 * g).toFixed(0)}% atk spd · +${(2 * g).toFixed(0)}% area`,
+    note: (g, m) =>
+      `+${(2.5 * g * m).toFixed(0)}% atk spd · +${(2 * g * m).toFixed(0)}% area`,
   },
 };
 
@@ -184,8 +235,8 @@ export interface GearItemDef {
   icon: string;
   hue: number;
   maxGrade: number;
-  apply: (s: DerivedStats, grade: number) => void;
-  note: (grade: number) => string;
+  apply: (s: DerivedStats, grade: number, mult: number) => void;
+  note: (grade: number, mult: number) => string;
 }
 
 /** Stable item id for a (set, slot) pair. */
@@ -279,14 +330,14 @@ export function applyGear(
   equipped: EquipMap,
   inventory: Record<string, ModuleState>,
 ): void {
-  // Per-item grade stats.
+  // Per-item grade stats, scaled by the item's rarity multiplier.
   for (const slot of SLOTS) {
     const id = equipped[slot];
     if (!id) continue;
     const item = GEAR_ITEMS[id];
     const st = inventory[id];
     if (!item || !st || st.grade <= 0) continue;
-    item.apply(stats, Math.min(st.grade, item.maxGrade));
+    item.apply(stats, Math.min(st.grade, item.maxGrade), rarityMult(st.rarity ?? 0));
   }
   // Set bonuses (2-piece, then the big 4-piece).
   const counts = setCounts(equipped, inventory);

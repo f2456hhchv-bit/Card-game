@@ -7,6 +7,7 @@ import {
   emptyEquip,
   itemId,
   mergeCost,
+  rollRarity,
   type EquipMap,
   type GearSlot,
   type ModuleState,
@@ -170,7 +171,7 @@ export class SaveManager {
         if (!m || m.grade <= 0) continue;
         const slot = map[oldId];
         const id = itemId("salvager", slot);
-        inventory[id] = { grade: m.grade, dupes: m.dupes };
+        inventory[id] = { grade: m.grade, dupes: m.dupes, rarity: 0 };
         equipped[slot] = id; // auto-equip the migrated piece
       }
     }
@@ -230,14 +231,19 @@ export class SaveManager {
   /**
    * Grant a random gear-item drop. A brand-new item is owned at grade 1 (and
    * auto-equipped if its slot is empty); a duplicate banks a core toward a merge.
+   * Every drop also rolls a **rarity** — a luckier roll upgrades the item's
+   * rarity (its stat multiplier), a second long-tail progression axis.
    */
-  grantItemDrop(): { id: string; isNew: boolean } {
+  grantItemDrop(): { id: string; isNew: boolean; rarity: number; rarityUp: boolean } {
     const def = ITEM_LIST[Math.floor(Math.random() * ITEM_LIST.length)];
     const inv = this.data.gear.inventory;
-    const m = inv[def.id] ?? { grade: 0, dupes: 0 };
+    const m = inv[def.id] ?? { grade: 0, dupes: 0, rarity: 0 };
+    const rolled = rollRarity();
     let isNew = false;
+    let rarityUp = false;
     if (m.grade === 0) {
       m.grade = 1;
+      m.rarity = rolled;
       isNew = true;
       // Convenience: fill an empty slot with the first item the player owns.
       if (this.data.gear.equipped[def.slot] == null) {
@@ -245,10 +251,14 @@ export class SaveManager {
       }
     } else {
       m.dupes++;
+      if (rolled > (m.rarity ?? 0)) {
+        m.rarity = rolled;
+        rarityUp = true;
+      }
     }
     inv[def.id] = m;
     this.save();
-    return { id: def.id, isNew };
+    return { id: def.id, isNew, rarity: m.rarity ?? 0, rarityUp };
   }
 
   /** Merge banked duplicates to raise an item's grade. Returns the new grade. */

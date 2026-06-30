@@ -23,6 +23,9 @@ import { clamp, TAU } from "../core/math/MathUtils";
 
 /** First boss appears at this many seconds; bosses recur on this interval. */
 const BOSS_INTERVAL = 180;
+/** Boss Rush: first boss delay, and gap after each boss falls (seconds). */
+const RUSH_FIRST = 5;
+const RUSH_GAP = 4;
 
 /** Aggregate, read-only run statistics surfaced to HUD and endgame screen. */
 export interface RunStats {
@@ -88,6 +91,11 @@ export class World {
   selectedWarden = "lumen";
   /** Stage id, supplied by Game; drives the enemy pool and backdrop palette. */
   stageId = "fade";
+  /**
+   * Boss Rush mode: no fodder spawns — bosses arrive fast and escalate endlessly,
+   * each a few seconds after the last falls. A pure gauntlet to flex a build.
+   */
+  bossRush = false;
 
   /** Reactor "Overdrive" pulse timer (seconds until next pulse). */
   private pulseTimer = 0;
@@ -247,7 +255,7 @@ export class World {
     this.orbitAngle = 0;
     this.boss = null;
     this.bossController = null;
-    this.nextBossTime = BOSS_INTERVAL;
+    this.nextBossTime = this.bossRush ? RUSH_FIRST : BOSS_INTERVAL;
     this.bossEncounter = 0;
   }
 
@@ -334,7 +342,8 @@ export class World {
 
     this.updatePlayer(dt, input);
     this.rebuildGrid();
-    this.spawnEnemies(dt);
+    // Boss Rush suppresses fodder spawns — only bosses and their summons appear.
+    if (!this.bossRush) this.spawnEnemies(dt);
     this.updateBoss(dt);
     this.weaponSystem.update(this, dt);
     this.updateProjectiles(dt);
@@ -381,7 +390,9 @@ export class World {
     // Schedule a new boss when its time arrives and none is active.
     if (!this.bossActive && this.stats.elapsed >= this.nextBossTime) {
       this.spawnBoss();
-      this.nextBossTime += BOSS_INTERVAL;
+      // In rush the next boss is scheduled when this one dies; otherwise it
+      // recurs on the fixed interval. Push it far out so it can't double-spawn.
+      this.nextBossTime += this.bossRush ? 1e9 : BOSS_INTERVAL;
     }
     if (this.boss && this.bossController) {
       if (!this.boss.active) {
@@ -893,6 +904,8 @@ export class World {
     this.boss = null;
     this.bossController = null;
     this.stats.bossKills++;
+    // Boss Rush: queue the next escalating boss a short beat later.
+    if (this.bossRush) this.nextBossTime = this.stats.elapsed + RUSH_GAP;
     this.events.emit("bossDefeated", { x: e.x, y: e.y });
 
     // Generous reward: a fan of XP shards plus guaranteed support drops.

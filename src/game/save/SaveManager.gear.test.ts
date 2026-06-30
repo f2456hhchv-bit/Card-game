@@ -14,6 +14,30 @@ describe("SaveManager — gear inventory & equip", () => {
     expect(sm.data.gear.equipped[item.slot]).toBe(first.id);
   });
 
+  it("a drop rolls a rarity, and a luckier later roll upgrades it", () => {
+    const sm = new SaveManager();
+    const real = Math.random;
+    try {
+      // grantItemDrop() calls Math.random twice: item pick, then rarity roll.
+      // Force item index 0 (→0) and a Common rarity roll (→0).
+      Math.random = () => 0;
+      const first = sm.grantItemDrop();
+      const id = first.id;
+      expect(first.isNew).toBe(true);
+      expect(first.rarity).toBe(0); // Common
+
+      // Same item (index 0), but a Legendary rarity roll (0.99 → top tier).
+      let c = 0;
+      Math.random = () => (c++ % 2 === 0 ? 0 : 0.99);
+      const second = sm.grantItemDrop();
+      expect(second.id).toBe(id);
+      expect(second.rarityUp).toBe(true);
+      expect(sm.data.gear.inventory[id].rarity).toBe(3); // Legendary
+    } finally {
+      Math.random = real;
+    }
+  });
+
   it("further drops of an owned item bank duplicate cores", () => {
     const sm = new SaveManager();
     const first = sm.grantItemDrop();
@@ -78,8 +102,8 @@ describe("SaveManager — gear inventory & equip", () => {
     const migrated = (sm as unknown as {
       migrate(p: unknown): typeof sm.data;
     }).migrate(legacy);
-    expect(migrated.gear.inventory[itemId("salvager", "hull")]).toEqual({ grade: 3, dupes: 1 });
-    expect(migrated.gear.inventory[itemId("salvager", "core")]).toEqual({ grade: 2, dupes: 0 });
+    expect(migrated.gear.inventory[itemId("salvager", "hull")]).toEqual({ grade: 3, dupes: 1, rarity: 0 });
+    expect(migrated.gear.inventory[itemId("salvager", "core")]).toEqual({ grade: 2, dupes: 0, rarity: 0 });
     expect(migrated.gear.equipped.hull).toBe(itemId("salvager", "hull"));
     expect(migrated.gear.equipped.core).toBe(itemId("salvager", "core"));
     expect(migrated.gear.equipped.engines).toBeNull();

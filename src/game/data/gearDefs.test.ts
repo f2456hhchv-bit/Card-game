@@ -7,6 +7,9 @@ import {
   maxedItems,
   emptyEquip,
   itemId,
+  rarityMult,
+  rollRarity,
+  RARITIES,
   GEAR_ITEMS,
   ITEM_LIST,
   SET_LIST,
@@ -65,6 +68,34 @@ describe("gearDefs — items", () => {
     const one = inv([itemId("bastion", "wings")], 5);
     one[itemId("bastion", "core")] = { grade: 3, dupes: 0 }; // not maxed
     expect(maxedItems(one)).toBe(1);
+  });
+});
+
+describe("gearDefs — rarity", () => {
+  it("rarity multipliers strictly increase by tier", () => {
+    for (let i = 1; i < RARITIES.length; i++) {
+      expect(rarityMult(i)).toBeGreaterThan(rarityMult(i - 1));
+    }
+    expect(rarityMult(0)).toBe(1);
+  });
+
+  it("a higher-rarity item grants more stats at the same grade", () => {
+    const id = itemId("solaris", "hull");
+    const common = { ...new Player().base };
+    const legendary = { ...new Player().base };
+    applyGear(common, { ...emptyEquip(), hull: id }, { [id]: { grade: 3, dupes: 0, rarity: 0 } });
+    applyGear(legendary, { ...emptyEquip(), hull: id }, { [id]: { grade: 3, dupes: 0, rarity: 3 } });
+    expect(legendary.maxHp).toBeGreaterThan(common.maxHp);
+  });
+
+  it("rollRarity returns a valid tier index and favours Common", () => {
+    const counts = [0, 0, 0, 0];
+    let seq = 0;
+    const rand = () => ((seq = (seq + 0.123) % 1), seq);
+    for (let i = 0; i < 2000; i++) counts[rollRarity(rand)]++;
+    for (const c of counts) expect(c).toBeGreaterThanOrEqual(0);
+    expect(counts.reduce((a, b) => a + b)).toBe(2000);
+    expect(counts[0]).toBeGreaterThan(counts[3]); // Common far more frequent
   });
 });
 
