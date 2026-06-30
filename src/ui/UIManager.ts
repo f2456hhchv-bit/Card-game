@@ -472,23 +472,81 @@ export class UIManager {
 
   private shop!: HTMLDivElement;
   private shopBalance!: HTMLDivElement;
+  private shopCrate!: HTMLDivElement;
   private shopGrid!: HTMLDivElement;
+
+  /** Flat Light-Mote price of a Supply Drop (an infinite gear-chase sink). */
+  private static readonly SUPPLY_DROP_COST = 150;
 
   private buildShop(): void {
     const o = this.el("div", "overlay hidden");
     const title = this.el("h2", undefined, "LIGHT MOTES");
     this.shopBalance = this.el("div", "shop-balance");
+    this.shopCrate = this.el("div", "shop-crate");
     this.shopGrid = this.el("div", "shop-grid");
     const back = this.el("button", "btn", "Back");
     back.addEventListener("click", () => this.closeShop());
-    o.append(title, this.shopBalance, this.shopGrid, back);
+    o.append(title, this.shopBalance, this.shopCrate, this.shopGrid, back);
     this.root.appendChild(o);
     this.shop = o;
+  }
+
+  /** The Supply Drop banner: spend Motes for a random gear item (never maxes). */
+  private refreshShopCrate(): void {
+    const d = this.save.data;
+    const cost = UIManager.SUPPLY_DROP_COST;
+    this.shopCrate.replaceChildren();
+    const card = this.el("div", "crate-card");
+    const body = this.el("div", "crate-body");
+    body.append(
+      this.el("div", "crate-icon", "🎁"),
+      (() => {
+        const t = this.el("div", "crate-text");
+        t.append(
+          this.el("div", "crate-name", "Supply Drop"),
+          this.el(
+            "div",
+            "crate-desc",
+            "Salvage a random ship-gear item — rolls rarity + affixes. Chase Legendaries, complete sets, then merge & equip in the Hangar.",
+          ),
+        );
+        return t;
+      })(),
+    );
+    const buy = this.el("button", "btn buy");
+    const affordable = d.motes >= cost;
+    buy.textContent = `✦ ${cost}`;
+    buy.disabled = !affordable;
+    if (!affordable) buy.classList.add("cant-afford");
+    buy.addEventListener("click", () => this.buySupplyDrop());
+    card.append(body, buy);
+    this.shopCrate.appendChild(card);
+  }
+
+  private buySupplyDrop(): void {
+    const d = this.save.data;
+    const cost = UIManager.SUPPLY_DROP_COST;
+    if (d.motes < cost) return;
+    d.motes -= cost;
+    const drop = this.save.grantItemDrop(); // also persists
+    this.save.save();
+    const def = GEAR_ITEMS[drop.id];
+    if (def) {
+      const rarity = rarityName(drop.rarity);
+      this.showToast(
+        def.icon,
+        drop.isNew ? `${rarity} ${def.name} found` : drop.rarityUp ? `${def.name} → ${rarity}!` : `${def.name} core`,
+        drop.isNew ? "New gear — equip it in the Hangar." : "Banked toward a merge in the Hangar.",
+      );
+    }
+    this.audio.levelUp();
+    this.refreshShop();
   }
 
   private refreshShop(): void {
     const d = this.save.data;
     this.shopBalance.textContent = `✦ ${d.motes} Light Motes`;
+    this.refreshShopCrate();
     this.shopGrid.replaceChildren();
     for (const def of META_LIST) {
       const level = d.meta[def.id] ?? 0;

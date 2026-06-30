@@ -117,6 +117,57 @@ export const META_DEFS: Record<string, MetaDef> = {
     // No stat effect; mote multiplier handled by metaMoteMultiplier().
     note: (lvl) => `Motes earned +${8 * lvl}%`,
   },
+  // ---- Tier II: deeper, pricier investments for veteran Wardens -----------
+  precision: {
+    id: "precision",
+    name: "Precision",
+    description: "Permanently sharpens your critical strike chance.",
+    hue: 340,
+    maxLevel: 8,
+    cost: curve(70),
+    apply: (s, lvl) => (s.critChance += 0.02 * lvl),
+    note: (lvl) => `Crit chance +${2 * lvl}%`,
+  },
+  ferocity: {
+    id: "ferocity",
+    name: "Ferocity",
+    description: "Permanently empowers your critical strikes.",
+    hue: 0,
+    maxLevel: 8,
+    cost: curve(70),
+    apply: (s, lvl) => (s.critMult += 0.06 * lvl),
+    note: (lvl) => `Crit damage +${6 * lvl}%`,
+  },
+  resonance: {
+    id: "resonance",
+    name: "Resonance",
+    description: "Permanently enlarges weapon area and effects.",
+    hue: 280,
+    maxLevel: 6,
+    cost: curve(80),
+    apply: (s, lvl) => (s.areaMult *= 1 + 0.03 * lvl),
+    note: (lvl) => `Area +${3 * lvl}%`,
+  },
+  velocity: {
+    id: "velocity",
+    name: "Velocity",
+    description: "Permanently quickens your projectiles.",
+    hue: 195,
+    maxLevel: 5,
+    cost: curve(60),
+    apply: (s, lvl) => (s.projectileSpeedMult *= 1 + 0.05 * lvl),
+    note: (lvl) => `Projectile speed +${5 * lvl}%`,
+  },
+  overflow: {
+    id: "overflow",
+    name: "Overflow",
+    description: "A build-defining surge — every weapon fires extra projectiles.",
+    hue: 265,
+    maxLevel: 2,
+    cost: curve(420),
+    apply: (s, lvl) => (s.extraProjectiles += lvl),
+    note: (lvl) => `+${lvl} projectile${lvl > 1 ? "s" : ""} on every weapon`,
+  },
 };
 
 export const META_LIST: MetaDef[] = Object.values(META_DEFS);

@@ -94,8 +94,16 @@ purchase state in `save.meta` (id → level). Each upgrade has escalating costs.
 | Recovery | +0.3 regen/s | 3 |
 | Fortune | +8% Motes earned (compounds the economy) | 5 |
 
-Meta upgrades apply in `Loadout.recomputeStats` (base → meta → in-run relics),
-wired via `World.metaLevels` which `Game` sets from the save each run.
+Tier II lines for veteran Wardens: **Precision** (crit chance), **Ferocity** (crit
+dmg), **Resonance** (area), **Velocity** (projectile speed), and **Overflow**
+(+projectiles, build-defining, very pricey). Meta upgrades apply in
+`Loadout.recomputeStats` (base → meta → in-run relics), wired via
+`World.metaLevels` which `Game` sets from the save each run.
+
+**Supply Drop** (mote sink): the shop's headline banner spends a flat 150 Motes
+for a random **gear-item** drop (full rarity + affix roll, pity included). It
+never maxes out — the infinite end-game sink that funnels surplus Motes into the
+deep gear chase (chase Legendaries / complete sets, then merge & equip).
 
 ### Wardens ✅ (character select)
 Source of truth: `src/game/data/wardenDefs.ts`. Each **Warden** is a playable
