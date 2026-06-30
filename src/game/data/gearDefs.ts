@@ -252,6 +252,25 @@ export function setCounts(
   return counts;
 }
 
+/** How many sets the player fully owns (all 4 slot pieces at grade ≥ 1). */
+export function completedSets(inventory: Record<string, ModuleState>): number {
+  let n = 0;
+  for (const set of SET_LIST) {
+    if (SLOTS.every((slot) => (inventory[itemId(set.id, slot)]?.grade ?? 0) > 0)) n++;
+  }
+  return n;
+}
+
+/** How many owned items are at their max grade. */
+export function maxedItems(inventory: Record<string, ModuleState>): number {
+  let n = 0;
+  for (const item of ITEM_LIST) {
+    const m = inventory[item.id];
+    if (m && m.grade >= item.maxGrade) n++;
+  }
+  return n;
+}
+
 /**
  * Apply all equipped items + any earned set bonuses onto a base stat block.
  */

@@ -174,6 +174,7 @@ Each stage has its own **palette** (sky/nebula/fog/star colours, baked by
 | --- | --- | --- | --- | --- | --- |
 | The Fade | free | ×1.00 | deep indigo void | full base bestiary | The Maw, The Choir |
 | Ember Wastes | fell 1 boss (lifetime) | ×1.35 | burning red/orange | faster, fiercer — adds **Cinder** & **Revenant** | **The Pyre**, **The Forge** |
+| Hollow Deep | fell 4 bosses (lifetime) | ×1.80 | frozen blue/cyan | glacial siege — adds **Shard** & **Colossus** | **The Rime**, **The Nadir** |
 
 `StageDef.difficulty` multiplies enemy HP/damage scaling (`SpawnDirector`) and
 boss strength (`World.spawnBoss`); the menu chip shows a ▲ threat badge. Tougher
@@ -209,13 +210,15 @@ tracked in `save.daily` (reset when the date rolls over) and shown on the menu.
   felled, runs, total felled, bosses slain, time played — plus the full
   achievement grid (unlocked lit, locked dimmed with a lock). Lifetime totals
   live in `save.lifetime`, updated by `recordRun`.
-- **Achievements** (12, in `achievementDefs.ts`): each has a `check(ctx)`
-  predicate over the just-finished run + lifetime/profile totals. Awarded the
-  moment they're satisfied — checked at game over and on key events (boss defeat,
-  weapon evolution) for immediate **toast** notifications. Examples: First Light,
-  Centurion (100/run), Swarmbreaker (400/run), Keeper (5m), Lightwarden (10m),
-  Ascendant (lvl 20), Boss Slayer, Hollowbane (5 bosses lifetime), Transcendent
-  (evolve), Devotee (daily), Collector (all Wardens), Investor (10 meta levels).
+- **Achievements** (15, in `achievementDefs.ts`): each has a `check(ctx)`
+  predicate over the just-finished run + lifetime/profile/gear totals. Awarded the
+  moment they're satisfied — checked at game over, on key events (boss defeat,
+  weapon evolution), and after Hangar gear changes (`onGearChanged`) for immediate
+  **toast** notifications. Examples: First Light, Centurion (100/run), Swarmbreaker
+  (400/run), Keeper (5m), Lightwarden (10m), Ascendant (lvl 20), Boss Slayer,
+  Hollowbane (5 bosses lifetime), Transcendent (evolve), Devotee (daily), Collector
+  (all Wardens), Investor (10 meta levels), **Quartermaster** (complete a gear
+  set), **Outfitter** (complete every set), **Master Smith** (max-grade an item).
 
 See `docs/SaveDataStructure.md` for the persisted schema.
 

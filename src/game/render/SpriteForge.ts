@@ -612,12 +612,17 @@ export class SpriteForge {
       // Ember bosses reuse the two silhouettes with fiery hues.
       thePyre: bakeChoir,
       theForge: bakeMaw,
+      // Hollow Deep bosses reuse them with icy hues.
+      theRime: bakeChoir,
+      theNadir: bakeMaw,
     };
     const bossHues: Record<string, number> = {
       theMaw: 292,
       theChoir: 196,
       thePyre: 18,
       theForge: 6,
+      theRime: 195,
+      theNadir: 210,
     };
     for (const id of Object.keys(bossBakers)) {
       const s = bossBakers[id](bossHues[id]);
@@ -637,6 +642,9 @@ export class SpriteForge {
       // Ember Wastes natives reuse fitting silhouettes with hot hues.
       cinder: bakeLunger,
       revenant: bakeCaster,
+      // Hollow Deep natives reuse fitting silhouettes with cold hues.
+      shard: bakeMote,
+      colossus: bakeHusk,
     };
     const hues: Record<string, number> = {
       drifter: 280,
@@ -649,6 +657,8 @@ export class SpriteForge {
       sporeling: 85,
       cinder: 18,
       revenant: 6,
+      shard: 195,
+      colossus: 210,
     };
     for (const id of Object.keys(defs)) {
       const s = defs[id](hues[id]);

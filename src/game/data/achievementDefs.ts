@@ -18,6 +18,10 @@ export interface AchievementContext {
   metaPurchases: number;
   wardensUnlocked: number;
   wardensTotal: number;
+  // Gear
+  fullSetsOwned: number;
+  setsTotal: number;
+  maxedGearItems: number;
 }
 
 export interface AchievementDef {
@@ -112,5 +116,26 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     description: "Purchase 10 permanent upgrade levels.",
     icon: "✧",
     check: (c) => c.metaPurchases >= 10,
+  },
+  {
+    id: "quartermaster",
+    name: "Quartermaster",
+    description: "Complete a full gear set (all 4 pieces).",
+    icon: "🛠",
+    check: (c) => c.fullSetsOwned >= 1,
+  },
+  {
+    id: "outfitter",
+    name: "Outfitter",
+    description: "Complete every gear set.",
+    icon: "🚀",
+    check: (c) => c.fullSetsOwned >= c.setsTotal,
+  },
+  {
+    id: "master-smith",
+    name: "Master Smith",
+    description: "Merge a gear item to max grade.",
+    icon: "⬡",
+    check: (c) => c.maxedGearItems >= 1,
   },
 ];

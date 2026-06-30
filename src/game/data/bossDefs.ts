@@ -97,6 +97,39 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     projectileSpeedMult: 1.15,
     cadenceMult: 0.9,
   },
+  // ---- Hollow Deep (stage 3) bosses -------------------------------------
+  theRime: {
+    id: "theRime",
+    name: "The Rime",
+    title: "Glacier Heart",
+    baseHp: 2600,
+    speed: 56,
+    radius: 54,
+    contactDamage: 26,
+    hue: 195,
+    projectileDamage: 15,
+    // A relentless cold front: dense, fast Shard swarms and quick ice bolts.
+    addType: "shard",
+    addCounts: [6, 9],
+    projectileSpeedMult: 1.5,
+    cadenceMult: 0.78,
+  },
+  theNadir: {
+    id: "theNadir",
+    name: "The Nadir",
+    title: "The Frozen Depth",
+    baseHp: 3100,
+    speed: 38,
+    radius: 60,
+    contactDamage: 30,
+    hue: 210,
+    projectileDamage: 14,
+    // The deepest dread: hulking, slow, and calves tanky Colossus titans.
+    addType: "colossus",
+    addCounts: [2, 3],
+    projectileSpeedMult: 1.2,
+    cadenceMult: 0.88,
+  },
 };
 
 export const BOSS_LIST: BossDef[] = Object.values(BOSS_DEFS);

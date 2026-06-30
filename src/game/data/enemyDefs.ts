@@ -167,6 +167,33 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     weight: 24,
     unlockAtMinutes: 2,
   },
+  // ---- Hollow Deep (stage 3) natives ------------------------------------
+  shard: {
+    id: "shard",
+    name: "Shard",
+    behaviour: "chase",
+    hp: 18,
+    speed: 110,
+    damage: 9,
+    radius: 11,
+    xpValue: 2,
+    hue: 195,
+    weight: 70,
+    unlockAtMinutes: 0,
+  },
+  colossus: {
+    id: "colossus",
+    name: "Colossus",
+    behaviour: "charger",
+    hp: 52,
+    speed: 74,
+    damage: 18,
+    radius: 19,
+    xpValue: 6,
+    hue: 210,
+    weight: 22,
+    unlockAtMinutes: 2,
+  },
 };
 
 /** Ordered list, convenient for the spawn director's availability filtering. */

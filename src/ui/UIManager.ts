@@ -34,6 +34,8 @@ export interface UICallbacks {
   onRestart(): void;
   onToMenu(): void;
   onPickDraft(option: DraftOption): void;
+  /** Fired after the player changes gear in the Hangar (merge/equip). */
+  onGearChanged(): void;
 }
 
 export class UIManager {
@@ -788,6 +790,7 @@ export class UIManager {
       this.showToast(def.icon, `${def.name} — Grade ${newGrade}`, `Max grade reached: ${def.note(newGrade)}`);
     }
     this.refreshHangar();
+    this.cb.onGearChanged(); // may unlock the Master Smith / set achievements
   }
 
   private openHangar(): void {

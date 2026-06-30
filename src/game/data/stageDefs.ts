@@ -79,6 +79,26 @@ export const STAGE_DEFS: Record<string, StageDef> = {
     unlockBosses: 1,
     difficulty: 1.35,
   },
+  deep: {
+    id: "deep",
+    name: "Hollow Deep",
+    title: "The frozen heart of the void",
+    description:
+      "A glacial abyss where the dark runs deepest. Shards and Colossi close in — only the well-equipped endure.",
+    accentHue: 195,
+    palette: {
+      baseTop: "#06182a",
+      baseMid: "#04101d",
+      baseBottom: "#020810",
+      nebulaHues: [195, 210, 230, 185, 160],
+      fogHue: 200,
+      starTint: "200,240,255",
+    },
+    enemyPool: ["shard", "colossus", "wisp", "drifter", "caster", "husk"],
+    bossPool: ["theRime", "theNadir"],
+    unlockBosses: 4,
+    difficulty: 1.8,
+  },
 };
 
 export const STAGE_LIST: StageDef[] = Object.values(STAGE_DEFS);

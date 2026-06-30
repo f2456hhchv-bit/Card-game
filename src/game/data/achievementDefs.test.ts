@@ -14,6 +14,9 @@ function ctx(over: Partial<AchievementContext> = {}): AchievementContext {
     metaPurchases: 0,
     wardensUnlocked: 1,
     wardensTotal: 4,
+    fullSetsOwned: 0,
+    setsTotal: 6,
+    maxedGearItems: 0,
     ...over,
   };
 }
@@ -48,6 +51,15 @@ describe("achievementDefs", () => {
   it("evolution and daily flags drive their achievements", () => {
     expect(check("transcendent", ctx({ runEvolved: true }))).toBe(true);
     expect(check("devotee", ctx({ runDaily: true }))).toBe(true);
+  });
+
+  it("gear achievements track set completion and maxed items", () => {
+    expect(check("quartermaster", ctx({ fullSetsOwned: 0 }))).toBe(false);
+    expect(check("quartermaster", ctx({ fullSetsOwned: 1 }))).toBe(true);
+    expect(check("outfitter", ctx({ fullSetsOwned: 5, setsTotal: 6 }))).toBe(false);
+    expect(check("outfitter", ctx({ fullSetsOwned: 6, setsTotal: 6 }))).toBe(true);
+    expect(check("master-smith", ctx({ maxedGearItems: 0 }))).toBe(false);
+    expect(check("master-smith", ctx({ maxedGearItems: 1 }))).toBe(true);
   });
 
   it("all achievements have unique ids", () => {

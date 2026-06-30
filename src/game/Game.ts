@@ -9,7 +9,7 @@ import { SaveManager } from "./save/SaveManager";
 import { UIManager } from "../ui/UIManager";
 import type { DraftOption } from "./Loadout";
 import { metaMoteMultiplier } from "./data/metaDefs";
-import { GEAR_ITEMS, emptyEquip } from "./data/gearDefs";
+import { GEAR_ITEMS, SET_LIST, emptyEquip, completedSets, maxedItems } from "./data/gearDefs";
 import { getStage, isStageUnlocked } from "./data/stageDefs";
 import { WARDEN_LIST } from "./data/wardenDefs";
 import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
@@ -75,6 +75,7 @@ export class Game {
       onRestart: () => this.startRun(this.isDailyRun),
       onToMenu: () => this.toMenu(),
       onPickDraft: (opt) => this.pickDraft(opt),
+      onGearChanged: () => this.checkAchievements(),
     });
 
     this.loop = new GameLoop({
@@ -324,6 +325,9 @@ export class Game {
       metaPurchases,
       wardensUnlocked: d.wardens.length,
       wardensTotal: WARDEN_LIST.length,
+      fullSetsOwned: completedSets(d.gear.inventory),
+      setsTotal: SET_LIST.length,
+      maxedGearItems: maxedItems(d.gear.inventory),
     };
   }
 

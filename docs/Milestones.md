@@ -105,6 +105,10 @@ Goal: replace placeholder geometry with premium, original procedural art.
       bosses advance set completion (on top of the loot shower).
 - [x] **Per-stage difficulty curve**: Ember Wastes runs at ×1.35 enemy/boss
       strength (threat badge on the menu chip) — opt-in, richer salvage, no paywall.
+- [x] **Third stage — Hollow Deep** (×1.80): frozen blue palette, Shard & Colossus
+      natives, bosses **The Rime** & **The Nadir**; unlocked at 4 lifetime bosses.
+- [x] **Set-completion achievements**: Quartermaster (a set), Outfitter (all sets),
+      Master Smith (max-grade an item) — checked live after Hangar changes. 15 total.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

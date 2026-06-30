@@ -3,6 +3,8 @@ import {
   applyGear,
   mergeCost,
   setCounts,
+  completedSets,
+  maxedItems,
   emptyEquip,
   itemId,
   GEAR_ITEMS,
@@ -50,6 +52,19 @@ describe("gearDefs — items", () => {
     let total = 0;
     for (let g = 1; g < 5; g++) total += mergeCost(g);
     expect(total).toBe(10);
+  });
+
+  it("completedSets counts only sets with all 4 pieces owned", () => {
+    const partial = inv([itemId("solaris", "hull"), itemId("solaris", "core")]);
+    expect(completedSets(partial)).toBe(0);
+    const full = inv(SLOTS.map((s) => itemId("solaris", s)));
+    expect(completedSets(full)).toBe(1);
+  });
+
+  it("maxedItems counts items at their max grade", () => {
+    const one = inv([itemId("bastion", "wings")], 5);
+    one[itemId("bastion", "core")] = { grade: 3, dupes: 0 }; // not maxed
+    expect(maxedItems(one)).toBe(1);
   });
 });
 

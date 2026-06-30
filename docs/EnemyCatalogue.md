@@ -33,12 +33,15 @@ scales HP and damage upward over time (see `docs/BalancingNotes.md`).
 | `sporeling` | Sporeling | chase | 5 | 118 | 6 | 8 | 1 | 85 | — | split-only |
 | `cinder` | Cinder | chase | 16 | 104 | 8 | 11 | 2 | 18 | 70 | 0:00 † |
 | `revenant` | Revenant | shooter | 42 | 60 | 15 | 16 | 5 | 6 | 24 | 2:00 † |
+| `shard` | Shard | chase | 18 | 110 | 9 | 11 | 2 | 195 | 70 | 0:00 ‡ |
+| `colossus` | Colossus | charger | 52 | 74 | 18 | 19 | 6 | 210 | 22 | 2:00 ‡ |
 
 - **Weight** = relative spawn frequency among currently-unlocked types.
 - **Unlocks** = run-time minute the type begins appearing.
-- **†** Ember Wastes (stage 2) natives — only spawn when that stage's enemy pool
-  is active (`stageDefs.ts`). The roster a run draws from is the **stage pool**
-  intersected with the time-unlock above.
+- **†** Ember Wastes (stage 2) · **‡** Hollow Deep (stage 3) natives — only spawn
+  when that stage's enemy pool is active (`stageDefs.ts`). The roster a run draws
+  from is the **stage pool** intersected with the time-unlock above, then scaled
+  by the stage's **difficulty** multiplier (Ember ×1.35, Deep ×1.80).
 
 ### Design intent
 - **Drifter / Mote:** early fodder; Mote is faster but frail, teaching dodging.
@@ -106,9 +109,16 @@ A slow, hulking siege engine (the tankiest boss, 2150 HP). Summons tanky ranged
 **Revenants** and grinds the player down with heavy contact (26) and steady
 fire. Hue 6 (deep red).
 
+### The Rime / The Nadir — Hollow Deep (`theRime`, `theNadir`)
+The frozen stage's bosses. **The Rime — Glacier Heart** is a fast cold front
+(2600 HP) flooding the field with dense Shard swarms and the quickest ice bolts
+(×1.5). **The Nadir — The Frozen Depth** is the tankiest encounter yet (3100 HP),
+slow and dreadful, calving tanky Colossus titans.
+
 Each **stage headlines its own bosses** via `StageDef.bossPool`, cycled by
 encounter index (`bossForEncounter(index, pool)`): The Fade alternates The Maw /
-The Choir; Ember Wastes alternates The Pyre / The Forge.
+The Choir; Ember Wastes alternates The Pyre / The Forge; Hollow Deep alternates
+The Rime / The Nadir. Stage `difficulty` further scales boss HP/damage.
 
 > The data/controller split (`bossDefs` tuning + shared `BossController`) plus
 > per-stage `bossPool` lets new bosses be added with only new data + a sprite.
