@@ -25,6 +25,8 @@ export interface AchievementContext {
   // Boss signatures
   signaturesOwned: number;
   signaturesTotal: number;
+  // Warden mastery
+  wardenMaxLevel: number;
 }
 
 export interface AchievementDef {
@@ -147,5 +149,12 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     description: "Claim every boss signature.",
     icon: "👑",
     check: (c) => c.signaturesTotal > 0 && c.signaturesOwned >= c.signaturesTotal,
+  },
+  {
+    id: "veteran",
+    name: "Veteran",
+    description: "Raise a Warden to mastery level 10.",
+    icon: "🎖",
+    check: (c) => c.wardenMaxLevel >= 10,
   },
 ];

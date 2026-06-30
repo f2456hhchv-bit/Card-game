@@ -11,7 +11,7 @@ import { PASSIVE_DEFS, PASSIVE_LIST } from "./data/passiveDefs";
 import { applyMeta } from "./data/metaDefs";
 import { applyGear, emptyEquip, type EquipMap, type ModuleState } from "./data/gearDefs";
 import { applySignature } from "./data/signatureDefs";
-import { getWarden } from "./data/wardenDefs";
+import { getWarden, applyWardenLevel } from "./data/wardenDefs";
 import { clamp } from "../core/math/MathUtils";
 
 /** A live weapon the Warden carries, with its current level and fire timer. */
@@ -83,6 +83,8 @@ export class Loadout {
   signatureId: string | null = null;
   /** Selected Warden id (set by World from the save each run). */
   wardenId = "lumen";
+  /** Mastery level of the selected Warden (set by World from the save each run). */
+  wardenLevel = 0;
 
   reset(): void {
     this.weapons.length = 0;
@@ -114,6 +116,7 @@ export class Loadout {
     const s = { ...player.base };
     // Order: base → Warden perk → permanent meta → ship modules → in-run relics.
     getWarden(this.wardenId).applyPerk?.(s);
+    applyWardenLevel(s, this.wardenLevel);
     applyMeta(s, this.metaLevels);
     applyGear(s, this.gearEquipped, this.gearInventory);
     applySignature(s, this.signatureId);

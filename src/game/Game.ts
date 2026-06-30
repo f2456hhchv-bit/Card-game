@@ -226,6 +226,7 @@ export class Game {
       this.world.gearEquipped = emptyEquip();
       this.world.signatureId = null;
       this.world.selectedWarden = "lumen";
+      this.world.wardenLevel = 0; // equal footing — no mastery bonus
       this.world.stageId = "fade"; // Daily is always the base stage, equal footing.
       this.world.reset();
       this.world.reseed(Rng.seedFromString(dailyDateString()));
@@ -236,6 +237,7 @@ export class Game {
       this.world.gearEquipped = this.save.data.gear.equipped;
       this.world.signatureId = this.save.data.signatures.equipped;
       this.world.selectedWarden = this.save.data.selectedWarden;
+      this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
       this.world.stageId = this.selectedStageId();
       this.world.reset();
     }
@@ -347,6 +349,22 @@ export class Game {
     }
     // Salvage a gear item from the wreck — every run advances the Hangar.
     this.salvageGear();
+    // Warden mastery: the played Warden earns XP from the run (not the Daily,
+    // which is equal-footing). Daily forces Lumen, so attribute by save selection.
+    if (!this.isDailyRun) {
+      const wid = this.save.data.selectedWarden;
+      const xp =
+        stats.kills +
+        Math.floor(stats.elapsed / 2) +
+        stats.bossKills * 25 +
+        stats.ascension * 8 +
+        stats.stagesCleared * 15;
+      const res = this.save.grantWardenXp(wid, xp);
+      if (res.gained > 0) {
+        const w = WARDEN_LIST.find((x) => x.id === wid);
+        this.ui.showToast("⬆", `${w?.name ?? "Warden"} — Level ${res.level}`, "Warden mastery deepens.");
+      }
+    }
     this.checkAchievements();
     this.ui.hideHUD();
     this.ui.showGameOver(
@@ -402,6 +420,7 @@ export class Game {
       maxedGearItems: maxedItems(d.gear.inventory),
       signaturesOwned: d.signatures.owned.length,
       signaturesTotal: SIGNATURE_LIST.length,
+      wardenMaxLevel: Object.values(d.wardenProgress).reduce((m, p) => Math.max(m, p.level), 0),
     };
   }
 

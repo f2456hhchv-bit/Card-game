@@ -1,8 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { getWarden, WARDEN_DEFS } from "./wardenDefs";
+import {
+  getWarden,
+  WARDEN_DEFS,
+  WARDEN_LEVEL_CAP,
+  wardenXpToNext,
+  applyWardenLevel,
+} from "./wardenDefs";
 import { bossForEncounter, BOSS_DEFS } from "./bossDefs";
 import { Loadout } from "../Loadout";
 import { Player } from "../entities/Player";
+import { SaveManager } from "../save/SaveManager";
 
 describe("wardenDefs", () => {
   it("the default Warden is free and starts with Lumen Bolt", () => {
@@ -32,6 +39,30 @@ describe("wardenDefs", () => {
     const baseAtk = player.base.attackSpeedMult;
     loadout.recomputeStats(player);
     expect(player.stats.attackSpeedMult).toBeCloseTo(baseAtk * 1.12);
+  });
+});
+
+describe("warden mastery", () => {
+  it("grants XP and levels up across thresholds", () => {
+    const sm = new SaveManager();
+    // Level 0→1 needs wardenXpToNext(0); give well over it.
+    const r = sm.grantWardenXp("lumen", wardenXpToNext(0) + wardenXpToNext(1) + 5);
+    expect(r.level).toBe(2);
+    expect(r.gained).toBe(2);
+    expect(sm.wardenLevel("lumen")).toBe(2);
+  });
+
+  it("the mastery bonus scales with level and caps", () => {
+    const s1 = { ...new Player().base };
+    const baseHp = s1.maxHp;
+    applyWardenLevel(s1, 5);
+    expect(s1.maxHp).toBe(baseHp + 15); // +3 HP/level × 5
+
+    const capped = { ...new Player().base };
+    applyWardenLevel(capped, 999);
+    const atCap = { ...new Player().base };
+    applyWardenLevel(atCap, WARDEN_LEVEL_CAP);
+    expect(capped.maxHp).toBe(atCap.maxHp); // clamped at the cap
   });
 });
 

@@ -4,7 +4,12 @@ import type { DraftOption } from "../game/Loadout";
 import type { SaveManager } from "../game/save/SaveManager";
 import type { AudioManager } from "../game/audio/AudioManager";
 import { META_LIST } from "../game/data/metaDefs";
-import { WARDEN_LIST } from "../game/data/wardenDefs";
+import {
+  WARDEN_LIST,
+  WARDEN_LEVEL_CAP,
+  wardenXpToNext,
+  wardenLevelBonus,
+} from "../game/data/wardenDefs";
 import { WEAPON_DEFS } from "../game/data/weaponDefs";
 import {
   SLOTS,
@@ -585,6 +590,31 @@ export class UIManager {
       const perk = this.el("div", "shop-next", def.perk);
       const weap = this.el("div", "warden-weapon", `Starts with: ${starter}`);
 
+      // Mastery: level + XP progress + the cumulative bonus (owned wardens only).
+      const prog = d.wardenProgress[def.id] ?? { level: 0, xp: 0 };
+      let mastery: HTMLDivElement | null = null;
+      if (unlocked) {
+        mastery = this.el("div", "warden-mastery");
+        const capped = Math.min(prog.level, WARDEN_LEVEL_CAP);
+        const need = wardenXpToNext(prog.level);
+        const pct = WARDEN_LEVEL_CAP > 0 ? Math.min(100, (prog.xp / need) * 100) : 0;
+        const head2 = this.el("div", "mastery-head");
+        head2.append(
+          this.el("span", "mastery-lv", `Mastery Lv ${prog.level}`),
+          this.el("span", "mastery-xp", capped >= WARDEN_LEVEL_CAP ? "MAX" : `${prog.xp}/${need} XP`),
+        );
+        const bar = this.el("div", "mastery-bar");
+        const fill = this.el("div", "mastery-fill");
+        fill.style.width = `${capped >= WARDEN_LEVEL_CAP ? 100 : pct}%`;
+        bar.appendChild(fill);
+        const bonus = this.el(
+          "div",
+          "mastery-bonus",
+          prog.level > 0 ? wardenLevelBonus(prog.level) : "Play to earn mastery bonuses.",
+        );
+        mastery.append(head2, bar, bonus);
+      }
+
       const btn = this.el("button", "btn buy");
       if (selected) {
         btn.textContent = "SELECTED";
@@ -600,7 +630,9 @@ export class UIManager {
         if (!affordable) btn.classList.add("cant-afford");
         btn.addEventListener("click", () => this.unlockWarden(def.id));
       }
-      card.append(head, desc, perk, weap, btn);
+      card.append(head, desc, perk, weap);
+      if (mastery) card.append(mastery);
+      card.append(btn);
       this.wardensGrid.appendChild(card);
     }
   }

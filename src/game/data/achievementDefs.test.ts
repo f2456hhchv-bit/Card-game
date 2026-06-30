@@ -19,6 +19,7 @@ function ctx(over: Partial<AchievementContext> = {}): AchievementContext {
     maxedGearItems: 0,
     signaturesOwned: 0,
     signaturesTotal: 6,
+    wardenMaxLevel: 0,
     ...over,
   };
 }

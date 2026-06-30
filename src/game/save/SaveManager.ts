@@ -1,6 +1,7 @@
 import type { AudioSettings } from "../audio/AudioManager";
 import type { RunStats } from "../World";
 import { signatureForBoss } from "../data/signatureDefs";
+import { wardenXpToNext } from "../data/wardenDefs";
 import {
   GEAR_ITEMS,
   ITEM_LIST,
@@ -81,6 +82,8 @@ export interface SaveData {
   signatures: { owned: string[]; equipped: string | null };
   /** Unlocked Warden ids. */
   wardens: string[];
+  /** Per-Warden mastery progress (level + banked XP), keyed by warden id. */
+  wardenProgress: Record<string, { level: number; xp: number }>;
   /** Currently selected Warden id. */
   selectedWarden: string;
   /** Currently selected stage id (see stageDefs). */
@@ -111,6 +114,7 @@ function defaultSave(): SaveData {
     stageBest: {},
     signatures: { owned: [], equipped: null },
     wardens: ["lumen"],
+    wardenProgress: {},
     selectedWarden: "lumen",
     selectedStage: "fade",
     daily: { date: "", bestTime: 0, bestKills: 0 },
@@ -170,6 +174,7 @@ export class SaveManager {
       signatures: parsed.signatures ?? { owned: [], equipped: null },
       lifetime: parsed.lifetime ?? { time: 0, damage: 0, bosses: 0, elites: 0 },
       wardens: parsed.wardens ?? ["lumen"],
+      wardenProgress: parsed.wardenProgress ?? {},
       selectedWarden: parsed.selectedWarden ?? "lumen",
       selectedStage: parsed.selectedStage ?? "fade",
       daily: parsed.daily ?? { date: "", bestTime: 0, bestKills: 0 },
@@ -451,6 +456,26 @@ export class SaveManager {
     this.data.signatures.equipped = id;
     this.save();
     return true;
+  }
+
+  /** Grant Warden mastery XP and resolve any level-ups. Returns new level/gained. */
+  grantWardenXp(wardenId: string, amount: number): { level: number; gained: number } {
+    const p = this.data.wardenProgress[wardenId] ?? { level: 0, xp: 0 };
+    p.xp += Math.max(0, Math.floor(amount));
+    let gained = 0;
+    while (p.xp >= wardenXpToNext(p.level)) {
+      p.xp -= wardenXpToNext(p.level);
+      p.level++;
+      gained++;
+    }
+    this.data.wardenProgress[wardenId] = p;
+    this.save();
+    return { level: p.level, gained };
+  }
+
+  /** Mastery level of a Warden (0 if never played). */
+  wardenLevel(wardenId: string): number {
+    return this.data.wardenProgress[wardenId]?.level ?? 0;
   }
 
   unlockAchievement(id: string): boolean {

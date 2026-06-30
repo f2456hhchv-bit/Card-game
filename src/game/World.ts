@@ -106,6 +106,8 @@ export class World {
   signatureId: string | null = null;
   /** Selected Warden id, supplied by Game from the save profile. */
   selectedWarden = "lumen";
+  /** Mastery level of the selected Warden, supplied by Game from the save. */
+  wardenLevel = 0;
   /** Stage id, supplied by Game; drives the enemy pool and backdrop palette. */
   stageId = "fade";
   /**
@@ -273,6 +275,7 @@ export class World {
     this.loadout.gearEquipped = this.gearEquipped;
     this.loadout.signatureId = this.signatureId;
     this.loadout.wardenId = this.selectedWarden;
+    this.loadout.wardenLevel = this.wardenLevel;
     this.loadout.reset();
     this.loadout.recomputeStats(this.player);
     this.player.hp = this.player.stats.maxHp;
