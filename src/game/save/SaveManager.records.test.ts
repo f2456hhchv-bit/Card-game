@@ -12,11 +12,18 @@ function stats(over: Partial<RunStats> = {}): RunStats {
     xpCollected: 0,
     level: 1,
     ascension: 0,
+    stagesCleared: 0,
     ...over,
   };
 }
 
-const NORMAL = { stageId: "fade", bossRush: false, endless: false, daily: false };
+const NORMAL = {
+  stageId: "fade",
+  bossRush: false,
+  endless: false,
+  gauntlet: false,
+  daily: false,
+};
 
 describe("SaveManager — per-mode records", () => {
   it("tracks per-stage best time/kills for normal runs", () => {
@@ -57,5 +64,17 @@ describe("SaveManager — per-mode records", () => {
     const r2 = sm.recordRun(stats({ ascension: 4 }), 0, { ...NORMAL, endless: true });
     expect(r2.newBestEndless).toBe(false);
     expect(sm.data.endlessBest).toBe(7);
+  });
+
+  it("tracks the Gauntlet best (stages cleared)", () => {
+    const sm = new SaveManager();
+    const r1 = sm.recordRun(stats({ stagesCleared: 2 }), 0, { ...NORMAL, gauntlet: true });
+    expect(r1.newBestGauntlet).toBe(true);
+    expect(sm.data.gauntletBest).toBe(2);
+    expect(sm.data.stageBest.fade).toBeUndefined();
+
+    const r2 = sm.recordRun(stats({ stagesCleared: 1 }), 0, { ...NORMAL, gauntlet: true });
+    expect(r2.newBestGauntlet).toBe(false);
+    expect(sm.data.gauntletBest).toBe(2);
   });
 });

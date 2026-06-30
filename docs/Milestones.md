@@ -122,6 +122,8 @@ Goal: replace placeholder geometry with premium, original procedural art.
       to **reroll** an item's affixes — agency over drop RNG.
 - [x] **Endless / Ascension mode**: unbounded difficulty ramp every 45s (HP/damage/
       spawn-rate + faster bosses); live ▲ badge, best Ascension tracked in Records.
+- [x] **Stage Gauntlet mode**: clear Fade→Ember→Deep on one life (HP carries over,
+      boss-kill advances stage with live palette/pool swap); best stages in Records.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette

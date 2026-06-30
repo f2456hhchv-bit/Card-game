@@ -36,6 +36,7 @@ export interface UICallbacks {
   onStartDaily(): void;
   onStartBossRush(): void;
   onStartEndless(): void;
+  onStartGauntlet(): void;
   onPause(): void;
   onResume(): void;
   onRestart(): void;
@@ -227,10 +228,13 @@ export class UIManager {
     this.levelLabel.textContent = `LV ${p.level}`;
     this.timerLabel.textContent = formatTime(world.stats.elapsed);
     this.killsLabel.textContent = `${world.stats.kills} felled`;
-    // Endless Ascension badge.
+    // Mode badge: Endless Ascension tier, or Gauntlet stage progress.
     if (world.endless) {
       this.ascLabel.classList.remove("hidden");
       this.ascLabel.textContent = `▲ Ascension ${world.stats.ascension}`;
+    } else if (world.gauntlet) {
+      this.ascLabel.classList.remove("hidden");
+      this.ascLabel.textContent = `⟶ Gauntlet · Stage ${Math.min(3, world.stats.stagesCleared + 1)}/3`;
     } else {
       this.ascLabel.classList.add("hidden");
     }
@@ -330,6 +334,10 @@ export class UIManager {
     const endlessBtn = this.el("button", "btn secondary", "Endless");
     endlessBtn.addEventListener("click", () => this.cb.onStartEndless());
 
+    // Stage Gauntlet — clear all three stages on one life.
+    const gauntletBtn = this.el("button", "btn secondary", "Gauntlet");
+    gauntletBtn.addEventListener("click", () => this.cb.onStartGauntlet());
+
     const wardensBtn = this.el("button", "btn secondary", "Wardens");
     wardensBtn.addEventListener("click", () => this.openWardens());
 
@@ -353,7 +361,7 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, dailyBtn, this.bossRushBtn, endlessBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
+    btnRow.append(play, dailyBtn, this.bossRushBtn, endlessBtn, gauntletBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
 
     o.append(title, sub, stats, stageRow, btnRow, dailyLine);
     this.root.appendChild(o);
@@ -933,6 +941,7 @@ export class UIManager {
       stat("Most Felled", `${d.bestKills}`),
       stat("Boss Rush", d.bossRushBest > 0 ? `${d.bossRushBest} bosses` : "—"),
       stat("Endless", d.endlessBest > 0 ? `Asc ${d.endlessBest}` : "—"),
+      stat("Gauntlet", d.gauntletBest > 0 ? `${d.gauntletBest}/3 stages` : "—"),
       stat("Runs", `${d.runsPlayed}`),
       stat("Bosses Slain", `${d.lifetime.bosses}`),
       stat("Time Played", hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`),
@@ -1133,20 +1142,30 @@ export class UIManager {
   showGameOver(
     stats: RunStats,
     motesEarned: number,
-    records: { newBestTime: boolean; newBestKills: boolean; newBestEndless?: boolean },
+    records: {
+      newBestTime: boolean;
+      newBestKills: boolean;
+      newBestEndless?: boolean;
+      newBestGauntlet?: boolean;
+    },
     daily = false,
     bossRush = false,
     endless = false,
+    gauntlet = false,
   ): void {
     const title = this.gameover.querySelector("#go-title");
     if (title) {
-      title.textContent = endless
-        ? "ENDLESS — THE LIGHT FADES"
-        : bossRush
-          ? "BOSS RUSH — THE LIGHT FADES"
-          : daily
-            ? "DAILY RUN — THE LIGHT FADES"
-            : "THE LIGHT FADES";
+      title.textContent = gauntlet
+        ? stats.stagesCleared >= 3
+          ? "GAUNTLET CLEARED!"
+          : "GAUNTLET — THE LIGHT FADES"
+        : endless
+          ? "ENDLESS — THE LIGHT FADES"
+          : bossRush
+            ? "BOSS RUSH — THE LIGHT FADES"
+            : daily
+              ? "DAILY RUN — THE LIGHT FADES"
+              : "THE LIGHT FADES";
     }
     const container = this.gameover.querySelector("#go-stats");
     if (container) {
@@ -1165,8 +1184,10 @@ export class UIManager {
       const tiles = [
         stat("Survived", formatTime(stats.elapsed), records.newBestTime),
       ];
-      // Endless headlines Ascension; Boss Rush headlines bosses felled.
+      // Each alt-mode headlines its own metric.
       if (endless) tiles.push(stat("Ascension", `${stats.ascension}`, records.newBestEndless));
+      else if (gauntlet)
+        tiles.push(stat("Stages", `${stats.stagesCleared}/3`, records.newBestGauntlet));
       else if (bossRush) tiles.push(stat("Bosses", `${stats.bossKills}`, stats.bossKills > 0));
       tiles.push(
         stat("Felled", `${stats.kills}`, records.newBestKills),

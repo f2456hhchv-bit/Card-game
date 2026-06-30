@@ -61,6 +61,8 @@ export class Game {
   private isBossRush = false;
   /** True while the current run is Endless / Ascension mode. */
   private isEndless = false;
+  /** True while the current run is a Stage Gauntlet. */
+  private isGauntlet = false;
   /** Whether a weapon was evolved this run (for the achievement). */
   private runEvolved = false;
 
@@ -83,9 +85,11 @@ export class Game {
       onStartDaily: () => this.startRun(true),
       onStartBossRush: () => this.startRun(false, true),
       onStartEndless: () => this.startRun(false, false, true),
+      onStartGauntlet: () => this.startRun(false, false, false, true),
       onPause: () => this.pause(),
       onResume: () => this.resume(),
-      onRestart: () => this.startRun(this.isDailyRun, this.isBossRush, this.isEndless),
+      onRestart: () =>
+        this.startRun(this.isDailyRun, this.isBossRush, this.isEndless, this.isGauntlet),
       onToMenu: () => this.toMenu(),
       onPickDraft: (opt) => this.pickDraft(opt),
       onGearChanged: () => this.checkAchievements(),
@@ -178,6 +182,14 @@ export class Game {
       this.camera.addShake(8, 0.4);
       this.ui.showToast("▲", `Ascension ${a.level}`, "The Hollow grow stronger — push on.");
     });
+    e.on("stageAdvance", (s) => {
+      // Reward clearing a stage with a breather heal, then press on.
+      const p = this.world.player;
+      p.hp = Math.min(p.stats.maxHp, p.hp + p.stats.maxHp * 0.3);
+      this.audio.bossDown();
+      this.camera.addShake(10, 0.5);
+      this.ui.showToast("⟶", `Stage ${s.cleared} cleared`, `Onward to ${s.name}…`);
+    });
     e.on("revived", () => {
       // Aegis save — a dramatic beat the player should feel.
       this.audio.evolveFanfare();
@@ -189,14 +201,16 @@ export class Game {
 
   // ---- State transitions -------------------------------------------------
 
-  private startRun(daily = false, bossRush = false, endless = false): void {
+  private startRun(daily = false, bossRush = false, endless = false, gauntlet = false): void {
     this.audio.unlock();
     this.isDailyRun = daily;
     this.isBossRush = bossRush;
     this.isEndless = endless;
+    this.isGauntlet = gauntlet;
     this.runEvolved = false;
     this.world.bossRush = bossRush;
     this.world.endless = endless;
+    this.world.gauntlet = gauntlet;
     if (daily) {
       // Daily Run: a fair, equal challenge — fixed daily seed, default Warden,
       // and no permanent meta-upgrades, so the run is the same for everyone.
@@ -306,12 +320,17 @@ export class Game {
     // Reward: motes scale with time survived, kills and bosses felled (the last
     // makes Boss Rush worthwhile), boosted by Fortune.
     const base =
-      stats.elapsed * 0.5 + stats.kills * 0.2 + stats.bossKills * 15 + stats.ascension * 8;
+      stats.elapsed * 0.5 +
+      stats.kills * 0.2 +
+      stats.bossKills * 15 +
+      stats.ascension * 8 +
+      stats.stagesCleared * 20;
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     const records = this.save.recordRun(stats, motes, {
       stageId: this.world.stageId,
       bossRush: this.isBossRush,
       endless: this.isEndless,
+      gauntlet: this.isGauntlet,
       daily: this.isDailyRun,
     });
     if (this.isDailyRun) {
@@ -321,7 +340,15 @@ export class Game {
     this.salvageGear();
     this.checkAchievements();
     this.ui.hideHUD();
-    this.ui.showGameOver(stats, motes, records, this.isDailyRun, this.isBossRush, this.isEndless);
+    this.ui.showGameOver(
+      stats,
+      motes,
+      records,
+      this.isDailyRun,
+      this.isBossRush,
+      this.isEndless,
+      this.isGauntlet,
+    );
   }
 
   /** Grant one gear-item salvage and toast the result (boss kill / run end). */

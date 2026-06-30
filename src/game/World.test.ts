@@ -268,6 +268,38 @@ describe("World — combat integration", () => {
     expect(ascended).toBeGreaterThan(baseline);
   });
 
+  it("Stage Gauntlet advances stage on a boss kill, carrying HP over", () => {
+    const world = new World(52);
+    world.gauntlet = true;
+    world.reset();
+    expect(world.stageId).toBe("fade"); // always starts on the first stage
+    world.player.stats.maxHp = 1e9;
+    world.player.hp = 1e9;
+
+    let advancedTo = "";
+    let cleared = 0;
+    world.events.on("stageAdvance", (s) => {
+      advancedTo = s.stageId;
+      cleared = s.cleared;
+    });
+
+    // Force the first gauntlet boss to appear, then slay it.
+    world.debugTriggerBoss();
+    for (let i = 0; i < 60 && !world.bossActive; i++) world.step(1 / 60, STILL);
+    expect(world.bossActive).toBe(true);
+    const hpBefore = world.player.hp;
+    const boss = world.boss!;
+    world.damageEnemy(boss, boss.maxHp + 1, false, 0, 0);
+    world.step(1 / 60, STILL);
+
+    expect(cleared).toBe(1);
+    expect(advancedTo).toBe("ember"); // Fade → Ember
+    expect(world.stageId).toBe("ember");
+    expect(world.stats.stagesCleared).toBe(1);
+    // HP carries over (a stage-clear heal may top it up, never resets it).
+    expect(world.player.hp).toBeGreaterThanOrEqual(hpBefore - 1);
+  });
+
   it("kills award XP and can trigger a level-up draft", () => {
     const world = new World(99);
     world.reset();

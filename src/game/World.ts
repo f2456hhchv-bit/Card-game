@@ -29,6 +29,10 @@ const RUSH_GAP = 4;
 /** Endless: seconds between Ascension steps, and the faster boss cadence. */
 const ASCENSION_INTERVAL = 45;
 const ENDLESS_BOSS_INTERVAL = 90;
+/** Stage Gauntlet: the stage order, first boss delay, and gap after advancing. */
+const GAUNTLET_ORDER = ["fade", "ember", "deep"] as const;
+const GAUNTLET_FIRST = 75;
+const GAUNTLET_GAP = 70;
 
 /** Aggregate, read-only run statistics surfaced to HUD and endgame screen. */
 export interface RunStats {
@@ -41,6 +45,8 @@ export interface RunStats {
   level: number;
   /** Endless mode: highest Ascension tier reached this run (0 otherwise). */
   ascension: number;
+  /** Gauntlet mode: stages cleared this run (0 otherwise). */
+  stagesCleared: number;
 }
 
 /** Typed gameplay events for audio/UI/feedback decoupling. */
@@ -60,6 +66,8 @@ export interface GameEvents {
   pulse: { x: number; y: number; radius: number };
   /** Endless mode stepped up an Ascension tier. */
   ascension: { level: number };
+  /** Gauntlet advanced to a new stage (after clearing the previous one's boss). */
+  stageAdvance: { stageId: string; name: string; cleared: number };
 }
 
 /** Position of an orbit-weapon orb, mirrored out for the renderer. */
@@ -109,6 +117,12 @@ export class World {
    * and bosses recur faster. A pure high-score chase ("how high can you climb").
    */
   endless = false;
+  /**
+   * Stage Gauntlet mode: clear Fade → Ember → Deep back-to-back on a single life
+   * (HP/level/loadout carry over). Defeating a stage's boss advances to the next.
+   */
+  gauntlet = false;
+  private gauntletIndex = 0;
   /** Current Ascension tier (endless mode); mirrored into stats for the HUD. */
   private ascHp = 1;
   private ascDmg = 1;
@@ -175,6 +189,7 @@ export class World {
     xpCollected: 0,
     level: 1,
     ascension: 0,
+    stagesCleared: 0,
   };
 
   /** Pending level-up drafts the Game state machine must resolve (pauses sim). */
@@ -229,6 +244,11 @@ export class World {
   }
 
   reset(): void {
+    // Gauntlet always begins on the first stage of its fixed order.
+    if (this.gauntlet) {
+      this.gauntletIndex = 0;
+      this.stageId = GAUNTLET_ORDER[0];
+    }
     // Return all live entities to their pools.
     for (const e of this.enemies) this.enemyPool.release(e);
     for (const p of this.projectiles) this.projectilePool.release(p);
@@ -270,6 +290,7 @@ export class World {
     this.stats.xpCollected = 0;
     this.stats.level = 1;
     this.stats.ascension = 0;
+    this.stats.stagesCleared = 0;
     this.pendingLevelUps = 0;
     this.isDead = false;
     this.auraRadius = 0;
@@ -277,13 +298,41 @@ export class World {
     this.orbitAngle = 0;
     this.boss = null;
     this.bossController = null;
-    this.nextBossTime = this.bossRush ? RUSH_FIRST : this.bossInterval();
+    this.nextBossTime = this.bossRush
+      ? RUSH_FIRST
+      : this.gauntlet
+        ? GAUNTLET_FIRST
+        : this.bossInterval();
     this.bossEncounter = 0;
   }
 
   /** Seconds between bosses for the current mode (endless recurs faster). */
   private bossInterval(): number {
     return this.endless ? ENDLESS_BOSS_INTERVAL : BOSS_INTERVAL;
+  }
+
+  /**
+   * Gauntlet: clearing a stage's boss advances to the next stage (swapping its
+   * enemy pool, difficulty and palette) until all are cleared, then keeps the
+   * bosses coming on the final stage. The Warden's HP/level/loadout carry over.
+   */
+  private advanceGauntlet(): void {
+    this.stats.stagesCleared++;
+    if (this.gauntletIndex < GAUNTLET_ORDER.length - 1) {
+      this.gauntletIndex++;
+      this.stageId = GAUNTLET_ORDER[this.gauntletIndex];
+      const stage = this.stage;
+      this.spawnDirector.setStage(stage.enemyPool, stage.difficulty);
+      this.nextBossTime = this.stats.elapsed + GAUNTLET_GAP;
+      this.events.emit("stageAdvance", {
+        stageId: stage.id,
+        name: stage.name,
+        cleared: this.stats.stagesCleared,
+      });
+    } else {
+      // Final stage cleared — keep bosses arriving for an endless victory lap.
+      this.nextBossTime = this.stats.elapsed + GAUNTLET_GAP;
+    }
   }
 
   obtainProjectile(): Projectile {
@@ -954,6 +1003,8 @@ export class World {
     this.stats.bossKills++;
     // Boss Rush: queue the next escalating boss a short beat later.
     if (this.bossRush) this.nextBossTime = this.stats.elapsed + RUSH_GAP;
+    // Gauntlet: a boss kill clears the current stage; advance to the next.
+    if (this.gauntlet) this.advanceGauntlet();
     this.events.emit("bossDefeated", { x: e.x, y: e.y });
 
     // Generous reward: a fan of XP shards plus guaranteed support drops.

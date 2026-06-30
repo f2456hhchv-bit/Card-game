@@ -51,6 +51,15 @@ export class SpawnDirector {
     this.ascRate = 1;
   }
 
+  /**
+   * Swap the active enemy pool + difficulty mid-run (Stage Gauntlet) without
+   * disturbing the spawn/elite/surge timers.
+   */
+  setStage(pool: readonly string[], difficulty: number): void {
+    this.pool = new Set(pool);
+    this.difficulty = difficulty;
+  }
+
   /** Set the endless Ascension multipliers (HP, damage, spawn-rate). */
   setAscension(hp: number, dmg: number, rate: number): void {
     this.ascHp = hp;

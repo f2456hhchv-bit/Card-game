@@ -232,6 +232,15 @@ director, with bosses recurring every 90s (vs 180s). Each step fires an
 The tier reached is the score — tracked in `save.endlessBest` and on the Records
 screen, and it boosts the mote reward (+8/tier). Always available from the menu.
 
+### Stage Gauntlet ✅ (one life, three stages)
+Clear **Fade → Ember → Deep back-to-back on a single life** — HP, level and
+loadout carry over (`World.gauntlet`, order `GAUNTLET_ORDER`). Each stage's
+**boss kill advances** to the next (`advanceGauntlet`): the spawn pool, difficulty
+and palette swap live (`SpawnDirector.setStage`), a "Stage N cleared" toast fires
+and the Warden gets a 30% breather heal. Clear all three for **GAUNTLET CLEARED!**
+then keep going for score. Stages cleared (0–3) is tracked in `save.gauntletBest`,
+shown in Records and on the HUD badge, and rewards +20 motes/stage.
+
 ### Daily Run ✅
 A once-a-day challenge seeded from the **local calendar date**
 (`Rng.seedFromString("YYYY-MM-DD")` → `World.reseed`), so the run's generated
