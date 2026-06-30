@@ -31,6 +31,12 @@ export interface StageDef {
   bossPool: string[];
   /** Lifetime bosses the player must have felled to unlock this stage. */
   unlockBosses: number;
+  /**
+   * Difficulty multiplier on enemy HP, damage and boss strength (1 = base). A
+   * higher value makes the stage tougher — and, paired with the same rewards,
+   * a denser source of gear/motes for players who can survive it.
+   */
+  difficulty: number;
 }
 
 export const STAGE_DEFS: Record<string, StageDef> = {
@@ -51,6 +57,7 @@ export const STAGE_DEFS: Record<string, StageDef> = {
     enemyPool: ["drifter", "mote", "husk", "lunger", "wisp", "caster", "spore"],
     bossPool: ["theMaw", "theChoir"],
     unlockBosses: 0,
+    difficulty: 1,
   },
   ember: {
     id: "ember",
@@ -70,6 +77,7 @@ export const STAGE_DEFS: Record<string, StageDef> = {
     enemyPool: ["cinder", "husk", "lunger", "revenant", "spore", "caster", "mote"],
     bossPool: ["thePyre", "theForge"],
     unlockBosses: 1,
+    difficulty: 1.35,
   },
 };
 

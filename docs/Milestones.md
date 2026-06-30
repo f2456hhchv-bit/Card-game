@@ -101,6 +101,10 @@ Goal: replace placeholder geometry with premium, original procedural art.
       Wastes adds **The Pyre** (fast Cinder swarm) & **The Forge** (Revenant siege).
 - [x] **Two more gear sets**: **Tempest** (crit) & **Nebula** (sustain) — now 6
       sets / 24 collectable items.
+- [x] **Boss-kill gear drops**: every boss defeat guarantees a gear salvage, so
+      bosses advance set completion (on top of the loot shower).
+- [x] **Per-stage difficulty curve**: Ember Wastes runs at ×1.35 enemy/boss
+      strength (threat badge on the menu chip) — opt-in, richer salvage, no paywall.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

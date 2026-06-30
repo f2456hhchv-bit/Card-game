@@ -231,7 +231,7 @@ export class World {
     this.revivesLeft = this.player.stats.revive;
     this.pulseTimer = World.PULSE_INTERVAL;
     this.pulseFx = 0;
-    this.spawnDirector.reset(this.stage.enemyPool);
+    this.spawnDirector.reset(this.stage.enemyPool, this.stage.difficulty);
 
     this.stats.elapsed = 0;
     this.stats.kills = 0;
@@ -430,11 +430,12 @@ export class World {
     e.isElite = false;
     e.isBoss = true;
     e.animPhase = 0;
-    // HP scales with encounter index and a touch with time.
+    // HP scales with encounter index, a touch with time, and stage difficulty.
     const encounterScale = 1 + this.bossEncounter * 0.85;
-    e.maxHp = def.baseHp * encounterScale * (1 + minutes * 0.04);
+    const diff = this.stage.difficulty;
+    e.maxHp = def.baseHp * encounterScale * (1 + minutes * 0.04) * diff;
     e.hp = e.maxHp;
-    e.damage = def.contactDamage * (1 + minutes * 0.08);
+    e.damage = def.contactDamage * (1 + minutes * 0.08) * diff;
     e.xpValue = 60 + this.bossEncounter * 30;
     e.knockX = 0;
     e.knockY = 0;

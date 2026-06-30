@@ -28,25 +28,31 @@ export class SpawnDirector {
   private surgeRemaining = 0;
   /** Enemy ids eligible for this run's stage (null = the whole bestiary). */
   private pool: Set<string> | null = null;
+  /** Stage difficulty multiplier on HP/damage scaling (1 = base stage). */
+  private difficulty = 1;
 
-  /** @param pool optional stage enemy-id whitelist; omit for all enemies. */
-  reset(pool?: readonly string[]): void {
+  /**
+   * @param pool optional stage enemy-id whitelist; omit for all enemies.
+   * @param difficulty stage HP/damage multiplier (1 = base).
+   */
+  reset(pool?: readonly string[], difficulty = 1): void {
     this.spawnAccumulator = 0;
     this.eliteTimer = 22;
     this.surgeTimer = 45;
     this.surgeRemaining = 0;
     this.pool = pool ? new Set(pool) : null;
+    this.difficulty = difficulty;
   }
 
   /** Difficulty multiplier on enemy HP as a function of elapsed minutes. */
   hpScale(minutes: number): number {
     // Gentle quadratic-ish ramp: ~1x at 0min, ~2.5x at 5min, ~6x at 12min.
-    return 1 + minutes * 0.28 + minutes * minutes * 0.018;
+    return (1 + minutes * 0.28 + minutes * minutes * 0.018) * this.difficulty;
   }
 
   /** Difficulty multiplier on enemy damage. */
   damageScale(minutes: number): number {
-    return 1 + minutes * 0.12;
+    return (1 + minutes * 0.12) * this.difficulty;
   }
 
   /** Base spawn interval (seconds between spawns), shrinking over time. */

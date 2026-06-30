@@ -200,6 +200,21 @@ describe("World — combat integration", () => {
     expect(world.player.stats.iframes).toBeGreaterThan(0.5); // boosted by Slipstream
   });
 
+  it("the Ember stage spawns tougher enemies than The Fade (difficulty curve)", () => {
+    const spawnHusk = (stageId: string) => {
+      const w = new World(5);
+      w.stageId = stageId;
+      w.reset();
+      (w as unknown as { spawnAdd(id: string, x: number, y: number): void }).spawnAdd(
+        "husk",
+        0,
+        0,
+      );
+      return w.enemies[0].maxHp;
+    };
+    expect(spawnHusk("ember")).toBeGreaterThan(spawnHusk("fade"));
+  });
+
   it("kills award XP and can trigger a level-up draft", () => {
     const world = new World(99);
     world.reset();

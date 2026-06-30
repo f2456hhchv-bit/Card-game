@@ -39,6 +39,15 @@ describe("SpawnDirector", () => {
     expect(fodder).toBe(0);
   });
 
+  it("applies a stage difficulty multiplier to HP and damage scaling", () => {
+    const base = new SpawnDirector();
+    base.reset();
+    const hard = new SpawnDirector();
+    hard.reset(undefined, 1.35);
+    expect(hard.hpScale(5)).toBeCloseTo(base.hpScale(5) * 1.35);
+    expect(hard.damageScale(5)).toBeCloseTo(base.damageScale(5) * 1.35);
+  });
+
   it("restricts spawns to the stage enemy pool when one is set", () => {
     const d = new SpawnDirector();
     d.reset(["cinder"]); // Ember Wastes-only pool (cinder unlocks at 0 min)

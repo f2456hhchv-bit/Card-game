@@ -342,8 +342,13 @@ export class UIManager {
       chip.style.setProperty("--card-accent", `hsl(${stage.accentHue} 80% 62%)`);
       if (active) chip.classList.add("active");
       if (!unlocked) chip.classList.add("locked");
+      const nameRow = this.el("div", "stage-chip-name", stage.name);
+      if (unlocked && stage.difficulty > 1) {
+        // A small threat badge signals the tougher (richer-salvage) stage.
+        nameRow.append(this.el("span", "stage-threat", `▲${stage.difficulty.toFixed(2)}`));
+      }
       chip.append(
-        this.el("div", "stage-chip-name", stage.name),
+        nameRow,
         this.el(
           "div",
           "stage-chip-sub",

@@ -144,8 +144,10 @@ big 4-piece bonus, four of which grant a signature perk):
 
 (6 sets × 4 slots = **24 items** to collect.)
 
-**Acquisition & merge loop:** every run drops one random **item** at game over
-(`SaveManager.grantItemDrop`). The **first** of an item *unlocks* it at **grade 1**
+**Acquisition & merge loop:** an item salvage (`SaveManager.grantItemDrop`) is
+granted both at **game over** *and* on **every boss kill** (`Game.salvageGear`),
+so bosses meaningfully advance set completion. The **first** of an item *unlocks*
+it at **grade 1**
 (and auto-equips if its slot is empty); duplicates **bank as cores**. In the
 **Hangar** you **equip** items into slots and **merge** banked cores to raise an
 item's grade — `mergeCost(grade) = grade`, so **1+2+3+4 = 10 cores** to max one
@@ -168,10 +170,15 @@ Source of truth: `src/game/data/stageDefs.ts`; selection in `save.selectedStage`
 Each stage has its own **palette** (sky/nebula/fog/star colours, baked by
 `Background.setStage`) and **enemy pool** (`SpawnDirector.reset(pool)`).
 
-| Stage | Unlock | Palette | Pool flavour | Bosses |
-| --- | --- | --- | --- | --- |
-| The Fade | free | deep indigo void | full base bestiary | The Maw, The Choir |
-| Ember Wastes | fell 1 boss (lifetime) | burning red/orange | faster, fiercer — adds **Cinder** & **Revenant** | **The Pyre**, **The Forge** |
+| Stage | Unlock | Difficulty | Palette | Pool flavour | Bosses |
+| --- | --- | --- | --- | --- | --- |
+| The Fade | free | ×1.00 | deep indigo void | full base bestiary | The Maw, The Choir |
+| Ember Wastes | fell 1 boss (lifetime) | ×1.35 | burning red/orange | faster, fiercer — adds **Cinder** & **Revenant** | **The Pyre**, **The Forge** |
+
+`StageDef.difficulty` multiplies enemy HP/damage scaling (`SpawnDirector`) and
+boss strength (`World.spawnBoss`); the menu chip shows a ▲ threat badge. Tougher
+stages aren't pay-walled — they're a denser, opt-in source of gear and motes for
+players who can survive them.
 
 Chosen from the main-menu **stage chips** (locked stages show their requirement).
 The Daily Run is always **The Fade** for equal footing. New stage-2 enemies live

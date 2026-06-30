@@ -154,6 +154,9 @@ export class Game {
       this.ui.hideBossBar();
       this.audio.bossDown();
       this.camera.addShake(20, 0.8);
+      // Bosses are the headline reward moment — guarantee a gear salvage so they
+      // meaningfully advance set completion, on top of the loot shower.
+      this.salvageGear();
       this.checkAchievements(); // immediate boss-kill toasts
     });
     e.on("revived", () => {
@@ -285,20 +288,24 @@ export class Game {
       this.save.recordDaily(dailyDateString(), stats.elapsed, stats.kills);
     }
     // Salvage a gear item from the wreck — every run advances the Hangar.
-    const drop = this.save.grantItemDrop();
-    const def = GEAR_ITEMS[drop.id];
-    if (def) {
-      this.ui.showToast(
-        def.icon,
-        drop.isNew ? `${def.name} found` : `${def.name} core`,
-        drop.isNew
-          ? `New gear unlocked — equip it in the Hangar.`
-          : `Duplicate core banked. Merge it in the Hangar to upgrade.`,
-      );
-    }
+    this.salvageGear();
     this.checkAchievements();
     this.ui.hideHUD();
     this.ui.showGameOver(stats, motes, records, this.isDailyRun);
+  }
+
+  /** Grant one gear-item salvage and toast the result (boss kill / run end). */
+  private salvageGear(): void {
+    const drop = this.save.grantItemDrop();
+    const def = GEAR_ITEMS[drop.id];
+    if (!def) return;
+    this.ui.showToast(
+      def.icon,
+      drop.isNew ? `${def.name} found` : `${def.name} core`,
+      drop.isNew
+        ? `New gear unlocked — equip it in the Hangar.`
+        : `Duplicate core banked. Merge it in the Hangar to upgrade.`,
+    );
   }
 
   private achievementContext(): AchievementContext {
