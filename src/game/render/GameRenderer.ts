@@ -6,6 +6,7 @@ import { TAU } from "../../core/math/MathUtils";
 import { SpriteForge, type Sprite } from "./SpriteForge";
 import { Background } from "./Background";
 import { PostFx } from "./PostFx";
+import { AssetManager } from "./AssetManager";
 
 /**
  * Draws the world. All art is procedural and asset-free: characters are baked
@@ -18,6 +19,7 @@ export class GameRenderer {
   private readonly forge = new SpriteForge();
   private readonly background = new Background();
   private readonly postFx = new PostFx();
+  private readonly assets = new AssetManager();
 
   setReduceMotion(v: boolean): void {
     this.reduceMotion = v;
@@ -81,6 +83,36 @@ export class GameRenderer {
     ctx.restore();
   }
 
+  /**
+   * Blit a production art asset for `key` if one is loaded, otherwise fall back
+   * to the procedural `fallback` sprite. This is the seam that lets authored
+   * PNG/SVG art replace procedural art with no game-system changes.
+   */
+  private blitKey(
+    ctx: CanvasRenderingContext2D,
+    key: string,
+    fallback: Sprite,
+    x: number,
+    y: number,
+    r: number,
+    rotation = 0,
+    alpha = 1,
+  ): void {
+    const art = this.assets.get(key);
+    if (!art) {
+      this.blit(ctx, fallback, x, y, r, rotation, alpha);
+      return;
+    }
+    const k = r / art.radius;
+    ctx.save();
+    ctx.translate(x, y);
+    if (rotation !== 0) ctx.rotate(rotation);
+    ctx.scale(k, k);
+    if (alpha !== 1) ctx.globalAlpha = alpha;
+    ctx.drawImage(art.img, -art.img.width / 2, -art.img.height / 2);
+    ctx.restore();
+  }
+
   /** Grounding shadow beneath an entity. */
   private shadow(ctx: CanvasRenderingContext2D, x: number, y: number, r: number): void {
     this.blit(ctx, this.forge.shadow, x, y + r * 0.55, r * 1.05, 0, 0.9);
@@ -131,7 +163,7 @@ export class GameRenderer {
     // Body sprite faces up; rotate toward facing. Invuln blink after a hit.
     // Rendered noticeably larger than the hitbox so the ship reads big on screen.
     const blink = p.invuln > 0 && Math.sin(p.invuln * 40) < -0.2 ? 0.45 : 1;
-    this.blit(ctx, this.forge.warden, x, y, r * 2.0, p.facing + Math.PI / 2, blink);
+    this.blitKey(ctx, "hero/warden", this.forge.warden, x, y, r * 2.0, p.facing + Math.PI / 2, blink);
   }
 
   private drawEnemies(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {

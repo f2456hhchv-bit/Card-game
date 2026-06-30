@@ -57,6 +57,21 @@ energy/weapon trails, heal/buff/debuff, crit FX, shake, screen flash, bloom.
 **UI** — styled panels, animated menus, smooth transitions, hover, responsive,
 quality icons, consistent type, rarity colour, portraits, item art, animated toasts.
 
+## Production-art pipeline (live)
+Original art assets live in `src/assets/art/**` (authored in-repo — never sourced
+externally) and are ingested by `AssetManager`, which turns them into bundled
+data-URI images (work offline + on Pages). Renderers call `GameRenderer.blitKey
+(key, proceduralFallback, …)`: if a production asset for `key` is loaded it's
+drawn, else the procedural sprite is used — so art drops in with **no game-system
+changes**. SVG today (resolution-independent, painterly); PNG sprite-atlases slot
+in through the same seam. First production asset shipped: `hero/warden`.
+
+> **Sourcing note (copyright):** external painted art is NOT downloaded/“amended”
+> (that isn't original and breaks the no-copyrighted-assets rule). Painted-style
+> assets are authored originally in-repo; if production PNGs are later supplied
+> (commissioned or generated), they register in `AssetManager` and replace the
+> procedural fallbacks with zero refactoring.
+
 ## Art Manifest
 `src/game/render/ArtManifest.ts` registers every visual asset with a **quality
 tier** (`placeholder` | `procedural-final` | `production`) and notes. The

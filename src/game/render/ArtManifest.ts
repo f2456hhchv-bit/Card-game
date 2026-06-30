@@ -30,7 +30,7 @@ export interface ArtEntry {
  */
 export const ART_MANIFEST: ArtEntry[] = [
   // Heroes (the Guardian ship + per-Warden tints).
-  { key: "warden", domain: "hero", tier: "procedural-final", anims: ["idle"], notes: "Baked starship w/ engine glow, cockpit, swept wings. TODO: per-Warden unique silhouettes + walk/attack/hit/death anim." },
+  { key: "hero/warden", domain: "hero", tier: "production", anims: ["idle"], notes: "Original illustrated SVG (layered hull/cockpit/swept wings/engine glow/rim light), loaded via AssetManager. TODO: per-Warden unique silhouettes + walk/attack/hit/death anim." },
 
   // Enemies.
   { key: "drifter", domain: "enemy", tier: "procedural-final", anims: ["idle"], notes: "Baked. TODO: spawn/death anim, unique movement tells." },
