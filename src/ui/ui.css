@@ -577,6 +577,36 @@
   font-style: italic;
 }
 
+/* Records — per-stage best list. */
+.records-stages {
+  width: min(560px, 92vw);
+}
+.stage-best-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+.stage-best-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 12px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid var(--card-accent, var(--ui-accent));
+}
+.stage-best-name {
+  font-weight: 800;
+  color: var(--card-accent);
+}
+.stage-best-val {
+  font-size: 0.84rem;
+  color: var(--ui-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
 /* A locked menu button (e.g. Boss Rush before the first boss). */
 .btn.secondary.locked {
   opacity: 0.5;
@@ -953,7 +983,8 @@
   font-size: 1.25rem;
   font-variant-numeric: tabular-nums;
 }
-.records-ach-head {
+.records-ach-head,
+.records-sub-head {
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;

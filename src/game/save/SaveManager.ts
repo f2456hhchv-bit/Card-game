@@ -60,7 +60,13 @@ export interface SaveData {
     inventory: Record<string, ModuleState>;
     /** Equipped item id per ship slot (null = empty). */
     equipped: EquipMap;
+    /** Pity counters so drops can't go cold (consecutive dupes / non-Rare). */
+    pity: { sinceNew: number; sinceRare: number };
   };
+  /** Best Boss Rush result: most bosses felled in a single rush. */
+  bossRushBest: number;
+  /** Best time/kills per stage id (normal runs), for the Records screen. */
+  stageBest: Record<string, { time: number; kills: number }>;
   /** Unlocked Warden ids. */
   wardens: string[];
   /** Currently selected Warden id. */
@@ -85,7 +91,9 @@ function defaultSave(): SaveData {
     achievements: [],
     tutorialSeen: false,
     meta: {},
-    gear: { inventory: {}, equipped: emptyEquip() },
+    gear: { inventory: {}, equipped: emptyEquip(), pity: { sinceNew: 0, sinceRare: 0 } },
+    bossRushBest: 0,
+    stageBest: {},
     wardens: ["lumen"],
     selectedWarden: "lumen",
     selectedStage: "fade",
@@ -102,6 +110,11 @@ function defaultSave(): SaveData {
 
 export class SaveManager {
   data: SaveData = defaultSave();
+
+  /** Consecutive duplicate drops before a new item is forced (if any remain). */
+  private static readonly NEW_PITY = 6;
+  /** Consecutive non-Rare drops before a Rare+ is guaranteed. */
+  private static readonly RARE_PITY = 7;
 
   load(): SaveData {
     try {
@@ -133,6 +146,8 @@ export class SaveManager {
       tutorialSeen,
       meta: parsed.meta ?? {},
       gear: this.migrateGear(parsed),
+      bossRushBest: parsed.bossRushBest ?? 0,
+      stageBest: parsed.stageBest ?? {},
       lifetime: parsed.lifetime ?? { time: 0, damage: 0, bosses: 0, elites: 0 },
       wardens: parsed.wardens ?? ["lumen"],
       selectedWarden: parsed.selectedWarden ?? "lumen",
@@ -152,9 +167,14 @@ export class SaveManager {
    * partial/whole Salvager set).
    */
   private migrateGear(parsed: Partial<SaveData> & { modules?: Record<string, ModuleState> }): SaveData["gear"] {
+    const pity = parsed.gear?.pity ?? { sinceNew: 0, sinceRare: 0 };
     if (parsed.gear?.inventory && parsed.gear?.equipped) {
-      // Already in the new format; just ensure all slots exist.
-      return { inventory: parsed.gear.inventory, equipped: { ...emptyEquip(), ...parsed.gear.equipped } };
+      // Already in the new format; just ensure all slots + pity exist.
+      return {
+        inventory: parsed.gear.inventory,
+        equipped: { ...emptyEquip(), ...parsed.gear.equipped },
+        pity,
+      };
     }
     const inventory: Record<string, ModuleState> = {};
     const equipped = emptyEquip();
@@ -175,7 +195,7 @@ export class SaveManager {
         equipped[slot] = id; // auto-equip the migrated piece
       }
     }
-    return { inventory, equipped };
+    return { inventory, equipped, pity };
   }
 
   save(): void {
@@ -186,10 +206,23 @@ export class SaveManager {
     }
   }
 
-  /** Record the outcome of a finished run and persist. Returns new records. */
-  recordRun(stats: RunStats, motesEarned: number): {
+  /**
+   * Record the outcome of a finished run and persist. `ctx` carries the run mode
+   * so per-mode records (per-stage bests, Boss Rush best) update correctly.
+   * Returns which global records fell.
+   */
+  recordRun(
+    stats: RunStats,
+    motesEarned: number,
+    ctx: { stageId: string; bossRush: boolean; daily: boolean } = {
+      stageId: "fade",
+      bossRush: false,
+      daily: false,
+    },
+  ): {
     newBestTime: boolean;
     newBestKills: boolean;
+    newBestRush: boolean;
   } {
     const d = this.data;
     d.runsPlayed++;
@@ -203,8 +236,23 @@ export class SaveManager {
     const newBestKills = stats.kills > d.bestKills;
     if (newBestTime) d.bestTime = stats.elapsed;
     if (newBestKills) d.bestKills = stats.kills;
+
+    // Boss Rush best: most bosses felled in a rush.
+    let newBestRush = false;
+    if (ctx.bossRush) {
+      newBestRush = stats.bossKills > d.bossRushBest;
+      if (newBestRush) d.bossRushBest = stats.bossKills;
+    } else if (!ctx.daily) {
+      // Per-stage best for normal (campaign) runs.
+      const prev = d.stageBest[ctx.stageId] ?? { time: 0, kills: 0 };
+      d.stageBest[ctx.stageId] = {
+        time: Math.max(prev.time, stats.elapsed),
+        kills: Math.max(prev.kills, stats.kills),
+      };
+    }
+
     this.save();
-    return { newBestTime, newBestKills };
+    return { newBestTime, newBestKills, newBestRush };
   }
 
   /**
@@ -235,17 +283,28 @@ export class SaveManager {
    * rarity (its stat multiplier), a second long-tail progression axis.
    */
   grantItemDrop(): { id: string; isNew: boolean; rarity: number; rarityUp: boolean } {
-    const def = ITEM_LIST[Math.floor(Math.random() * ITEM_LIST.length)];
     const inv = this.data.gear.inventory;
+    const pity = this.data.gear.pity;
+
+    // New-item pity: after enough consecutive duplicates, force an unowned item
+    // (if any remain) so collection never fully stalls.
+    const unowned = ITEM_LIST.filter((it) => (inv[it.id]?.grade ?? 0) === 0);
+    const forceNew = unowned.length > 0 && pity.sinceNew >= SaveManager.NEW_PITY;
+    const def = forceNew
+      ? unowned[Math.floor(Math.random() * unowned.length)]
+      : ITEM_LIST[Math.floor(Math.random() * ITEM_LIST.length)];
+
+    // Rarity pity: guarantee at least Rare when the dry streak gets long.
+    let rolled = rollRarity();
+    if (pity.sinceRare >= SaveManager.RARE_PITY && rolled < 1) rolled = 1;
+
     const m = inv[def.id] ?? { grade: 0, dupes: 0, rarity: 0 };
-    const rolled = rollRarity();
     let isNew = false;
     let rarityUp = false;
     if (m.grade === 0) {
       m.grade = 1;
       m.rarity = rolled;
       isNew = true;
-      // Convenience: fill an empty slot with the first item the player owns.
       if (this.data.gear.equipped[def.slot] == null) {
         this.data.gear.equipped[def.slot] = def.id;
       }
@@ -257,6 +316,11 @@ export class SaveManager {
       }
     }
     inv[def.id] = m;
+
+    // Advance pity counters.
+    pity.sinceNew = isNew ? 0 : pity.sinceNew + 1;
+    pity.sinceRare = rolled >= 1 ? 0 : pity.sinceRare + 1;
+
     this.save();
     return { id: def.id, isNew, rarity: m.rarity ?? 0, rarityUp };
   }

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { SaveManager } from "./SaveManager";
-import { GEAR_ITEMS, itemId } from "../data/gearDefs";
+import { GEAR_ITEMS, ITEM_LIST, itemId } from "../data/gearDefs";
 
 describe("SaveManager — gear inventory & equip", () => {
   it("a first drop owns the item at grade 1 and auto-equips an empty slot", () => {
@@ -63,6 +63,44 @@ describe("SaveManager — gear inventory & equip", () => {
     sm.data.gear.inventory[id].dupes = 5;
     expect(sm.mergeItem(id)).toBe(3); // grade 2 → 3 costs 2
     expect(sm.data.gear.inventory[id].dupes).toBe(3);
+  });
+
+  it("new-item pity forces an unowned item after a dry streak", () => {
+    const sm = new SaveManager();
+    // Own every item except one, so exactly one unowned remains.
+    for (const it of ITEM_LIST) sm.data.gear.inventory[it.id] = { grade: 1, dupes: 0, rarity: 0 };
+    const missing = itemId("nebula", "wings");
+    delete sm.data.gear.inventory[missing];
+    sm.data.gear.pity.sinceNew = 6; // at the pity threshold
+
+    const real = Math.random;
+    try {
+      Math.random = () => 0; // would otherwise pick item index 0 (already owned)
+      const drop = sm.grantItemDrop();
+      expect(drop.id).toBe(missing);
+      expect(drop.isNew).toBe(true);
+      expect(sm.data.gear.pity.sinceNew).toBe(0); // reset on a new item
+    } finally {
+      Math.random = real;
+    }
+  });
+
+  it("rarity pity guarantees a Rare+ after a non-Rare streak", () => {
+    const sm = new SaveManager();
+    const id = ITEM_LIST[0].id;
+    sm.data.gear.inventory[id] = { grade: 1, dupes: 0, rarity: 0 };
+    sm.data.gear.pity.sinceRare = 7; // at the rarity-pity threshold
+
+    const real = Math.random;
+    try {
+      Math.random = () => 0; // item index 0, and a Common rarity roll…
+      const drop = sm.grantItemDrop();
+      expect(drop.id).toBe(id);
+      expect(drop.rarity).toBeGreaterThanOrEqual(1); // …bumped to Rare by pity
+      expect(sm.data.gear.pity.sinceRare).toBe(0); // reset
+    } finally {
+      Math.random = real;
+    }
   });
 
   it("cannot merge past max grade", () => {

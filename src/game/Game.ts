@@ -297,7 +297,11 @@ export class Game {
     // makes Boss Rush worthwhile), boosted by Fortune.
     const base = stats.elapsed * 0.5 + stats.kills * 0.2 + stats.bossKills * 15;
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
-    const records = this.save.recordRun(stats, motes);
+    const records = this.save.recordRun(stats, motes, {
+      stageId: this.world.stageId,
+      bossRush: this.isBossRush,
+      daily: this.isDailyRun,
+    });
     if (this.isDailyRun) {
       this.save.recordDaily(dailyDateString(), stats.elapsed, stats.kills);
     }

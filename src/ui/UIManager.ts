@@ -838,17 +838,19 @@ export class UIManager {
 
   private records!: HTMLDivElement;
   private recordsStats!: HTMLDivElement;
+  private recordsStages!: HTMLDivElement;
   private recordsGrid!: HTMLDivElement;
 
   private buildRecords(): void {
     const o = this.el("div", "overlay hidden");
     const title = this.el("h2", undefined, "RECORDS");
     this.recordsStats = this.el("div", "records-stats");
+    this.recordsStages = this.el("div", "records-stages");
     const achHead = this.el("div", "records-ach-head", "Achievements");
     this.recordsGrid = this.el("div", "ach-grid");
     const back = this.el("button", "btn", "Back");
     back.addEventListener("click", () => this.closeRecords());
-    o.append(title, this.recordsStats, achHead, this.recordsGrid, back);
+    o.append(title, this.recordsStats, this.recordsStages, achHead, this.recordsGrid, back);
     this.root.appendChild(o);
     this.records = o;
   }
@@ -865,11 +867,30 @@ export class UIManager {
     this.recordsStats.replaceChildren(
       stat("Best Time", formatTime(d.bestTime)),
       stat("Most Felled", `${d.bestKills}`),
+      stat("Boss Rush", d.bossRushBest > 0 ? `${d.bossRushBest} bosses` : "—"),
       stat("Runs", `${d.runsPlayed}`),
-      stat("Total Felled", `${d.totalKills}`),
       stat("Bosses Slain", `${d.lifetime.bosses}`),
       stat("Time Played", hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`),
     );
+
+    // Per-stage best times (only stages the player has recorded a run on).
+    this.recordsStages.replaceChildren();
+    const played = STAGE_LIST.filter((s) => d.stageBest[s.id]);
+    if (played.length > 0) {
+      this.recordsStages.appendChild(this.el("div", "records-sub-head", "Best by Stage"));
+      const list = this.el("div", "stage-best-list");
+      for (const s of played) {
+        const best = d.stageBest[s.id];
+        const row = this.el("div", "stage-best-row");
+        row.style.setProperty("--card-accent", `hsl(${s.accentHue} 80% 62%)`);
+        row.append(
+          this.el("span", "stage-best-name", s.name),
+          this.el("span", "stage-best-val", `${formatTime(best.time)} · ${best.kills} felled`),
+        );
+        list.appendChild(row);
+      }
+      this.recordsStages.appendChild(list);
+    }
 
     const unlocked = new Set(d.achievements);
     const done = ACHIEVEMENT_DEFS.filter((a) => unlocked.has(a.id)).length;
