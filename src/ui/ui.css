@@ -281,13 +281,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* `safe center` keeps short screens centred but pins to the top (no clipping)
+     when content is taller than the viewport, so it can be scrolled. */
+  justify-content: safe center;
   gap: 22px;
   background: var(--ui-bg);
   backdrop-filter: blur(6px);
   pointer-events: auto;
   padding: 24px;
   text-align: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+/* Don't let tall children get squeezed by the flex column — keep their height. */
+.overlay > * {
+  flex-shrink: 0;
 }
 .overlay.hidden {
   display: none;
