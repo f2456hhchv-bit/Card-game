@@ -10,6 +10,10 @@
  * asset here is authored in-repo under src/assets/art, never sourced externally.
  */
 import wardenSvg from "../../assets/art/hero/warden.svg?raw";
+import cinderSvg from "../../assets/art/enemy/cinder.svg?raw";
+import revenantSvg from "../../assets/art/enemy/revenant.svg?raw";
+import shardSvg from "../../assets/art/enemy/shard.svg?raw";
+import colossusSvg from "../../assets/art/enemy/colossus.svg?raw";
 
 export interface ArtImage {
   img: HTMLImageElement;
@@ -20,8 +24,13 @@ export interface ArtImage {
 
 /** Registry of authored assets: key → [raw SVG, designRadius]. */
 const ART_SOURCES: Record<string, { svg: string; radius: number }> = {
-  // The asset's viewBox is 120×120 centred at (60,60); the ship body radius ≈ 30.
+  // All assets use a 120×120 viewBox centred at (60,60) with a design body
+  // radius ≈ 30, matching SpriteForge so blit scaling is consistent.
   "hero/warden": { svg: wardenSvg, radius: 30 },
+  "enemy/cinder": { svg: cinderSvg, radius: 30 },
+  "enemy/revenant": { svg: revenantSvg, radius: 30 },
+  "enemy/shard": { svg: shardSvg, radius: 30 },
+  "enemy/colossus": { svg: colossusSvg, radius: 30 },
 };
 
 export class AssetManager {

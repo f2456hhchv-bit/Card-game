@@ -203,11 +203,28 @@ export class GameRenderer {
         ctx.restore();
       }
 
-      const sprite = this.forge.enemy(e.typeId);
-      this.blit(ctx, sprite, x, y, r, rot);
-      // Hit flash overlay.
-      if (e.hitFlash > 0) {
-        this.blit(ctx, this.forge.enemyWhite(e.typeId), x, y, r, rot, Math.min(1, e.hitFlash / 0.08));
+      // Prefer a production asset; fall back to the procedural baked sprite.
+      const art = this.assets.get(`enemy/${e.typeId}`);
+      if (art) {
+        const k = r / art.radius;
+        ctx.save();
+        ctx.translate(x, y);
+        if (rot !== 0) ctx.rotate(rot);
+        ctx.scale(k, k);
+        ctx.drawImage(art.img, -art.img.width / 2, -art.img.height / 2);
+        // Hit flash: an additive self-blend brightens the silhouette (no mask).
+        if (e.hitFlash > 0) {
+          ctx.globalCompositeOperation = "lighter";
+          ctx.globalAlpha = Math.min(1, e.hitFlash / 0.08) * 0.85;
+          ctx.drawImage(art.img, -art.img.width / 2, -art.img.height / 2);
+        }
+        ctx.restore();
+      } else {
+        const sprite = this.forge.enemy(e.typeId);
+        this.blit(ctx, sprite, x, y, r, rot);
+        if (e.hitFlash > 0) {
+          this.blit(ctx, this.forge.enemyWhite(e.typeId), x, y, r, rot, Math.min(1, e.hitFlash / 0.08));
+        }
       }
 
       // Health bar for damaged / elite enemies.

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Colossus — Hollow Deep heavy charger. A hulking ice golem. Faces up (-Y).
+       Original art. -->
+  <defs>
+    <linearGradient id="co-body" x1="60" y1="30" x2="60" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#dbeeff"/>
+      <stop offset="0.5" stop-color="#8fb6e0"/>
+      <stop offset="1" stop-color="#3f5f8c"/>
+    </linearGradient>
+    <linearGradient id="co-plate" x1="30" y1="40" x2="90" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#eaf6ff"/>
+      <stop offset="1" stop-color="#6f93c4"/>
+    </linearGradient>
+    <radialGradient id="co-core" cx="60" cy="64" r="12" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#eafcff"/>
+      <stop offset="0.5" stop-color="#54d0ff"/>
+      <stop offset="1" stop-color="#1572b8"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Heavy arms / fists -->
+  <path d="M26 60 L18 86 L36 92 L42 70 Z" fill="url(#co-body)" stroke="#27406a" stroke-width="1.3"/>
+  <path d="M94 60 L102 86 L84 92 L78 70 Z" fill="url(#co-body)" stroke="#27406a" stroke-width="1.3"/>
+
+  <!-- Broad armoured torso (trapezoid, wider at the shoulders) -->
+  <path d="M34 44 L86 44 L92 92 L28 92 Z" fill="url(#co-body)" stroke="#27406a" stroke-width="1.6"/>
+
+  <!-- Shoulder plates -->
+  <path d="M30 42 L58 38 L56 56 L30 58 Z" fill="url(#co-plate)" stroke="#27406a" stroke-width="1.2"/>
+  <path d="M90 42 L62 38 L64 56 L90 58 Z" fill="url(#co-plate)" stroke="#27406a" stroke-width="1.2"/>
+
+  <!-- Small heavy head set low between the shoulders -->
+  <rect x="50" y="30" width="20" height="18" rx="4" fill="url(#co-plate)" stroke="#27406a" stroke-width="1.3"/>
+  <rect x="53" y="37" width="14" height="4.5" rx="2" fill="#0c2240"/>
+
+  <!-- Glowing power core in the chest -->
+  <polygon points="60,52 70,64 60,80 50,64" fill="url(#co-core)" stroke="#bff0ff" stroke-width="1"/>
+
+  <!-- Ice cracks / plate seams -->
+  <path d="M40 60 L52 70 M80 60 L68 70 M44 80 L54 88 M76 80 L66 88"
+        stroke="#cfe6ff" stroke-width="1.1" opacity="0.55" stroke-linecap="round"/>
+</svg>

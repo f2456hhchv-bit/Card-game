@@ -40,10 +40,10 @@ export const ART_MANIFEST: ArtEntry[] = [
   { key: "wisp", domain: "enemy", tier: "procedural-final", anims: ["idle"], notes: "Baked." },
   { key: "caster", domain: "enemy", tier: "procedural-final", anims: ["idle"], notes: "Baked." },
   { key: "spore", domain: "enemy", tier: "procedural-final", anims: ["idle"], notes: "Baked." },
-  { key: "cinder", domain: "enemy", tier: "placeholder", notes: "Recolour of lunger — REQUIRES unique silhouette per directive." },
-  { key: "revenant", domain: "enemy", tier: "placeholder", notes: "Recolour of caster — REQUIRES unique silhouette." },
-  { key: "shard", domain: "enemy", tier: "placeholder", notes: "Recolour of mote — REQUIRES unique silhouette." },
-  { key: "colossus", domain: "enemy", tier: "placeholder", notes: "Recolour of husk — REQUIRES unique silhouette." },
+  { key: "enemy/cinder", domain: "enemy", tier: "production", notes: "Original SVG — angry living-flame imp (ember palette). Unique silhouette." },
+  { key: "enemy/revenant", domain: "enemy", tier: "production", notes: "Original SVG — hooded ember-wraith caster w/ burning eyes + tattered hem." },
+  { key: "enemy/shard", domain: "enemy", tier: "production", notes: "Original SVG — angular living-ice crystal cluster (frost palette)." },
+  { key: "enemy/colossus", domain: "enemy", tier: "production", notes: "Original SVG — hulking armoured ice golem w/ glowing core." },
 
   // Bosses.
   { key: "theMaw", domain: "boss", tier: "procedural-final", notes: "Baked. TODO: entrance + death sequence, phase visual shifts." },
