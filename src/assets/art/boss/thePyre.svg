@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <!-- The Pyre — Heart of Cinders. A cracked obsidian shell split open over a
+       molten heart, crowned in flame. Original art. Design radius ~52. -->
+  <defs>
+    <radialGradient id="py-glow" cx="80" cy="84" r="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff7a18" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ff7a18" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="py-core" cx="80" cy="86" r="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff6c2"/>
+      <stop offset="0.4" stop-color="#ffd23f"/>
+      <stop offset="0.8" stop-color="#ff5a14"/>
+      <stop offset="1" stop-color="#b81402"/>
+    </radialGradient>
+    <linearGradient id="py-shell" x1="40" y1="40" x2="120" y2="124" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3a2330"/>
+      <stop offset="0.6" stop-color="#1c1018"/>
+      <stop offset="1" stop-color="#0a0408"/>
+    </linearGradient>
+    <linearGradient id="py-flame" x1="80" y1="14" x2="80" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff0a0"/>
+      <stop offset="0.5" stop-color="#ff9b1e"/>
+      <stop offset="1" stop-color="#ff4d10"/>
+    </linearGradient>
+    <filter id="py-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6"/></filter>
+  </defs>
+
+  <circle cx="80" cy="84" r="74" fill="url(#py-glow)"/>
+
+  <!-- Flame crown -->
+  <g fill="url(#py-flame)" filter="url(#py-soft)">
+    <path d="M80 16 C72 34 70 42 80 52 C90 42 88 34 80 16 Z"/>
+    <path d="M54 28 C50 44 52 50 62 54 C66 44 64 36 54 28 Z"/>
+    <path d="M106 28 C110 44 108 50 98 54 C94 44 96 36 106 28 Z"/>
+  </g>
+
+  <!-- Cracked obsidian shell (two halves pulled apart) -->
+  <path d="M80 44 C44 46 30 70 34 98 C38 124 58 138 80 138 C70 116 66 96 70 78 C72 64 76 52 80 44 Z"
+        fill="url(#py-shell)" stroke="#000" stroke-width="1.6"/>
+  <path d="M80 44 C116 46 130 70 126 98 C122 124 102 138 80 138 C90 116 94 96 90 78 C88 64 84 52 80 44 Z"
+        fill="url(#py-shell)" stroke="#000" stroke-width="1.6"/>
+
+  <!-- Molten heart in the gap -->
+  <ellipse cx="80" cy="88" rx="20" ry="28" fill="url(#py-core)"/>
+  <ellipse cx="80" cy="84" rx="8" ry="12" fill="#fff6c2" filter="url(#py-soft)"/>
+
+  <!-- Glowing lava cracks across the shell -->
+  <g stroke="#ff6a1e" stroke-width="2" opacity="0.85" stroke-linecap="round" filter="url(#py-soft)">
+    <path d="M52 70 L40 84 M50 104 L38 110 M110 70 L122 84 M112 104 L124 110"/>
+  </g>
+</svg>

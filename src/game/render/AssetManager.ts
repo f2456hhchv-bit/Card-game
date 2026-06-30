@@ -14,6 +14,12 @@ import cinderSvg from "../../assets/art/enemy/cinder.svg?raw";
 import revenantSvg from "../../assets/art/enemy/revenant.svg?raw";
 import shardSvg from "../../assets/art/enemy/shard.svg?raw";
 import colossusSvg from "../../assets/art/enemy/colossus.svg?raw";
+import theMawSvg from "../../assets/art/boss/theMaw.svg?raw";
+import theChoirSvg from "../../assets/art/boss/theChoir.svg?raw";
+import thePyreSvg from "../../assets/art/boss/thePyre.svg?raw";
+import theForgeSvg from "../../assets/art/boss/theForge.svg?raw";
+import theRimeSvg from "../../assets/art/boss/theRime.svg?raw";
+import theNadirSvg from "../../assets/art/boss/theNadir.svg?raw";
 
 export interface ArtImage {
   img: HTMLImageElement;
@@ -31,6 +37,13 @@ const ART_SOURCES: Record<string, { svg: string; radius: number }> = {
   "enemy/revenant": { svg: revenantSvg, radius: 30 },
   "enemy/shard": { svg: shardSvg, radius: 30 },
   "enemy/colossus": { svg: colossusSvg, radius: 30 },
+  // Bosses use a 160×160 viewBox; main mass radius ≈ 52 (glow extends past it).
+  "boss/theMaw": { svg: theMawSvg, radius: 52 },
+  "boss/theChoir": { svg: theChoirSvg, radius: 52 },
+  "boss/thePyre": { svg: thePyreSvg, radius: 52 },
+  "boss/theForge": { svg: theForgeSvg, radius: 52 },
+  "boss/theRime": { svg: theRimeSvg, radius: 52 },
+  "boss/theNadir": { svg: theNadirSvg, radius: 52 },
 };
 
 export class AssetManager {

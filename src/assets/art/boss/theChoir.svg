@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <!-- The Choir — Hollow Chorus. A broken halo ring studded with watching eyes
+       around a great central eye. Original art. Design radius ~52. -->
+  <defs>
+    <radialGradient id="ch-glow" cx="80" cy="80" r="74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3fd0ff" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#3fd0ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ch-ring" x1="20" y1="30" x2="120" y2="130" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#eafcff"/>
+      <stop offset="0.5" stop-color="#79d4ff"/>
+      <stop offset="1" stop-color="#1f6fb0"/>
+    </linearGradient>
+    <radialGradient id="ch-eye" cx="80" cy="80" r="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#bfeeff"/>
+      <stop offset="1" stop-color="#0e6aa6"/>
+    </radialGradient>
+    <filter id="ch-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.4"/></filter>
+  </defs>
+
+  <circle cx="80" cy="80" r="72" fill="url(#ch-glow)"/>
+
+  <!-- Broken outer halo (two arcs, a gap = "hollow") -->
+  <g fill="none" stroke="url(#ch-ring)" stroke-width="9" stroke-linecap="round" filter="url(#ch-soft)">
+    <path d="M80 26 A54 54 0 0 1 130 100"/>
+    <path d="M30 100 A54 54 0 0 1 70 27"/>
+  </g>
+  <!-- Inner halo accent -->
+  <circle cx="80" cy="80" r="40" fill="none" stroke="#cdeeff" stroke-width="2" opacity="0.5"/>
+
+  <!-- A chorus of small watching eyes around the ring -->
+  <g>
+    <g transform="translate(80,30)"><ellipse rx="7" ry="5" fill="#eafcff" stroke="#1f6fb0" stroke-width="1"/><circle r="2.6" fill="#0b2a44"/></g>
+    <g transform="translate(124,58)"><ellipse rx="6.5" ry="4.6" fill="#eafcff" stroke="#1f6fb0" stroke-width="1"/><circle r="2.4" fill="#0b2a44"/></g>
+    <g transform="translate(126,104)"><ellipse rx="6.5" ry="4.6" fill="#eafcff" stroke="#1f6fb0" stroke-width="1"/><circle r="2.4" fill="#0b2a44"/></g>
+    <g transform="translate(36,58)"><ellipse rx="6.5" ry="4.6" fill="#eafcff" stroke="#1f6fb0" stroke-width="1"/><circle r="2.4" fill="#0b2a44"/></g>
+    <g transform="translate(40,116)"><ellipse rx="6" ry="4.3" fill="#eafcff" stroke="#1f6fb0" stroke-width="1"/><circle r="2.2" fill="#0b2a44"/></g>
+  </g>
+
+  <!-- The great central eye -->
+  <ellipse cx="80" cy="80" rx="24" ry="19" fill="url(#ch-eye)" stroke="#0e6aa6" stroke-width="2"/>
+  <circle cx="80" cy="80" r="9" fill="#0a2740"/>
+  <circle cx="80" cy="80" r="4.4" fill="#7fe3ff"/>
+  <circle cx="76" cy="75" r="2.4" fill="#ffffff"/>
+</svg>

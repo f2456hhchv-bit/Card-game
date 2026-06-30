@@ -263,18 +263,39 @@ export class GameRenderer {
       ctx.restore();
     }
 
-    const rot = this.reduceMotion ? 0 : t * 0.35;
-    this.blit(ctx, this.forge.bossSprite(boss.typeId), x, y, r * 1.2, rot);
-    if (boss.hitFlash > 0) {
-      this.blit(
-        ctx,
-        this.forge.bossWhite(boss.typeId),
-        x,
-        y,
-        r * 1.2,
-        rot,
-        Math.min(1, boss.hitFlash / 0.08),
-      );
+    const art = this.assets.get(`boss/${boss.typeId}`);
+    if (art) {
+      // Illustrated bosses sway/breathe rather than spinning like the abstract
+      // procedural sprite, so their silhouette stays readable.
+      const sway = this.reduceMotion ? 0 : Math.sin(t * 0.7) * 0.05;
+      const breathe = this.reduceMotion ? 1 : 1 + Math.sin(t * 1.6) * 0.02;
+      const rr = r * 1.2 * breathe;
+      const k = rr / art.radius;
+      ctx.save();
+      ctx.translate(x, y);
+      if (sway !== 0) ctx.rotate(sway);
+      ctx.scale(k, k);
+      ctx.drawImage(art.img, -art.img.width / 2, -art.img.height / 2);
+      if (boss.hitFlash > 0) {
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = Math.min(1, boss.hitFlash / 0.08) * 0.85;
+        ctx.drawImage(art.img, -art.img.width / 2, -art.img.height / 2);
+      }
+      ctx.restore();
+    } else {
+      const rot = this.reduceMotion ? 0 : t * 0.35;
+      this.blit(ctx, this.forge.bossSprite(boss.typeId), x, y, r * 1.2, rot);
+      if (boss.hitFlash > 0) {
+        this.blit(
+          ctx,
+          this.forge.bossWhite(boss.typeId),
+          x,
+          y,
+          r * 1.2,
+          rot,
+          Math.min(1, boss.hitFlash / 0.08),
+        );
+      }
     }
   }
 

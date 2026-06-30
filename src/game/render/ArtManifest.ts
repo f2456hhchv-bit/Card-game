@@ -46,12 +46,12 @@ export const ART_MANIFEST: ArtEntry[] = [
   { key: "enemy/colossus", domain: "enemy", tier: "production", notes: "Original SVG — hulking armoured ice golem w/ glowing core." },
 
   // Bosses.
-  { key: "theMaw", domain: "boss", tier: "procedural-final", notes: "Baked. TODO: entrance + death sequence, phase visual shifts." },
-  { key: "theChoir", domain: "boss", tier: "procedural-final", notes: "Baked." },
-  { key: "thePyre", domain: "boss", tier: "placeholder", notes: "Recolour of theChoir — REQUIRES unique boss silhouette." },
-  { key: "theForge", domain: "boss", tier: "placeholder", notes: "Recolour of theMaw — REQUIRES unique boss silhouette." },
-  { key: "theRime", domain: "boss", tier: "placeholder", notes: "Recolour of theChoir — REQUIRES unique boss silhouette." },
-  { key: "theNadir", domain: "boss", tier: "placeholder", notes: "Recolour of theMaw — REQUIRES unique boss silhouette." },
+  { key: "boss/theMaw", domain: "boss", tier: "production", notes: "Original SVG — void devourer: toothed maw ring around a hungry star + tendrils. TODO: entrance/death sequence + phase shifts." },
+  { key: "boss/theChoir", domain: "boss", tier: "production", notes: "Original SVG — broken halo studded with watching eyes around a great central eye." },
+  { key: "boss/thePyre", domain: "boss", tier: "production", notes: "Original SVG — cracked obsidian shell over a molten heart, flame-crowned." },
+  { key: "boss/theForge", domain: "boss", tier: "production", notes: "Original SVG — horned iron forge-golem w/ visor eyes + molten core." },
+  { key: "boss/theRime", domain: "boss", tier: "production", notes: "Original SVG — crystal heart radiating an 8-point frost star." },
+  { key: "boss/theNadir", domain: "boss", tier: "production", notes: "Original SVG — abyssal leviathan eye ringed with frozen tendrils." },
 
   // FX / rendering pipeline.
   { key: "postfx.bloom", domain: "vfx", tier: "procedural-final", notes: "Quarter-res threshold bloom composite — engine-level, applies to all art." },

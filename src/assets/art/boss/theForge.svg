@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <!-- The Forge — Anvil of the Dark. A hulking horned iron construct with a
+       molten forge-core and burning eyes. Original art. Design radius ~52. -->
+  <defs>
+    <radialGradient id="fo-glow" cx="80" cy="84" r="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff3a14" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#ff3a14" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fo-iron" x1="40" y1="36" x2="120" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5b5560"/>
+      <stop offset="0.5" stop-color="#36313d"/>
+      <stop offset="1" stop-color="#17141c"/>
+    </linearGradient>
+    <linearGradient id="fo-plate" x1="40" y1="50" x2="110" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7a7280"/>
+      <stop offset="1" stop-color="#2a2530"/>
+    </linearGradient>
+    <radialGradient id="fo-core" cx="80" cy="92" r="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff0b0"/>
+      <stop offset="0.5" stop-color="#ff7a18"/>
+      <stop offset="1" stop-color="#a01000"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="80" cy="84" r="74" fill="url(#fo-glow)"/>
+
+  <!-- Horns -->
+  <path d="M44 44 C30 26 22 32 34 40 C24 34 28 50 46 56 Z" fill="url(#fo-iron)" stroke="#0f0c14" stroke-width="1.4"/>
+  <path d="M116 44 C130 26 138 32 126 40 C136 34 132 50 114 56 Z" fill="url(#fo-iron)" stroke="#0f0c14" stroke-width="1.4"/>
+
+  <!-- Heavy anvil-shaped torso (wide top, narrow waist, broad base) -->
+  <path d="M34 52 L126 52 L116 78 L122 96 L110 138 L50 138 L38 96 L44 78 Z"
+        fill="url(#fo-iron)" stroke="#0f0c14" stroke-width="2"/>
+  <!-- Shoulder plates -->
+  <path d="M34 52 L70 46 L66 70 L40 74 Z" fill="url(#fo-plate)" stroke="#0f0c14" stroke-width="1.3"/>
+  <path d="M126 52 L90 46 L94 70 L120 74 Z" fill="url(#fo-plate)" stroke="#0f0c14" stroke-width="1.3"/>
+
+  <!-- Burning forge eyes (a visor of heat) -->
+  <rect x="58" y="60" width="44" height="9" rx="4" fill="#160a06"/>
+  <circle cx="68" cy="64.5" r="3.6" fill="#ffd23f"/>
+  <circle cx="92" cy="64.5" r="3.6" fill="#ffd23f"/>
+
+  <!-- Molten forge-core in the belly -->
+  <polygon points="80,80 96,96 80,120 64,96" fill="url(#fo-core)" stroke="#ffd23f" stroke-width="1"/>
+  <!-- Hot seams -->
+  <g stroke="#ff6a1e" stroke-width="2" opacity="0.8" stroke-linecap="round">
+    <path d="M52 86 L62 96 M108 86 L98 96 M58 120 L68 112 M102 120 L92 112"/>
+  </g>
+  <!-- Rivets -->
+  <g fill="#9a93a3">
+    <circle cx="46" cy="60" r="2"/><circle cx="114" cy="60" r="2"/>
+    <circle cx="54" cy="130" r="2"/><circle cx="106" cy="130" r="2"/>
+  </g>
+</svg>

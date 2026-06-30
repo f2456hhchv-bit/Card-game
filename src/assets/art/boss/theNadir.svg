@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <!-- The Nadir — The Frozen Depth. An abyssal leviathan eye ringed with frozen
+       tendrils, staring up from the deep. Original art. Design radius ~52. -->
+  <defs>
+    <radialGradient id="na-glow" cx="80" cy="80" r="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2f6fd0" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#2f6fd0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="na-body" cx="80" cy="80" r="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#274a86"/>
+      <stop offset="0.6" stop-color="#152c54"/>
+      <stop offset="1" stop-color="#08152c"/>
+    </radialGradient>
+    <radialGradient id="na-iris" cx="80" cy="80" r="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#bfe6ff"/>
+      <stop offset="0.45" stop-color="#3f9fe0"/>
+      <stop offset="0.85" stop-color="#0e3a6e"/>
+      <stop offset="1" stop-color="#04101f"/>
+    </radialGradient>
+    <filter id="na-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6"/></filter>
+  </defs>
+
+  <circle cx="80" cy="80" r="74" fill="url(#na-glow)"/>
+
+  <!-- Frozen tendrils radiating outward (lashes) -->
+  <g stroke="#3f6fa8" stroke-width="6" stroke-linecap="round" fill="none" filter="url(#na-soft)">
+    <path d="M80 30 C84 16 92 12 90 26"/>
+    <path d="M80 130 C76 144 68 148 70 134"/>
+    <path d="M30 80 C16 84 12 76 26 74"/>
+    <path d="M130 80 C144 76 148 84 134 74"/>
+    <path d="M44 44 C32 34 32 24 42 36"/>
+    <path d="M116 44 C128 34 128 24 118 36"/>
+    <path d="M44 116 C32 126 32 136 42 124"/>
+    <path d="M116 116 C128 126 128 136 118 124"/>
+  </g>
+
+  <!-- The abyssal eyeball -->
+  <circle cx="80" cy="80" r="48" fill="url(#na-body)" stroke="#06101f" stroke-width="2"/>
+  <!-- Cold rim glint -->
+  <path d="M80 32 A48 48 0 0 0 34 92" fill="none" stroke="#6fa8e0" stroke-width="2.5" opacity="0.5" stroke-linecap="round"/>
+
+  <!-- Iris + vertical leviathan pupil -->
+  <circle cx="80" cy="80" r="26" fill="url(#na-iris)" stroke="#0e3a6e" stroke-width="1.5"/>
+  <ellipse cx="80" cy="80" rx="7" ry="22" fill="#03101f"/>
+  <ellipse cx="80" cy="80" rx="3" ry="14" fill="#7fd0ff" opacity="0.6"/>
+  <circle cx="72" cy="70" r="4" fill="#ffffff" opacity="0.85"/>
+</svg>
