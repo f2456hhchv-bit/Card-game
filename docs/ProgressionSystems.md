@@ -131,7 +131,7 @@ scaled by grade:
 | Wings 🪽 | +2.5% attack speed, +2% area |
 
 **Sets** add a payoff for collecting + equipping matching pieces (2-piece and a
-big 4-piece bonus that grants a signature perk):
+big 4-piece bonus, four of which grant a signature perk):
 
 | Set | 2-piece | 4-piece (full set) |
 | --- | --- | --- |
@@ -139,6 +139,10 @@ big 4-piece bonus that grants a signature perk):
 | Solaris | +8% damage | **Overdrive** light pulse + 12% damage |
 | Bastion | +30 Max HP | **Aegis** revive (survive a lethal hit) + 6% armour |
 | Zephyr | +8% move speed | **Salvo** +1 projectile on every weapon & +0.25s i-frames |
+| Tempest | +10% crit chance | +60% crit damage & +6% attack speed |
+| Nebula | +0.8 HP regen/s | +40 Max HP, +0.7 regen/s & +5% armour |
+
+(6 sets × 4 slots = **24 items** to collect.)
 
 **Acquisition & merge loop:** every run drops one random **item** at game over
 (`SaveManager.grantItemDrop`). The **first** of an item *unlocks* it at **grade 1**
@@ -164,14 +168,19 @@ Source of truth: `src/game/data/stageDefs.ts`; selection in `save.selectedStage`
 Each stage has its own **palette** (sky/nebula/fog/star colours, baked by
 `Background.setStage`) and **enemy pool** (`SpawnDirector.reset(pool)`).
 
-| Stage | Unlock | Palette | Pool flavour |
-| --- | --- | --- | --- |
-| The Fade | free | deep indigo void | full base bestiary |
-| Ember Wastes | fell 1 boss (lifetime) | burning red/orange | faster, fiercer — adds **Cinder** & **Revenant** |
+| Stage | Unlock | Palette | Pool flavour | Bosses |
+| --- | --- | --- | --- | --- |
+| The Fade | free | deep indigo void | full base bestiary | The Maw, The Choir |
+| Ember Wastes | fell 1 boss (lifetime) | burning red/orange | faster, fiercer — adds **Cinder** & **Revenant** | **The Pyre**, **The Forge** |
 
 Chosen from the main-menu **stage chips** (locked stages show their requirement).
 The Daily Run is always **The Fade** for equal footing. New stage-2 enemies live
 in `enemyDefs.ts`; their sprites reuse fitting silhouettes with hot hues.
+
+Each stage headlines its own **bosses** via `StageDef.bossPool`, cycled by
+encounter index (`bossForEncounter(index, pool)`). The Pyre floods the field with
+fast Cinders and rapid bullets; The Forge is a slow siege that summons tanky
+Revenants. Boss sprites reuse the two baked silhouettes with fiery hues.
 
 ### Daily Run ✅
 A once-a-day challenge seeded from the **local calendar date**

@@ -413,7 +413,7 @@ export class World {
   }
 
   private spawnBoss(): void {
-    const def = bossForEncounter(this.bossEncounter);
+    const def = bossForEncounter(this.bossEncounter, this.stage.bossPool);
     const minutes = this.stats.elapsed / 60;
     const e = this.enemyPool.obtain();
     const angle = this.rng.angle();

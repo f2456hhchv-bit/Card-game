@@ -609,8 +609,16 @@ export class SpriteForge {
     const bossBakers: Record<string, (hue: number) => Sprite> = {
       theMaw: bakeMaw,
       theChoir: bakeChoir,
+      // Ember bosses reuse the two silhouettes with fiery hues.
+      thePyre: bakeChoir,
+      theForge: bakeMaw,
     };
-    const bossHues: Record<string, number> = { theMaw: 292, theChoir: 196 };
+    const bossHues: Record<string, number> = {
+      theMaw: 292,
+      theChoir: 196,
+      thePyre: 18,
+      theForge: 6,
+    };
     for (const id of Object.keys(bossBakers)) {
       const s = bossBakers[id](bossHues[id]);
       this.bosses.set(id, s);

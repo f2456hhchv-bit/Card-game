@@ -145,6 +145,33 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
     },
     bonus4Note: "+1 projectile on every weapon & +0.25s i-frames",
   },
+  tempest: {
+    id: "tempest",
+    name: "Tempest",
+    hue: 192,
+    description: "Storm-charged targeting array built around the perfect strike.",
+    bonus2: (s) => (s.critChance += 0.1),
+    bonus2Note: "+10% crit chance",
+    bonus4: (s) => {
+      s.critMult += 0.6;
+      s.attackSpeedMult *= 1.06;
+    },
+    bonus4Note: "+60% crit damage & +6% attack speed",
+  },
+  nebula: {
+    id: "nebula",
+    name: "Nebula",
+    hue: 110,
+    description: "Living energy lattice that knits the hull back together.",
+    bonus2: (s) => (s.regen += 0.8),
+    bonus2Note: "+0.8 HP regen/s",
+    bonus4: (s) => {
+      s.maxHp += 40;
+      s.regen += 0.7;
+      s.armor += 0.05;
+    },
+    bonus4Note: "+40 Max HP, +0.7 regen/s & +5% armour",
+  },
 };
 
 export const SET_LIST: GearSetDef[] = Object.values(GEAR_SETS);

@@ -96,12 +96,22 @@ faster bullets (×1.3 speed), a tighter attack cadence (×0.82), and it summons
 **Casters** (which themselves fire) on phase entry instead of melee Husks — a
 very different, bullet-dense fight. Base 1450 HP, contact 18, projectiles 11.
 
-Bosses **alternate by encounter** (`bossForEncounter` cycles the roster): The
-Maw at 3:00, The Choir at 6:00, The Maw at 9:00, and so on.
+### The Pyre — *Heart of Cinders* (`thePyre`) — Ember Wastes
+The Ember stage's opening boss: aggressive and fast. Floods the arena with quick
+**Cinders** (5 then 8 on phase entry) and the fastest bullets in the game
+(×1.45 speed, cadence ×0.8). Base 1750 HP, contact 22, projectiles 13, hue 18.
 
-> The data/controller split (`bossDefs` tuning + shared `BossController`) lets
-> new bosses be added with only new data + a sprite. More are tracked in the
-> Roadmap.
+### The Forge — *Anvil of the Dark* (`theForge`) — Ember Wastes
+A slow, hulking siege engine (the tankiest boss, 2150 HP). Summons tanky ranged
+**Revenants** and grinds the player down with heavy contact (26) and steady
+fire. Hue 6 (deep red).
+
+Each **stage headlines its own bosses** via `StageDef.bossPool`, cycled by
+encounter index (`bossForEncounter(index, pool)`): The Fade alternates The Maw /
+The Choir; Ember Wastes alternates The Pyre / The Forge.
+
+> The data/controller split (`bossDefs` tuning + shared `BossController`) plus
+> per-stage `bossPool` lets new bosses be added with only new data + a sprite.
 
 ## Enemy projectiles ✅
 Hostile projectiles (`EnemyProjectile`) are pooled and tested against the

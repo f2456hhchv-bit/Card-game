@@ -36,13 +36,14 @@ describe("wardenDefs", () => {
 });
 
 describe("bossDefs", () => {
-  it("alternates bosses across encounters", () => {
-    expect(bossForEncounter(0).id).toBe(BOSS_DEFS.theMaw.id);
-    expect(bossForEncounter(1).id).toBe(BOSS_DEFS.theChoir.id);
-    expect(bossForEncounter(2).id).toBe(BOSS_DEFS.theMaw.id);
+  it("alternates The Fade's bosses across encounters", () => {
+    const pool = ["theMaw", "theChoir"];
+    expect(bossForEncounter(0, pool).id).toBe(BOSS_DEFS.theMaw.id);
+    expect(bossForEncounter(1, pool).id).toBe(BOSS_DEFS.theChoir.id);
+    expect(bossForEncounter(2, pool).id).toBe(BOSS_DEFS.theMaw.id);
   });
 
-  it("the two bosses summon different add types", () => {
+  it("the base bosses summon different add types", () => {
     expect(BOSS_DEFS.theMaw.addType).toBe("husk");
     expect(BOSS_DEFS.theChoir.addType).toBe("caster");
   });

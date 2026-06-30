@@ -64,11 +64,52 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     projectileSpeedMult: 1.3,
     cadenceMult: 0.82,
   },
+  // ---- Ember Wastes (stage 2) bosses ------------------------------------
+  thePyre: {
+    id: "thePyre",
+    name: "The Pyre",
+    title: "Heart of Cinders",
+    baseHp: 1750,
+    speed: 64,
+    radius: 52,
+    contactDamage: 22,
+    hue: 18,
+    projectileDamage: 13,
+    // Fast, aggressive: floods the field with quick Cinders and rapid bullets.
+    addType: "cinder",
+    addCounts: [5, 8],
+    projectileSpeedMult: 1.45,
+    cadenceMult: 0.8,
+  },
+  theForge: {
+    id: "theForge",
+    name: "The Forge",
+    title: "Anvil of the Dark",
+    baseHp: 2150,
+    speed: 42,
+    radius: 58,
+    contactDamage: 26,
+    hue: 6,
+    projectileDamage: 12,
+    // Slow, hulking, and summons tanky ranged Revenants — a grinding siege.
+    addType: "revenant",
+    addCounts: [2, 3],
+    projectileSpeedMult: 1.15,
+    cadenceMult: 0.9,
+  },
 };
 
 export const BOSS_LIST: BossDef[] = Object.values(BOSS_DEFS);
 
-/** The boss for the Nth encounter (cycles the roster as it grows). */
-export function bossForEncounter(index: number): BossDef {
+export function getBoss(id: string): BossDef {
+  return BOSS_DEFS[id] ?? BOSS_DEFS.theMaw;
+}
+
+/**
+ * The boss for the Nth encounter, drawn from a stage's boss pool (cycles the
+ * pool as encounters grow). Falls back to the whole roster if no pool is given.
+ */
+export function bossForEncounter(index: number, pool?: readonly string[]): BossDef {
+  if (pool && pool.length > 0) return getBoss(pool[index % pool.length]);
   return BOSS_LIST[index % BOSS_LIST.length];
 }

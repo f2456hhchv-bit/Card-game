@@ -97,6 +97,10 @@ Goal: replace placeholder geometry with premium, original procedural art.
       drop at end of run. Guardian sprite redesigned as a **starship**, larger.
 - [x] **Second stage — Ember Wastes**: distinct warm palette + enemy pool (adds
       Cinder & Revenant), unlocked by felling a boss; chosen via menu stage chips.
+- [x] **Stage-specific bosses**: each stage headlines its own boss pool — Ember
+      Wastes adds **The Pyre** (fast Cinder swarm) & **The Forge** (Revenant siege).
+- [x] **Two more gear sets**: **Tempest** (crit) & **Nebula** (sustain) — now 6
+      sets / 24 collectable items.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

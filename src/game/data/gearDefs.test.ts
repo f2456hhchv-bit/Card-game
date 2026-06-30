@@ -20,9 +20,9 @@ function inv(ids: string[], grade = 1) {
 }
 
 describe("gearDefs — items", () => {
-  it("there are 4 sets × 4 slots = 16 items", () => {
-    expect(SET_LIST.length).toBe(4);
-    expect(ITEM_LIST.length).toBe(16);
+  it("there are 6 sets × 4 slots = 24 items", () => {
+    expect(SET_LIST.length).toBe(6);
+    expect(ITEM_LIST.length).toBe(24);
     for (const set of SET_LIST) {
       for (const slot of SLOTS) {
         expect(GEAR_ITEMS[itemId(set.id, slot)]).toBeDefined();
