@@ -17,6 +17,7 @@ import {
   rarityName,
   rarityColor,
   rarityMult,
+  affixText,
 } from "../game/data/gearDefs";
 import { ACHIEVEMENT_DEFS } from "../game/data/achievementDefs";
 import { STAGE_LIST, getStage, isStageUnlocked } from "../game/data/stageDefs";
@@ -756,6 +757,14 @@ export class UIManager {
           isOwned ? def.note(m.grade, rarityMult(rarity)) : "Salvage one from a run.",
         );
 
+        // Rolled bonus sub-stats (affixes), one line each.
+        const affixWrap = this.el("div", "item-affixes");
+        if (isOwned && m.affixes && m.affixes.length > 0) {
+          for (const a of m.affixes) {
+            affixWrap.appendChild(this.el("div", "affix-line", `◆ ${affixText(a)}`));
+          }
+        }
+
         const actions = this.el("div", "item-actions");
         if (isOwned) {
           // Equip / Equipped button.
@@ -792,7 +801,7 @@ export class UIManager {
           actions.appendChild(lock);
         }
 
-        card.append(top, grade, pips, stat, actions);
+        card.append(top, grade, pips, stat, affixWrap, actions);
         grid.appendChild(card);
       }
 

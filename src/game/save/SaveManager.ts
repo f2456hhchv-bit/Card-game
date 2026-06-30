@@ -8,6 +8,7 @@ import {
   itemId,
   mergeCost,
   rollRarity,
+  rollAffixes,
   type EquipMap,
   type GearSlot,
   type ModuleState,
@@ -298,12 +299,13 @@ export class SaveManager {
     let rolled = rollRarity();
     if (pity.sinceRare >= SaveManager.RARE_PITY && rolled < 1) rolled = 1;
 
-    const m = inv[def.id] ?? { grade: 0, dupes: 0, rarity: 0 };
+    const m = inv[def.id] ?? { grade: 0, dupes: 0, rarity: 0, affixes: [] };
     let isNew = false;
     let rarityUp = false;
     if (m.grade === 0) {
       m.grade = 1;
       m.rarity = rolled;
+      m.affixes = rollAffixes(rolled);
       isNew = true;
       if (this.data.gear.equipped[def.slot] == null) {
         this.data.gear.equipped[def.slot] = def.id;
@@ -312,6 +314,8 @@ export class SaveManager {
       m.dupes++;
       if (rolled > (m.rarity ?? 0)) {
         m.rarity = rolled;
+        // A higher rarity adds affixes (keeping the existing rolls).
+        m.affixes = rollAffixes(rolled, m.affixes ?? []);
         rarityUp = true;
       }
     }

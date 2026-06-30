@@ -114,6 +114,11 @@ Goal: replace placeholder geometry with premium, original procedural art.
       the Hangar; a second chase axis atop grade-merging.
 - [x] **Boss Rush mode**: endless escalating boss gauntlet (no fodder), unlocked
       after the first boss kill; +15 motes/boss, game-over headlines Bosses.
+- [x] **Per-mode records** (per-stage best + Boss Rush best) and **drop pity**
+      timers (force a new item / a Rare+ after dry streaks).
+- [x] **Gear affixes**: rolled bonus sub-stats, count = rarity tier (0–3), from an
+      11-stat pool; a second build-depth axis shown in the Hangar.
+- [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

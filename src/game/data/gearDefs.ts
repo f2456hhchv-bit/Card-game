@@ -18,6 +18,12 @@ import type { DerivedStats } from "../entities/Player";
 export type GearSlot = "hull" | "core" | "engines" | "wings";
 export const SLOTS: GearSlot[] = ["hull", "core", "engines", "wings"];
 
+/** A rolled bonus sub-stat on an item (id + magnitude). */
+export interface Affix {
+  id: string;
+  value: number;
+}
+
 /** Per-item persisted state (shared shape for inventory entries). */
 export interface ModuleState {
   /** Current grade, 1..maxGrade. 0 = not owned. */
@@ -26,6 +32,8 @@ export interface ModuleState {
   dupes: number;
   /** Rarity tier index (0=Common … 3=Legendary). Optional for old saves. */
   rarity?: number;
+  /** Rolled bonus sub-stats; count scales with rarity. Optional for old saves. */
+  affixes?: Affix[];
 }
 
 /**
@@ -73,6 +81,145 @@ export function rollRarity(rand: () => number = Math.random): number {
     if (roll < 0) return i;
   }
   return 0;
+}
+
+/**
+ * Affixes — rolled bonus sub-stats layered on top of an item's slot stat. The
+ * **number** of affixes scales with rarity (Common 0 → Legendary 3), so rarity
+ * matters twice over. Magnitudes are rolled once at drop time and persisted.
+ */
+export interface AffixDef {
+  id: string;
+  label: string;
+  /** Inclusive roll range for the magnitude. */
+  roll: [number, number];
+  /** Round to an integer (for flat HP / pickup). */
+  int?: boolean;
+  apply: (s: DerivedStats, value: number) => void;
+  format: (value: number) => string;
+}
+
+export const AFFIX_DEFS: Record<string, AffixDef> = {
+  dmg: {
+    id: "dmg",
+    label: "Damage",
+    roll: [0.02, 0.06],
+    apply: (s, v) => (s.damageMult *= 1 + v),
+    format: (v) => `+${(v * 100).toFixed(0)}% damage`,
+  },
+  crit: {
+    id: "crit",
+    label: "Crit",
+    roll: [0.02, 0.05],
+    apply: (s, v) => (s.critChance += v),
+    format: (v) => `+${(v * 100).toFixed(0)}% crit`,
+  },
+  critdmg: {
+    id: "critdmg",
+    label: "Crit Damage",
+    roll: [0.08, 0.2],
+    apply: (s, v) => (s.critMult += v),
+    format: (v) => `+${(v * 100).toFixed(0)}% crit dmg`,
+  },
+  hp: {
+    id: "hp",
+    label: "Max HP",
+    roll: [6, 16],
+    int: true,
+    apply: (s, v) => (s.maxHp += v),
+    format: (v) => `+${v} Max HP`,
+  },
+  armor: {
+    id: "armor",
+    label: "Armour",
+    roll: [0.01, 0.03],
+    apply: (s, v) => (s.armor += v),
+    format: (v) => `+${(v * 100).toFixed(1)}% armour`,
+  },
+  regen: {
+    id: "regen",
+    label: "Regen",
+    roll: [0.2, 0.6],
+    apply: (s, v) => (s.regen += v),
+    format: (v) => `+${v.toFixed(1)} regen/s`,
+  },
+  move: {
+    id: "move",
+    label: "Move Speed",
+    roll: [0.02, 0.05],
+    apply: (s, v) => (s.moveSpeed *= 1 + v),
+    format: (v) => `+${(v * 100).toFixed(0)}% move`,
+  },
+  atkspd: {
+    id: "atkspd",
+    label: "Attack Speed",
+    roll: [0.02, 0.05],
+    apply: (s, v) => (s.attackSpeedMult *= 1 + v),
+    format: (v) => `+${(v * 100).toFixed(0)}% atk speed`,
+  },
+  area: {
+    id: "area",
+    label: "Area",
+    roll: [0.02, 0.05],
+    apply: (s, v) => (s.areaMult *= 1 + v),
+    format: (v) => `+${(v * 100).toFixed(0)}% area`,
+  },
+  pickup: {
+    id: "pickup",
+    label: "Pickup",
+    roll: [6, 16],
+    int: true,
+    apply: (s, v) => (s.pickupRadius += v),
+    format: (v) => `+${v} pickup`,
+  },
+  xp: {
+    id: "xp",
+    label: "XP Gain",
+    roll: [0.03, 0.08],
+    apply: (s, v) => (s.xpMult *= 1 + v),
+    format: (v) => `+${(v * 100).toFixed(0)}% XP`,
+  },
+};
+
+export const AFFIX_LIST: AffixDef[] = Object.values(AFFIX_DEFS);
+
+/** Number of affixes an item of the given rarity carries. */
+export function affixCount(rarity: number): number {
+  return [0, 1, 2, 3][rarity] ?? 0;
+}
+
+/** Human-readable text for a rolled affix. */
+export function affixText(a: Affix): string {
+  const def = AFFIX_DEFS[a.id];
+  return def ? def.format(a.value) : "";
+}
+
+/**
+ * Roll affixes up to the rarity's count, keeping any `existing` ones (so a
+ * rarity upgrade only *adds* affixes, never downgrades). `rand` is injectable.
+ */
+export function rollAffixes(
+  rarity: number,
+  existing: Affix[] = [],
+  rand: () => number = Math.random,
+): Affix[] {
+  const target = affixCount(rarity);
+  const out = existing.slice(0, target);
+  const used = new Set(out.map((a) => a.id));
+  const pool = AFFIX_LIST.filter((d) => !used.has(d.id));
+  while (out.length < target && pool.length > 0) {
+    const i = Math.floor(rand() * pool.length);
+    const def = pool.splice(i, 1)[0];
+    const raw = def.roll[0] + rand() * (def.roll[1] - def.roll[0]);
+    out.push({ id: def.id, value: def.int ? Math.round(raw) : Math.round(raw * 1000) / 1000 });
+  }
+  return out;
+}
+
+/** Apply an item's rolled affixes onto a stat block. */
+export function applyAffixes(stats: DerivedStats, affixes: Affix[] | undefined): void {
+  if (!affixes) return;
+  for (const a of affixes) AFFIX_DEFS[a.id]?.apply(stats, a.value);
 }
 
 /** Slot presentation + the base stat each slot grants per grade. */
@@ -338,6 +485,7 @@ export function applyGear(
     const st = inventory[id];
     if (!item || !st || st.grade <= 0) continue;
     item.apply(stats, Math.min(st.grade, item.maxGrade), rarityMult(st.rarity ?? 0));
+    applyAffixes(stats, st.affixes);
   }
   // Set bonuses (2-piece, then the big 4-piece).
   const counts = setCounts(equipped, inventory);

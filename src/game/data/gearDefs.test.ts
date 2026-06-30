@@ -10,6 +10,10 @@ import {
   rarityMult,
   rollRarity,
   RARITIES,
+  affixCount,
+  rollAffixes,
+  applyAffixes,
+  AFFIX_LIST,
   GEAR_ITEMS,
   ITEM_LIST,
   SET_LIST,
@@ -96,6 +100,37 @@ describe("gearDefs — rarity", () => {
     for (const c of counts) expect(c).toBeGreaterThanOrEqual(0);
     expect(counts.reduce((a, b) => a + b)).toBe(2000);
     expect(counts[0]).toBeGreaterThan(counts[3]); // Common far more frequent
+  });
+});
+
+describe("gearDefs — affixes", () => {
+  it("affix count scales with rarity (Common 0 → Legendary 3)", () => {
+    expect(affixCount(0)).toBe(0);
+    expect(affixCount(1)).toBe(1);
+    expect(affixCount(2)).toBe(2);
+    expect(affixCount(3)).toBe(3);
+  });
+
+  it("rolls the right number of distinct affixes for a rarity", () => {
+    const a = rollAffixes(3); // Legendary → 3 affixes
+    expect(a.length).toBe(3);
+    expect(new Set(a.map((x) => x.id)).size).toBe(3); // all distinct
+    for (const af of a) expect(AFFIX_LIST.some((d) => d.id === af.id)).toBe(true);
+  });
+
+  it("a rarity upgrade keeps existing affixes and only adds", () => {
+    const rare = rollAffixes(1); // 1 affix
+    const upgraded = rollAffixes(3, rare); // keep the 1, add to reach 3
+    expect(upgraded.length).toBe(3);
+    expect(upgraded.slice(0, 1)).toEqual(rare);
+    expect(new Set(upgraded.map((x) => x.id)).size).toBe(3);
+  });
+
+  it("applyAffixes adds the rolled bonuses onto a stat block", () => {
+    const s = { ...new Player().base };
+    const before = s.maxHp;
+    applyAffixes(s, [{ id: "hp", value: 12 }]);
+    expect(s.maxHp).toBe(before + 12);
   });
 });
 

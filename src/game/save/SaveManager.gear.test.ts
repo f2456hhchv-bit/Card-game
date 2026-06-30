@@ -38,6 +38,22 @@ describe("SaveManager — gear inventory & equip", () => {
     }
   });
 
+  it("a dropped item carries affixes matching its rarity", () => {
+    const sm = new SaveManager();
+    const real = Math.random;
+    try {
+      // Force item index 0 and a Legendary rarity roll (→ 3 affixes).
+      let c = 0;
+      Math.random = () => (c++ === 1 ? 0.999 : 0.001);
+      const drop = sm.grantItemDrop();
+      const m = sm.data.gear.inventory[drop.id];
+      expect(m.rarity).toBe(3);
+      expect(m.affixes?.length).toBe(3);
+    } finally {
+      Math.random = real;
+    }
+  });
+
   it("further drops of an owned item bank duplicate cores", () => {
     const sm = new SaveManager();
     const first = sm.grantItemDrop();

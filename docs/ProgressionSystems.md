@@ -150,6 +150,16 @@ big 4-piece bonus, four of which grant a signature perk):
 later roll *upgrades* an owned item's rarity. The Hangar shows a coloured rarity
 pill + edge per item and live, rarity-scaled stat numbers.
 
+**Affixes** are rolled bonus sub-stats layered on top of the slot stat, and the
+**number** of affixes equals the rarity tier (Common 0 · Rare 1 · Epic 2 ·
+Legendary 3) — so rarity matters twice. Affixes are drawn from a pool of 11
+(`AFFIX_DEFS`: damage, crit, crit-dmg, HP, armour, regen, move, attack-speed,
+area, pickup, XP), each rolled once at drop time and persisted. A rarity upgrade
+*adds* affixes without dropping existing ones (`rollAffixes` keeps the kept set).
+The Hangar lists each item's affixes; they apply in `applyGear` via `applyAffixes`
+after the slot/rarity stats. This gives two items of the same slot/grade distinct,
+build-defining rolls.
+
 **Acquisition & merge loop:** an item salvage (`SaveManager.grantItemDrop`) is
 granted both at **game over** *and* on **every boss kill** (`Game.salvageGear`),
 so bosses meaningfully advance set completion. The **first** of an item *unlocks*

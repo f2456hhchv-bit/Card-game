@@ -25,8 +25,10 @@ interface SaveData {
                               // returning profiles via migration)
   meta: Record<string, number>; // permanent meta-upgrade levels (metaDefs id→lvl)
   gear: {                     // ship gear inventory + equipped loadout
-    inventory: Record<string, { grade: number; dupes: number; rarity?: number }>;
-                              // owned items: merge grade, banked dupes, rarity tier
+    inventory: Record<string, { grade: number; dupes: number; rarity?: number;
+                affixes?: { id: string; value: number }[] }>;
+                              // owned items: grade, dupes, rarity tier, rolled affixes
+    pity: { sinceNew: number; sinceRare: number }; // anti-dry-streak counters
     equipped: { hull: string|null; core: string|null;
                 engines: string|null; wings: string|null };       // per-slot item
   };

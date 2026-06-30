@@ -888,6 +888,17 @@
   line-height: 1.25;
   min-height: 1.6em;
 }
+.item-affixes {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.affix-line {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: hsl(150 60% 68%);
+  line-height: 1.25;
+}
 .item-actions {
   display: flex;
   gap: 6px;
