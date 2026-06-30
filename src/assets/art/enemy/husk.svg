@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Husk — a heavy, slow armoured shambler of cracked stone with a molten seam.
+       Original art. Design radius ~30. -->
+  <defs>
+    <linearGradient id="hu-body" x1="60" y1="30" x2="60" y2="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8a6a4a"/>
+      <stop offset="0.5" stop-color="#5a3f2c"/>
+      <stop offset="1" stop-color="#2c1d14"/>
+    </linearGradient>
+    <linearGradient id="hu-plate" x1="36" y1="40" x2="84" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a07f56"/>
+      <stop offset="1" stop-color="#4a3320"/>
+    </linearGradient>
+    <radialGradient id="hu-seam" cx="60" cy="64" r="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff0a0"/>
+      <stop offset="0.5" stop-color="#ff9b1e"/>
+      <stop offset="1" stop-color="#b83a06" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="hu-glow" cx="60" cy="64" r="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff8a1e" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#ff8a1e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="60" cy="64" r="42" fill="url(#hu-glow)"/>
+
+  <!-- Stubby arms -->
+  <path d="M30 60 L22 84 L40 86 L44 66 Z" fill="url(#hu-body)" stroke="#1c120b" stroke-width="1.4"/>
+  <path d="M90 60 L98 84 L80 86 L76 66 Z" fill="url(#hu-body)" stroke="#1c120b" stroke-width="1.4"/>
+
+  <!-- Hunched boulder torso -->
+  <path d="M40 42 C40 34 80 34 80 42 L88 78 C88 92 74 98 60 98 C46 98 32 92 32 78 Z"
+        fill="url(#hu-body)" stroke="#1c120b" stroke-width="1.8"/>
+  <!-- Shoulder plates -->
+  <path d="M36 44 L60 38 L58 56 L36 58 Z" fill="url(#hu-plate)" stroke="#1c120b" stroke-width="1.2"/>
+  <path d="M84 44 L60 38 L62 56 L84 58 Z" fill="url(#hu-plate)" stroke="#1c120b" stroke-width="1.2"/>
+
+  <!-- Glowing molten seam (its eye/core) -->
+  <path d="M46 60 L74 60 L68 72 L52 72 Z" fill="url(#hu-seam)"/>
+  <path d="M50 64 L70 64" stroke="#fff0a0" stroke-width="2" stroke-linecap="round"/>
+  <!-- Cracks -->
+  <g stroke="#ff7a18" stroke-width="1.4" opacity="0.65" stroke-linecap="round">
+    <path d="M44 80 L52 86 M76 80 L68 86 M60 74 L60 90"/>
+  </g>
+  <!-- Rim light -->
+  <path d="M40 42 C40 36 56 35 60 35" fill="none" stroke="#caa97a" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+</svg>

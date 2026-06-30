@@ -10,6 +10,13 @@
  * asset here is authored in-repo under src/assets/art, never sourced externally.
  */
 import wardenSvg from "../../assets/art/hero/warden.svg?raw";
+import drifterSvg from "../../assets/art/enemy/drifter.svg?raw";
+import moteSvg from "../../assets/art/enemy/mote.svg?raw";
+import huskSvg from "../../assets/art/enemy/husk.svg?raw";
+import lungerSvg from "../../assets/art/enemy/lunger.svg?raw";
+import wispSvg from "../../assets/art/enemy/wisp.svg?raw";
+import casterSvg from "../../assets/art/enemy/caster.svg?raw";
+import sporeSvg from "../../assets/art/enemy/spore.svg?raw";
 import cinderSvg from "../../assets/art/enemy/cinder.svg?raw";
 import revenantSvg from "../../assets/art/enemy/revenant.svg?raw";
 import shardSvg from "../../assets/art/enemy/shard.svg?raw";
@@ -36,6 +43,13 @@ const ART_SOURCES: Record<string, { svg: string; radius: number }> = {
   // All assets use a 120×120 viewBox centred at (60,60) with a design body
   // radius ≈ 30, matching SpriteForge so blit scaling is consistent.
   "hero/warden": { svg: wardenSvg, radius: 30 },
+  "enemy/drifter": { svg: drifterSvg, radius: 30 },
+  "enemy/mote": { svg: moteSvg, radius: 30 },
+  "enemy/husk": { svg: huskSvg, radius: 30 },
+  "enemy/lunger": { svg: lungerSvg, radius: 30 },
+  "enemy/wisp": { svg: wispSvg, radius: 30 },
+  "enemy/caster": { svg: casterSvg, radius: 30 },
+  "enemy/spore": { svg: sporeSvg, radius: 30 },
   "enemy/cinder": { svg: cinderSvg, radius: 30 },
   "enemy/revenant": { svg: revenantSvg, radius: 30 },
   "enemy/shard": { svg: shardSvg, radius: 30 },

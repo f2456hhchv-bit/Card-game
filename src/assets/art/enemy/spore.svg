@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Spore — a bulbous fungal sac swollen with sporelings, about to burst.
+       Original art. Design radius ~30. -->
+  <defs>
+    <radialGradient id="sp-body" cx="54" cy="66" r="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d6f59a"/>
+      <stop offset="0.45" stop-color="#8fc94a"/>
+      <stop offset="0.85" stop-color="#4f8a24"/>
+      <stop offset="1" stop-color="#274d12"/>
+    </radialGradient>
+    <radialGradient id="sp-seam" cx="60" cy="70" r="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#eaffba" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#eaffba" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sp-glow" cx="60" cy="70" r="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a6e84a" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#a6e84a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="sp-soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.4"/></filter>
+  </defs>
+
+  <circle cx="60" cy="70" r="44" fill="url(#sp-glow)"/>
+
+  <!-- Stem + cap -->
+  <rect x="55" y="30" width="10" height="20" rx="4" fill="#4f8a24" stroke="#274d12" stroke-width="1.2"/>
+  <path d="M40 40 C44 28 76 28 80 40 C72 48 48 48 40 40 Z" fill="#7bb53a" stroke="#274d12" stroke-width="1.4"/>
+  <g fill="#eaffba" opacity="0.8"><circle cx="52" cy="38" r="2.2"/><circle cx="68" cy="38" r="2"/><circle cx="60" cy="35" r="1.8"/></g>
+
+  <!-- Bulbous swollen sac -->
+  <ellipse cx="60" cy="74" rx="34" ry="30" fill="url(#sp-body)" stroke="#22440f" stroke-width="1.8"/>
+  <!-- Glowing pressure seam (about to split) -->
+  <path d="M60 50 C66 62 66 86 60 100" fill="none" stroke="#eaffba" stroke-width="3" opacity="0.7" stroke-linecap="round" filter="url(#sp-soft)"/>
+  <ellipse cx="60" cy="74" rx="18" ry="22" fill="url(#sp-seam)"/>
+
+  <!-- Spots + two small eyes -->
+  <g fill="#3a6b18">
+    <circle cx="42" cy="70" r="4"/><circle cx="78" cy="72" r="3.4"/><circle cx="50" cy="92" r="3"/><circle cx="72" cy="90" r="3.4"/>
+  </g>
+  <circle cx="52" cy="66" r="3.2" fill="#1c360c"/>
+  <circle cx="68" cy="66" r="3.2" fill="#1c360c"/>
+  <circle cx="52.6" cy="64.6" r="1.1" fill="#eaffba"/>
+  <circle cx="68.6" cy="64.6" r="1.1" fill="#eaffba"/>
+  <!-- Specular -->
+  <ellipse cx="48" cy="56" rx="12" ry="7" fill="#eaffba" opacity="0.25" filter="url(#sp-soft)"/>
+</svg>

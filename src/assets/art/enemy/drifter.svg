@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Drifter — the basic Hollow shade. A floating shadow with a tattered hem and
+       two cold eyes. Original art. Design radius ~30. -->
+  <defs>
+    <linearGradient id="dr-body" x1="60" y1="28" x2="60" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6a4ba0"/>
+      <stop offset="0.55" stop-color="#3d2870"/>
+      <stop offset="1" stop-color="#1b1038"/>
+    </linearGradient>
+    <radialGradient id="dr-glow" cx="60" cy="58" r="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7a52d0" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#7a52d0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="dr-eye" cx="0" cy="0" r="5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#eafcff"/>
+      <stop offset="0.5" stop-color="#9fe6ff"/>
+      <stop offset="1" stop-color="#2f8fd6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="dr-soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.4"/></filter>
+  </defs>
+
+  <circle cx="60" cy="58" r="42" fill="url(#dr-glow)"/>
+
+  <!-- Shade body: rounded hood over a wavering tattered hem -->
+  <path d="M60 26
+           C40 26 30 42 30 60
+           C30 74 33 84 33 96 L41 88 L47 98 L54 88 L60 100 L66 88 L73 98 L79 88 L87 96
+           C87 84 90 74 90 60
+           C90 42 80 26 60 26 Z"
+        fill="url(#dr-body)" stroke="#140a2c" stroke-width="1.6"/>
+  <!-- Cool rim light -->
+  <path d="M60 27 C42 28 33 43 33 60" fill="none" stroke="#9b7fe0" stroke-width="2" opacity="0.45" stroke-linecap="round"/>
+
+  <!-- Cold eyes -->
+  <ellipse cx="50" cy="58" rx="6" ry="8" fill="#0c0820"/>
+  <ellipse cx="70" cy="58" rx="6" ry="8" fill="#0c0820"/>
+  <circle cx="50" cy="57" r="4.4" fill="url(#dr-eye)"/>
+  <circle cx="70" cy="57" r="4.4" fill="url(#dr-eye)"/>
+  <circle cx="50.5" cy="55.5" r="1.6" fill="#ffffff"/>
+  <circle cx="70.5" cy="55.5" r="1.6" fill="#ffffff"/>
+  <!-- Specular sheen -->
+  <ellipse cx="50" cy="40" rx="14" ry="7" fill="#b59bea" opacity="0.22" filter="url(#dr-soft)"/>
+</svg>
