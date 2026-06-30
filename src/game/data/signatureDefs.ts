@@ -103,6 +103,20 @@ export const SIGNATURE_DEFS: Record<string, SignatureDef> = {
       s.pulseDamage = Math.max(s.pulseDamage, 30);
     },
   },
+  crown: {
+    id: "crown",
+    bossId: "theSovereign",
+    name: "Crown of Hollows",
+    title: "from The Sovereign",
+    icon: "♛",
+    hue: 270,
+    description: "+12% damage, +10% crit chance and +10% weapon area.",
+    apply: (s) => {
+      s.damageMult *= 1.12;
+      s.critChance += 0.1;
+      s.areaMult *= 1.1;
+    },
+  },
 };
 
 export const SIGNATURE_LIST: SignatureDef[] = Object.values(SIGNATURE_DEFS);

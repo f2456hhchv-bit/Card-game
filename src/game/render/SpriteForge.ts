@@ -615,6 +615,8 @@ export class SpriteForge {
       // Hollow Deep bosses reuse them with icy hues.
       theRime: bakeChoir,
       theNadir: bakeMaw,
+      // The Sovereign (Fade) — void hue fallback.
+      theSovereign: bakeMaw,
     };
     const bossHues: Record<string, number> = {
       theMaw: 292,
@@ -623,6 +625,7 @@ export class SpriteForge {
       theForge: 6,
       theRime: 195,
       theNadir: 210,
+      theSovereign: 270,
     };
     for (const id of Object.keys(bossBakers)) {
       const s = bossBakers[id](bossHues[id]);
@@ -645,6 +648,9 @@ export class SpriteForge {
       // Hollow Deep natives reuse fitting silhouettes with cold hues.
       shard: bakeMote,
       colossus: bakeHusk,
+      // Fade additions — violet fallbacks.
+      seer: bakeWisp,
+      lancer: bakeLunger,
     };
     const hues: Record<string, number> = {
       drifter: 280,
@@ -659,6 +665,8 @@ export class SpriteForge {
       revenant: 6,
       shard: 195,
       colossus: 210,
+      seer: 265,
+      lancer: 285,
     };
     for (const id of Object.keys(defs)) {
       const s = defs[id](hues[id]);

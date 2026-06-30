@@ -44,6 +44,8 @@ export const ART_MANIFEST: ArtEntry[] = [
   { key: "enemy/revenant", domain: "enemy", tier: "production", notes: "Original SVG — hooded ember-wraith caster w/ burning eyes + tattered hem." },
   { key: "enemy/shard", domain: "enemy", tier: "production", notes: "Original SVG — angular living-ice crystal cluster (frost palette)." },
   { key: "enemy/colossus", domain: "enemy", tier: "production", notes: "Original SVG — hulking armoured ice golem w/ glowing core." },
+  { key: "enemy/seer", domain: "enemy", tier: "production", notes: "Original SVG — Fade arcane rune-sentinel: eye-sigil in a hex plate." },
+  { key: "enemy/lancer", domain: "enemy", tier: "production", notes: "Original SVG — Fade void manta-dart that charges in a line." },
 
   // Bosses.
   { key: "boss/theMaw", domain: "boss", tier: "production", notes: "Original SVG — void devourer: toothed maw ring around a hungry star + tendrils. TODO: entrance/death sequence + phase shifts." },
@@ -52,6 +54,7 @@ export const ART_MANIFEST: ArtEntry[] = [
   { key: "boss/theForge", domain: "boss", tier: "production", notes: "Original SVG — horned iron forge-golem w/ visor eyes + molten core." },
   { key: "boss/theRime", domain: "boss", tier: "production", notes: "Original SVG — crystal heart radiating an 8-point frost star." },
   { key: "boss/theNadir", domain: "boss", tier: "production", notes: "Original SVG — abyssal leviathan eye ringed with frozen tendrils." },
+  { key: "boss/theSovereign", domain: "boss", tier: "production", notes: "Original SVG — crowned void regent w/ imperious eye + orbiting regalia." },
 
   // FX / rendering pipeline.
   { key: "postfx.bloom", domain: "vfx", tier: "procedural-final", notes: "Quarter-res threshold bloom composite — engine-level, applies to all art." },

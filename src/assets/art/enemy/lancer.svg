@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <!-- Lancer — a void manta-dart of the Fade that charges in a straight line.
+       Faces up (-Y); the renderer rotates it at its target. Original art. R~30. -->
+  <defs>
+    <linearGradient id="la-body" x1="60" y1="22" x2="60" y2="96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d9c2ff"/>
+      <stop offset="0.4" stop-color="#9a6cf0"/>
+      <stop offset="1" stop-color="#3a1f7a"/>
+    </linearGradient>
+    <linearGradient id="la-fin" x1="30" y1="50" x2="60" y2="86" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7a4fd0"/>
+      <stop offset="1" stop-color="#241147"/>
+    </linearGradient>
+    <radialGradient id="la-glow" cx="60" cy="62" r="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b04cff" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#b04cff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="la-soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.3"/></filter>
+  </defs>
+
+  <circle cx="60" cy="60" r="42" fill="url(#la-glow)"/>
+
+  <!-- Swept manta fins -->
+  <path d="M58 50 L20 84 L40 88 L58 70 Z" fill="url(#la-fin)" stroke="#160a30" stroke-width="1.2" filter="url(#la-soft)"/>
+  <path d="M62 50 L100 84 L80 88 L62 70 Z" fill="url(#la-fin)" stroke="#160a30" stroke-width="1.2" filter="url(#la-soft)"/>
+
+  <!-- Dart body (arrowhead pointing up) -->
+  <path d="M60 18 C68 36 72 56 70 78 C68 90 64 96 60 100 C56 96 52 90 50 78 C48 56 52 36 60 18 Z"
+        fill="url(#la-body)" stroke="#1e0f44" stroke-width="1.6"/>
+  <!-- Glowing spine -->
+  <path d="M60 26 L60 92" stroke="#e6d4ff" stroke-width="2" opacity="0.6" stroke-linecap="round"/>
+  <!-- Magenta leading-edge trim + nose glint -->
+  <path d="M60 18 C66 34 70 54 68 76" fill="none" stroke="#ff5ad0" stroke-width="1.6" opacity="0.7" stroke-linecap="round"/>
+  <path d="M60 18 C62 24 63 30 62.5 36 L57.5 36 C57 30 58 24 60 18 Z" fill="#ffffff" opacity="0.7"/>
+  <!-- Twin rear thruster glints -->
+  <circle cx="55" cy="96" r="2.4" fill="#d9b6ff" filter="url(#la-soft)"/>
+  <circle cx="65" cy="96" r="2.4" fill="#d9b6ff" filter="url(#la-soft)"/>
+</svg>

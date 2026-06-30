@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <!-- The Sovereign — Crown of Hollows. A regal void-regent: a dark orb wearing a
+       jagged crown over a single imperious eye, ringed by floating shards.
+       Original art. Design radius ~52. -->
+  <defs>
+    <radialGradient id="so-orb" cx="68" cy="74" r="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3b2a66"/>
+      <stop offset="0.55" stop-color="#221645"/>
+      <stop offset="1" stop-color="#0b0620"/>
+    </radialGradient>
+    <radialGradient id="so-eye" cx="80" cy="86" r="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fbeaff"/>
+      <stop offset="0.45" stop-color="#c98bff"/>
+      <stop offset="0.85" stop-color="#7a2ce0"/>
+      <stop offset="1" stop-color="#2e0c70"/>
+    </radialGradient>
+    <linearGradient id="so-crown" x1="40" y1="14" x2="120" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffe9a0"/>
+      <stop offset="0.5" stop-color="#e6b23f"/>
+      <stop offset="1" stop-color="#8a5a14"/>
+    </linearGradient>
+    <radialGradient id="so-glow" cx="80" cy="80" r="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#a04cff" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#a04cff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="so-shade" cx="80" cy="84" r="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0.62" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.5"/>
+    </radialGradient>
+    <filter id="so-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6"/></filter>
+  </defs>
+
+  <circle cx="80" cy="80" r="72" fill="url(#so-glow)"/>
+
+  <!-- Floating regalia shards orbiting the regent -->
+  <g fill="#6a4fb0" stroke="#241147" stroke-width="1" filter="url(#so-soft)">
+    <polygon points="26,70 33,76 27,84 20,77"/>
+    <polygon points="134,70 141,77 134,84 127,76"/>
+    <polygon points="44,128 51,134 44,141 38,134"/>
+    <polygon points="116,128 122,134 116,141 110,134"/>
+  </g>
+
+  <!-- Jagged crown -->
+  <g fill="url(#so-crown)" stroke="#5a3a0e" stroke-width="1.2">
+    <polygon points="34,52 42,18 52,46"/>
+    <polygon points="52,46 64,10 76,42"/>
+    <polygon points="76,42 80,6 84,42"/>
+    <polygon points="84,42 96,10 108,46"/>
+    <polygon points="108,46 118,18 126,52"/>
+    <rect x="34" y="48" width="92" height="9" rx="3"/>
+  </g>
+  <!-- Crown jewels -->
+  <circle cx="64" cy="30" r="2.6" fill="#b984ff"/>
+  <circle cx="80" cy="24" r="3" fill="#7fe3ff"/>
+  <circle cx="96" cy="30" r="2.6" fill="#ff7fd0"/>
+
+  <!-- The void orb head -->
+  <circle cx="80" cy="86" r="46" fill="url(#so-orb)" stroke="#160c30" stroke-width="2"/>
+  <!-- Cool rim light -->
+  <path d="M80 42 A46 46 0 0 0 36 96" fill="none" stroke="#7a4cd0" stroke-width="2.4" opacity="0.5" stroke-linecap="round"/>
+
+  <!-- The imperious eye -->
+  <ellipse cx="80" cy="86" rx="22" ry="18" fill="url(#so-eye)" stroke="#2e0c70" stroke-width="2"/>
+  <path d="M58 86 A22 18 0 0 1 102 86 L102 80 A22 18 0 0 0 58 80 Z" fill="#1a0848" opacity="0.5"/>
+  <circle cx="80" cy="86" r="8.5" fill="#16063a"/>
+  <circle cx="80" cy="86" r="4.4" fill="#caa0ff"/>
+  <circle cx="76" cy="81" r="2.4" fill="#ffffff"/>
+
+  <!-- Painted volume -->
+  <ellipse cx="64" cy="64" rx="18" ry="11" fill="#b483ff" opacity="0.16" filter="url(#so-soft)"/>
+  <circle cx="80" cy="86" r="46" fill="url(#so-shade)"/>
+</svg>

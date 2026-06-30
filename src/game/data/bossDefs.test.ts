@@ -26,6 +26,13 @@ describe("bossDefs", () => {
     }
   });
 
+  it("The Sovereign joins the Fade roster, summoning the new Seer enemy", () => {
+    expect(STAGE_DEFS.fade.bossPool).toContain("theSovereign");
+    expect(BOSS_DEFS.theSovereign.addType).toBe("seer");
+    // Its summon and the new fodder are part of the Fade enemy pool.
+    expect(STAGE_DEFS.fade.enemyPool).toEqual(expect.arrayContaining(["seer", "lancer"]));
+  });
+
   it("Ember bosses are distinct fiery encounters", () => {
     expect(BOSS_DEFS.thePyre.addType).toBe("cinder");
     expect(BOSS_DEFS.theForge.addType).toBe("revenant");

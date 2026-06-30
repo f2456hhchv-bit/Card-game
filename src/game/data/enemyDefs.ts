@@ -140,6 +140,33 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     unlockAtMinutes: 0,
     summonOnly: true, // only created by a Spore splitting
   },
+  // ---- The Fade (stage 1) additions -------------------------------------
+  seer: {
+    id: "seer",
+    name: "Seer",
+    behaviour: "orbiter",
+    hp: 24,
+    speed: 88,
+    damage: 9,
+    radius: 12,
+    xpValue: 3,
+    hue: 265,
+    weight: 26,
+    unlockAtMinutes: 4,
+  },
+  lancer: {
+    id: "lancer",
+    name: "Lancer",
+    behaviour: "charger",
+    hp: 30,
+    speed: 86,
+    damage: 13,
+    radius: 13,
+    xpValue: 3,
+    hue: 285,
+    weight: 24,
+    unlockAtMinutes: 4.5,
+  },
   // ---- Ember Wastes (stage 2) natives -----------------------------------
   cinder: {
     id: "cinder",

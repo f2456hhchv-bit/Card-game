@@ -97,6 +97,23 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     projectileSpeedMult: 1.15,
     cadenceMult: 0.9,
   },
+  theSovereign: {
+    id: "theSovereign",
+    name: "The Sovereign",
+    title: "Crown of Hollows",
+    baseHp: 1900,
+    speed: 50,
+    radius: 56,
+    contactDamage: 24,
+    hue: 270,
+    projectileDamage: 13,
+    // A regent who commands the void — summons watching Seers and looses
+    // imperious volleys.
+    addType: "seer",
+    addCounts: [3, 5],
+    projectileSpeedMult: 1.25,
+    cadenceMult: 0.82,
+  },
   // ---- Hollow Deep (stage 3) bosses -------------------------------------
   theRime: {
     id: "theRime",
