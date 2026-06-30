@@ -26,6 +26,9 @@ const BOSS_INTERVAL = 180;
 /** Boss Rush: first boss delay, and gap after each boss falls (seconds). */
 const RUSH_FIRST = 5;
 const RUSH_GAP = 4;
+/** Endless: seconds between Ascension steps, and the faster boss cadence. */
+const ASCENSION_INTERVAL = 45;
+const ENDLESS_BOSS_INTERVAL = 90;
 
 /** Aggregate, read-only run statistics surfaced to HUD and endgame screen. */
 export interface RunStats {
@@ -36,6 +39,8 @@ export interface RunStats {
   damageDealt: number;
   xpCollected: number;
   level: number;
+  /** Endless mode: highest Ascension tier reached this run (0 otherwise). */
+  ascension: number;
 }
 
 /** Typed gameplay events for audio/UI/feedback decoupling. */
@@ -53,6 +58,8 @@ export interface GameEvents {
   revived: { x: number; y: number };
   /** Overdrive perk fired: a light pulse damaged nearby foes. */
   pulse: { x: number; y: number; radius: number };
+  /** Endless mode stepped up an Ascension tier. */
+  ascension: { level: number };
 }
 
 /** Position of an orbit-weapon orb, mirrored out for the renderer. */
@@ -96,6 +103,16 @@ export class World {
    * each a few seconds after the last falls. A pure gauntlet to flex a build.
    */
   bossRush = false;
+  /**
+   * Endless / Ascension mode: a normal run whose difficulty ramps every
+   * {@link ASCENSION_INTERVAL}s — enemy HP/damage/spawn-rate climb without bound
+   * and bosses recur faster. A pure high-score chase ("how high can you climb").
+   */
+  endless = false;
+  /** Current Ascension tier (endless mode); mirrored into stats for the HUD. */
+  private ascHp = 1;
+  private ascDmg = 1;
+  private ascTimer = 0;
 
   /** Reactor "Overdrive" pulse timer (seconds until next pulse). */
   private pulseTimer = 0;
@@ -157,6 +174,7 @@ export class World {
     damageDealt: 0,
     xpCollected: 0,
     level: 1,
+    ascension: 0,
   };
 
   /** Pending level-up drafts the Game state machine must resolve (pauses sim). */
@@ -240,6 +258,9 @@ export class World {
     this.pulseTimer = World.PULSE_INTERVAL;
     this.pulseFx = 0;
     this.spawnDirector.reset(this.stage.enemyPool, this.stage.difficulty);
+    this.ascHp = 1;
+    this.ascDmg = 1;
+    this.ascTimer = ASCENSION_INTERVAL;
 
     this.stats.elapsed = 0;
     this.stats.kills = 0;
@@ -248,6 +269,7 @@ export class World {
     this.stats.damageDealt = 0;
     this.stats.xpCollected = 0;
     this.stats.level = 1;
+    this.stats.ascension = 0;
     this.pendingLevelUps = 0;
     this.isDead = false;
     this.auraRadius = 0;
@@ -255,8 +277,13 @@ export class World {
     this.orbitAngle = 0;
     this.boss = null;
     this.bossController = null;
-    this.nextBossTime = this.bossRush ? RUSH_FIRST : BOSS_INTERVAL;
+    this.nextBossTime = this.bossRush ? RUSH_FIRST : this.bossInterval();
     this.bossEncounter = 0;
+  }
+
+  /** Seconds between bosses for the current mode (endless recurs faster). */
+  private bossInterval(): number {
+    return this.endless ? ENDLESS_BOSS_INTERVAL : BOSS_INTERVAL;
   }
 
   obtainProjectile(): Projectile {
@@ -351,6 +378,26 @@ export class World {
     this.updateEnemyProjectiles(dt);
     this.updatePickups(dt);
     this.updateOverdrive(dt);
+    if (this.endless) this.updateAscension(dt);
+  }
+
+  /**
+   * Endless mode: every {@link ASCENSION_INTERVAL}s, raise the Ascension tier —
+   * compounding enemy HP/damage and spawn-rate via the spawn director, plus
+   * tougher bosses. Unbounded; the tier reached is the score.
+   */
+  private updateAscension(dt: number): void {
+    this.ascTimer -= dt;
+    if (this.ascTimer > 0) return;
+    this.ascTimer += ASCENSION_INTERVAL;
+    this.stats.ascension++;
+    const n = this.stats.ascension;
+    // Linear-in-tier ramps (gentle at first, brutal deep in).
+    this.ascHp = 1 + n * 0.18;
+    this.ascDmg = 1 + n * 0.12;
+    const rate = 1 + n * 0.08;
+    this.spawnDirector.setAscension(this.ascHp, this.ascDmg, rate);
+    this.events.emit("ascension", { level: n });
   }
 
   /**
@@ -392,7 +439,7 @@ export class World {
       this.spawnBoss();
       // In rush the next boss is scheduled when this one dies; otherwise it
       // recurs on the fixed interval. Push it far out so it can't double-spawn.
-      this.nextBossTime += this.bossRush ? 1e9 : BOSS_INTERVAL;
+      this.nextBossTime += this.bossRush ? 1e9 : this.bossInterval();
     }
     if (this.boss && this.bossController) {
       if (!this.boss.active) {
@@ -441,12 +488,13 @@ export class World {
     e.isElite = false;
     e.isBoss = true;
     e.animPhase = 0;
-    // HP scales with encounter index, a touch with time, and stage difficulty.
+    // HP scales with encounter index, a touch with time, stage difficulty, and
+    // (in endless) the current Ascension tier.
     const encounterScale = 1 + this.bossEncounter * 0.85;
     const diff = this.stage.difficulty;
-    e.maxHp = def.baseHp * encounterScale * (1 + minutes * 0.04) * diff;
+    e.maxHp = def.baseHp * encounterScale * (1 + minutes * 0.04) * diff * this.ascHp;
     e.hp = e.maxHp;
-    e.damage = def.contactDamage * (1 + minutes * 0.08) * diff;
+    e.damage = def.contactDamage * (1 + minutes * 0.08) * diff * this.ascDmg;
     e.xpValue = 60 + this.bossEncounter * 30;
     e.knockX = 0;
     e.knockY = 0;

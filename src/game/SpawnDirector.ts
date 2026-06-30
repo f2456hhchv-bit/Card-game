@@ -30,6 +30,10 @@ export class SpawnDirector {
   private pool: Set<string> | null = null;
   /** Stage difficulty multiplier on HP/damage scaling (1 = base stage). */
   private difficulty = 1;
+  /** Endless Ascension multipliers (HP, damage, spawn-rate); 1 = no ascension. */
+  private ascHp = 1;
+  private ascDmg = 1;
+  private ascRate = 1;
 
   /**
    * @param pool optional stage enemy-id whitelist; omit for all enemies.
@@ -42,24 +46,34 @@ export class SpawnDirector {
     this.surgeRemaining = 0;
     this.pool = pool ? new Set(pool) : null;
     this.difficulty = difficulty;
+    this.ascHp = 1;
+    this.ascDmg = 1;
+    this.ascRate = 1;
+  }
+
+  /** Set the endless Ascension multipliers (HP, damage, spawn-rate). */
+  setAscension(hp: number, dmg: number, rate: number): void {
+    this.ascHp = hp;
+    this.ascDmg = dmg;
+    this.ascRate = rate;
   }
 
   /** Difficulty multiplier on enemy HP as a function of elapsed minutes. */
   hpScale(minutes: number): number {
     // Gentle quadratic-ish ramp: ~1x at 0min, ~2.5x at 5min, ~6x at 12min.
-    return (1 + minutes * 0.28 + minutes * minutes * 0.018) * this.difficulty;
+    return (1 + minutes * 0.28 + minutes * minutes * 0.018) * this.difficulty * this.ascHp;
   }
 
   /** Difficulty multiplier on enemy damage. */
   damageScale(minutes: number): number {
-    return (1 + minutes * 0.12) * this.difficulty;
+    return (1 + minutes * 0.12) * this.difficulty * this.ascDmg;
   }
 
   /** Base spawn interval (seconds between spawns), shrinking over time. */
   private spawnInterval(minutes: number): number {
-    // From ~0.7s early to ~0.12s late, clamped.
-    const v = 0.72 - minutes * 0.05;
-    return Math.max(0.12, v);
+    // From ~0.7s early to ~0.12s late, clamped; ascension shortens it further.
+    const v = (0.72 - minutes * 0.05) / this.ascRate;
+    return Math.max(0.08, v);
   }
 
   /** Soft cap on concurrent enemies, rising with time. */

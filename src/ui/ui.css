@@ -80,6 +80,17 @@
   color: var(--ui-text-dim);
   font-weight: 600;
 }
+.hud-asc {
+  margin-top: 4px;
+  align-self: center;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: hsl(12 90% 66%);
+  text-shadow: 0 0 10px hsla(12, 90%, 60%, 0.5);
+}
+.hud-asc.hidden {
+  display: none;
+}
 
 /* Health bar bottom-centre. */
 .hp-wrap {

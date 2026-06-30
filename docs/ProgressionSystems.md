@@ -223,6 +223,15 @@ check to flex a geared build. Uses the selected stage's boss pool + difficulty
 and your full meta/gear. Motes reward adds **+15 per boss felled**; the game-over
 screen headlines **Bosses**. Entry via the main-menu **Boss Rush** button.
 
+### Endless / Ascension ✅ (high-score chase)
+A run whose difficulty **ramps without bound**: every {`ASCENSION_INTERVAL`} = 45s
+the **Ascension tier** rises (`World.updateAscension`), compounding enemy HP
+(×1+0.18·n), damage (×1+0.12·n) and spawn-rate (×1+0.08·n) through the spawn
+director, with bosses recurring every 90s (vs 180s). Each step fires an
+`ascension` toast + screen shake; the HUD shows a live **▲ Ascension N** badge.
+The tier reached is the score — tracked in `save.endlessBest` and on the Records
+screen, and it boosts the mote reward (+8/tier). Always available from the menu.
+
 ### Daily Run ✅
 A once-a-day challenge seeded from the **local calendar date**
 (`Rng.seedFromString("YYYY-MM-DD")` → `World.reseed`), so the run's generated

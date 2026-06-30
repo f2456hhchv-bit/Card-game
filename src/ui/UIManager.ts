@@ -35,6 +35,7 @@ export interface UICallbacks {
   onStart(): void;
   onStartDaily(): void;
   onStartBossRush(): void;
+  onStartEndless(): void;
   onPause(): void;
   onResume(): void;
   onRestart(): void;
@@ -65,6 +66,7 @@ export class UIManager {
   private bossBar!: HTMLDivElement;
   private bossName!: HTMLDivElement;
   private bossFill!: HTMLDivElement;
+  private ascLabel!: HTMLDivElement;
 
   private menu!: HTMLDivElement;
   private bossRushBtn!: HTMLButtonElement;
@@ -157,7 +159,10 @@ export class UIManager {
     this.killsLabel = this.el("div", "hud-kills", "0 felled");
     row.append(this.levelLabel, this.timerLabel, this.killsLabel);
 
-    top.append(xpBar, row);
+    // Endless-only Ascension badge (hidden in other modes).
+    this.ascLabel = this.el("div", "hud-asc hidden", "▲ 0");
+
+    top.append(xpBar, row, this.ascLabel);
 
     // Boss bar (hidden until a boss is active).
     this.bossName = this.el("div", "boss-name", "");
@@ -222,6 +227,13 @@ export class UIManager {
     this.levelLabel.textContent = `LV ${p.level}`;
     this.timerLabel.textContent = formatTime(world.stats.elapsed);
     this.killsLabel.textContent = `${world.stats.kills} felled`;
+    // Endless Ascension badge.
+    if (world.endless) {
+      this.ascLabel.classList.remove("hidden");
+      this.ascLabel.textContent = `▲ Ascension ${world.stats.ascension}`;
+    } else {
+      this.ascLabel.classList.add("hidden");
+    }
     const hpFrac = Math.max(0, p.hp / p.stats.maxHp);
     this.hpFill.style.width = `${hpFrac * 100}%`;
     this.hpText.textContent = `${Math.ceil(p.hp)} / ${Math.round(p.stats.maxHp)}`;
@@ -314,6 +326,10 @@ export class UIManager {
       this.cb.onStartBossRush();
     });
 
+    // Endless / Ascension — always available; ramps without bound.
+    const endlessBtn = this.el("button", "btn secondary", "Endless");
+    endlessBtn.addEventListener("click", () => this.cb.onStartEndless());
+
     const wardensBtn = this.el("button", "btn secondary", "Wardens");
     wardensBtn.addEventListener("click", () => this.openWardens());
 
@@ -337,7 +353,7 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, dailyBtn, this.bossRushBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
+    btnRow.append(play, dailyBtn, this.bossRushBtn, endlessBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
 
     o.append(title, sub, stats, stageRow, btnRow, dailyLine);
     this.root.appendChild(o);
@@ -916,6 +932,7 @@ export class UIManager {
       stat("Best Time", formatTime(d.bestTime)),
       stat("Most Felled", `${d.bestKills}`),
       stat("Boss Rush", d.bossRushBest > 0 ? `${d.bossRushBest} bosses` : "—"),
+      stat("Endless", d.endlessBest > 0 ? `Asc ${d.endlessBest}` : "—"),
       stat("Runs", `${d.runsPlayed}`),
       stat("Bosses Slain", `${d.lifetime.bosses}`),
       stat("Time Played", hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`),
@@ -1116,17 +1133,20 @@ export class UIManager {
   showGameOver(
     stats: RunStats,
     motesEarned: number,
-    records: { newBestTime: boolean; newBestKills: boolean },
+    records: { newBestTime: boolean; newBestKills: boolean; newBestEndless?: boolean },
     daily = false,
     bossRush = false,
+    endless = false,
   ): void {
     const title = this.gameover.querySelector("#go-title");
     if (title) {
-      title.textContent = bossRush
-        ? "BOSS RUSH — THE LIGHT FADES"
-        : daily
-          ? "DAILY RUN — THE LIGHT FADES"
-          : "THE LIGHT FADES";
+      title.textContent = endless
+        ? "ENDLESS — THE LIGHT FADES"
+        : bossRush
+          ? "BOSS RUSH — THE LIGHT FADES"
+          : daily
+            ? "DAILY RUN — THE LIGHT FADES"
+            : "THE LIGHT FADES";
     }
     const container = this.gameover.querySelector("#go-stats");
     if (container) {
@@ -1142,16 +1162,20 @@ export class UIManager {
         stats.damageDealt >= 100000
           ? `${(stats.damageDealt / 1000).toFixed(0)}k`
           : `${Math.round(stats.damageDealt)}`;
-      container.replaceChildren(
+      const tiles = [
         stat("Survived", formatTime(stats.elapsed), records.newBestTime),
-        // Boss Rush headlines bosses felled; normal runs headline kills.
-        stat("Bosses", `${stats.bossKills}`, bossRush && stats.bossKills > 0),
+      ];
+      // Endless headlines Ascension; Boss Rush headlines bosses felled.
+      if (endless) tiles.push(stat("Ascension", `${stats.ascension}`, records.newBestEndless));
+      else if (bossRush) tiles.push(stat("Bosses", `${stats.bossKills}`, stats.bossKills > 0));
+      tiles.push(
         stat("Felled", `${stats.kills}`, records.newBestKills),
         stat("Elites", `${stats.eliteKills}`),
         stat("Level", `${stats.level}`),
         stat("Damage", dmg),
         stat("Motes", `+${motesEarned}`),
       );
+      container.replaceChildren(...tiles);
     }
     this.gameover.classList.remove("hidden");
   }

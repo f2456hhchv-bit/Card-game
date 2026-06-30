@@ -242,6 +242,32 @@ describe("World — combat integration", () => {
     expect(world.stats.bossKills).toBe(1);
   });
 
+  it("Endless mode raises the Ascension tier over time and toughens enemies", () => {
+    const world = new World(44);
+    world.endless = true;
+    world.reset();
+    world.player.stats.maxHp = 1e9;
+    world.player.hp = 1e9;
+
+    let asc = 0;
+    world.events.on("ascension", (a) => (asc = a.level));
+    // Step ~50s of sim (past the 45s Ascension interval).
+    for (let i = 0; i < 60 * 50; i++) world.step(1 / 60, STILL);
+    expect(asc).toBeGreaterThanOrEqual(1);
+    expect(world.stats.ascension).toBe(asc);
+
+    // An enemy spawned now should be tougher than the same enemy at Ascension 0.
+    const baseline = (() => {
+      const w = new World(44);
+      w.reset();
+      (w as unknown as { spawnAdd(id: string, x: number, y: number): void }).spawnAdd("husk", 0, 0);
+      return w.enemies[0].maxHp;
+    })();
+    (world as unknown as { spawnAdd(id: string, x: number, y: number): void }).spawnAdd("husk", 0, 0);
+    const ascended = world.enemies[world.enemies.length - 1].maxHp;
+    expect(ascended).toBeGreaterThan(baseline);
+  });
+
   it("kills award XP and can trigger a level-up draft", () => {
     const world = new World(99);
     world.reset();

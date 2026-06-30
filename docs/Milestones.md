@@ -120,6 +120,8 @@ Goal: replace placeholder geometry with premium, original procedural art.
       11-stat pool; a second build-depth axis shown in the Hangar.
 - [x] **Salvage & reroll economy**: dismantle spare cores into **Alloy**, spend it
       to **reroll** an item's affixes — agency over drop RNG.
+- [x] **Endless / Ascension mode**: unbounded difficulty ramp every 45s (HP/damage/
+      spawn-rate + faster bosses); live ▲ badge, best Ascension tracked in Records.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette

@@ -70,6 +70,8 @@ export interface SaveData {
   };
   /** Best Boss Rush result: most bosses felled in a single rush. */
   bossRushBest: number;
+  /** Best Endless result: highest Ascension tier reached. */
+  endlessBest: number;
   /** Best time/kills per stage id (normal runs), for the Records screen. */
   stageBest: Record<string, { time: number; kills: number }>;
   /** Unlocked Warden ids. */
@@ -99,6 +101,7 @@ function defaultSave(): SaveData {
     meta: {},
     gear: { inventory: {}, equipped: emptyEquip(), pity: { sinceNew: 0, sinceRare: 0 } },
     bossRushBest: 0,
+    endlessBest: 0,
     stageBest: {},
     wardens: ["lumen"],
     selectedWarden: "lumen",
@@ -154,6 +157,7 @@ export class SaveManager {
       meta: parsed.meta ?? {},
       gear: this.migrateGear(parsed),
       bossRushBest: parsed.bossRushBest ?? 0,
+      endlessBest: parsed.endlessBest ?? 0,
       stageBest: parsed.stageBest ?? {},
       lifetime: parsed.lifetime ?? { time: 0, damage: 0, bosses: 0, elites: 0 },
       wardens: parsed.wardens ?? ["lumen"],
@@ -221,15 +225,17 @@ export class SaveManager {
   recordRun(
     stats: RunStats,
     motesEarned: number,
-    ctx: { stageId: string; bossRush: boolean; daily: boolean } = {
+    ctx: { stageId: string; bossRush: boolean; endless: boolean; daily: boolean } = {
       stageId: "fade",
       bossRush: false,
+      endless: false,
       daily: false,
     },
   ): {
     newBestTime: boolean;
     newBestKills: boolean;
     newBestRush: boolean;
+    newBestEndless: boolean;
   } {
     const d = this.data;
     d.runsPlayed++;
@@ -244,11 +250,15 @@ export class SaveManager {
     if (newBestTime) d.bestTime = stats.elapsed;
     if (newBestKills) d.bestKills = stats.kills;
 
-    // Boss Rush best: most bosses felled in a rush.
+    // Mode-specific bests.
     let newBestRush = false;
+    let newBestEndless = false;
     if (ctx.bossRush) {
       newBestRush = stats.bossKills > d.bossRushBest;
       if (newBestRush) d.bossRushBest = stats.bossKills;
+    } else if (ctx.endless) {
+      newBestEndless = stats.ascension > d.endlessBest;
+      if (newBestEndless) d.endlessBest = stats.ascension;
     } else if (!ctx.daily) {
       // Per-stage best for normal (campaign) runs.
       const prev = d.stageBest[ctx.stageId] ?? { time: 0, kills: 0 };
@@ -259,7 +269,7 @@ export class SaveManager {
     }
 
     this.save();
-    return { newBestTime, newBestKills, newBestRush };
+    return { newBestTime, newBestKills, newBestRush, newBestEndless };
   }
 
   /**
