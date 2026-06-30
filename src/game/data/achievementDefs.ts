@@ -22,6 +22,9 @@ export interface AchievementContext {
   fullSetsOwned: number;
   setsTotal: number;
   maxedGearItems: number;
+  // Boss signatures
+  signaturesOwned: number;
+  signaturesTotal: number;
 }
 
 export interface AchievementDef {
@@ -137,5 +140,12 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     description: "Merge a gear item to max grade.",
     icon: "⬡",
     check: (c) => c.maxedGearItems >= 1,
+  },
+  {
+    id: "warlord",
+    name: "Warlord",
+    description: "Claim every boss signature.",
+    icon: "👑",
+    check: (c) => c.signaturesTotal > 0 && c.signaturesOwned >= c.signaturesTotal,
   },
 ];

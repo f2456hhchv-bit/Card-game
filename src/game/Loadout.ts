@@ -10,6 +10,7 @@ import {
 import { PASSIVE_DEFS, PASSIVE_LIST } from "./data/passiveDefs";
 import { applyMeta } from "./data/metaDefs";
 import { applyGear, emptyEquip, type EquipMap, type ModuleState } from "./data/gearDefs";
+import { applySignature } from "./data/signatureDefs";
 import { getWarden } from "./data/wardenDefs";
 import { clamp } from "../core/math/MathUtils";
 
@@ -78,6 +79,8 @@ export class Loadout {
   gearInventory: Record<string, ModuleState> = {};
   /** Equipped gear per slot (set by World from the save each run). */
   gearEquipped: EquipMap = emptyEquip();
+  /** Equipped boss-signature id, or null (set by World from the save each run). */
+  signatureId: string | null = null;
   /** Selected Warden id (set by World from the save each run). */
   wardenId = "lumen";
 
@@ -113,6 +116,7 @@ export class Loadout {
     getWarden(this.wardenId).applyPerk?.(s);
     applyMeta(s, this.metaLevels);
     applyGear(s, this.gearEquipped, this.gearInventory);
+    applySignature(s, this.signatureId);
     for (const [id, level] of this.passives) {
       const def = PASSIVE_DEFS[id];
       if (def) def.apply(s, level);

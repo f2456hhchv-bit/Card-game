@@ -18,6 +18,7 @@ import {
   rarityName,
 } from "./data/gearDefs";
 import { getStage, isStageUnlocked } from "./data/stageDefs";
+import { SIGNATURE_DEFS, SIGNATURE_LIST } from "./data/signatureDefs";
 import { WARDEN_LIST } from "./data/wardenDefs";
 import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
 import { Rng } from "../core/math/Rng";
@@ -168,13 +169,19 @@ export class Game {
       this.audio.bossWarn();
       this.camera.addShake(12, 0.6);
     });
-    e.on("bossDefeated", () => {
+    e.on("bossDefeated", (b) => {
       this.ui.hideBossBar();
       this.audio.bossDown();
       this.camera.addShake(20, 0.8);
       // Bosses are the headline reward moment — guarantee a gear salvage so they
       // meaningfully advance set completion, on top of the loot shower.
       this.salvageGear();
+      // First defeat of a boss type unlocks its signature relic.
+      const sig = this.save.unlockSignature(b.id);
+      if (sig?.isNew) {
+        const def = SIGNATURE_DEFS[sig.id];
+        this.ui.showToast(def.icon, `${def.name} claimed`, def.description);
+      }
       this.checkAchievements(); // immediate boss-kill toasts
     });
     e.on("ascension", (a) => {
@@ -217,6 +224,7 @@ export class Game {
       this.world.metaLevels = {};
       this.world.gearInventory = {};
       this.world.gearEquipped = emptyEquip();
+      this.world.signatureId = null;
       this.world.selectedWarden = "lumen";
       this.world.stageId = "fade"; // Daily is always the base stage, equal footing.
       this.world.reset();
@@ -226,6 +234,7 @@ export class Game {
       this.world.metaLevels = this.save.data.meta;
       this.world.gearInventory = this.save.data.gear.inventory;
       this.world.gearEquipped = this.save.data.gear.equipped;
+      this.world.signatureId = this.save.data.signatures.equipped;
       this.world.selectedWarden = this.save.data.selectedWarden;
       this.world.stageId = this.selectedStageId();
       this.world.reset();
@@ -391,6 +400,8 @@ export class Game {
       fullSetsOwned: completedSets(d.gear.inventory),
       setsTotal: SET_LIST.length,
       maxedGearItems: maxedItems(d.gear.inventory),
+      signaturesOwned: d.signatures.owned.length,
+      signaturesTotal: SIGNATURE_LIST.length,
     };
   }
 

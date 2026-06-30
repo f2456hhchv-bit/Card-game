@@ -22,6 +22,7 @@ import {
 } from "../game/data/gearDefs";
 import { ACHIEVEMENT_DEFS } from "../game/data/achievementDefs";
 import { STAGE_LIST, getStage, isStageUnlocked } from "../game/data/stageDefs";
+import { SIGNATURE_LIST } from "../game/data/signatureDefs";
 import { formatTime } from "../core/format";
 
 /**
@@ -639,6 +640,7 @@ export class UIManager {
   private hangar!: HTMLDivElement;
   private hangarEquip!: HTMLDivElement;
   private hangarSets!: HTMLDivElement;
+  private hangarSignatures!: HTMLDivElement;
   private hangarBalance!: HTMLDivElement;
 
   private buildHangar(): void {
@@ -652,11 +654,21 @@ export class UIManager {
     this.hangarBalance = this.el("div", "shop-balance");
     // Equipped loadout summary (4 slots + active set bonuses).
     this.hangarEquip = this.el("div", "equip-panel");
+    // Boss-signature relics (one equipped at a time).
+    this.hangarSignatures = this.el("div", "set-list");
     // The collected inventory, grouped by set.
     this.hangarSets = this.el("div", "set-list");
     const back = this.el("button", "btn", "Back");
     back.addEventListener("click", () => this.closeHangar());
-    o.append(title, sub, this.hangarBalance, this.hangarEquip, this.hangarSets, back);
+    o.append(
+      title,
+      sub,
+      this.hangarBalance,
+      this.hangarEquip,
+      this.hangarSignatures,
+      this.hangarSets,
+      back,
+    );
     this.root.appendChild(o);
     this.hangar = o;
   }
@@ -664,7 +676,87 @@ export class UIManager {
   private refreshHangar(): void {
     this.hangarBalance.textContent = `⬢ ${this.save.data.alloy} Alloy`;
     this.refreshEquipPanel();
+    this.refreshSignatures();
     this.refreshSetList();
+  }
+
+  /** Boss-signature relics: one equippable at a time; locked until the boss falls. */
+  private refreshSignatures(): void {
+    const sig = this.save.data.signatures;
+    this.hangarSignatures.replaceChildren();
+
+    const group = this.el("div", "set-group");
+    group.style.setProperty("--card-accent", "hsl(45 90% 62%)");
+    const head = this.el("div", "set-head");
+    head.append(
+      this.el("div", "set-name", "Boss Signatures"),
+      this.el("div", "set-count", `${sig.owned.length}/${SIGNATURE_LIST.length} claimed`),
+    );
+    group.append(
+      head,
+      this.el("div", "set-desc", "Trophies from each boss — equip one. Defeat a boss to claim its relic."),
+    );
+
+    const grid = this.el("div", "item-grid");
+    for (const def of SIGNATURE_LIST) {
+      const owned = sig.owned.includes(def.id);
+      const equipped = sig.equipped === def.id;
+      const accent = `hsl(${def.hue} 80% 65%)`;
+
+      const card = this.el("div", "item-card");
+      card.style.setProperty("--card-accent", accent);
+      card.style.setProperty("--rarity", accent);
+      if (!owned) card.classList.add("locked");
+      if (equipped) card.classList.add("equipped");
+
+      const top = this.el("div", "item-top");
+      top.append(
+        this.el("span", "item-icon", def.icon),
+        this.el("div", "item-name", owned ? def.name : "??? Signature"),
+      );
+      const sm = this.el("div", "item-grade", owned ? def.title : "Locked");
+      const desc = this.el(
+        "div",
+        "item-stat",
+        owned ? def.description : `Defeat the boss ${def.title.replace("from ", "")}.`,
+      );
+
+      const actions = this.el("div", "item-actions");
+      if (owned) {
+        const eq = this.el("button", "btn mini");
+        if (equipped) {
+          eq.textContent = "Equipped";
+          eq.classList.add("maxed");
+          eq.disabled = true;
+        } else {
+          eq.textContent = "Equip";
+          eq.addEventListener("click", () => this.equipSignature(def.id));
+        }
+        actions.appendChild(eq);
+        if (equipped) {
+          const un = this.el("button", "btn mini");
+          un.textContent = "Unequip";
+          un.addEventListener("click", () => this.equipSignature(null));
+          actions.appendChild(un);
+        }
+      } else {
+        const lock = this.el("button", "btn mini cant-afford");
+        lock.textContent = "Locked";
+        lock.disabled = true;
+        actions.appendChild(lock);
+      }
+
+      card.append(top, sm, desc, actions);
+      grid.appendChild(card);
+    }
+    group.append(grid);
+    this.hangarSignatures.appendChild(group);
+  }
+
+  private equipSignature(id: string | null): void {
+    this.save.equipSignature(id);
+    this.audio.select();
+    this.refreshHangar();
   }
 
   /** Top panel: the four equipped slots + which set bonuses are active. */

@@ -124,6 +124,9 @@ Goal: replace placeholder geometry with premium, original procedural art.
       spawn-rate + faster bosses); live ▲ badge, best Ascension tracked in Records.
 - [x] **Stage Gauntlet mode**: clear Fade→Ember→Deep on one life (HP carries over,
       boss-kill advances stage with live palette/pool swap); best stages in Records.
+- [x] **Boss signatures**: each boss drops a unique equippable relic (one slot,
+      themed proc/passive) on first defeat; collect all six for the Warlord
+      achievement (now 16 achievements).
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette

@@ -59,7 +59,7 @@ export interface GameEvents {
   weaponFired: { weaponId: string };
   bombDetonate: { x: number; y: number };
   bossSpawned: { name: string; title: string };
-  bossDefeated: { x: number; y: number };
+  bossDefeated: { x: number; y: number; id: string };
   /** Aegis perk fired: the Warden cheated death this run. */
   revived: { x: number; y: number };
   /** Overdrive perk fired: a light pulse damaged nearby foes. */
@@ -102,6 +102,8 @@ export class World {
     engines: null,
     wings: null,
   };
+  /** Equipped boss-signature id, supplied by Game from the save profile. */
+  signatureId: string | null = null;
   /** Selected Warden id, supplied by Game from the save profile. */
   selectedWarden = "lumen";
   /** Stage id, supplied by Game; drives the enemy pool and backdrop palette. */
@@ -269,6 +271,7 @@ export class World {
     this.loadout.metaLevels = this.metaLevels;
     this.loadout.gearInventory = this.gearInventory;
     this.loadout.gearEquipped = this.gearEquipped;
+    this.loadout.signatureId = this.signatureId;
     this.loadout.wardenId = this.selectedWarden;
     this.loadout.reset();
     this.loadout.recomputeStats(this.player);
@@ -1005,7 +1008,7 @@ export class World {
     if (this.bossRush) this.nextBossTime = this.stats.elapsed + RUSH_GAP;
     // Gauntlet: a boss kill clears the current stage; advance to the next.
     if (this.gauntlet) this.advanceGauntlet();
-    this.events.emit("bossDefeated", { x: e.x, y: e.y });
+    this.events.emit("bossDefeated", { x: e.x, y: e.y, id: e.typeId });
 
     // Generous reward: a fan of XP shards plus guaranteed support drops.
     const shards = 14;

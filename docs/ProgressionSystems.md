@@ -189,6 +189,27 @@ i-frames (`p.stats.iframes`), Salvo (`extraProjectiles`).
 > (`gearEquipped = emptyEquip()`) so it stays an equal-footing challenge. Item
 > drops are still *earned* from a daily's end-of-run salvage.
 
+### Boss Signatures ✅ (boss-exclusive relics)
+Each boss drops a one-of-a-kind **signature relic** the first time it falls
+(`signatureForBoss`, unlocked in `SaveManager.unlockSignature` on the
+`bossDefeated` event). The Warden equips **one** at a time in a dedicated slot
+that doesn't touch ship-set bonuses (`save.signatures.{owned,equipped}` →
+`Loadout.applySignature`). Each grants a strong, themed passive — several light up
+real procs (Overdrive pulse, Aegis revive, +projectile):
+
+| Signature | Boss | Effect |
+| --- | --- | --- |
+| Devourer's Heart | The Maw | +18% damage, +30 Max HP |
+| Chorus Core | The Choir | +1 projectile, +10% attack speed |
+| Cinderbrand | The Pyre | +22% damage, Overdrive pulse |
+| Anvil Plate | The Forge | +60 Max HP, +8% armour, Aegis revive |
+| Glacial Lens | The Rime | +12% area, +15% crit, +30% crit dmg |
+| Abyssal Core | The Nadir | +45 Max HP, +0.8 regen/s, stronger pulse |
+
+Collecting all six unlocks the **Warlord** achievement. Equip/claim state shows in
+the Hangar's Signatures panel; signatures are stripped for the equal-footing Daily
+Run.
+
 ### Stages ✅ (distinct battlegrounds)
 Source of truth: `src/game/data/stageDefs.ts`; selection in `save.selectedStage`.
 Each stage has its own **palette** (sky/nebula/fog/star colours, baked by

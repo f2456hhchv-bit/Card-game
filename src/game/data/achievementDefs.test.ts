@@ -17,6 +17,8 @@ function ctx(over: Partial<AchievementContext> = {}): AchievementContext {
     fullSetsOwned: 0,
     setsTotal: 6,
     maxedGearItems: 0,
+    signaturesOwned: 0,
+    signaturesTotal: 6,
     ...over,
   };
 }
@@ -60,6 +62,8 @@ describe("achievementDefs", () => {
     expect(check("outfitter", ctx({ fullSetsOwned: 6, setsTotal: 6 }))).toBe(true);
     expect(check("master-smith", ctx({ maxedGearItems: 0 }))).toBe(false);
     expect(check("master-smith", ctx({ maxedGearItems: 1 }))).toBe(true);
+    expect(check("warlord", ctx({ signaturesOwned: 5, signaturesTotal: 6 }))).toBe(false);
+    expect(check("warlord", ctx({ signaturesOwned: 6, signaturesTotal: 6 }))).toBe(true);
   });
 
   it("all achievements have unique ids", () => {

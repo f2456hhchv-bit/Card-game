@@ -33,6 +33,7 @@ interface SaveData {
     equipped: { hull: string|null; core: string|null;
                 engines: string|null; wings: string|null };       // per-slot item
   };
+  signatures: { owned: string[]; equipped: string|null }; // boss-signature relics
   wardens: string[];          // unlocked Warden ids (default ["lumen"])
   selectedWarden: string;     // active Warden id (default "lumen")
   selectedStage: string;      // active stage id (default "fade")

@@ -1,5 +1,6 @@
 import type { AudioSettings } from "../audio/AudioManager";
 import type { RunStats } from "../World";
+import { signatureForBoss } from "../data/signatureDefs";
 import {
   GEAR_ITEMS,
   ITEM_LIST,
@@ -76,6 +77,8 @@ export interface SaveData {
   gauntletBest: number;
   /** Best time/kills per stage id (normal runs), for the Records screen. */
   stageBest: Record<string, { time: number; kills: number }>;
+  /** Boss signatures: which are unlocked, and which one is equipped. */
+  signatures: { owned: string[]; equipped: string | null };
   /** Unlocked Warden ids. */
   wardens: string[];
   /** Currently selected Warden id. */
@@ -106,6 +109,7 @@ function defaultSave(): SaveData {
     endlessBest: 0,
     gauntletBest: 0,
     stageBest: {},
+    signatures: { owned: [], equipped: null },
     wardens: ["lumen"],
     selectedWarden: "lumen",
     selectedStage: "fade",
@@ -163,6 +167,7 @@ export class SaveManager {
       endlessBest: parsed.endlessBest ?? 0,
       gauntletBest: parsed.gauntletBest ?? 0,
       stageBest: parsed.stageBest ?? {},
+      signatures: parsed.signatures ?? { owned: [], equipped: null },
       lifetime: parsed.lifetime ?? { time: 0, damage: 0, bosses: 0, elites: 0 },
       wardens: parsed.wardens ?? ["lumen"],
       selectedWarden: parsed.selectedWarden ?? "lumen",
@@ -421,6 +426,31 @@ export class SaveManager {
     return SLOTS.some((slot) =>
       ITEM_LIST.some((it) => it.slot === slot && (this.data.gear.inventory[it.id]?.grade ?? 0) > 0),
     );
+  }
+
+  /**
+   * Unlock the signature a boss drops (first kill of that boss type). Auto-equips
+   * it if no signature is currently equipped. Returns the signature id + isNew.
+   */
+  unlockSignature(bossId: string): { id: string; isNew: boolean } | null {
+    const def = signatureForBoss(bossId);
+    if (!def) return null;
+    const sig = this.data.signatures;
+    const isNew = !sig.owned.includes(def.id);
+    if (isNew) {
+      sig.owned.push(def.id);
+      if (sig.equipped == null) sig.equipped = def.id;
+      this.save();
+    }
+    return { id: def.id, isNew };
+  }
+
+  /** Equip an owned signature, or pass null to clear the slot. */
+  equipSignature(id: string | null): boolean {
+    if (id !== null && !this.data.signatures.owned.includes(id)) return false;
+    this.data.signatures.equipped = id;
+    this.save();
+    return true;
   }
 
   unlockAchievement(id: string): boolean {
