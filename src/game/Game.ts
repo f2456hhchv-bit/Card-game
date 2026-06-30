@@ -94,6 +94,7 @@ export class Game {
       onToMenu: () => this.toMenu(),
       onPickDraft: (opt) => this.pickDraft(opt),
       onGearChanged: () => this.checkAchievements(),
+      onGraphicsChanged: () => this.applyAccessibility(),
     });
 
     this.loop = new GameLoop({
@@ -140,6 +141,7 @@ export class Game {
       acc.reduceMotion = acc.reduceMotion || true;
     }
     this.gameRenderer.setReduceMotion(acc.reduceMotion);
+    this.gameRenderer.setBloom(acc.bloom);
   }
 
   private bindEvents(): void {

@@ -50,6 +50,8 @@ export interface UICallbacks {
   onPickDraft(option: DraftOption): void;
   /** Fired after the player changes gear in the Hangar (merge/equip). */
   onGearChanged(): void;
+  /** Fired after a graphics setting (e.g. Bloom) changes, to re-apply it live. */
+  onGraphicsChanged?(): void;
 }
 
 export class UIManager {
@@ -1379,6 +1381,10 @@ export class UIManager {
       sliderRow("Ambience", () => a.music, (v) => (a.music = v)),
       toggleRow("Mute", () => a.muted, (v) => (a.muted = v)),
       toggleRow("Screen Shake", () => acc.screenShake, (v) => (acc.screenShake = v)),
+      toggleRow("Bloom & Grading", () => acc.bloom, (v) => {
+        acc.bloom = v;
+        this.cb.onGraphicsChanged?.();
+      }),
       toggleRow("Reduce Motion", () => acc.reduceMotion, (v) => (acc.reduceMotion = v)),
       toggleRow("Damage Numbers", () => acc.damageNumbers, (v) => (acc.damageNumbers = v)),
       toggleRow("Show Performance", () => this.showPerf, (v) => this.setPerfVisible(v)),

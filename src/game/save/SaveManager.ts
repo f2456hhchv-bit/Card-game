@@ -32,6 +32,8 @@ export interface AccessibilitySettings {
   screenShake: boolean;
   damageNumbers: boolean;
   highContrast: boolean;
+  /** Bloom / colour-grade post-processing (off for weak devices). */
+  bloom: boolean;
 }
 
 export interface SaveData {
@@ -124,6 +126,7 @@ function defaultSave(): SaveData {
       screenShake: true,
       damageNumbers: true,
       highContrast: false,
+      bloom: true,
     },
   };
 }

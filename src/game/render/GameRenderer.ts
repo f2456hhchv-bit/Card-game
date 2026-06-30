@@ -5,6 +5,7 @@ import type { Input } from "../../engine/Input";
 import { TAU } from "../../core/math/MathUtils";
 import { SpriteForge, type Sprite } from "./SpriteForge";
 import { Background } from "./Background";
+import { PostFx } from "./PostFx";
 
 /**
  * Draws the world. All art is procedural and asset-free: characters are baked
@@ -16,9 +17,15 @@ export class GameRenderer {
   private reduceMotion = false;
   private readonly forge = new SpriteForge();
   private readonly background = new Background();
+  private readonly postFx = new PostFx();
 
   setReduceMotion(v: boolean): void {
     this.reduceMotion = v;
+  }
+
+  /** Toggle the bloom/colour-grade post pass (Settings → Bloom). */
+  setBloom(v: boolean): void {
+    this.postFx.enabled = v;
   }
 
   render(renderer: Renderer, camera: Camera, world: World, input: Input): void {
@@ -41,6 +48,10 @@ export class GameRenderer {
     this.drawArcs(ctx, camera, world);
     this.drawPlayer(ctx, camera, world);
     this.drawParticles(ctx, camera, world);
+
+    // Post-processing: bloom + colour grade over the lit gameplay layer (before
+    // the vignette and crisp UI text, so glow blooms but readouts stay sharp).
+    this.postFx.apply(ctx, renderer.canvas, renderer.dpr);
 
     // Cinematic post: vignette, plus a danger pulse when the Warden is low.
     this.background.drawVignette(ctx);

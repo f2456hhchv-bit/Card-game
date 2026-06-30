@@ -127,6 +127,21 @@ Goal: replace placeholder geometry with premium, original procedural art.
 - [x] **Boss signatures**: each boss drops a unique equippable relic (one slot,
       themed proc/passive) on first defeat; collect all six for the Warlord
       achievement (now 16 achievements).
+- [x] **Weapon pass + new Wardens + Warden mastery**: 3 new weapons & evolutions,
+      3 new Wardens, per-Warden mastery levelling (Veteran achievement → 17).
+
+## ▶ ART UPLIFT — IN PROGRESS (permanent standard, see docs/ArtDirection.md)
+Visual quality is now a primary success criterion. Working toward Survivor.io /
+Brotato-tier polish via a procedural+shader rendering pipeline (no external
+artist; production-art seam via `ArtManifest`).
+- [x] **Art Direction standard** recorded (`docs/ArtDirection.md`) + **Art Manifest**
+      seam (`ArtManifest.ts`) tracking every asset's quality tier.
+- [x] **Post-processing pipeline**: quarter-res **bloom** + subtle colour grade
+      (`PostFx.ts`), toggleable in Settings — game-wide luminous uplift.
+- [ ] Per-Warden & per-enemy **unique silhouettes** (manifest flags recolours as
+      `placeholder` — REQUIRE production art).
+- [ ] **Animation state machine** (idle/walk/attack/hit/death) + squash/stretch.
+- [ ] VFX library (trails, smoke, fire, explosions), unique boss presentations.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
