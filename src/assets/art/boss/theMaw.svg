@@ -1,55 +1,65 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
-  <!-- The Maw — Devourer of Light. A void sphere that has split into a ringed,
-       toothed maw around a hungry star. Original art. Design radius ~52. -->
+  <!-- The Maw — Devourer of Light. A void sphere split into an even ring of fangs
+       around a captive hungry star. Original art. Design radius ~52. -->
   <defs>
-    <radialGradient id="m-void" cx="80" cy="80" r="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#3a1660"/>
-      <stop offset="0.55" stop-color="#23103f"/>
-      <stop offset="1" stop-color="#0c0418"/>
+    <radialGradient id="m-void" cx="70" cy="68" r="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#46206e"/>
+      <stop offset="0.5" stop-color="#26123f"/>
+      <stop offset="1" stop-color="#0a0414"/>
     </radialGradient>
     <radialGradient id="m-core" cx="80" cy="82" r="26" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="0.4" stop-color="#e4b6ff"/>
+      <stop offset="0.4" stop-color="#e8baff"/>
       <stop offset="0.8" stop-color="#a24cff"/>
       <stop offset="1" stop-color="#5a1aa0" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="m-glow" cx="80" cy="80" r="74" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#9b4cff" stop-opacity="0.5"/>
+      <stop offset="0" stop-color="#9b4cff" stop-opacity="0.55"/>
       <stop offset="1" stop-color="#9b4cff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="m-shade" cx="80" cy="80" r="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0.62" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.55"/>
     </radialGradient>
     <filter id="m-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.8"/></filter>
   </defs>
 
   <circle cx="80" cy="80" r="70" fill="url(#m-glow)"/>
 
-  <!-- Writhing outer tendrils -->
-  <g fill="#2a1248" stroke="#150828" stroke-width="1.4" filter="url(#m-soft)">
-    <path d="M80 24 C72 8 90 6 86 22 C96 12 100 28 88 30 Z"/>
-    <path d="M28 60 C12 54 16 38 26 50 C20 36 36 36 34 50 Z"/>
-    <path d="M132 60 C148 54 144 38 134 50 C140 36 124 36 126 50 Z"/>
-    <path d="M40 128 C28 140 16 128 30 124 C18 124 24 110 36 118 Z"/>
-    <path d="M120 128 C132 140 144 128 130 124 C142 124 136 110 124 118 Z"/>
+  <!-- Writhing tendrils reaching out from the void -->
+  <g fill="#2e1450" stroke="#160828" stroke-width="1.6" filter="url(#m-soft)">
+    <path d="M80 18 C70 2 92 0 86 18 C98 8 102 28 86 28 Z"/>
+    <path d="M22 56 C6 48 12 30 22 44 C14 28 34 30 32 46 Z"/>
+    <path d="M138 56 C154 48 148 30 138 44 C146 28 126 30 128 46 Z"/>
+    <path d="M30 130 C16 144 4 130 20 126 C6 124 14 108 30 118 Z"/>
+    <path d="M130 130 C144 144 156 130 140 126 C154 124 146 108 130 118 Z"/>
   </g>
 
   <!-- The void body -->
-  <circle cx="80" cy="80" r="50" fill="url(#m-void)" stroke="#1a0c30" stroke-width="2"/>
-  <!-- Cool purple rim light -->
-  <path d="M80 30 A50 50 0 0 0 31 88" fill="none" stroke="#7a3cd0" stroke-width="2.5" opacity="0.5" stroke-linecap="round"/>
+  <circle cx="80" cy="80" r="50" fill="url(#m-void)" stroke="#190b2e" stroke-width="2"/>
 
-  <!-- Jagged maw ring of teeth around an off-centre mouth -->
-  <g fill="#efe6ff" stroke="#2a1248" stroke-width="1">
-    <polygon points="56,58 62,72 50,70"/>
-    <polygon points="72,50 76,66 64,62"/>
-    <polygon points="92,52 90,68 80,60"/>
-    <polygon points="106,64 98,74 102,60"/>
-    <polygon points="108,86 98,84 106,96"/>
-    <polygon points="96,106 92,92 104,98"/>
-    <polygon points="74,110 78,96 84,108"/>
-    <polygon points="56,102 64,90 60,104"/>
-    <polygon points="48,82 60,80 50,92"/>
+  <!-- An even ring of inward-pointing fangs -->
+  <g fill="#efe6ff" stroke="#2a1248" stroke-width="0.8">
+    <g transform="rotate(0 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(30 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(60 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(90 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(120 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(150 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(180 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(210 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(240 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(270 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(300 80 80)"><polygon points="73,41 87,41 80,55"/></g>
+    <g transform="rotate(330 80 80)"><polygon points="73,41 87,41 80,55"/></g>
   </g>
 
-  <!-- The hungry star inside the maw -->
+  <!-- The captive hungry star -->
   <circle cx="80" cy="82" r="22" fill="url(#m-core)"/>
   <circle cx="80" cy="82" r="8" fill="#ffffff" filter="url(#m-soft)"/>
+
+  <!-- Painted volume: top-left specular + bottom form shadow -->
+  <ellipse cx="64" cy="58" rx="20" ry="13" fill="#c89bff" opacity="0.18" filter="url(#m-soft)"/>
+  <circle cx="80" cy="80" r="50" fill="url(#m-shade)"/>
+  <path d="M80 30 A50 50 0 0 0 31 88" fill="none" stroke="#8a4ce0" stroke-width="2.5" opacity="0.5" stroke-linecap="round"/>
 </svg>

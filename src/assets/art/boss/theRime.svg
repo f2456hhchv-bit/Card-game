@@ -44,7 +44,23 @@
   <polygon points="50,66 68,66 80,126" fill="#bfeaff" opacity="0.35"/>
   <polygon points="110,66 92,66 80,126" fill="#5fb0e6" opacity="0.3"/>
 
+  <!-- Sharp edge highlight + form shadow on the crystal for painted volume -->
+  <path d="M80 34 L50 66 L80 126" fill="#ffffff" opacity="0.18"/>
+  <path d="M80 34 L110 66 L80 126" fill="#0a3a66" opacity="0.28"/>
+
   <!-- Cold core -->
-  <circle cx="80" cy="74" r="13" fill="url(#ri-core)"/>
-  <circle cx="80" cy="72" r="5" fill="#ffffff" filter="url(#ri-soft)"/>
+  <circle cx="80" cy="74" r="14" fill="url(#ri-core)"/>
+  <circle cx="80" cy="72" r="5.5" fill="#ffffff" filter="url(#ri-soft)"/>
+
+  <!-- Orbiting ice splinters for richness -->
+  <g fill="url(#ri-spike)" stroke="#1d6fae" stroke-width="0.8" opacity="0.95">
+    <polygon points="34,40 41,46 36,52 30,47"/>
+    <polygon points="126,44 132,50 127,57 121,51"/>
+    <polygon points="120,116 126,122 121,128 115,123"/>
+    <polygon points="40,120 46,126 41,132 35,127"/>
+  </g>
+  <g fill="#eafcff">
+    <circle cx="58" cy="40" r="1.6"/><circle cx="104" cy="38" r="1.4"/>
+    <circle cx="48" cy="100" r="1.5"/><circle cx="112" cy="98" r="1.5"/>
+  </g>
 </svg>
