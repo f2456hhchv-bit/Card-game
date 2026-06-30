@@ -6,8 +6,17 @@ import type { AudioManager } from "../game/audio/AudioManager";
 import { META_LIST } from "../game/data/metaDefs";
 import { WARDEN_LIST } from "../game/data/wardenDefs";
 import { WEAPON_DEFS } from "../game/data/weaponDefs";
-import { GEAR_LIST, mergeCost } from "../game/data/gearDefs";
+import {
+  SLOTS,
+  SLOT_META,
+  SET_LIST,
+  GEAR_ITEMS,
+  itemId,
+  mergeCost,
+  setCounts,
+} from "../game/data/gearDefs";
 import { ACHIEVEMENT_DEFS } from "../game/data/achievementDefs";
+import { STAGE_LIST, getStage, isStageUnlocked } from "../game/data/stageDefs";
 import { formatTime } from "../core/format";
 
 /**
@@ -274,6 +283,10 @@ export class UIManager {
     const stats = this.el("div", "menu-stats");
     stats.id = "menu-stats";
 
+    // Stage chooser — sits above Begin so the choice is made before launching.
+    const stageRow = this.el("div", "stage-row");
+    stageRow.id = "stage-row";
+
     const play = this.el("button", "btn", "Begin Vigil");
     play.addEventListener("click", () => this.cb.onStart());
 
@@ -307,9 +320,48 @@ export class UIManager {
     btnRow.style.justifyContent = "center";
     btnRow.append(play, dailyBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
 
-    o.append(title, sub, stats, btnRow, dailyLine);
+    o.append(title, sub, stats, stageRow, btnRow, dailyLine);
     this.root.appendChild(o);
     this.menu = o;
+  }
+
+  /** Rebuild the stage chooser chips (unlock-gated) from the save. */
+  private refreshStageChooser(): void {
+    const row = this.menu.querySelector("#stage-row");
+    if (!row) return;
+    const d = this.save.data;
+    const selected = getStage(d.selectedStage);
+    // If the saved stage is locked, fall the selection back to base.
+    if (!isStageUnlocked(selected, d.lifetime.bosses)) d.selectedStage = "fade";
+
+    row.replaceChildren();
+    for (const stage of STAGE_LIST) {
+      const unlocked = isStageUnlocked(stage, d.lifetime.bosses);
+      const active = d.selectedStage === stage.id;
+      const chip = this.el("button", "stage-chip");
+      chip.style.setProperty("--card-accent", `hsl(${stage.accentHue} 80% 62%)`);
+      if (active) chip.classList.add("active");
+      if (!unlocked) chip.classList.add("locked");
+      chip.append(
+        this.el("div", "stage-chip-name", stage.name),
+        this.el(
+          "div",
+          "stage-chip-sub",
+          unlocked ? stage.title : `🔒 Fell ${stage.unlockBosses} boss to unlock`,
+        ),
+      );
+      if (unlocked) {
+        chip.addEventListener("click", () => {
+          d.selectedStage = stage.id;
+          this.save.save();
+          this.audio.select();
+          this.refreshStageChooser();
+        });
+      } else {
+        chip.disabled = true;
+      }
+      row.appendChild(chip);
+    }
   }
 
   /** Today's local date as YYYY-MM-DD, matching Game's Daily Run seed. */
@@ -537,7 +589,8 @@ export class UIManager {
   // ---- Hangar (ship modules + merge) -------------------------------------
 
   private hangar!: HTMLDivElement;
-  private hangarGrid!: HTMLDivElement;
+  private hangarEquip!: HTMLDivElement;
+  private hangarSets!: HTMLDivElement;
 
   private buildHangar(): void {
     const o = this.el("div", "overlay hidden");
@@ -545,88 +598,189 @@ export class UIManager {
     const sub = this.el(
       "div",
       "subtitle",
-      "Salvaged ship modules. Merge duplicate cores to raise a module's grade — each grade adds power, and reaching max grade unlocks a signature system.",
+      "Equip one item per ship slot. Merge duplicate cores to raise an item's grade — and equip a full set of 4 for a powerful set bonus.",
     );
-    this.hangarGrid = this.el("div", "shop-grid");
+    // Equipped loadout summary (4 slots + active set bonuses).
+    this.hangarEquip = this.el("div", "equip-panel");
+    // The collected inventory, grouped by set.
+    this.hangarSets = this.el("div", "set-list");
     const back = this.el("button", "btn", "Back");
     back.addEventListener("click", () => this.closeHangar());
-    o.append(title, sub, this.hangarGrid, back);
+    o.append(title, sub, this.hangarEquip, this.hangarSets, back);
     this.root.appendChild(o);
     this.hangar = o;
   }
 
   private refreshHangar(): void {
-    const d = this.save.data;
-    this.hangarGrid.replaceChildren();
-    for (const def of GEAR_LIST) {
-      const m = d.modules[def.id] ?? { grade: 0, dupes: 0 };
-      const owned = m.grade > 0;
-      const maxed = m.grade >= def.maxGrade;
+    this.refreshEquipPanel();
+    this.refreshSetList();
+  }
 
-      const card = this.el("div", "shop-card module-card");
-      card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
-      if (!owned) card.classList.add("locked");
-      if (maxed) card.classList.add("selected");
+  /** Top panel: the four equipped slots + which set bonuses are active. */
+  private refreshEquipPanel(): void {
+    const g = this.save.data.gear;
+    this.hangarEquip.replaceChildren();
 
-      const head = this.el("div", "shop-card-head");
-      const nameWrap = this.el("div", "module-name-wrap");
-      nameWrap.append(
-        this.el("span", "module-icon", def.icon),
-        this.el("div", "shop-name", owned ? def.name : "??? Module"),
+    const slots = this.el("div", "equip-slots");
+    for (const slot of SLOTS) {
+      const meta = SLOT_META[slot];
+      const equippedId = g.equipped[slot];
+      const item = equippedId ? GEAR_ITEMS[equippedId] : null;
+      const st = equippedId ? g.inventory[equippedId] : null;
+
+      const tile = this.el("div", "equip-slot");
+      if (item) tile.style.setProperty("--card-accent", `hsl(${item.hue} 80% 65%)`);
+      tile.append(this.el("div", "equip-slot-icon", meta.icon));
+      tile.append(this.el("div", "equip-slot-label", meta.label));
+      tile.append(
+        this.el(
+          "div",
+          "equip-slot-item",
+          item && st ? `${item.name} · G${st.grade}` : "— empty —",
+        ),
       );
+      slots.appendChild(tile);
+    }
+    this.hangarEquip.appendChild(slots);
+
+    // Active set bonuses across the equipped loadout.
+    const counts = setCounts(g.equipped, g.inventory);
+    const bonusWrap = this.el("div", "active-bonuses");
+    let any = false;
+    for (const set of SET_LIST) {
+      const n = counts[set.id] ?? 0;
+      if (n <= 0) continue;
+      const chip = this.el("div", "bonus-chip");
+      chip.style.setProperty("--card-accent", `hsl(${set.hue} 80% 65%)`);
+      const tiers: string[] = [];
+      if (n >= 2) tiers.push(`2pc ${set.bonus2Note}`);
+      if (n >= 4) tiers.push(`4pc ${set.bonus4Note}`);
+      chip.append(
+        this.el("span", "bonus-set", `${set.name} (${n}/4)`),
+        this.el("span", "bonus-text", tiers.length ? tiers.join("  ·  ") : "equip 2+ for a bonus"),
+      );
+      bonusWrap.appendChild(chip);
+      any = true;
+    }
+    if (!any) {
+      bonusWrap.append(
+        this.el("div", "bonus-empty", "Equip 2+ items from the same set to activate a set bonus."),
+      );
+    }
+    this.hangarEquip.appendChild(bonusWrap);
+  }
+
+  /** Inventory grouped by set: each set shows its 4 slot pieces. */
+  private refreshSetList(): void {
+    const g = this.save.data.gear;
+    this.hangarSets.replaceChildren();
+
+    for (const set of SET_LIST) {
+      const accent = `hsl(${set.hue} 80% 65%)`;
+      const owned = SLOTS.filter((slot) => (g.inventory[itemId(set.id, slot)]?.grade ?? 0) > 0).length;
+
+      const group = this.el("div", "set-group");
+      group.style.setProperty("--card-accent", accent);
+
+      const head = this.el("div", "set-head");
       head.append(
-        nameWrap,
-        this.el("div", "shop-level", owned ? `Grade ${m.grade}/${def.maxGrade}` : "Unowned"),
+        this.el("div", "set-name", `${set.name}`),
+        this.el("div", "set-count", `${owned}/4 collected`),
+      );
+      const setDesc = this.el("div", "set-desc", set.description);
+      const setBonus = this.el("div", "set-bonus-lines");
+      setBonus.append(
+        this.el("div", "set-bonus-row", `2-piece — ${set.bonus2Note}`),
+        this.el("div", "set-bonus-row big", `4-piece — ${set.bonus4Note}`),
       );
 
-      // Grade pips show progress toward max grade at a glance.
-      const pips = this.el("div", "grade-pips");
-      for (let i = 1; i <= def.maxGrade; i++) {
-        const pip = this.el("div", `pip${i <= m.grade ? " on" : ""}`);
-        pips.appendChild(pip);
+      const grid = this.el("div", "item-grid");
+      for (const slot of SLOTS) {
+        const def = GEAR_ITEMS[itemId(set.id, slot)];
+        const m = g.inventory[def.id] ?? { grade: 0, dupes: 0 };
+        const isOwned = m.grade > 0;
+        const maxed = m.grade >= def.maxGrade;
+        const equipped = g.equipped[slot] === def.id;
+
+        const card = this.el("div", "item-card");
+        card.style.setProperty("--card-accent", accent);
+        if (!isOwned) card.classList.add("locked");
+        if (equipped) card.classList.add("equipped");
+
+        const top = this.el("div", "item-top");
+        top.append(
+          this.el("span", "item-icon", def.icon),
+          this.el("div", "item-name", isOwned ? def.name : `${SLOT_META[slot].label}`),
+        );
+        const grade = this.el(
+          "div",
+          "item-grade",
+          isOwned ? `Grade ${m.grade}/${def.maxGrade}` : "Not found",
+        );
+        const pips = this.el("div", "grade-pips small");
+        for (let i = 1; i <= def.maxGrade; i++) {
+          pips.appendChild(this.el("div", `pip${i <= m.grade ? " on" : ""}`));
+        }
+        const stat = this.el("div", "item-stat", isOwned ? def.note(m.grade) : "Salvage one from a run.");
+
+        const actions = this.el("div", "item-actions");
+        if (isOwned) {
+          // Equip / Equipped button.
+          const eq = this.el("button", "btn mini");
+          if (equipped) {
+            eq.textContent = "Equipped";
+            eq.classList.add("maxed");
+            eq.disabled = true;
+          } else {
+            eq.textContent = "Equip";
+            eq.addEventListener("click", () => this.equipItem(def.id));
+          }
+          actions.appendChild(eq);
+
+          // Merge button.
+          const mg = this.el("button", "btn mini");
+          if (maxed) {
+            mg.textContent = "MAX";
+            mg.classList.add("maxed");
+            mg.disabled = true;
+          } else {
+            const cost = mergeCost(m.grade);
+            const canMerge = m.dupes >= cost;
+            mg.textContent = `Merge ⬡${m.dupes}/${cost}`;
+            mg.disabled = !canMerge;
+            if (!canMerge) mg.classList.add("cant-afford");
+            mg.addEventListener("click", () => this.mergeItem(def.id));
+          }
+          actions.appendChild(mg);
+        } else {
+          const lock = this.el("button", "btn mini cant-afford");
+          lock.textContent = "Locked";
+          lock.disabled = true;
+          actions.appendChild(lock);
+        }
+
+        card.append(top, grade, pips, stat, actions);
+        grid.appendChild(card);
       }
 
-      const slot = this.el("div", "module-slot", def.slot);
-      const desc = this.el("div", "shop-desc", owned ? def.description : "Salvage one from a run to reveal it.");
-
-      // Signature perk line — dim until unlocked at max grade.
-      const perk = this.el("div", `module-perk${maxed ? " unlocked" : ""}`);
-      perk.append(
-        this.el("span", "perk-tag", maxed ? "★ UNLOCKED" : `★ Grade ${def.maxGrade}`),
-        this.el("span", "perk-text", `${def.perk.name} — ${def.perk.description}`),
-      );
-
-      const btn = this.el("button", "btn buy");
-      if (!owned) {
-        btn.textContent = "Locked";
-        btn.disabled = true;
-        btn.classList.add("cant-afford");
-      } else if (maxed) {
-        btn.textContent = "MAX GRADE";
-        btn.classList.add("maxed");
-        btn.disabled = true;
-      } else {
-        const cost = mergeCost(m.grade);
-        const canMerge = m.dupes >= cost;
-        btn.textContent = `Merge ⬡ ${m.dupes}/${cost}`;
-        btn.disabled = !canMerge;
-        if (!canMerge) btn.classList.add("cant-afford");
-        btn.addEventListener("click", () => this.mergeModule(def.id));
-      }
-
-      card.append(head, pips, slot, desc, perk, btn);
-      this.hangarGrid.appendChild(card);
+      group.append(head, setDesc, setBonus, grid);
+      this.hangarSets.appendChild(group);
     }
   }
 
-  private mergeModule(id: string): void {
-    const newGrade = this.save.mergeModule(id);
+  private equipItem(id: string): void {
+    if (!this.save.equipItem(id)) return;
+    this.audio.select();
+    this.refreshHangar();
+  }
+
+  private mergeItem(id: string): void {
+    const newGrade = this.save.mergeItem(id);
     if (newGrade === null) return;
     this.audio.levelUp();
-    const def = GEAR_LIST.find((g) => g.id === id);
+    const def = GEAR_ITEMS[id];
     if (def && newGrade >= def.maxGrade) {
-      // Hitting max grade unlocks the signature perk — celebrate it.
-      this.showToast(def.icon, `${def.name} — Grade ${newGrade}`, `${def.perk.name} unlocked: ${def.perk.description}`);
+      this.showToast(def.icon, `${def.name} — Grade ${newGrade}`, `Max grade reached: ${def.note(newGrade)}`);
     }
     this.refreshHangar();
   }
@@ -724,6 +878,8 @@ export class UIManager {
       stat("Runs", `${d.runsPlayed}`),
       stat("Light Motes", `${d.motes}`),
     );
+
+    this.refreshStageChooser();
 
     const dailyLine = this.menu.querySelector("#daily-line");
     if (dailyLine) {

@@ -39,6 +39,18 @@ describe("SpawnDirector", () => {
     expect(fodder).toBe(0);
   });
 
+  it("restricts spawns to the stage enemy pool when one is set", () => {
+    const d = new SpawnDirector();
+    d.reset(["cinder"]); // Ember Wastes-only pool (cinder unlocks at 0 min)
+    const rng = new Rng(99);
+    const seen = new Set<string>();
+    for (let i = 0; i < 1200; i++) {
+      for (const req of d.update(1 / 60, i / 60, 0, rng)) seen.add(req.def.id);
+    }
+    expect(seen.size).toBeGreaterThan(0);
+    for (const id of seen) expect(id).toBe("cinder");
+  });
+
   it("is deterministic for a fixed seed", () => {
     const run = () => {
       const d = new SpawnDirector();

@@ -31,9 +31,14 @@ scales HP and damage upward over time (see `docs/BalancingNotes.md`).
 | `caster` | Caster | shooter | 20 | 70 | 10 | 13 | 4 | 320 | 28 | 4:00 |
 | `spore` | Spore | chase | 30 | 50 | 10 | 17 | 3 | 95 | 32 | 2:30 |
 | `sporeling` | Sporeling | chase | 5 | 118 | 6 | 8 | 1 | 85 | — | split-only |
+| `cinder` | Cinder | chase | 16 | 104 | 8 | 11 | 2 | 18 | 70 | 0:00 † |
+| `revenant` | Revenant | shooter | 42 | 60 | 15 | 16 | 5 | 6 | 24 | 2:00 † |
 
 - **Weight** = relative spawn frequency among currently-unlocked types.
 - **Unlocks** = run-time minute the type begins appearing.
+- **†** Ember Wastes (stage 2) natives — only spawn when that stage's enemy pool
+  is active (`stageDefs.ts`). The roster a run draws from is the **stage pool**
+  intersected with the time-unlock above.
 
 ### Design intent
 - **Drifter / Mote:** early fodder; Mote is faster but frail, teaching dodging.
@@ -47,6 +52,10 @@ scales HP and damage upward over time (see `docs/BalancingNotes.md`).
   swarm pressure — killing it without AoE just trades one threat for three
   faster ones. Elite Spores don't split (avoids run-away counts). Sporelings are
   `summonOnly`, so the spawn director never spawns them directly.
+- **Cinder (Ember Wastes):** fast, fragile hot-rusher — the Ember stage's fodder,
+  quicker than a Drifter so the warm stage reads as more frantic.
+- **Revenant (Ember Wastes):** a tanky ranged caster that keeps the player honest
+  about cover on the open red plains.
 
 ## Elites
 Any archetype can spawn as an **elite**: larger, glowing, with a shadowed

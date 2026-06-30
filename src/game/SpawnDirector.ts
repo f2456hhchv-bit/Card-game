@@ -26,12 +26,16 @@ export class SpawnDirector {
   private surgeTimer = 45;
   /** Active surge: extra spawn-rate multiplier and its remaining time. */
   private surgeRemaining = 0;
+  /** Enemy ids eligible for this run's stage (null = the whole bestiary). */
+  private pool: Set<string> | null = null;
 
-  reset(): void {
+  /** @param pool optional stage enemy-id whitelist; omit for all enemies. */
+  reset(pool?: readonly string[]): void {
     this.spawnAccumulator = 0;
     this.eliteTimer = 22;
     this.surgeTimer = 45;
     this.surgeRemaining = 0;
+    this.pool = pool ? new Set(pool) : null;
   }
 
   /** Difficulty multiplier on enemy HP as a function of elapsed minutes. */
@@ -58,7 +62,12 @@ export class SpawnDirector {
   }
 
   private availableDefs(minutes: number): EnemyDef[] {
-    return ENEMY_LIST.filter((d) => !d.summonOnly && minutes >= d.unlockAtMinutes);
+    return ENEMY_LIST.filter(
+      (d) =>
+        !d.summonOnly &&
+        minutes >= d.unlockAtMinutes &&
+        (this.pool === null || this.pool.has(d.id)),
+    );
   }
 
   /**

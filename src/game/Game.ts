@@ -9,7 +9,8 @@ import { SaveManager } from "./save/SaveManager";
 import { UIManager } from "../ui/UIManager";
 import type { DraftOption } from "./Loadout";
 import { metaMoteMultiplier } from "./data/metaDefs";
-import { GEAR_DEFS } from "./data/gearDefs";
+import { GEAR_ITEMS, emptyEquip } from "./data/gearDefs";
+import { getStage, isStageUnlocked } from "./data/stageDefs";
 import { WARDEN_LIST } from "./data/wardenDefs";
 import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
 import { Rng } from "../core/math/Rng";
@@ -174,15 +175,19 @@ export class Game {
       // Daily Run: a fair, equal challenge — fixed daily seed, default Warden,
       // and no permanent meta-upgrades, so the run is the same for everyone.
       this.world.metaLevels = {};
-      this.world.modules = {};
+      this.world.gearInventory = {};
+      this.world.gearEquipped = emptyEquip();
       this.world.selectedWarden = "lumen";
+      this.world.stageId = "fade"; // Daily is always the base stage, equal footing.
       this.world.reset();
       this.world.reseed(Rng.seedFromString(dailyDateString()));
     } else {
-      // Apply permanent meta-upgrades, ship modules + selected Warden.
+      // Apply permanent meta-upgrades, equipped ship gear + selected Warden.
       this.world.metaLevels = this.save.data.meta;
-      this.world.modules = this.save.data.modules;
+      this.world.gearInventory = this.save.data.gear.inventory;
+      this.world.gearEquipped = this.save.data.gear.equipped;
       this.world.selectedWarden = this.save.data.selectedWarden;
+      this.world.stageId = this.selectedStageId();
       this.world.reset();
     }
     this.camera.snapTo(this.world.player.x, this.world.player.y);
@@ -202,6 +207,13 @@ export class Game {
     this.tutorialStep = 0;
     this.tutorialStepTime = 0;
     this.tutorialMoveTime = 0;
+  }
+
+  /** The selected stage id, falling back to base if it's somehow still locked. */
+  private selectedStageId(): string {
+    const stage = getStage(this.save.data.selectedStage);
+    if (isStageUnlocked(stage, this.save.data.lifetime.bosses)) return stage.id;
+    return "fade";
   }
 
   private toMenu(): void {
@@ -272,15 +284,15 @@ export class Game {
     if (this.isDailyRun) {
       this.save.recordDaily(dailyDateString(), stats.elapsed, stats.kills);
     }
-    // Salvage a ship module from the wreck — every run advances the Hangar.
-    const drop = this.save.grantModuleDrop();
-    const def = GEAR_DEFS[drop.id];
+    // Salvage a gear item from the wreck — every run advances the Hangar.
+    const drop = this.save.grantItemDrop();
+    const def = GEAR_ITEMS[drop.id];
     if (def) {
       this.ui.showToast(
         def.icon,
-        drop.isNew ? `${def.name} acquired` : `${def.name} core`,
+        drop.isNew ? `${def.name} found` : `${def.name} core`,
         drop.isNew
-          ? `New module unlocked — equip it in the Hangar.`
+          ? `New gear unlocked — equip it in the Hangar.`
           : `Duplicate core banked. Merge it in the Hangar to upgrade.`,
       );
     }

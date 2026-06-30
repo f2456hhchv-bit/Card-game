@@ -113,35 +113,65 @@ Selection + unlock state live in the save (`selectedWarden`, `wardens[]`).
 The perk applies in `Loadout.recomputeStats` in the order **base → Warden perk →
 meta upgrades → in-run relics**. Selected via the main-menu **Wardens** screen.
 
-### Ship Modules & the Hangar ✅ (gear + merge/fusion)
-The Guardian is a **starship**, so its equippable gear is **ship systems** rather
-than armour pieces. Source of truth: `src/game/data/gearDefs.ts`; merge state in
-`save.modules` (id → `{ grade, dupes }`).
+### Ship Gear, Sets & the Hangar ✅ (inventory + merge + set bonuses)
+The Guardian is a **starship**, so its equippable gear is **ship systems**. Rather
+than one fixed module per slot, the player builds an **inventory** of many items
+and equips **one per slot** (Hull / Core / Engines / Wings). Source of truth:
+`src/game/data/gearDefs.ts`; state in `save.gear` (`inventory` id→`{grade,dupes}`
+and `equipped` slot→itemId).
 
-| Module | Slot | Stats / grade | ★ Max-grade perk |
+There are **4 sets × 4 slots = 16 items**. Each item grants its **slot's** stat,
+scaled by grade:
+
+| Slot | Stat per grade |
+| --- | --- |
+| Hull 🛡 | +6 Max HP, +1.5% armour |
+| Core ⚛ | +3.5% damage |
+| Engines 🚀 | +2.5% move speed, +8 pickup radius |
+| Wings 🪽 | +2.5% attack speed, +2% area |
+
+**Sets** add a payoff for collecting + equipping matching pieces (2-piece and a
+big 4-piece bonus that grants a signature perk):
+
+| Set | 2-piece | 4-piece (full set) |
+| --- | --- | --- |
+| Salvager | +6% XP gain | +8% damage & +25 Max HP |
+| Solaris | +8% damage | **Overdrive** light pulse + 12% damage |
+| Bastion | +30 Max HP | **Aegis** revive (survive a lethal hit) + 6% armour |
+| Zephyr | +8% move speed | **Salvo** +1 projectile on every weapon & +0.25s i-frames |
+
+**Acquisition & merge loop:** every run drops one random **item** at game over
+(`SaveManager.grantItemDrop`). The **first** of an item *unlocks* it at **grade 1**
+(and auto-equips if its slot is empty); duplicates **bank as cores**. In the
+**Hangar** you **equip** items into slots and **merge** banked cores to raise an
+item's grade — `mergeCost(grade) = grade`, so **1+2+3+4 = 10 cores** to max one
+item to grade 5. The Hangar groups items by set, shows 2pc/4pc bonuses, and the
+equipped panel surfaces which set bonuses are currently active.
+
+Gear applies in `Loadout.recomputeStats` in the order **base → Warden perk → meta
+upgrades → equipped gear + set bonuses → in-run relics** (`applyGear`), wired via
+`World.gearEquipped`/`gearInventory` which `Game` sets from the save each run.
+Perk runtime lives in `World`: Aegis (`revivesLeft` + revive in `damagePlayer`),
+Overdrive (`updateOverdrive` pulse, drawn by `GameRenderer.drawPulse`), Slipstream
+i-frames (`p.stats.iframes`), Salvo (`extraProjectiles`).
+
+> **Daily Run footing:** gear, like meta-upgrades, is stripped for the Daily Run
+> (`gearEquipped = emptyEquip()`) so it stays an equal-footing challenge. Item
+> drops are still *earned* from a daily's end-of-run salvage.
+
+### Stages ✅ (distinct battlegrounds)
+Source of truth: `src/game/data/stageDefs.ts`; selection in `save.selectedStage`.
+Each stage has its own **palette** (sky/nebula/fog/star colours, baked by
+`Background.setStage`) and **enemy pool** (`SpawnDirector.reset(pool)`).
+
+| Stage | Unlock | Palette | Pool flavour |
 | --- | --- | --- | --- |
-| Aegis Plating | Hull | +7 Max HP, +2% armour | **Aegis** — survive one lethal hit/run, recover to 35% HP |
-| Solar Reactor | Core | +4% damage | **Overdrive** — periodic light pulse damages nearby foes |
-| Ion Thrusters | Engines | +3% move speed, +9 pickup radius | **Slipstream** — +0.25s i-frames after each hit |
-| Strike Wings | Wings | +3% attack speed, +2.5% area | **Salvo** — every weapon fires +1 projectile |
+| The Fade | free | deep indigo void | full base bestiary |
+| Ember Wastes | fell 1 boss (lifetime) | burning red/orange | faster, fiercer — adds **Cinder** & **Revenant** |
 
-**Acquisition & merge loop:** every run drops one random module core at game over
-(`SaveManager.grantModuleDrop`). The **first** core of a type *unlocks* the module
-at **grade 1**; subsequent cores **bank as duplicates**. In the **Hangar** (main
-menu → Hangar) you **merge** banked duplicates to raise grade — `mergeCost(grade)
-= grade`, so **1+2+3+4 = 10 dupes** to take a module from grade 1 to the max grade
-5. Each grade adds its stats; hitting **grade 5 unlocks the signature perk**.
-
-Modules apply in `Loadout.recomputeStats` in the order **base → Warden perk →
-meta upgrades → ship modules → in-run relics** (`applyGear`), wired via
-`World.modules` which `Game` sets from the save each run. Perk runtime lives in
-`World`: Aegis (`revivesLeft` + revive in `damagePlayer`), Overdrive
-(`updateOverdrive` pulse, drawn by `GameRenderer.drawPulse`), Slipstream
-(`p.stats.iframes` drives the post-hit invuln window), Salvo (`extraProjectiles`).
-
-> **Daily Run footing:** modules, like meta-upgrades, are stripped for the Daily
-> Run (`world.modules = {}`) so it stays an equal-footing skill challenge. Cores
-> are still *earned* from a daily's end-of-run drop.
+Chosen from the main-menu **stage chips** (locked stages show their requirement).
+The Daily Run is always **The Fade** for equal footing. New stage-2 enemies live
+in `enemyDefs.ts`; their sprites reuse fitting silhouettes with hot hues.
 
 ### Daily Run ✅
 A once-a-day challenge seeded from the **local calendar date**

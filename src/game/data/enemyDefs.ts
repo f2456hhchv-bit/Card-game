@@ -140,6 +140,33 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     unlockAtMinutes: 0,
     summonOnly: true, // only created by a Spore splitting
   },
+  // ---- Ember Wastes (stage 2) natives -----------------------------------
+  cinder: {
+    id: "cinder",
+    name: "Cinder",
+    behaviour: "chase",
+    hp: 16,
+    speed: 104,
+    damage: 8,
+    radius: 11,
+    xpValue: 2,
+    hue: 18,
+    weight: 70,
+    unlockAtMinutes: 0,
+  },
+  revenant: {
+    id: "revenant",
+    name: "Revenant",
+    behaviour: "shooter",
+    hp: 42,
+    speed: 60,
+    damage: 15,
+    radius: 16,
+    xpValue: 5,
+    hue: 6,
+    weight: 24,
+    unlockAtMinutes: 2,
+  },
 };
 
 /** Ordered list, convenient for the spawn director's availability filtering. */

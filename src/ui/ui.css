@@ -577,36 +577,54 @@
   font-style: italic;
 }
 
-/* Hangar — ship modules. */
-.module-card.locked {
-  opacity: 0.6;
-}
-.module-card.selected {
-  box-shadow: 0 0 0 2px var(--card-accent),
-    0 0 22px color-mix(in srgb, var(--card-accent) 40%, transparent);
-}
-.module-name-wrap {
+/* Stage chooser on the main menu. */
+.stage-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 4px 0 2px;
 }
-.module-icon {
-  font-size: 1.3rem;
-  line-height: 1;
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--card-accent) 70%, transparent));
+.stage-chip {
+  pointer-events: auto;
+  min-width: 150px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--ui-panel);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 3px solid var(--card-accent, rgba(255, 255, 255, 0.2));
+  color: var(--ui-text);
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
 }
-.module-slot {
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--card-accent);
+.stage-chip.active {
+  box-shadow: 0 0 0 2px var(--card-accent),
+    0 0 20px color-mix(in srgb, var(--card-accent) 40%, transparent);
+}
+.stage-chip.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.stage-chip-name {
   font-weight: 800;
-  opacity: 0.85;
+  font-size: 0.92rem;
+  letter-spacing: 0.03em;
 }
+.stage-chip-sub {
+  font-size: 0.7rem;
+  color: var(--ui-text-dim);
+  margin-top: 1px;
+}
+
+/* Hangar — gear inventory + sets. */
 .grade-pips {
   display: flex;
   gap: 5px;
   margin: 2px 0;
+}
+.grade-pips.small {
+  gap: 3px;
 }
 .grade-pips .pip {
   width: 22px;
@@ -615,39 +633,216 @@
   background: rgba(255, 255, 255, 0.12);
   transition: background 0.2s ease, box-shadow 0.2s ease;
 }
+.grade-pips.small .pip {
+  width: 14px;
+  height: 5px;
+}
 .grade-pips .pip.on {
   background: var(--card-accent);
   box-shadow: 0 0 8px color-mix(in srgb, var(--card-accent) 60%, transparent);
 }
-.module-perk {
+
+/* Equipped loadout panel. */
+.equip-panel {
+  width: min(880px, 94vw);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 6px;
+}
+.equip-slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.equip-slot {
+  background: var(--ui-panel);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid var(--card-accent, rgba(255, 255, 255, 0.2));
+  border-radius: 10px;
+  padding: 8px 6px;
+  text-align: center;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 7px 9px;
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px dashed rgba(255, 255, 255, 0.16);
-  opacity: 0.7;
+  align-items: center;
 }
-.module-perk.unlocked {
-  border-style: solid;
-  border-color: color-mix(in srgb, var(--card-accent) 60%, transparent);
-  background: color-mix(in srgb, var(--card-accent) 12%, transparent);
-  opacity: 1;
+.equip-slot-icon {
+  font-size: 1.4rem;
+  line-height: 1;
 }
-.module-perk .perk-tag {
-  font-size: 0.66rem;
+.equip-slot-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ui-text-dim);
   font-weight: 800;
-  letter-spacing: 0.1em;
+}
+.equip-slot-item {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.active-bonuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.bonus-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--card-accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-accent) 55%, transparent);
+  text-align: left;
+}
+.bonus-set {
+  font-size: 0.74rem;
+  font-weight: 800;
   color: var(--card-accent);
 }
-.module-perk .perk-text {
+.bonus-text {
+  font-size: 0.72rem;
+  color: var(--ui-text);
+}
+.bonus-empty {
+  font-size: 0.8rem;
+  color: var(--ui-text-dim);
+  font-style: italic;
+}
+
+/* Set groups + item cards. */
+.set-list {
+  width: min(880px, 94vw);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.set-group {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--card-accent);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+}
+.set-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.set-name {
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  color: var(--card-accent);
+}
+.set-count {
   font-size: 0.78rem;
   color: var(--ui-text-dim);
-  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
 }
-.module-perk.unlocked .perk-text {
+.set-desc {
+  font-size: 0.8rem;
+  color: var(--ui-text-dim);
+  margin: 2px 0 6px;
+}
+.set-bonus-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+.set-bonus-row {
+  font-size: 0.78rem;
   color: var(--ui-text);
+}
+.set-bonus-row.big {
+  font-weight: 800;
+  color: var(--card-accent);
+}
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .item-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .equip-slots {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.item-card {
+  background: var(--ui-panel);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 9px 9px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.item-card.locked {
+  opacity: 0.5;
+}
+.item-card.equipped {
+  box-shadow: 0 0 0 2px var(--card-accent),
+    0 0 18px color-mix(in srgb, var(--card-accent) 35%, transparent);
+}
+.item-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.item-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--card-accent) 70%, transparent));
+}
+.item-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.item-grade {
+  font-size: 0.68rem;
+  color: var(--ui-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.item-stat {
+  font-size: 0.72rem;
+  color: var(--ui-text);
+  line-height: 1.25;
+  min-height: 1.6em;
+}
+.item-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+.btn.mini {
+  pointer-events: auto;
+  flex: 1;
+  padding: 6px 4px;
+  font-size: 0.74rem;
+  border-radius: 8px;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+.btn.mini.cant-afford {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn.mini.maxed {
+  opacity: 0.7;
+  border-color: rgba(138, 255, 193, 0.4);
+  color: var(--ui-good);
+  cursor: default;
 }
 
 /* Achievement toasts. */

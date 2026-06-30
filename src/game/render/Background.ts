@@ -13,6 +13,7 @@
  */
 import { Rng } from "../../core/math/Rng";
 import { TAU } from "../../core/math/MathUtils";
+import { STAGE_DEFS, type StagePalette } from "../data/stageDefs";
 
 const TILE = 1024;
 
@@ -21,29 +22,43 @@ export class Background {
   private vignette: HTMLCanvasElement | null = null;
   private vigW = 0;
   private vigH = 0;
+  /** Which palette the baked tile currently reflects (rebake only on change). */
+  private paletteId = "fade";
+  private fogHue = STAGE_DEFS.fade.palette.fogHue;
 
   constructor() {
-    this.tile = this.bakeTile();
+    this.tile = this.bakeTile(STAGE_DEFS.fade.palette);
   }
 
-  private bakeTile(): HTMLCanvasElement {
+  /**
+   * Switch the backdrop to a stage's palette, rebaking the sky tile only when
+   * the stage actually changes (cheap to call every frame).
+   */
+  setStage(id: string, palette: StagePalette): void {
+    if (id === this.paletteId) return;
+    this.paletteId = id;
+    this.fogHue = palette.fogHue;
+    this.tile = this.bakeTile(palette);
+  }
+
+  private bakeTile(palette: StagePalette): HTMLCanvasElement {
     const cv = document.createElement("canvas");
     cv.width = TILE;
     cv.height = TILE;
     const ctx = cv.getContext("2d")!;
     const rng = new Rng(0xa17e); // fixed seed → stable, repeatable sky
 
-    // Base gradient: deep indigo top, near-black bottom.
+    // Base gradient from the stage palette.
     const base = ctx.createLinearGradient(0, 0, 0, TILE);
-    base.addColorStop(0, "#0a0e24");
-    base.addColorStop(0.5, "#070a18");
-    base.addColorStop(1, "#04050d");
+    base.addColorStop(0, palette.baseTop);
+    base.addColorStop(0.5, palette.baseMid);
+    base.addColorStop(1, palette.baseBottom);
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, TILE, TILE);
 
     // Nebula clouds — a handful of big soft radial blobs, additive.
     ctx.globalCompositeOperation = "lighter";
-    const hues = [230, 265, 200, 290, 180];
+    const hues = palette.nebulaHues;
     for (let i = 0; i < 9; i++) {
       const x = rng.range(0, TILE);
       const y = rng.range(0, TILE);
@@ -59,18 +74,19 @@ export class Background {
     }
 
     // Starfield — many small dots of varied brightness; a few brighter ones
-    // get a cross-glint.
+    // get a cross-glint. Tinted to suit the stage.
+    const [sr, sg, sb] = palette.starTint.split(",").map((n) => parseInt(n, 10));
     for (let i = 0; i < 460; i++) {
       const x = rng.range(0, TILE);
       const y = rng.range(0, TILE);
       const b = rng.range(0.15, 0.9);
       const s = rng.range(0.4, 1.6);
-      ctx.fillStyle = `rgba(${200 + rng.range(0, 55)},${210 + rng.range(0, 45)},255,${b})`;
+      ctx.fillStyle = `rgba(${sr + rng.range(0, 30)},${sg + rng.range(0, 30)},${sb},${b})`;
       ctx.beginPath();
       ctx.arc(x, y, s, 0, TAU);
       ctx.fill();
       if (b > 0.78 && s > 1.1) {
-        ctx.strokeStyle = `rgba(220,230,255,${b * 0.5})`;
+        ctx.strokeStyle = `rgba(${sr + 20},${sg + 20},${sb},${b * 0.5})`;
         ctx.lineWidth = 0.6;
         ctx.beginPath();
         ctx.moveTo(x - s * 2.5, y);
@@ -140,7 +156,7 @@ export class Background {
       const fy =
         height * (0.4 + 0.2 * i) + Math.cos(drift * 0.04 + i) * 90 - camY * 0.12;
       const fr = 260 + i * 70;
-      const hue = 240 + i * 20;
+      const hue = this.fogHue + i * 20;
       const g = ctx.createRadialGradient(fx, fy, 0, fx, fy, fr);
       g.addColorStop(0, `hsla(${hue} 60% 50% / 0.05)`);
       g.addColorStop(1, `hsla(${hue} 60% 50% / 0)`);

@@ -626,6 +626,9 @@ export class SpriteForge {
       caster: bakeCaster,
       spore: bakeSpore,
       sporeling: bakeSporeling,
+      // Ember Wastes natives reuse fitting silhouettes with hot hues.
+      cinder: bakeLunger,
+      revenant: bakeCaster,
     };
     const hues: Record<string, number> = {
       drifter: 280,
@@ -636,6 +639,8 @@ export class SpriteForge {
       caster: 320,
       spore: 95,
       sporeling: 85,
+      cinder: 18,
+      revenant: 6,
     };
     for (const id of Object.keys(defs)) {
       const s = defs[id](hues[id]);

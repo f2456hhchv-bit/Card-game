@@ -1,6 +1,20 @@
 import { describe, it, expect } from "vitest";
 import { World } from "./World";
 import { WEAPON_DEFS } from "./data/weaponDefs";
+import { SLOTS, itemId, emptyEquip } from "./data/gearDefs";
+
+/** Equip a full 4-piece set on the world (grade 5) to trigger its 4pc perk. */
+function equipFullSet(world: World, setId: string): void {
+  const equipped = emptyEquip();
+  const inventory: Record<string, { grade: number; dupes: number }> = {};
+  for (const slot of SLOTS) {
+    const id = itemId(setId, slot);
+    equipped[slot] = id;
+    inventory[id] = { grade: 5, dupes: 0 };
+  }
+  world.gearEquipped = equipped;
+  world.gearInventory = inventory;
+}
 
 /** Minimal input stub — the World only reads moveX/moveY/facing-relevant bits. */
 const STILL = { moveX: 0, moveY: 0 } as unknown as Parameters<World["step"]>[1];
@@ -124,9 +138,9 @@ describe("World — combat integration", () => {
     expect(world.enemies.filter((e) => e.typeId === "sporeling").length).toBe(2);
   });
 
-  it("Aegis (Plating max grade) cheats death once, then dies on the next lethal hit", () => {
+  it("Aegis (Bastion 4-piece) cheats death once, then dies on the next lethal hit", () => {
     const world = new World(123);
-    world.modules = { plating: { grade: 5, dupes: 0 } };
+    equipFullSet(world, "bastion");
     world.reset();
     expect(world.player.stats.revive).toBe(1);
 
@@ -150,9 +164,9 @@ describe("World — combat integration", () => {
     expect(world.isDead).toBe(true);
   });
 
-  it("Overdrive (Reactor max grade) emits a damaging pulse around the ship", () => {
+  it("Overdrive (Solaris 4-piece) emits a damaging pulse around the ship", () => {
     const world = new World(456);
-    world.modules = { reactor: { grade: 5, dupes: 0 } };
+    equipFullSet(world, "solaris");
     world.reset();
     expect(world.player.stats.pulseDamage).toBeGreaterThan(0);
 
@@ -177,7 +191,7 @@ describe("World — combat integration", () => {
 
   it("uses the player's iframes stat for the post-hit invulnerability window", () => {
     const world = new World(77);
-    world.modules = { thrusters: { grade: 5, dupes: 0 } }; // Slipstream: +iframes
+    equipFullSet(world, "zephyr"); // Zephyr 4pc: +0.25s i-frames
     world.reset();
     world.player.invuln = 0;
     world.player.hp = world.player.stats.maxHp;

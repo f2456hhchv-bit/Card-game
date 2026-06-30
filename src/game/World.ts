@@ -16,6 +16,7 @@ import { WeaponSystem } from "./systems/WeaponSystem";
 import { BossController } from "./systems/BossController";
 import { bossForEncounter } from "./data/bossDefs";
 import { ENEMY_DEFS } from "./data/enemyDefs";
+import { getStage, type StageDef } from "./data/stageDefs";
 import { WEAPON_DEFS } from "./data/weaponDefs";
 import { Input } from "../engine/Input";
 import { clamp, TAU } from "../core/math/MathUtils";
@@ -74,10 +75,19 @@ export class World {
 
   /** Permanent meta-upgrade levels, supplied by Game from the save profile. */
   metaLevels: Record<string, number> = {};
-  /** Ship module gear, supplied by Game from the save profile. */
-  modules: Record<string, import("./data/gearDefs").ModuleState> = {};
+  /** Owned gear inventory, supplied by Game from the save profile. */
+  gearInventory: Record<string, import("./data/gearDefs").ModuleState> = {};
+  /** Equipped gear per slot, supplied by Game from the save profile. */
+  gearEquipped: import("./data/gearDefs").EquipMap = {
+    hull: null,
+    core: null,
+    engines: null,
+    wings: null,
+  };
   /** Selected Warden id, supplied by Game from the save profile. */
   selectedWarden = "lumen";
+  /** Stage id, supplied by Game; drives the enemy pool and backdrop palette. */
+  stageId = "fade";
 
   /** Reactor "Overdrive" pulse timer (seconds until next pulse). */
   private pulseTimer = 0;
@@ -169,6 +179,11 @@ export class World {
     return ARENA_RADIUS;
   }
 
+  /** The active stage definition (palette + enemy pool). */
+  get stage(): StageDef {
+    return getStage(this.stageId);
+  }
+
   /** Re-seed the world RNG (used to start a deterministic Daily Run). */
   reseed(seed: number): void {
     this.rng.setState(seed);
@@ -206,7 +221,8 @@ export class World {
 
     this.player.reset();
     this.loadout.metaLevels = this.metaLevels;
-    this.loadout.modules = this.modules;
+    this.loadout.gearInventory = this.gearInventory;
+    this.loadout.gearEquipped = this.gearEquipped;
     this.loadout.wardenId = this.selectedWarden;
     this.loadout.reset();
     this.loadout.recomputeStats(this.player);
@@ -215,7 +231,7 @@ export class World {
     this.revivesLeft = this.player.stats.revive;
     this.pulseTimer = World.PULSE_INTERVAL;
     this.pulseFx = 0;
-    this.spawnDirector.reset();
+    this.spawnDirector.reset(this.stage.enemyPool);
 
     this.stats.elapsed = 0;
     this.stats.kills = 0;

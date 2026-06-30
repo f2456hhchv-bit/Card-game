@@ -1,6 +1,16 @@
 import type { AudioSettings } from "../audio/AudioManager";
 import type { RunStats } from "../World";
-import { GEAR_DEFS, GEAR_LIST, mergeCost, type ModuleState } from "../data/gearDefs";
+import {
+  GEAR_ITEMS,
+  ITEM_LIST,
+  SLOTS,
+  emptyEquip,
+  itemId,
+  mergeCost,
+  type EquipMap,
+  type GearSlot,
+  type ModuleState,
+} from "../data/gearDefs";
 
 /**
  * Persistent profile saved to localStorage. This is the meta-progression and
@@ -43,12 +53,19 @@ export interface SaveData {
   tutorialSeen: boolean;
   /** Permanent meta-upgrade levels, keyed by upgrade id (see metaDefs). */
   meta: Record<string, number>;
-  /** Ship module gear state, keyed by module id (grade + banked duplicates). */
-  modules: Record<string, ModuleState>;
+  /** Ship gear: a collected inventory of items plus what's equipped per slot. */
+  gear: {
+    /** Owned items, keyed by item id (grade + banked duplicate cores). */
+    inventory: Record<string, ModuleState>;
+    /** Equipped item id per ship slot (null = empty). */
+    equipped: EquipMap;
+  };
   /** Unlocked Warden ids. */
   wardens: string[];
   /** Currently selected Warden id. */
   selectedWarden: string;
+  /** Currently selected stage id (see stageDefs). */
+  selectedStage: string;
   /** Today's Daily Run best (resets when the date rolls over). */
   daily: { date: string; bestTime: number; bestKills: number };
   audio: AudioSettings;
@@ -67,9 +84,10 @@ function defaultSave(): SaveData {
     achievements: [],
     tutorialSeen: false,
     meta: {},
-    modules: {},
+    gear: { inventory: {}, equipped: emptyEquip() },
     wardens: ["lumen"],
     selectedWarden: "lumen",
+    selectedStage: "fade",
     daily: { date: "", bestTime: 0, bestKills: 0 },
     audio: { master: 0.8, sfx: 0.9, music: 0.5, muted: false },
     accessibility: {
@@ -113,15 +131,50 @@ export class SaveManager {
       version: SAVE_VERSION,
       tutorialSeen,
       meta: parsed.meta ?? {},
-      modules: parsed.modules ?? {},
+      gear: this.migrateGear(parsed),
       lifetime: parsed.lifetime ?? { time: 0, damage: 0, bosses: 0, elites: 0 },
       wardens: parsed.wardens ?? ["lumen"],
       selectedWarden: parsed.selectedWarden ?? "lumen",
+      selectedStage: parsed.selectedStage ?? "fade",
       daily: parsed.daily ?? { date: "", bestTime: 0, bestKills: 0 },
       audio: { ...base.audio, ...(parsed.audio ?? {}) },
       accessibility: { ...base.accessibility, ...(parsed.accessibility ?? {}) },
       achievements: parsed.achievements ?? [],
     };
+  }
+
+  /**
+   * Build the gear block from a parsed save, migrating the old single-module
+   * format (`modules: {plating,reactor,thrusters,wings}`) into the new inventory
+   * by mapping each legacy module to the matching Salvager-set item and
+   * auto-equipping it, so existing players keep their progress (and start with a
+   * partial/whole Salvager set).
+   */
+  private migrateGear(parsed: Partial<SaveData> & { modules?: Record<string, ModuleState> }): SaveData["gear"] {
+    if (parsed.gear?.inventory && parsed.gear?.equipped) {
+      // Already in the new format; just ensure all slots exist.
+      return { inventory: parsed.gear.inventory, equipped: { ...emptyEquip(), ...parsed.gear.equipped } };
+    }
+    const inventory: Record<string, ModuleState> = {};
+    const equipped = emptyEquip();
+    const legacy = parsed.modules;
+    if (legacy) {
+      const map: Record<string, GearSlot> = {
+        plating: "hull",
+        reactor: "core",
+        thrusters: "engines",
+        wings: "wings",
+      };
+      for (const oldId in map) {
+        const m = legacy[oldId];
+        if (!m || m.grade <= 0) continue;
+        const slot = map[oldId];
+        const id = itemId("salvager", slot);
+        inventory[id] = { grade: m.grade, dupes: m.dupes };
+        equipped[slot] = id; // auto-equip the migrated piece
+      }
+    }
+    return { inventory, equipped };
   }
 
   save(): void {
@@ -174,26 +227,34 @@ export class SaveManager {
     return { newBestTime, newBestKills };
   }
 
-  /** Grant a random ship-module drop. New module → grade 1; else a duplicate. */
-  grantModuleDrop(): { id: string; isNew: boolean } {
-    const def = GEAR_LIST[Math.floor(Math.random() * GEAR_LIST.length)];
-    const m = this.data.modules[def.id] ?? { grade: 0, dupes: 0 };
+  /**
+   * Grant a random gear-item drop. A brand-new item is owned at grade 1 (and
+   * auto-equipped if its slot is empty); a duplicate banks a core toward a merge.
+   */
+  grantItemDrop(): { id: string; isNew: boolean } {
+    const def = ITEM_LIST[Math.floor(Math.random() * ITEM_LIST.length)];
+    const inv = this.data.gear.inventory;
+    const m = inv[def.id] ?? { grade: 0, dupes: 0 };
     let isNew = false;
     if (m.grade === 0) {
       m.grade = 1;
       isNew = true;
+      // Convenience: fill an empty slot with the first item the player owns.
+      if (this.data.gear.equipped[def.slot] == null) {
+        this.data.gear.equipped[def.slot] = def.id;
+      }
     } else {
       m.dupes++;
     }
-    this.data.modules[def.id] = m;
+    inv[def.id] = m;
     this.save();
     return { id: def.id, isNew };
   }
 
-  /** Merge banked duplicates to raise a module's grade. Returns the new grade. */
-  mergeModule(id: string): number | null {
-    const def = GEAR_DEFS[id];
-    const m = this.data.modules[id];
+  /** Merge banked duplicates to raise an item's grade. Returns the new grade. */
+  mergeItem(id: string): number | null {
+    const def = GEAR_ITEMS[id];
+    const m = this.data.gear.inventory[id];
     if (!def || !m || m.grade >= def.maxGrade) return null;
     const cost = mergeCost(m.grade);
     if (m.dupes < cost) return null;
@@ -201,6 +262,29 @@ export class SaveManager {
     m.grade++;
     this.save();
     return m.grade;
+  }
+
+  /** Equip an owned item into its slot. Returns false if not owned. */
+  equipItem(id: string): boolean {
+    const def = GEAR_ITEMS[id];
+    const m = this.data.gear.inventory[id];
+    if (!def || !m || m.grade <= 0) return false;
+    this.data.gear.equipped[def.slot] = id;
+    this.save();
+    return true;
+  }
+
+  /** Clear a slot. */
+  unequipSlot(slot: GearSlot): void {
+    this.data.gear.equipped[slot] = null;
+    this.save();
+  }
+
+  /** True if the player owns at least one item (used for UI hints). */
+  hasAnyGear(): boolean {
+    return SLOTS.some((slot) =>
+      ITEM_LIST.some((it) => it.slot === slot && (this.data.gear.inventory[it.id]?.grade ?? 0) > 0),
+    );
   }
 
   unlockAchievement(id: string): boolean {

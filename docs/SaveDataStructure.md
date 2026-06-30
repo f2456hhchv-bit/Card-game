@@ -24,10 +24,14 @@ interface SaveData {
   tutorialSeen: boolean;      // first-run coach hints shown (skipped for
                               // returning profiles via migration)
   meta: Record<string, number>; // permanent meta-upgrade levels (metaDefs id→lvl)
-  modules: Record<string, { grade: number; dupes: number }>; // ship-module gear
-                              // (gearDefs id → grade 1..maxGrade + banked dupes)
+  gear: {                     // ship gear inventory + equipped loadout
+    inventory: Record<string, { grade: number; dupes: number }>; // owned items
+    equipped: { hull: string|null; core: string|null;
+                engines: string|null; wings: string|null };       // per-slot item
+  };
   wardens: string[];          // unlocked Warden ids (default ["lumen"])
   selectedWarden: string;     // active Warden id (default "lumen")
+  selectedStage: string;      // active stage id (default "fade")
   daily: { date: string; bestTime: number; bestKills: number }; // today's Daily best
   lifetime: { time: number; damage: number; bosses: number; elites: number }; // career totals
   audio: {
@@ -50,6 +54,10 @@ interface SaveData {
 - On load, an unknown/partial save is **merged onto current defaults**
   (`SaveManager.migrate`), so older saves never wipe — missing fields are
   back-filled and `version` is normalised to the current value.
+- The legacy single-module field (`modules: {plating,reactor,thrusters,wings}`)
+  is migrated by `migrateGear` into the new `gear` inventory: each owned module
+  becomes the matching **Salvager**-set item (grade + dupes preserved) and is
+  auto-equipped, so returning players keep their progress.
 - Corrupt/unparseable data falls back to a fresh default profile rather than
   crashing.
 - Writes are best-effort: storage being unavailable (e.g. private browsing) is

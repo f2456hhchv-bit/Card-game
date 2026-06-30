@@ -90,10 +90,13 @@ Goal: replace placeholder geometry with premium, original procedural art.
 - [x] Offline-seeded **Daily Run** (fixed daily seed, equal footing, daily best)
 - [x] **Records** screen (lifetime stats) + 12 **achievements** with unlock toasts
 - [x] Richer end-of-run stats (elites, damage)
-- [x] **Ship Modules + Hangar**: 4 equippable ship systems, **merge duplicates**
-      to raise grade, each module's **max grade unlocks a signature perk** (Aegis
-      revive, Overdrive pulse, Slipstream i-frames, Salvo +projectile); cores drop
-      at end of run. Guardian sprite redesigned as a **starship**, rendered larger.
+- [x] **Ship Gear + Hangar**: a collectable **inventory** of 16 items (4 sets ×
+      4 slots), equip one per slot, **merge duplicate cores** to raise item grade,
+      and **set bonuses** — a full 4-piece set grants a signature perk (Solaris
+      Overdrive, Bastion Aegis revive, Zephyr Salvo, Salvager all-round). Items
+      drop at end of run. Guardian sprite redesigned as a **starship**, larger.
+- [x] **Second stage — Ember Wastes**: distinct warm palette + enemy pool (adds
+      Cinder & Revenant), unlocked by felling a boss; chosen via menu stage chips.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen
