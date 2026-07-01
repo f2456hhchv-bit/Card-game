@@ -256,6 +256,7 @@ export class Game {
       this.world.signatureId = null;
       this.world.selectedWarden = "lumen";
       this.world.wardenLevel = 0; // equal footing — no mastery bonus
+      this.world.selectedChassis = "skiff"; // equal footing — neutral hull
       this.world.stageId = "fade"; // Daily is always the base stage, equal footing.
       this.world.reset();
       this.world.reseed(Rng.seedFromString(dailyDateString()));
@@ -267,6 +268,7 @@ export class Game {
       this.world.signatureId = this.save.data.signatures.equipped;
       this.world.selectedWarden = this.save.data.selectedWarden;
       this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
+      this.world.selectedChassis = this.save.data.selectedChassis;
       this.world.stageId = this.selectedStageId();
       this.world.reset();
     }
@@ -298,6 +300,7 @@ export class Game {
     this.world.signatureId = this.save.data.signatures.equipped;
     this.world.selectedWarden = this.save.data.selectedWarden;
     this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
+    this.world.selectedChassis = this.save.data.selectedChassis;
     this.world.reset();
     this.beginRunUi();
   }
@@ -408,6 +411,7 @@ export class Game {
       this.world.signatureId = null;
       this.world.selectedWarden = "lumen";
       this.world.wardenLevel = 0;
+      this.world.selectedChassis = "skiff";
       this.world.stageId = "fade";
     } else {
       this.world.metaLevels = this.save.data.meta;
@@ -416,6 +420,7 @@ export class Game {
       this.world.signatureId = this.save.data.signatures.equipped;
       this.world.selectedWarden = this.save.data.selectedWarden;
       this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
+      this.world.selectedChassis = this.save.data.selectedChassis;
       this.world.stageId = snap.stageId;
     }
     this.world.reset();

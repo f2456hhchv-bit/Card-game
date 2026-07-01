@@ -11,6 +11,7 @@ import {
   wardenLevelBonus,
 } from "../game/data/wardenDefs";
 import { WEAPON_DEFS } from "../game/data/weaponDefs";
+import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import {
   SLOTS,
   SLOT_META,
@@ -156,6 +157,7 @@ export class UIManager {
     this.buildHowTo();
     this.buildShop();
     this.buildWardens();
+    this.buildChassis();
     this.buildHangar();
     this.buildRecords();
     this.buildCampaign();
@@ -437,7 +439,8 @@ export class UIManager {
     };
     tab("journey", "🗺", "Journey");
     tab("play", "⚔", "Play");
-    tab("wardens", "🎖", "Commanders");
+    tab("wardens", "🎖", "Crew");
+    tab("ships", "🚀", "Ships");
     tab("hangar", "🧩", "Hangar");
     tab("shop", "🛒", "Shop");
     tab("more", "☰", "More");
@@ -454,6 +457,7 @@ export class UIManager {
   private hideSubPages(): void {
     for (const o of [
       this.wardens,
+      this.chassis,
       this.hangar,
       this.shop,
       this.records,
@@ -487,6 +491,9 @@ export class UIManager {
     switch (id) {
       case "wardens":
         this.openWardens();
+        break;
+      case "ships":
+        this.openChassis();
         break;
       case "hangar":
         this.openHangar();
@@ -987,6 +994,97 @@ export class UIManager {
   private closeWardens(): void {
     this.refreshMenuStats();
     this.goTab("journey");
+  }
+
+  // ---- Ships (chassis select) --------------------------------------------
+
+  private chassis!: HTMLDivElement;
+  private chassisBalance!: HTMLDivElement;
+  private chassisGrid!: HTMLDivElement;
+
+  private buildChassis(): void {
+    const o = this.el("div", "overlay hidden");
+    const title = this.el("h2", undefined, "SHIPS");
+    const sub = this.el("div", "subtitle", "Choose your hull — each flies its own way");
+    this.chassisBalance = this.el("div", "shop-balance");
+    this.chassisGrid = this.el("div", "shop-grid");
+    const back = this.el("button", "btn", "Back");
+    back.addEventListener("click", () => this.goTab("journey"));
+    o.append(title, sub, this.chassisBalance, this.chassisGrid, back);
+    this.root.appendChild(o);
+    this.chassis = o;
+  }
+
+  private refreshChassis(): void {
+    const d = this.save.data;
+    this.chassisBalance.textContent = `✦ ${d.motes} Light Motes`;
+    this.chassisGrid.replaceChildren();
+    for (const def of CHASSIS_LIST) {
+      const unlocked = d.chassis.includes(def.id);
+      const selected = d.selectedChassis === def.id;
+
+      const card = this.el("div", "shop-card warden-card");
+      card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
+      if (selected) card.classList.add("selected");
+
+      const head = this.el("div", "shop-card-head");
+      head.append(
+        this.el("div", "shop-name", `${def.icon} ${def.name}`),
+        this.el("div", "shop-level", selected ? "★ Piloting" : unlocked ? "Owned" : "Locked"),
+      );
+      const identity = this.el("div", "shop-next", def.identity);
+      const desc = this.el("div", "shop-desc", def.description);
+      const special = this.el("div", "warden-special");
+      special.append(
+        this.el("span", "warden-special-name", "Hull Special"),
+        this.el("span", "warden-special-desc", def.passiveNote),
+      );
+
+      const btn = this.el("button", "btn buy");
+      if (selected) {
+        btn.textContent = "PILOTING";
+        btn.classList.add("maxed");
+        btn.disabled = true;
+      } else if (unlocked) {
+        btn.textContent = "Pilot";
+        btn.addEventListener("click", () => this.selectChassis(def.id));
+      } else {
+        btn.textContent = `✦ ${def.unlockCost}`;
+        const affordable = d.motes >= def.unlockCost;
+        btn.disabled = !affordable;
+        if (!affordable) btn.classList.add("cant-afford");
+        btn.addEventListener("click", () => this.unlockChassis(def.id));
+      }
+      card.append(head, identity, desc, special, btn);
+      this.chassisGrid.appendChild(card);
+    }
+  }
+
+  private selectChassis(id: string): void {
+    this.save.data.selectedChassis = id;
+    this.save.save();
+    this.audio.select();
+    this.refreshChassis();
+  }
+
+  private unlockChassis(id: string): void {
+    const d = this.save.data;
+    const def = CHASSIS_LIST.find((c) => c.id === id);
+    if (!def || d.chassis.includes(id) || d.motes < def.unlockCost) return;
+    d.motes -= def.unlockCost;
+    d.chassis.push(id);
+    d.selectedChassis = id; // auto-pilot the newly acquired ship
+    this.save.save();
+    this.audio.levelUp();
+    this.refreshChassis();
+  }
+
+  private openChassis(): void {
+    this.hideSubPages();
+    this.refreshChassis();
+    this.menu.classList.add("hidden");
+    this.chassis.classList.remove("hidden");
+    this.setActiveTab("ships");
   }
 
   // ---- Hangar (ship modules + merge) -------------------------------------

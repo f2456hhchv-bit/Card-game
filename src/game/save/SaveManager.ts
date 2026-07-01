@@ -93,6 +93,10 @@ export interface SaveData {
   wardenProgress: Record<string, { level: number; xp: number }>;
   /** Currently selected Warden id. */
   selectedWarden: string;
+  /** Unlocked chassis (ship) ids. */
+  chassis: string[];
+  /** Currently selected chassis (ship) id. */
+  selectedChassis: string;
   /** Currently selected stage id (see stageDefs). */
   selectedStage: string;
   /** Today's Daily Run best (resets when the date rolls over). */
@@ -124,6 +128,8 @@ function defaultSave(): SaveData {
     wardens: ["lumen"],
     wardenProgress: {},
     selectedWarden: "lumen",
+    chassis: ["skiff"],
+    selectedChassis: "skiff",
     selectedStage: "fade",
     daily: { date: "", bestTime: 0, bestKills: 0 },
     audio: { master: 0.8, sfx: 0.9, music: 0.5, muted: false },
@@ -186,6 +192,8 @@ export class SaveManager {
       wardens: parsed.wardens ?? ["lumen"],
       wardenProgress: parsed.wardenProgress ?? {},
       selectedWarden: parsed.selectedWarden ?? "lumen",
+      chassis: parsed.chassis ?? ["skiff"],
+      selectedChassis: parsed.selectedChassis ?? "skiff",
       selectedStage: parsed.selectedStage ?? "fade",
       daily: parsed.daily ?? { date: "", bestTime: 0, bestKills: 0 },
       audio: { ...base.audio, ...(parsed.audio ?? {}) },

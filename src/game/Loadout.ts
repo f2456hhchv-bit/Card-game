@@ -12,6 +12,7 @@ import { applyMeta } from "./data/metaDefs";
 import { applyGear, emptyEquip, type EquipMap, type ModuleState } from "./data/gearDefs";
 import { applySignature } from "./data/signatureDefs";
 import { getWarden, applyWardenLevel } from "./data/wardenDefs";
+import { getChassis } from "./data/chassisDefs";
 import { clamp } from "../core/math/MathUtils";
 
 /** A live weapon the Warden carries, with its current level and fire timer. */
@@ -85,6 +86,8 @@ export class Loadout {
   wardenId = "lumen";
   /** Mastery level of the selected Warden (set by World from the save each run). */
   wardenLevel = 0;
+  /** Selected chassis (ship) id (set by World from the save each run). */
+  chassisId = "skiff";
 
   reset(): void {
     this.weapons.length = 0;
@@ -147,9 +150,10 @@ export class Loadout {
    */
   recomputeStats(player: Player): void {
     const s = { ...player.base };
-    // Order: base → Warden perk → permanent meta → ship modules → in-run relics.
+    // Order: base → Commander perk/mastery → chassis → meta → gear → relics.
     getWarden(this.wardenId).applyPerk?.(s);
     applyWardenLevel(s, this.wardenLevel);
+    getChassis(this.chassisId).apply?.(s);
     applyMeta(s, this.metaLevels);
     applyGear(s, this.gearEquipped, this.gearInventory);
     applySignature(s, this.signatureId);

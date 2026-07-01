@@ -136,6 +136,16 @@ Goal: replace placeholder geometry with premium, original procedural art.
       clear conditions, a Campaign map + Sector-Cleared flow, and **endless**
       procedurally-generated Galaxies beyond the 5 authored ones.
 - [x] **Shop mote sinks**: infinite Supply Drop crate + 5 Tier-II upgrades.
+- [x] **Three build ecosystems** (Commanders · Ships · Gear): the run is now shaped
+      by three independent, growable layers.
+  - **Commanders** (renamed from Wardens): pilots with a perk + an **activated
+    special power** on a cooldown (Space / on-screen button) — nova, heal,
+    empower, dash, guard.
+  - **Ships (Chassis)**: a selectable hull — Skiff (free), Scout Shuttle, Warpstrike,
+    Dreadnought, Gunship, Carrier, Bulwark — each with a stat identity and a passive
+    **hull special** (magnet pulse / phase / drone volley / thorns). New "Ships" tab.
+  - **Gear**: 12 sets × **6 ship parts** (Hull/Core/Engines/Wings/Shield/Targeting)
+    = 72 items, with 2pc/4pc/**6pc capstone** set bonuses.
 - [x] **Equipment expansion**: gear roster doubled to **12 sets / 48 items** — new
       sets **Vanguard** (offense), **Warp** (projectile speed/area), **Harvester**
       (XP/pickup greed), **Juggernaut** (bruiser), **Corona** (Overdrive/AoE) and

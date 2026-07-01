@@ -27,6 +27,7 @@ import {
 import { WEAPON_DEFS } from "./data/weaponDefs";
 import { emptyEquip } from "./data/gearDefs";
 import { getWarden, type CommanderSpecial } from "./data/wardenDefs";
+import { getChassis } from "./data/chassisDefs";
 import { Input } from "../engine/Input";
 import { clamp, TAU } from "../core/math/MathUtils";
 
@@ -118,6 +119,10 @@ export class World {
   selectedWarden = "lumen";
   /** Mastery level of the selected Warden, supplied by Game from the save. */
   wardenLevel = 0;
+  /** Selected chassis (ship) id, supplied by Game from the save. */
+  selectedChassis = "skiff";
+  /** Countdown to the next chassis passive tick (magnet/phase/drone). */
+  private chassisTimer = 0;
   /** Stage id, supplied by Game; drives the enemy pool and backdrop palette. */
   stageId = "fade";
   /**
@@ -333,6 +338,7 @@ export class World {
     this.loadout.signatureId = this.signatureId;
     this.loadout.wardenId = this.selectedWarden;
     this.loadout.wardenLevel = this.wardenLevel;
+    this.loadout.chassisId = this.selectedChassis;
     this.loadout.reset();
     this.loadout.recomputeStats(this.player);
     this.player.hp = this.player.stats.maxHp;
@@ -345,6 +351,7 @@ export class World {
     this.specialCd = 0;
     this.damageBuff = 1;
     this.buffTimer = 0;
+    this.chassisTimer = 2; // brief grace before the first hull-passive tick
     this.spawnDirector.reset(this.activeEnemyPool, this.activeDifficulty);
     this.ascHp = 1;
     this.ascDmg = 1;
@@ -583,6 +590,7 @@ export class World {
     this.updateEnemyProjectiles(dt);
     this.updatePickups(dt);
     this.updateOverdrive(dt);
+    this.updateChassisPassive(dt);
     if (this.endless) this.updateAscension(dt);
     this.checkCampaignClear();
   }
@@ -647,6 +655,63 @@ export class World {
     this.pulseFx = r;
     this.spawnRing(px, py, 30, r, 0.45);
     this.events.emit("pulse", { x: px, y: py, radius: r });
+  }
+
+  // ---- Chassis (ship) passive hull specials ------------------------------
+
+  /** Timed hull passives: magnet pulse, phase (brief invuln), drone volley. */
+  private updateChassisPassive(dt: number): void {
+    const passive = getChassis(this.selectedChassis).passive;
+    if (passive === "none" || passive === "thorns") return; // "thorns" is reactive
+    this.chassisTimer -= dt;
+    if (this.chassisTimer > 0) return;
+    const p = this.player;
+    switch (passive) {
+      case "magnet":
+        this.chassisTimer = 7;
+        for (const k of this.pickups) k.homing = true;
+        this.spawnRing(p.x, p.y, 150, p.stats.pickupRadius, 0.5);
+        break;
+      case "phase":
+        this.chassisTimer = 9;
+        p.invuln = Math.max(p.invuln, 0.7);
+        this.spawnRing(p.x, p.y, 258, p.radius * 1.5, 0.5);
+        break;
+      case "drone":
+        this.chassisTimer = 4;
+        this.fireDroneVolley();
+        break;
+    }
+  }
+
+  /** Carrier escort drone: a small seeking volley toward the nearest foe. */
+  private fireDroneVolley(): void {
+    const p = this.player;
+    const target = this.enemyGrid.findNearest(p.x, p.y, 720);
+    const base = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.facing;
+    const dmg = Math.round(22 * p.stats.damageMult * this.damageBuff);
+    const speed = 520 * p.stats.projectileSpeedMult;
+    for (let i = 0; i < 3; i++) {
+      const a = base + (i - 1) * 0.18;
+      const proj = this.obtainProjectile();
+      proj.x = p.x;
+      proj.y = p.y;
+      proj.vx = Math.cos(a) * speed;
+      proj.vy = Math.sin(a) * speed;
+      proj.radius = 6;
+      proj.damage = dmg;
+      proj.crit = false;
+      proj.life = 1.4;
+      proj.pierce = 1;
+      proj.knockback = 60;
+      proj.style = "bolt";
+      proj.hue = 95;
+      proj.weaponSeq = -1;
+      proj.rotation = a;
+      proj.rotationSpeed = 0;
+      proj.evolved = false;
+      proj.active = true;
+    }
   }
 
   // ---- Commander special ability -----------------------------------------
@@ -1318,6 +1383,8 @@ export class World {
     p.invuln = p.stats.iframes;
     p.hitFlash = 0.25;
     this.events.emit("playerHit", { damage: reduced });
+    // Bulwark chassis: reflect a punishing burst to nearby foes when struck.
+    if (getChassis(this.selectedChassis).passive === "thorns") this.reflectThorns(reduced);
     if (p.hp <= 0) {
       // Aegis (Plating max-grade): cheat death once per run, recover to 35% HP.
       if (this.revivesLeft > 0) {
@@ -1332,6 +1399,25 @@ export class World {
       this.isDead = true;
       this.events.emit("playerDied", {});
     }
+  }
+
+  /** Bulwark thorns: burst damage to enemies around the struck player. */
+  private reflectThorns(damageTaken: number): void {
+    const p = this.player;
+    const r = 170;
+    const r2 = r * r;
+    const dmg = 30 + damageTaken * 2.5;
+    const near = this.enemyGrid.query(p.x, p.y, r);
+    for (let i = 0; i < near.length; i++) {
+      const e = near[i];
+      if (!e.active) continue;
+      const dx = e.x - p.x;
+      const dy = e.y - p.y;
+      if (dx * dx + dy * dy > r2) continue;
+      const inv = 1 / (Math.hypot(dx, dy) || 1);
+      this.damageEnemy(e, dmg, false, dx * inv * 160, dy * inv * 160);
+    }
+    this.spawnRing(p.x, p.y, 280, r, 0.4);
   }
 
   // ---- Cosmetic spawners (pooled) ---------------------------------------
