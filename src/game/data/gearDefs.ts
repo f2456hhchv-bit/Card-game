@@ -179,6 +179,20 @@ export const AFFIX_DEFS: Record<string, AffixDef> = {
     apply: (s, v) => (s.xpMult *= 1 + v),
     format: (v) => `+${(v * 100).toFixed(0)}% XP`,
   },
+  projspd: {
+    id: "projspd",
+    label: "Projectile Speed",
+    roll: [0.03, 0.08],
+    apply: (s, v) => (s.projectileSpeedMult *= 1 + v),
+    format: (v) => `+${(v * 100).toFixed(0)}% proj speed`,
+  },
+  iframe: {
+    id: "iframe",
+    label: "Evasion",
+    roll: [0.05, 0.15],
+    apply: (s, v) => (s.iframes += v),
+    format: (v) => `+${v.toFixed(2)}s i-frames`,
+  },
 };
 
 export const AFFIX_LIST: AffixDef[] = Object.values(AFFIX_DEFS);
@@ -370,6 +384,84 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
     },
     bonus4Note: "+40 Max HP, +0.7 regen/s & +5% armour",
   },
+  vanguard: {
+    id: "vanguard",
+    name: "Vanguard",
+    hue: 12,
+    description: "Frontline assault plating forged for relentless offense.",
+    bonus2: (s) => (s.attackSpeedMult *= 1.08),
+    bonus2Note: "+8% attack speed",
+    bonus4: (s) => {
+      s.damageMult *= 1.1;
+      s.critChance += 0.05;
+    },
+    bonus4Note: "+10% damage & +5% crit chance",
+  },
+  warp: {
+    id: "warp",
+    name: "Warp",
+    hue: 258,
+    description: "Phase-tuned frame that hurls light farther, faster and wider.",
+    bonus2: (s) => (s.projectileSpeedMult *= 1.15),
+    bonus2Note: "+15% projectile speed",
+    bonus4: (s) => {
+      s.areaMult *= 1.15;
+      s.projectileSpeedMult *= 1.12;
+    },
+    bonus4Note: "+15% area & +12% projectile speed",
+  },
+  harvester: {
+    id: "harvester",
+    name: "Harvester",
+    hue: 84,
+    description: "Scavenger rig that draws in light and wrings out every mote.",
+    bonus2: (s) => (s.pickupRadius += 30),
+    bonus2Note: "+30 pickup radius",
+    bonus4: (s) => {
+      s.xpMult *= 1.14;
+      s.pickupRadius += 25;
+    },
+    bonus4Note: "+14% XP gain & +25 pickup radius",
+  },
+  juggernaut: {
+    id: "juggernaut",
+    name: "Juggernaut",
+    hue: 326,
+    description: "Siege-grade bulwark that trades nothing for staying power.",
+    bonus2: (s) => (s.maxHp += 40),
+    bonus2Note: "+40 Max HP",
+    bonus4: (s) => {
+      s.damageMult *= 1.1;
+      s.armor += 0.08;
+    },
+    bonus4Note: "+10% damage & +8% armour",
+  },
+  corona: {
+    id: "corona",
+    name: "Corona",
+    hue: 45,
+    description: "Solar lattice that erupts in cleansing waves of light.",
+    bonus2: (s) => (s.areaMult *= 1.1),
+    bonus2Note: "+10% area",
+    bonus4: (s) => {
+      s.pulseDamage = Math.max(s.pulseDamage, 26);
+      s.areaMult *= 1.08;
+    },
+    bonus4Note: "Overdrive light pulse + 8% area",
+  },
+  phantom: {
+    id: "phantom",
+    name: "Phantom",
+    hue: 196,
+    description: "Ghost-frame woven for evasion and the perfect dodge.",
+    bonus2: (s) => (s.iframes += 0.2),
+    bonus2Note: "+0.2s i-frames",
+    bonus4: (s) => {
+      s.moveSpeed *= 1.1;
+      s.extraProjectiles += 1;
+    },
+    bonus4Note: "+10% move speed & +1 projectile",
+  },
 };
 
 export const SET_LIST: GearSetDef[] = Object.values(GEAR_SETS);
@@ -391,7 +483,7 @@ export function itemId(setId: string, slot: GearSlot): string {
   return `${setId}_${slot}`;
 }
 
-/** Build the 16 items (4 sets × 4 slots) from set + slot metadata. */
+/** Build every item (one per set × slot) from set + slot metadata. */
 function buildItems(): Record<string, GearItemDef> {
   const out: Record<string, GearItemDef> = {};
   for (const set of SET_LIST) {

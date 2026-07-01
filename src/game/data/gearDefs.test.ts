@@ -29,13 +29,23 @@ function inv(ids: string[], grade = 1) {
 }
 
 describe("gearDefs — items", () => {
-  it("there are 6 sets × 4 slots = 24 items", () => {
-    expect(SET_LIST.length).toBe(6);
-    expect(ITEM_LIST.length).toBe(24);
+  it("builds one item per set × slot, all defined", () => {
+    expect(SET_LIST.length).toBe(12);
+    expect(ITEM_LIST.length).toBe(SET_LIST.length * SLOTS.length);
     for (const set of SET_LIST) {
       for (const slot of SLOTS) {
         expect(GEAR_ITEMS[itemId(set.id, slot)]).toBeDefined();
       }
+    }
+  });
+
+  it("every set's 2pc and 4pc bonuses apply without error", () => {
+    for (const set of SET_LIST) {
+      const s = { ...new Player().base };
+      expect(() => set.bonus2(s)).not.toThrow();
+      expect(() => set.bonus4(s)).not.toThrow();
+      expect(set.bonus2Note.length).toBeGreaterThan(0);
+      expect(set.bonus4Note.length).toBeGreaterThan(0);
     }
   });
 

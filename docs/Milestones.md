@@ -136,6 +136,12 @@ Goal: replace placeholder geometry with premium, original procedural art.
       clear conditions, a Campaign map + Sector-Cleared flow, and **endless**
       procedurally-generated Galaxies beyond the 5 authored ones.
 - [x] **Shop mote sinks**: infinite Supply Drop crate + 5 Tier-II upgrades.
+- [x] **Equipment expansion**: gear roster doubled to **12 sets / 48 items** — new
+      sets **Vanguard** (offense), **Warp** (projectile speed/area), **Harvester**
+      (XP/pickup greed), **Juggernaut** (bruiser), **Corona** (Overdrive/AoE) and
+      **Phantom** (evasion) — each with distinct 2pc/4pc bonuses. Affix pool grown
+      to 13 (added Projectile Speed & Evasion). Everything flows through the drop/
+      boss-loot/Supply-Drop/Hangar/achievement systems with no wiring changes.
 - [x] **Playtest feedback pass** (v0.3.x): (1) fodder is **throttled during boss
       fights** (halved cap + slower spawns) so adds no longer wall the player off
       from the boss; (2) **late-game bite** — enemy damage gains a quadratic tail
