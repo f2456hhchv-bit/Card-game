@@ -160,6 +160,8 @@ export class Loadout {
     // Clamp a few stats into sane ranges.
     s.armor = clamp(s.armor, 0, 0.85);
     s.critChance = clamp(s.critChance, 0, 1);
+    // Never let trade-off effects (e.g. Glass Cannon) drop Max HP to a lethal 0.
+    s.maxHp = Math.max(1, s.maxHp);
     player.stats = s;
     // Keep current HP within the new max.
     if (player.hp > s.maxHp) player.hp = s.maxHp;

@@ -153,6 +153,40 @@ export const PASSIVE_DEFS: Record<string, PassiveDef> = {
     },
     levelNote: (lvl) => `+${lvl} projectile${lvl > 1 ? "s" : ""}`,
   },
+  phaseCloak: {
+    id: "phaseCloak",
+    name: "Phase Cloak",
+    description: "Lengthens the invulnerability after a hit — dodge through danger.",
+    hue: 190,
+    maxLevel: 5,
+    apply: (s, lvl) => {
+      s.iframes += 0.08 * lvl;
+    },
+    levelNote: (lvl) => `Invulnerability +${(0.08 * lvl).toFixed(2)}s`,
+  },
+  glassCannon: {
+    id: "glassCannon",
+    name: "Glass Cannon",
+    description: "Overwhelming firepower — at the cost of your own vitality.",
+    hue: 355,
+    maxLevel: 5,
+    apply: (s, lvl) => {
+      s.damageMult *= 1 + 0.14 * lvl;
+      s.maxHp -= 8 * lvl;
+    },
+    levelNote: (lvl) => `Damage +${14 * lvl}% · Max HP −${8 * lvl}`,
+  },
+  executioner: {
+    id: "executioner",
+    name: "Executioner",
+    description: "Turns critical strikes into devastating blows.",
+    hue: 350,
+    maxLevel: 4,
+    apply: (s, lvl) => {
+      s.critMult += 0.25 * lvl;
+    },
+    levelNote: (lvl) => `Crit damage +${25 * lvl}%`,
+  },
 };
 
 export const PASSIVE_LIST: PassiveDef[] = Object.values(PASSIVE_DEFS);
