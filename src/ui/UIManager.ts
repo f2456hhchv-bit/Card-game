@@ -1455,6 +1455,10 @@ export class UIManager {
     this.campaign.classList.add("hidden");
     this.menu.classList.remove("hidden");
   }
+  /** Hide the campaign/sector overlay without returning to the menu (run start). */
+  hideCampaign(): void {
+    this.campaign.classList.add("hidden");
+  }
 
   // ---- Sector-cleared screen ---------------------------------------------
 

@@ -301,6 +301,7 @@ export class Game {
     this.draftQueue = 0;
     this.applyAccessibility();
     this.ui.hideMenu();
+    this.ui.hideCampaign();
     this.ui.hideGameOver();
     this.ui.hideLevelCleared();
     this.ui.hideDraft();
