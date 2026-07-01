@@ -94,6 +94,14 @@ export class UIManager {
   private menu!: HTMLDivElement;
   private bossRushBtn!: HTMLButtonElement;
   private continueBtn!: HTMLButtonElement;
+  // Tabbed main-menu structure.
+  private tabBar!: HTMLDivElement;
+  private journeyPanel!: HTMLDivElement;
+  private journeyBody!: HTMLDivElement;
+  private playPanel!: HTMLDivElement;
+  private morePanel!: HTMLDivElement;
+  private activeMenuTab = "journey";
+  private currentStop?: HTMLElement;
   private draft!: HTMLDivElement;
   private pause!: HTMLDivElement;
   private gameover!: HTMLDivElement;
@@ -331,34 +339,36 @@ export class UIManager {
   // ---- Main menu ---------------------------------------------------------
 
   private buildMenu(): void {
-    const o = this.el("div", "overlay");
-    const title = this.el("h1", undefined, "AFTERLIGHT");
+    const o = this.el("div", "overlay menu-overlay");
+    const menuHeader = this.el("div", "menu-header");
+    const title = this.el("h1", "menu-title", "AFTERLIGHT");
     const sub = this.el("div", "subtitle", "Hold back the dark");
-
     const stats = this.el("div", "menu-stats");
     stats.id = "menu-stats";
-
-    // Stage chooser — sits above Begin so the choice is made before launching.
-    const stageRow = this.el("div", "stage-row");
-    stageRow.id = "stage-row";
+    menuHeader.append(title, sub, stats);
 
     // Continue — resume a run left mid-play. Only shown when one is stored.
     this.continueBtn = this.el("button", "btn", "▶ Continue Run");
     this.continueBtn.addEventListener("click", () => this.cb.onContinueRun());
 
-    // Campaign is the primary progression: warp through Galaxies & Sectors.
-    const campaignBtn = this.el("button", "btn", "Campaign");
-    campaignBtn.addEventListener("click", () => this.openCampaign());
+    // ---- Inline panels (switched by the bottom tab bar) ----
+    const panels = this.el("div", "menu-panels");
 
-    const play = this.el("button", "btn secondary", "Quick Play");
+    // Journey — the vertical Galaxy pathway (the hero of the main screen).
+    this.journeyPanel = this.el("div", "menu-panel");
+    this.journeyBody = this.el("div", "journey");
+    this.journeyPanel.append(this.continueBtn, this.journeyBody);
+
+    // Play — the game modes, with the Quick Play stage chooser.
+    this.playPanel = this.el("div", "menu-panel hidden");
+    const stageRow = this.el("div", "stage-row");
+    stageRow.id = "stage-row";
+    const play = this.el("button", "btn", "Quick Play");
     play.addEventListener("click", () => this.cb.onStart());
-
     const dailyBtn = this.el("button", "btn secondary", "Daily Run");
     dailyBtn.addEventListener("click", () => this.cb.onStartDaily());
     const dailyLine = this.el("div", "daily-line");
     dailyLine.id = "daily-line";
-
-    // Boss Rush — unlocked once the player has felled a boss.
     this.bossRushBtn = this.el("button", "btn secondary", "Boss Rush");
     this.bossRushBtn.addEventListener("click", () => {
       if (this.bossRushBtn.classList.contains("locked")) {
@@ -367,43 +377,153 @@ export class UIManager {
       }
       this.cb.onStartBossRush();
     });
-
-    // Endless / Ascension — always available; ramps without bound.
     const endlessBtn = this.el("button", "btn secondary", "Endless");
     endlessBtn.addEventListener("click", () => this.cb.onStartEndless());
-
-    // Stage Gauntlet — clear all three stages on one life.
     const gauntletBtn = this.el("button", "btn secondary", "Gauntlet");
     gauntletBtn.addEventListener("click", () => this.cb.onStartGauntlet());
+    const modeGrid = this.el("div", "mode-grid");
+    modeGrid.append(play, dailyBtn, this.bossRushBtn, endlessBtn, gauntletBtn);
+    this.playPanel.append(
+      this.el("div", "panel-head", "Quick Play — choose a region"),
+      stageRow,
+      modeGrid,
+      dailyLine,
+    );
 
-    const wardensBtn = this.el("button", "btn secondary", "Wardens");
-    wardensBtn.addEventListener("click", () => this.openWardens());
-
-    const hangarBtn = this.el("button", "btn secondary", "Hangar");
-    hangarBtn.addEventListener("click", () => this.openHangar());
-
+    // More — the secondary destinations.
+    this.morePanel = this.el("div", "menu-panel hidden");
     const recordsBtn = this.el("button", "btn secondary", "Records");
     recordsBtn.addEventListener("click", () => this.openRecords());
-
-    const shopBtn = this.el("button", "btn secondary", "Shop");
-    shopBtn.addEventListener("click", () => this.openShop());
-
     const howBtn = this.el("button", "btn secondary", "How to Play");
     howBtn.addEventListener("click", () => this.openHowTo());
-
     const settingsBtn = this.el("button", "btn secondary", "Settings");
     settingsBtn.addEventListener("click", () => this.openSettings());
+    const moreGrid = this.el("div", "mode-grid");
+    moreGrid.append(recordsBtn, howBtn, settingsBtn);
+    this.morePanel.append(this.el("div", "panel-head", "More"), moreGrid);
 
-    const btnRow = this.el("div");
-    btnRow.style.display = "flex";
-    btnRow.style.gap = "12px";
-    btnRow.style.flexWrap = "wrap";
-    btnRow.style.justifyContent = "center";
-    btnRow.append(this.continueBtn, campaignBtn, play, dailyBtn, this.bossRushBtn, endlessBtn, gauntletBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
+    panels.append(this.journeyPanel, this.playPanel, this.morePanel);
 
-    o.append(title, sub, stats, stageRow, btnRow, dailyLine);
+    // ---- Bottom tab bar ----
+    this.tabBar = this.el("div", "tab-bar");
+    const tab = (id: string, icon: string, label: string, onClick: () => void, inline: boolean) => {
+      const b = this.el("button", "tab-btn");
+      b.append(this.el("span", "tab-icon", icon), this.el("span", "tab-label", label));
+      b.dataset.tab = id;
+      b.addEventListener("click", () => {
+        this.audio.select();
+        if (inline) this.selectMenuTab(id);
+        onClick();
+      });
+      this.tabBar.appendChild(b);
+    };
+    tab("journey", "🗺", "Journey", () => {}, true);
+    tab("play", "⚔", "Play", () => {}, true);
+    tab("wardens", "🛡", "Wardens", () => this.openWardens(), false);
+    tab("hangar", "🧩", "Hangar", () => this.openHangar(), false);
+    tab("shop", "🛒", "Shop", () => this.openShop(), false);
+    tab("more", "☰", "More", () => {}, true);
+
+    o.append(menuHeader, panels, this.tabBar);
     this.root.appendChild(o);
     this.menu = o;
+    this.selectMenuTab("journey");
+  }
+
+  /** Switch the active inline menu panel (Journey / Play / More). */
+  private selectMenuTab(tab: string): void {
+    this.activeMenuTab = tab;
+    this.journeyPanel.classList.toggle("hidden", tab !== "journey");
+    this.playPanel.classList.toggle("hidden", tab !== "play");
+    this.morePanel.classList.toggle("hidden", tab !== "more");
+    for (const b of Array.from(this.tabBar.children) as HTMLElement[]) {
+      b.classList.toggle("active", b.dataset.tab === tab);
+    }
+    if (tab === "journey") this.refreshJourney();
+  }
+
+  /**
+   * The vertical Galaxy pathway. Galaxies stack with the earliest at the bottom
+   * and later ones above, joined by a trailing link — so the player "climbs"
+   * upward, scrolling up to preview Galaxies they've yet to conquer. Tapping an
+   * unlocked Galaxy opens its Sector map.
+   */
+  private refreshJourney(): void {
+    const progress = this.campaignProgress();
+    const currentGalaxy = galaxyOf(progress);
+    const topGalaxy = currentGalaxy + 2; // tease a couple of locked Galaxies ahead
+    this.currentStop = undefined;
+
+    this.journeyBody.replaceChildren();
+    for (let i = topGalaxy; i >= 0; i--) {
+      const g = getGalaxy(i);
+      const clearedSectors = Math.max(
+        0,
+        Math.min(SECTORS_PER_GALAXY, progress - i * SECTORS_PER_GALAXY),
+      );
+      const unlocked = i <= currentGalaxy;
+      const isCurrent = i === currentGalaxy;
+      const complete = clearedSectors >= SECTORS_PER_GALAXY;
+      const hues = g.palette.nebulaHues;
+      const accent = `hsl(${g.palette.fogHue} 72% 62%)`;
+
+      // Trailing link above each stop (except the topmost).
+      if (i < topGalaxy) {
+        const link = this.el("div", "galaxy-link");
+        if (unlocked) link.classList.add("lit");
+        this.journeyBody.appendChild(link);
+      }
+
+      const stop = this.el("button", "galaxy-stop");
+      if (!unlocked) stop.classList.add("locked");
+      if (isCurrent) stop.classList.add("current");
+      if (complete) stop.classList.add("complete");
+      stop.style.setProperty("--accent", accent);
+
+      const emblem = this.el("div", "galaxy-emblem");
+      emblem.style.background =
+        `radial-gradient(circle at 34% 30%, hsl(${hues[0]} 78% 64%), ` +
+        `hsl(${hues[1] ?? hues[0]} 60% 34%) 52%, ${g.palette.baseBottom} 100%)`;
+      emblem.append(this.el("div", "galaxy-emblem-core"));
+      if (!unlocked) emblem.append(this.el("div", "galaxy-lock", "🔒"));
+
+      const info = this.el("div", "galaxy-info");
+      info.append(
+        this.el("div", "galaxy-idx", `GALAXY ${i + 1}`),
+        this.el("div", "galaxy-name", g.name),
+        this.el("div", "galaxy-sub", unlocked ? g.title : "Uncharted — press on to reveal"),
+      );
+      const pips = this.el("div", "galaxy-pips");
+      for (let s = 0; s < SECTORS_PER_GALAXY; s++) {
+        const pip = this.el("div", "pip");
+        if (s < clearedSectors) pip.classList.add("done");
+        if (isBossSector(i * SECTORS_PER_GALAXY + s)) pip.classList.add("boss");
+        pips.appendChild(pip);
+      }
+      info.appendChild(pips);
+
+      stop.append(emblem, info);
+      if (unlocked) {
+        stop.addEventListener("click", () => {
+          this.audio.select();
+          this.openCampaignGalaxy(i);
+        });
+      } else {
+        stop.disabled = true;
+      }
+      if (isCurrent) this.currentStop = stop;
+      this.journeyBody.appendChild(stop);
+    }
+    // Snap the view to the current Galaxy so the player lands on "where I am".
+    requestAnimationFrame(() => this.currentStop?.scrollIntoView({ block: "center" }));
+  }
+
+  /** Open the Sector map focused on a specific Galaxy (from the Journey map). */
+  private openCampaignGalaxy(galaxy: number): void {
+    this.viewedGalaxy = galaxy;
+    this.refreshCampaign();
+    this.menu.classList.add("hidden");
+    this.campaign.classList.remove("hidden");
   }
 
   /** Rebuild the stage chooser chips (unlock-gated) from the save. */
@@ -1428,10 +1548,12 @@ export class UIManager {
     this.menu.classList.add("hidden");
   }
 
-  /** Refresh menu stats and the resumable-run "Continue" button visibility. */
+  /** Refresh menu stats, the Journey map and the "Continue" button visibility. */
   refreshMenu(): void {
     this.refreshMenuStats();
     this.continueBtn.style.display = this.save.hasRunSnapshot() ? "" : "none";
+    // Re-render the active panel (refreshes the Journey map if it's showing).
+    this.selectMenuTab(this.activeMenuTab);
   }
 
   // ---- Level-up draft ----------------------------------------------------

@@ -159,6 +159,14 @@ artist; production-art seam via `ArtManifest`).
 - [ ] **Animation state machine** (idle/walk/attack/hit/death) + squash/stretch.
 - [ ] VFX library (trails, smoke, fire, explosions), unique boss presentations.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
+- [x] **Main-menu redesign**: bottom **tab bar** (Journey / Play / Wardens /
+      Hangar / Shop / More) declutters the main screen, and the hero screen is now
+      a scrollable vertical **Galaxy pathway** — each Galaxy an emblem node joined
+      by a trailing link, with per-Sector progress pips, locked Galaxies teased
+      above, and the current Galaxy centred on open. Tapping a Galaxy opens its
+      Sector map.
+- [x] **Resumable runs**: leave mid-run (pause / close tab) and pick up exactly
+      where you left off via a menu "Continue" button.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

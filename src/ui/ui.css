@@ -1318,3 +1318,218 @@
     transition: none;
   }
 }
+
+/* ===== Tabbed main menu + Journey pathway ===== */
+.menu-overlay {
+  justify-content: flex-start;
+  overflow: hidden;
+  gap: 10px;
+  padding: 14px 0 0;
+}
+.menu-header {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.menu-title {
+  margin: 0;
+  font-size: clamp(1.7rem, 6vw, 3rem);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+}
+.menu-overlay .menu-panels {
+  flex: 1 1 auto;
+  flex-shrink: 1;
+  min-height: 0;
+  width: min(580px, 96vw);
+  display: flex;
+}
+.menu-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 4px 12px 12px;
+}
+.menu-panel.hidden {
+  display: none;
+}
+.panel-head {
+  text-align: center;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(180, 192, 255, 0.7);
+  font-size: 0.78rem;
+}
+.mode-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(360px, 90vw);
+}
+
+/* Bottom tab bar. */
+.tab-bar {
+  flex: 0 0 auto;
+  display: flex;
+  width: 100%;
+  max-width: 720px;
+  gap: 2px;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+  background: rgba(9, 11, 19, 0.82);
+  border-top: 1px solid rgba(125, 140, 255, 0.16);
+  backdrop-filter: blur(8px);
+}
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  color: rgba(200, 208, 240, 0.62);
+  padding: 6px 2px;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.tab-btn .tab-icon {
+  font-size: 1.22rem;
+  line-height: 1;
+}
+.tab-btn .tab-label {
+  font-size: 0.64rem;
+  letter-spacing: 0.03em;
+}
+.tab-btn.active {
+  color: #fff;
+  background: rgba(125, 140, 255, 0.16);
+}
+.tab-btn:active {
+  transform: translateY(1px);
+}
+
+/* Vertical Galaxy pathway. */
+.journey {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  padding: 4px 0 10px;
+}
+.galaxy-link {
+  width: 4px;
+  height: 44px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(125, 140, 255, 0.16) 0 6px,
+    transparent 6px 12px
+  );
+}
+.galaxy-link.lit {
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--accent, #8aa) 0 6px,
+    transparent 6px 12px
+  );
+  box-shadow: 0 0 8px rgba(125, 140, 255, 0.3);
+  opacity: 0.92;
+}
+.galaxy-stop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(440px, 92vw);
+  text-align: left;
+  background: rgba(18, 22, 34, 0.72);
+  border: 1px solid rgba(125, 140, 255, 0.18);
+  border-radius: 16px;
+  padding: 12px 16px;
+  cursor: pointer;
+  color: var(--ui-text);
+  font: inherit;
+}
+.galaxy-stop.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 26px -6px var(--accent);
+}
+.galaxy-stop.locked {
+  opacity: 0.5;
+  cursor: default;
+}
+.galaxy-emblem {
+  position: relative;
+  flex: 0 0 auto;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.6), 0 0 20px -4px var(--accent);
+  overflow: hidden;
+}
+.galaxy-emblem-core {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 66% 74%, rgba(255, 255, 255, 0.28), transparent 42%);
+}
+.galaxy-lock {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  background: rgba(4, 6, 12, 0.5);
+}
+.galaxy-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.galaxy-idx {
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  font-weight: 800;
+}
+.galaxy-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.galaxy-sub {
+  font-size: 0.8rem;
+  color: rgba(200, 208, 240, 0.66);
+}
+.galaxy-pips {
+  display: flex;
+  gap: 4px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+.galaxy-pips .pip {
+  width: 12px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(160, 172, 220, 0.22);
+}
+.galaxy-pips .pip.done {
+  background: var(--accent);
+}
+.galaxy-pips .pip.boss {
+  border: 1px solid rgba(255, 120, 120, 0.8);
+}
+.galaxy-pips .pip.boss.done {
+  background: #ff7a7a;
+}
