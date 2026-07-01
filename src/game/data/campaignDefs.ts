@@ -147,3 +147,41 @@ export function isBossSector(level: number): boolean {
 export function levelReward(level: number): number {
   return 30 + level * 6 + (isBossSector(level) ? 60 : 0);
 }
+
+// ---- Per-Sector variety ----------------------------------------------------
+
+/**
+ * The enemy pool for a specific Sector. Early Sectors of a Galaxy field a subset
+ * (so newcomers learn a few foes), widening to the full roster by mid-Galaxy —
+ * a gentle "introduce the bestiary" curve rather than the whole pool at once.
+ */
+export function sectorEnemyPool(level: number): string[] {
+  const pool = getGalaxy(galaxyOf(level)).enemyPool;
+  const n = Math.min(pool.length, 4 + sectorOf(level));
+  return pool.slice(0, n);
+}
+
+/**
+ * A subtly shifted palette per Sector — the same Galaxy, but each Sector drifts
+ * its nebula/fog hues so back-to-back levels feel like different regions of
+ * space rather than the identical backdrop.
+ */
+export function sectorPalette(level: number): StagePalette {
+  const base = getGalaxy(galaxyOf(level)).palette;
+  const shift = sectorOf(level) * 8;
+  return {
+    ...base,
+    nebulaHues: base.nebulaHues.map((h) => (h + shift) % 360),
+    fogHue: (base.fogHue + shift) % 360,
+  };
+}
+
+/**
+ * Star rating (1–3) for clearing a Sector, from the HP fraction remaining at the
+ * clear moment — rewards clean, unhurt runs and drives replay for 3★.
+ */
+export function starsFor(hpFraction: number): number {
+  if (hpFraction >= 0.85) return 3;
+  if (hpFraction >= 0.5) return 2;
+  return 1;
+}

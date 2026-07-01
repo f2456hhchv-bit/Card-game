@@ -698,6 +698,7 @@ export class World {
       this.stats.elapsed,
       this.enemies.length,
       this.rng,
+      this.bossActive,
     );
     if (requests.length === 0) return;
     const minutes = this.stats.elapsed / 60;

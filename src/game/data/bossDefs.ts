@@ -29,7 +29,21 @@ export interface BossDef {
   projectileSpeedMult: number;
   /** Multiplier on attack cadence (<1 = attacks more often). */
   cadenceMult: number;
+  /**
+   * The boss's signature attack — woven through its phase rotations so each boss
+   * has a recognizable, distinct move rather than sharing one generic pattern.
+   * See {@link BossAttackKind} in BossController for the vocabulary.
+   */
+  signature: BossSignature;
 }
+
+/** Signature attack ids a boss can be built around (see BossController.fire). */
+export type BossSignature =
+  | "ringGap" // dense radial ring with a single dodgeable gap
+  | "spiralTwin" // two counter-rotating spiral arms
+  | "aimedSpread" // tight shotgun cluster fired at the Warden
+  | "cross" // rigid rotating cross of bullet-lines
+  | "wall"; // a sweeping wall of parallel bullets
 
 export const BOSS_DEFS: Record<string, BossDef> = {
   theMaw: {
@@ -46,6 +60,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     addCounts: [4, 6],
     projectileSpeedMult: 1,
     cadenceMult: 1,
+    signature: "ringGap",
   },
   theChoir: {
     id: "theChoir",
@@ -63,6 +78,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     addCounts: [2, 3],
     projectileSpeedMult: 1.3,
     cadenceMult: 0.82,
+    signature: "spiralTwin",
   },
   // ---- Ember Wastes (stage 2) bosses ------------------------------------
   thePyre: {
@@ -80,6 +96,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     addCounts: [5, 8],
     projectileSpeedMult: 1.45,
     cadenceMult: 0.8,
+    signature: "aimedSpread",
   },
   theForge: {
     id: "theForge",
@@ -96,6 +113,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     addCounts: [2, 3],
     projectileSpeedMult: 1.15,
     cadenceMult: 0.9,
+    signature: "cross",
   },
   theSovereign: {
     id: "theSovereign",
@@ -113,6 +131,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     addCounts: [3, 5],
     projectileSpeedMult: 1.25,
     cadenceMult: 0.82,
+    signature: "wall",
   },
   // ---- Hollow Deep (stage 3) bosses -------------------------------------
   theRime: {
@@ -130,6 +149,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     addCounts: [6, 9],
     projectileSpeedMult: 1.5,
     cadenceMult: 0.78,
+    signature: "ringGap",
   },
   theNadir: {
     id: "theNadir",
@@ -146,6 +166,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     addCounts: [2, 3],
     projectileSpeedMult: 1.2,
     cadenceMult: 0.88,
+    signature: "cross",
   },
 };
 

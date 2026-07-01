@@ -75,7 +75,9 @@ export class SpawnDirector {
 
   /** Difficulty multiplier on enemy damage. */
   damageScale(minutes: number): number {
-    return (1 + minutes * 0.12) * this.difficulty * this.ascDmg;
+    // Linear early, with a quadratic tail so that late enemies keep biting even
+    // once the Warden's build is monstrous (addresses "too easy after ~20 min").
+    return (1 + minutes * 0.12 + minutes * minutes * 0.006) * this.difficulty * this.ascDmg;
   }
 
   /** Base spawn interval (seconds between spawns), shrinking over time. */
@@ -87,7 +89,7 @@ export class SpawnDirector {
 
   /** Soft cap on concurrent enemies, rising with time. */
   enemyCap(minutes: number): number {
-    return Math.min(900, Math.floor(120 + minutes * 70));
+    return Math.min(900, Math.floor(140 + minutes * 90));
   }
 
   private availableDefs(minutes: number): EnemyDef[] {
@@ -102,15 +104,24 @@ export class SpawnDirector {
   /**
    * Advance the director and return spawn requests for this step (often empty).
    * @param dt seconds, @param elapsed total run seconds, @param liveCount current enemy count
+   * @param bossActive when true, fodder is throttled and its cap halved so the
+   *        boss fight stays readable (fixes "adds swarm the boss"); elites still
+   *        tick so the pressure doesn't vanish entirely.
    */
-  update(dt: number, elapsed: number, liveCount: number, rng: Rng): SpawnRequest[] {
+  update(
+    dt: number,
+    elapsed: number,
+    liveCount: number,
+    rng: Rng,
+    bossActive = false,
+  ): SpawnRequest[] {
     const minutes = elapsed / 60;
     const requests: SpawnRequest[] = [];
 
-    // Surge scheduling — brief windows of heavy pressure.
+    // Surge scheduling — brief windows of heavy pressure (never during a boss).
     this.surgeTimer -= dt;
     if (this.surgeTimer <= 0) {
-      this.surgeRemaining = 6;
+      if (!bossActive) this.surgeRemaining = 6;
       this.surgeTimer = 50 + rng.range(-8, 8);
     }
     let rateMult = 1;
@@ -119,14 +130,19 @@ export class SpawnDirector {
       rateMult = 2.6;
     }
 
-    const cap = this.enemyCap(minutes);
+    // During a boss, thin the fodder: fewer, and capped low so it never walls
+    // the player off from the boss.
+    const bossLull = bossActive ? 2.8 : 1;
+    const cap = bossActive
+      ? Math.floor(this.enemyCap(minutes) * 0.45)
+      : this.enemyCap(minutes);
     if (liveCount >= cap) {
       // At cap: still tick elite timer but suppress fodder spawns.
       this.eliteTimer -= dt;
       return requests;
     }
 
-    const interval = this.spawnInterval(minutes) / rateMult;
+    const interval = (this.spawnInterval(minutes) * bossLull) / rateMult;
     this.spawnAccumulator += dt;
 
     const defs = this.availableDefs(minutes);
@@ -138,12 +154,15 @@ export class SpawnDirector {
       requests.push({ def, elite: false });
     }
 
-    // Elite spawns — tankier, rewarding targets that punctuate the run.
+    // Elite spawns — tankier, rewarding targets that punctuate the run. Late in
+    // a run they arrive faster and in pairs, keeping veterans honest.
     this.eliteTimer -= dt;
     if (this.eliteTimer <= 0 && minutes >= 1) {
-      this.eliteTimer = Math.max(12, 26 - minutes) + rng.range(-3, 3);
-      const def = rng.weighted(defs, weights);
-      requests.push({ def, elite: true });
+      const floor = minutes >= 14 ? 8 : 12;
+      this.eliteTimer = Math.max(floor, 26 - minutes) + rng.range(-3, 3);
+      requests.push({ def: rng.weighted(defs, weights), elite: true });
+      // Past the mid-late game, elites hunt in pairs.
+      if (minutes >= 16) requests.push({ def: rng.weighted(defs, weights), elite: true });
     }
 
     return requests;

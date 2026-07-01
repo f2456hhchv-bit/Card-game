@@ -472,12 +472,34 @@ export class UIManager {
       row("⬆", "Each level-up, choose one of three power-ups. Build synergies!"),
       row("★", "Max a weapon + its paired relic to evolve it into a signature form."),
       row("⏸", touch ? "Tap the pause button (top-right) to pause." : "Press Esc or P to pause."),
-      row("☠", "A boss, The Maw, arrives at 3:00. Hold back the dark as long as you can."),
+      row("☠", "Bosses telegraph before they strike — each has its own signature pattern. Learn the tell, then punish the wind-up."),
+    );
+
+    // Systems guide — a plain-language tour of everything the menus unlock, so
+    // new players aren't lost among Wardens, the Hangar and the game modes.
+    const guideTitle = this.el("h3", "howto-subhead", "THE SYSTEMS");
+    const guide = this.el("div", "howto");
+    const grow = (icon: string, name: string, text: string) => {
+      const r = this.el("div", "howto-row");
+      const body = this.el("div", "howto-text");
+      body.append(this.el("strong", undefined, name + " — "), document.createTextNode(text));
+      r.append(this.el("div", "howto-icon", icon), body);
+      return r;
+    };
+    guide.append(
+      grow("🛡", "Wardens", "The heroes you play. Each starts with a different weapon and a permanent perk (more damage, more HP, faster fire…). Playing a Warden levels up its Mastery for a small lasting bonus. Unlock new Wardens with Light Motes."),
+      grow("🧩", "Hangar", "Your gear inventory. Equip one item per slot (Hull / Core / Engines / Wings). Items roll a rarity and bonus affixes, and matching a full 4-piece Set grants a powerful set bonus. Merge duplicates to raise an item's grade."),
+      grow("⚙", "Alloy & Salvage", "Dismantle spare gear into Alloy, then spend it to re-roll an item's affixes — turning unwanted drops into the stats you actually want."),
+      grow("🌌", "Campaign", "The main journey: clear a Sector to warp to the next. Survive the timer (or fell the Sector boss) to advance. Difficulty climbs slowly, Galaxy by Galaxy — endlessly."),
+      grow("♾", "Endless", "One run, difficulty ramps every 45s without limit. A pure high-score chase — how far up the Ascension tiers can you climb?"),
+      grow("⚔", "Boss Rush", "No fodder — just boss after escalating boss. The place to test a finished build."),
+      grow("🏰", "Gauntlet", "Clear three stages back-to-back on a single life. Your HP, level and loadout carry across each stage — pace yourself."),
+      grow("🛒", "Shop", "Spend Light Motes (earned every run) on permanent meta-upgrades and Supply Drops. Everything is unlockable through play — no purchases, ever."),
     );
 
     const back = this.el("button", "btn", "Back");
     back.addEventListener("click", () => this.closeHowTo());
-    o.append(title, list, back);
+    o.append(title, list, guideTitle, guide, back);
     this.root.appendChild(o);
     this.howto = o;
   }

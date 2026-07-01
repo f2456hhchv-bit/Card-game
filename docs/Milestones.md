@@ -136,6 +136,15 @@ Goal: replace placeholder geometry with premium, original procedural art.
       clear conditions, a Campaign map + Sector-Cleared flow, and **endless**
       procedurally-generated Galaxies beyond the 5 authored ones.
 - [x] **Shop mote sinks**: infinite Supply Drop crate + 5 Tier-II upgrades.
+- [x] **Playtest feedback pass** (v0.3.x): (1) fodder is **throttled during boss
+      fights** (halved cap + slower spawns) so adds no longer wall the player off
+      from the boss; (2) **late-game bite** — enemy damage gains a quadratic tail
+      and elites arrive faster and in pairs past ~14–16 min, fixing "too easy
+      after 20 min / lvl 50"; (3) **per-boss signature attacks** (ringGap /
+      spiralTwin / aimedSpread / cross / wall) woven into each boss's phase
+      rotation so encounters play distinctly, not one shared pattern; (4) an
+      in-game **Systems Guide** on the How-to-Play screen explaining Wardens,
+      Hangar, Alloy/salvage, Campaign, Endless, Boss Rush, Gauntlet and the Shop.
 
 ## ▶ ART UPLIFT — IN PROGRESS (permanent standard, see docs/ArtDirection.md)
 Visual quality is now a primary success criterion. Working toward Survivor.io /

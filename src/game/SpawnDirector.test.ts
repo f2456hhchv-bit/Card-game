@@ -60,6 +60,22 @@ describe("SpawnDirector", () => {
     for (const id of seen) expect(id).toBe("cinder");
   });
 
+  it("throttles fodder while a boss is active", () => {
+    const run = (bossActive: boolean) => {
+      const d = new SpawnDirector();
+      d.reset();
+      const rng = new Rng(2024);
+      let fodder = 0;
+      // Mid-run (~4 min), well below any cap, small live count.
+      for (let i = 0; i < 600; i++) {
+        const reqs = d.update(1 / 60, 240 + i / 60, 20, rng, bossActive);
+        fodder += reqs.filter((r) => !r.elite).length;
+      }
+      return fodder;
+    };
+    expect(run(true)).toBeLessThan(run(false));
+  });
+
   it("is deterministic for a fixed seed", () => {
     const run = () => {
       const d = new SpawnDirector();

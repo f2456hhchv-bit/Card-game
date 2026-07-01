@@ -25,7 +25,18 @@ export interface BossContext {
   spawnAdd(typeId: string, x: number, y: number): void;
 }
 
-type AttackKind = "aimed" | "radial" | "spiral";
+import type { BossSignature } from "../data/bossDefs";
+
+/**
+ * Every attack the controller can fire. The first three are the shared,
+ * always-readable staples; the rest are boss signatures (one per boss, woven
+ * into that boss's rotation) so encounters play distinctly.
+ */
+type AttackKind =
+  | "aimed"
+  | "radial"
+  | "spiral"
+  | BossSignature;
 
 interface QueuedAttack {
   kind: AttackKind;
@@ -51,6 +62,8 @@ export class BossController {
   private queued: QueuedAttack | null = null;
   private spiralAngle = 0;
   private cycleStep = 0;
+  /** Rotating base for the rigid "cross" signature. */
+  private crossAngle = 0;
 
   constructor(def: BossDef) {
     this.def = def;
@@ -133,24 +146,52 @@ export class BossController {
     this.attackTimer = Math.max(this.attackTimer, 1.0);
   }
 
+  /**
+   * The attack rotation for the current phase, with the boss's **signature**
+   * woven in — appearing occasionally in phase 1 and frequently by phase 3, so
+   * every boss reads as its own fight while still escalating.
+   */
+  private phaseCycle(): AttackKind[] {
+    const sig = this.def.signature;
+    switch (this.phase) {
+      case 0:
+        return ["aimed", "radial", sig];
+      case 1:
+        return ["aimed", sig, "radial", "spiral"];
+      default:
+        return [sig, "radial", sig, "spiral", "aimed"];
+    }
+  }
+
   private chooseAttack(): QueuedAttack {
     const speed = this.projectileSpeed();
-    // Each phase cycles a themed rotation of attacks.
-    const cycles: AttackKind[][] = [
-      ["aimed", "radial"],
-      ["aimed", "radial", "spiral"],
-      ["radial", "spiral", "aimed"],
-    ];
-    const cycle = cycles[this.phase];
+    const cycle = this.phaseCycle();
     const kind = cycle[this.cycleStep % cycle.length];
     this.cycleStep++;
-    const count =
-      kind === "aimed"
-        ? 5 + this.phase * 2
-        : kind === "radial"
-          ? 12 + this.phase * 4
-          : 3 + this.phase;
-    return { kind, count, speed };
+    return { kind, count: this.attackCount(kind), speed };
+  }
+
+  /** Bullet/arm count for an attack, scaled by phase. */
+  private attackCount(kind: AttackKind): number {
+    const p = this.phase;
+    switch (kind) {
+      case "aimed":
+        return 5 + p * 2;
+      case "radial":
+        return 12 + p * 4;
+      case "spiral":
+        return 3 + p;
+      case "aimedSpread":
+        return 6 + p * 2; // dense shotgun cone
+      case "ringGap":
+        return 18 + p * 5; // full ring minus a dodge gap
+      case "cross":
+        return 4 + (p >= 2 ? 4 : 0); // 4 arms, 8 in the final phase
+      case "spiralTwin":
+        return 3 + p; // arms per side
+      case "wall":
+        return 7 + p * 2; // parallel bullets across the wall
+    }
   }
 
   private fire(attack: QueuedAttack, boss: Enemy, ctx: BossContext): void {
@@ -186,6 +227,75 @@ export class BossController {
             dmg,
             r,
           );
+        }
+        break;
+      }
+      case "aimedSpread": {
+        // A tight shotgun cluster hurled at the Warden — punishing up close,
+        // easy to sidestep at range. The Pyre's aggressive signature.
+        const base = Math.atan2(ctx.player.y - boss.y, ctx.player.x - boss.x);
+        const arc = 0.42;
+        for (let i = 0; i < attack.count; i++) {
+          const t = attack.count > 1 ? i / (attack.count - 1) - 0.5 : 0;
+          const jitter = ctx.rng.range(-0.03, 0.03);
+          this.spawn(boss, ctx, base + t * arc + jitter, attack.speed * 1.15, dmg, r);
+        }
+        break;
+      }
+      case "ringGap": {
+        // A full radial ring with one wedge left open — there is always a lane
+        // to dodge through if you read it. The Maw/Rime's devouring signature.
+        const offset = ctx.rng.angle();
+        const n = attack.count;
+        const gapStart = Math.floor(ctx.rng.range(0, n));
+        const gapWidth = 3; // slots left open
+        for (let i = 0; i < n; i++) {
+          if ((i - gapStart + n) % n < gapWidth) continue;
+          this.spawn(boss, ctx, offset + (i / n) * TAU, attack.speed, dmg, r);
+        }
+        break;
+      }
+      case "cross": {
+        // A rigid cross of bullet-lines that rotates a little each volley — a
+        // slow, geometric, hammering pattern. The Forge/Nadir's signature.
+        this.crossAngle += 0.28;
+        const arms = attack.count;
+        const perLine = 3;
+        for (let a = 0; a < arms; a++) {
+          const ang = this.crossAngle + (a / arms) * TAU;
+          for (let k = 0; k < perLine; k++) {
+            this.spawn(boss, ctx, ang, attack.speed * (0.8 + k * 0.22), dmg, r);
+          }
+        }
+        break;
+      }
+      case "spiralTwin": {
+        // Two counter-rotating spiral arms — a hypnotic, weaving mesh. The
+        // Choir's chorus signature.
+        this.spiralAngle += 0.42;
+        const arms = attack.count;
+        for (let i = 0; i < arms; i++) {
+          const spread = (i / arms) * TAU;
+          this.spawn(boss, ctx, this.spiralAngle + spread, attack.speed * 0.9, dmg, r);
+          this.spawn(boss, ctx, -this.spiralAngle + spread, attack.speed * 0.9, dmg, r);
+        }
+        break;
+      }
+      case "wall": {
+        // A wall of parallel bullets sweeping in from the boss's flank — you
+        // must slip around its end. The Sovereign's imperious signature.
+        const base = Math.atan2(ctx.player.y - boss.y, ctx.player.x - boss.x);
+        const dirX = Math.cos(base);
+        const dirY = Math.sin(base);
+        const perpX = -dirY;
+        const perpY = dirX;
+        const n = attack.count;
+        const spacing = 44;
+        for (let i = 0; i < n; i++) {
+          const off = (i - (n - 1) / 2) * spacing;
+          const sx = boss.x + perpX * off + dirX * boss.radius;
+          const sy = boss.y + perpY * off + dirY * boss.radius;
+          ctx.fireEnemyProjectile(sx, sy, dirX * attack.speed, dirY * attack.speed, dmg, this.def.hue, r);
         }
         break;
       }
