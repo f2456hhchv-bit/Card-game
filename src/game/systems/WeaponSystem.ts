@@ -145,6 +145,13 @@ export class WeaponSystem {
       const angle = baseAngle + t * spread * (count - 1);
       this.spawnProjectile(world, w, lvl, angle, seq);
     }
+    const mr = world.player.radius + 6;
+    world.spawnMuzzle(
+      world.player.x + Math.cos(baseAngle) * mr,
+      world.player.y + Math.sin(baseAngle) * mr,
+      baseAngle,
+      w.def.hue,
+    );
     world.events.emit("weaponFired", { weaponId: w.def.id });
   }
 
@@ -162,6 +169,13 @@ export class WeaponSystem {
       const t = count > 1 ? i / (count - 1) - 0.5 : 0;
       this.spawnProjectile(world, w, lvl, baseAngle + t * arc, seq);
     }
+    const mr = world.player.radius + 6;
+    world.spawnMuzzle(
+      world.player.x + Math.cos(baseAngle) * mr,
+      world.player.y + Math.sin(baseAngle) * mr,
+      baseAngle,
+      w.def.hue,
+    );
     world.events.emit("weaponFired", { weaponId: w.def.id });
   }
 

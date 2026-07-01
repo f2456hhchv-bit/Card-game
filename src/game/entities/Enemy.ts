@@ -35,6 +35,8 @@ export class Enemy implements SpatialEntity {
   // Visuals
   hue = 280;
   hitFlash = 0;
+  /** Squash-and-stretch pop on being hit; eases back to 1 (see World). */
+  hitScale = 1;
   /** Knockback velocity decays separately from steering velocity. */
   knockX = 0;
   knockY = 0;
@@ -48,6 +50,7 @@ export class Enemy implements SpatialEntity {
   reset(): void {
     this.active = false;
     this.hitFlash = 0;
+    this.hitScale = 1;
     this.knockX = 0;
     this.knockY = 0;
     this.contactCooldown = 0;

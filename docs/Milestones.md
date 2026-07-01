@@ -156,8 +156,14 @@ artist; production-art seam via `ArtManifest`).
       (`PostFx.ts`), toggleable in Settings — game-wide luminous uplift.
 - [ ] Per-Warden & per-enemy **unique silhouettes** (manifest flags recolours as
       `placeholder` — REQUIRE production art).
-- [ ] **Animation state machine** (idle/walk/attack/hit/death) + squash/stretch.
-- [ ] VFX library (trails, smoke, fire, explosions), unique boss presentations.
+- [~] **Animation state machine** (idle/walk/attack/hit/death) + squash/stretch.
+      Started: enemies now **pop (squash-and-stretch)** on every hit — harder on
+      crits — easing back over ~0.1s. (Idle bob + directional wobble already in.)
+- [~] VFX library (trails, smoke, fire, explosions), unique boss presentations.
+      Started: **impact spark bursts** where shots land, **muzzle flashes** in the
+      firing direction, and **elemental ambient wisps** — embers rising off fire
+      foes (Cinder/Revenant), frost drifting off ice foes (Shard/Colossus) — for
+      instant on-field identity. All budget-capped so dense swarms stay cheap.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
 - [x] **Main-menu redesign**: bottom **tab bar** (Journey / Play / Wardens /
       Hangar / Shop / More) declutters the main screen, and the hero screen is now

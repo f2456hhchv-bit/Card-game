@@ -179,7 +179,7 @@ export class GameRenderer {
       const x = camera.worldToScreenX(e.x);
       const yBob = this.reduceMotion ? 0 : Math.sin(t * 5 + e.animPhase) * e.radius * 0.07 * camera.zoom;
       const y = camera.worldToScreenY(e.y) + yBob;
-      const r = e.radius * camera.zoom * 1.25;
+      const r = e.radius * camera.zoom * 1.25 * e.hitScale;
 
       this.shadow(ctx, x, camera.worldToScreenY(e.y), e.radius * camera.zoom);
 

@@ -834,6 +834,8 @@ export class World {
           if (dx * dx + dy * dy > rr * rr) continue;
           const inv = 1 / (Math.hypot(dx, dy) || 1);
           this.damageEnemy(e, p.damage, p.crit, dx * inv * p.knockback, dy * inv * p.knockback);
+          // Impact spark burst kicked back along the projectile's travel.
+          this.spawnImpact(p.x, p.y, p.hue, p.vx, p.vy);
           p.pierce--;
           if (p.pierce <= 0) {
             expired = true;
@@ -857,6 +859,7 @@ export class World {
     for (let i = arr.length - 1; i >= 0; i--) {
       const e = arr[i];
       e.hitFlash = Math.max(0, e.hitFlash - dt);
+      if (e.hitScale !== 1) e.hitScale += (1 - e.hitScale) * Math.min(1, dt * 16);
       e.contactCooldown = Math.max(0, e.contactCooldown - dt);
 
       const dx = px - e.x;
@@ -881,6 +884,9 @@ export class World {
         this.damagePlayer(e.damage);
         e.contactCooldown = 0.6;
       }
+
+      // Elemental ambient wisps give fire/ice foes a distinct read on the field.
+      this.emitEnemyAmbient(e);
     }
     // Cheap soft separation so enemies don't fully stack into one pixel.
     this.separateEnemies();
@@ -1109,6 +1115,7 @@ export class World {
     if (!e.active) return;
     e.hp -= amount;
     e.hitFlash = 0.08;
+    e.hitScale = crit ? 1.5 : 1.32; // squash-and-stretch pop, eased back in updateEnemies
     e.knockX += knockX;
     e.knockY += knockY;
     this.stats.damageDealt += amount;
@@ -1274,6 +1281,92 @@ export class World {
     // A shockwave ring punctuates bigger kills.
     if (e.isElite || e.isBoss) {
       this.spawnRing(e.x, e.y, e.hue, e.radius * 0.8, e.isBoss ? 0.7 : 0.5);
+    }
+  }
+
+  /**
+   * Impact burst where a shot lands — a small fan of sparks kicked back along
+   * the hit direction plus a quick flash ring. Bounded so heavy multi-projectile
+   * builds can't flood the particle pool.
+   */
+  spawnImpact(x: number, y: number, hue: number, nx: number, ny: number): void {
+    if (this.particles.length > 420) return;
+    const base = Math.atan2(ny, nx);
+    for (let i = 0; i < 3; i++) {
+      const pt = this.particlePool.obtain();
+      const a = base + this.rng.range(-0.6, 0.6);
+      const sp = this.rng.range(70, 190);
+      pt.x = x;
+      pt.y = y;
+      pt.vx = Math.cos(a) * sp;
+      pt.vy = Math.sin(a) * sp;
+      pt.life = 0;
+      pt.maxLife = this.rng.range(0.14, 0.26);
+      pt.size = this.rng.range(1.5, 3);
+      pt.hue = hue;
+      pt.alpha = 1;
+      pt.drag = 0.82;
+      pt.shape = "spark";
+      pt.active = true;
+      this.particles.push(pt);
+    }
+    this.spawnRing(x, y, hue, 8, 0.16);
+  }
+
+  /**
+   * Occasional elemental wisp trailing a fire (ember rising) or ice (frost
+   * drifting) enemy — pure identity flavour. Bounded and low-probability so
+   * dense swarms stay cheap.
+   */
+  private emitEnemyAmbient(e: Enemy): void {
+    if (this.particles.length > 280) return;
+    const fire = e.typeId === "cinder" || e.typeId === "revenant";
+    const ice = e.typeId === "shard" || e.typeId === "colossus";
+    if ((!fire && !ice) || !this.rng.chance(0.02)) return;
+    const pt = this.particlePool.obtain();
+    pt.x = e.x + this.rng.range(-e.radius, e.radius) * 0.5;
+    pt.y = e.y + this.rng.range(-e.radius, e.radius) * 0.5;
+    if (fire) {
+      pt.vx = this.rng.range(-8, 8);
+      pt.vy = this.rng.range(-40, -18); // embers rise
+      pt.hue = this.rng.range(18, 42);
+      pt.maxLife = this.rng.range(0.3, 0.6);
+      pt.size = this.rng.range(1.4, 2.6);
+    } else {
+      pt.vx = this.rng.range(-14, 14);
+      pt.vy = this.rng.range(-6, 10);
+      pt.hue = this.rng.range(180, 205);
+      pt.maxLife = this.rng.range(0.4, 0.8);
+      pt.size = this.rng.range(1.2, 2.2);
+    }
+    pt.life = 0;
+    pt.alpha = 1;
+    pt.drag = 0.9;
+    pt.shape = "spark";
+    pt.active = true;
+    this.particles.push(pt);
+  }
+
+  /** Muzzle flash at a weapon's origin, thrown in the firing direction. */
+  spawnMuzzle(x: number, y: number, angle: number, hue: number): void {
+    if (this.particles.length > 420) return;
+    for (let i = 0; i < 2; i++) {
+      const pt = this.particlePool.obtain();
+      const a = angle + this.rng.range(-0.22, 0.22);
+      const sp = this.rng.range(120, 240);
+      pt.x = x;
+      pt.y = y;
+      pt.vx = Math.cos(a) * sp;
+      pt.vy = Math.sin(a) * sp;
+      pt.life = 0;
+      pt.maxLife = this.rng.range(0.08, 0.16);
+      pt.size = this.rng.range(2, 3.4);
+      pt.hue = hue;
+      pt.alpha = 1;
+      pt.drag = 0.8;
+      pt.shape = "spark";
+      pt.active = true;
+      this.particles.push(pt);
     }
   }
 
