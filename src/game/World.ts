@@ -21,6 +21,7 @@ import {
   getGalaxy,
   galaxyOf,
   levelDifficulty,
+  levelDamageDifficulty,
   levelDuration,
   isBossSector,
 } from "./data/campaignDefs";
@@ -286,9 +287,14 @@ export class World {
       : this.stage.bossPool;
   }
 
-  /** Enemy HP/damage difficulty multiplier for the active arena. */
+  /** Enemy HP difficulty multiplier for the active arena. */
   private get activeDifficulty(): number {
     return this.campaign ? levelDifficulty(this.campaignLevel) : this.stage.difficulty;
+  }
+
+  /** Enemy damage difficulty — milder than HP in campaign (see campaignDefs). */
+  private get activeDamageDifficulty(): number {
+    return this.campaign ? levelDamageDifficulty(this.campaignLevel) : this.stage.difficulty;
   }
 
   /** Re-seed the world RNG (used to start a deterministic Daily Run). */
@@ -352,7 +358,11 @@ export class World {
     this.damageBuff = 1;
     this.buffTimer = 0;
     this.chassisTimer = 2; // brief grace before the first hull-passive tick
-    this.spawnDirector.reset(this.activeEnemyPool, this.activeDifficulty);
+    this.spawnDirector.reset(
+      this.activeEnemyPool,
+      this.activeDifficulty,
+      this.activeDamageDifficulty,
+    );
     this.ascHp = 1;
     this.ascDmg = 1;
     this.ascTimer = ASCENSION_INTERVAL;
@@ -851,7 +861,10 @@ export class World {
     const diff = this.activeDifficulty;
     e.maxHp = def.baseHp * encounterScale * (1 + minutes * 0.04) * diff * this.ascHp;
     e.hp = e.maxHp;
-    e.damage = def.contactDamage * (1 + minutes * 0.08) * diff * this.ascDmg;
+    // Boss damage uses the milder damage curve so deep-Galaxy bosses are tanky,
+    // not one-shot machines.
+    e.damage =
+      def.contactDamage * (1 + minutes * 0.08) * this.activeDamageDifficulty * this.ascDmg;
     e.xpValue = 60 + this.bossEncounter * 30;
     e.knockX = 0;
     e.knockY = 0;

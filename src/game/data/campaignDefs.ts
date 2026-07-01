@@ -10,6 +10,12 @@ import { STAGE_DEFS, type StagePalette } from "./stageDefs";
  * **procedurally generated beyond** it, so the campaign expands without end.
  */
 export const SECTORS_PER_GALAXY = 10;
+/** The campaign runs to **Galaxy 100** — a finite, defined endgame. */
+export const GALAXY_COUNT = 100;
+/** Total Sectors in the whole campaign (Galaxy 100 · Sector 10 is the finale). */
+export const TOTAL_SECTORS = GALAXY_COUNT * SECTORS_PER_GALAXY;
+/** Global index of the final Sector (0-based). */
+export const MAX_LEVEL = TOTAL_SECTORS - 1;
 
 export interface GalaxyDef {
   name: string;
@@ -127,9 +133,30 @@ export function levelLabel(level: number): string {
   return `Galaxy ${galaxyOf(level) + 1} · Sector ${sectorOf(level) + 1}`;
 }
 
-/** Enemy HP/damage multiplier — a slow, steady climb per Sector. */
+/**
+ * Enemy HP/damage multiplier for a Sector. Tuned for the full 1000-Sector run:
+ * player power is **bounded** (meta + gear + Commander + chassis + in-run level),
+ * so this must target *achievable* strength rather than run away. It is mostly a
+ * gentle linear climb with a modest quadratic tail so the deepest Galaxies stay
+ * demanding without becoming an unkillable wall.
+ *
+ * Rough shape: G1 ≈ 1.0–1.2× · G10 ≈ 3.5× · G50 ≈ 15× · G100 ≈ 33×.
+ * (Constants are deliberately easy to retune from playtest feedback.)
+ */
 export function levelDifficulty(level: number): number {
-  return 1 + level * 0.06;
+  const l = Math.max(0, Math.min(level, MAX_LEVEL));
+  return 1 + l * 0.025 + l * l * 0.000008;
+}
+
+/**
+ * Enemy **damage** multiplier for a Sector — deliberately climbs slower than
+ * {@link levelDifficulty} (HP). Late Galaxies therefore field bullet-sponge foes
+ * you must out-damage, rather than glass cannons that one-shot a maxed hull.
+ * Rough shape: G1 ≈ 1.0× · G50 ≈ 9× · G100 ≈ 19×.
+ */
+export function levelDamageDifficulty(level: number): number {
+  const l = Math.max(0, Math.min(level, MAX_LEVEL));
+  return 1 + l * 0.015 + l * l * 0.000003;
 }
 
 /** Survival target (seconds) for a non-boss Sector — grows slowly, then caps. */
@@ -141,6 +168,11 @@ export function levelDuration(level: number): number {
 export function isBossSector(level: number): boolean {
   const s = sectorOf(level);
   return s === 4 || s === 9;
+}
+
+/** The final Sector of the campaign (Galaxy 100 · Sector 10). */
+export function isFinalLevel(level: number): boolean {
+  return level >= MAX_LEVEL;
 }
 
 /** Motes awarded for clearing a Sector (first clear pays more — see Game). */

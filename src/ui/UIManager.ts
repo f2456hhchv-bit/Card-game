@@ -36,6 +36,7 @@ import {
   isBossSector,
   levelDifficulty,
   SECTORS_PER_GALAXY,
+  GALAXY_COUNT,
 } from "../game/data/campaignDefs";
 import { formatTime } from "../core/format";
 
@@ -536,8 +537,9 @@ export class UIManager {
    */
   private refreshJourney(): void {
     const progress = this.campaignProgress();
-    const currentGalaxy = galaxyOf(progress);
-    const topGalaxy = currentGalaxy + 2; // tease a couple of locked Galaxies ahead
+    // Clamp to the finite Galaxy 100 endgame (progress may reach "all cleared").
+    const currentGalaxy = Math.min(galaxyOf(progress), GALAXY_COUNT - 1);
+    const topGalaxy = Math.min(currentGalaxy + 2, GALAXY_COUNT - 1);
     this.currentStop = undefined;
 
     this.journeyBody.replaceChildren();
@@ -1563,7 +1565,8 @@ export class UIManager {
 
   private refreshCampaign(): void {
     const progress = this.campaignProgress();
-    const maxGalaxy = galaxyOf(progress); // furthest galaxy with any unlocked sector
+    // Furthest galaxy with any unlocked sector, clamped to the Galaxy 100 finale.
+    const maxGalaxy = Math.min(galaxyOf(progress), GALAXY_COUNT - 1);
     this.viewedGalaxy = Math.max(0, Math.min(this.viewedGalaxy, maxGalaxy));
     const g = getGalaxy(this.viewedGalaxy);
     const accent = `hsl(${g.palette.fogHue} 70% 62%)`;

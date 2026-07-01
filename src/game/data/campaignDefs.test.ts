@@ -6,9 +6,13 @@ import {
   levelDifficulty,
   levelDuration,
   isBossSector,
+  isFinalLevel,
   levelLabel,
   GALAXIES,
   SECTORS_PER_GALAXY,
+  GALAXY_COUNT,
+  TOTAL_SECTORS,
+  MAX_LEVEL,
 } from "./campaignDefs";
 import { ENEMY_DEFS } from "./enemyDefs";
 import { BOSS_DEFS } from "./bossDefs";
@@ -22,12 +26,26 @@ describe("campaignDefs", () => {
     expect(levelLabel(13)).toBe("Galaxy 2 · Sector 4");
   });
 
-  it("difficulty climbs slowly and monotonically per Sector", () => {
+  it("difficulty climbs monotonically and stays in a fair band to Galaxy 100", () => {
     expect(levelDifficulty(0)).toBeCloseTo(1);
+    // Strictly increasing across the whole run.
     expect(levelDifficulty(10)).toBeGreaterThan(levelDifficulty(0));
-    expect(levelDifficulty(25)).toBeGreaterThan(levelDifficulty(10));
-    // "slow": one Galaxy (10 Sectors) is roughly +60% enemy strength.
-    expect(levelDifficulty(10)).toBeCloseTo(1.6, 1);
+    expect(levelDifficulty(99)).toBeGreaterThan(levelDifficulty(10));
+    expect(levelDifficulty(MAX_LEVEL)).toBeGreaterThan(levelDifficulty(499));
+    // Gentle early (first Galaxy stays approachable).
+    expect(levelDifficulty(9)).toBeLessThan(1.4);
+    // Demanding but not an unkillable wall at the finale (player power is bounded).
+    expect(levelDifficulty(MAX_LEVEL)).toBeGreaterThan(20);
+    expect(levelDifficulty(MAX_LEVEL)).toBeLessThan(45);
+  });
+
+  it("is a finite campaign of 100 Galaxies (1000 Sectors)", () => {
+    expect(GALAXY_COUNT).toBe(100);
+    expect(TOTAL_SECTORS).toBe(1000);
+    expect(MAX_LEVEL).toBe(999);
+    expect(isFinalLevel(MAX_LEVEL)).toBe(true);
+    expect(isFinalLevel(MAX_LEVEL - 1)).toBe(false);
+    expect(levelLabel(MAX_LEVEL)).toBe("Galaxy 100 · Sector 10");
   });
 
   it("boss Sectors are the 5th and 10th of each Galaxy", () => {
@@ -45,7 +63,7 @@ describe("campaignDefs", () => {
     }
   });
 
-  it("the campaign is endless — Galaxies generate beyond the authored list", () => {
+  it("Galaxies generate procedurally beyond the authored list (up to Galaxy 100)", () => {
     const far = getGalaxy(GALAXIES.length + 20);
     expect(far.name.length).toBeGreaterThan(0);
     expect(far.enemyPool.length).toBeGreaterThan(0);

@@ -19,7 +19,7 @@ import {
   rarityName,
 } from "./data/gearDefs";
 import { getStage, isStageUnlocked } from "./data/stageDefs";
-import { levelReward } from "./data/campaignDefs";
+import { levelReward, isFinalLevel, MAX_LEVEL } from "./data/campaignDefs";
 import { SIGNATURE_DEFS, SIGNATURE_LIST } from "./data/signatureDefs";
 import { WARDEN_LIST } from "./data/wardenDefs";
 import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
@@ -93,7 +93,7 @@ export class Game {
       onStartEndless: () => this.startRun(false, false, true),
       onStartGauntlet: () => this.startRun(false, false, false, true),
       onStartCampaign: (level: number) => this.startCampaign(level),
-      onNextLevel: () => this.startCampaign(this.campaignLevel + 1),
+      onNextLevel: () => this.startCampaign(Math.min(this.campaignLevel + 1, MAX_LEVEL)),
       onContinueRun: () => this.resumeSavedRun(),
       onPause: () => this.pause(),
       onResume: () => this.resume(),
@@ -486,16 +486,21 @@ export class Game {
     const base = levelReward(level) * (firstClear ? 1 : 0.3);
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     this.save.data.motes += motes;
+    // Advance progress (may reach TOTAL_SECTORS = "all cleared"; the map clamps
+    // its display so it never shows a Galaxy beyond 100).
     if (firstClear) this.save.data.campaignProgress = level + 1;
-    // Every clear salvages gear + earns the Warden mastery XP.
+    // Every clear salvages gear + earns the Commander mastery XP.
     this.salvageGear();
     const wid = this.save.data.selectedWarden;
     this.save.grantWardenXp(wid, 20 + level * 4 + this.world.stats.kills);
     this.save.save();
     this.checkAchievements();
-    const hasNext = true; // the campaign is endless (procedural galaxies)
+    const final = isFinalLevel(level);
+    if (final) {
+      this.ui.showToast("★", "Campaign Complete!", "You have conquered all 100 Galaxies. The dark is held.");
+    }
     this.ui.hideHUD();
-    this.ui.showLevelCleared(level, motes, firstClear, hasNext);
+    this.ui.showLevelCleared(level, motes, firstClear, !final);
   }
 
   private onPlayerDied(): void {

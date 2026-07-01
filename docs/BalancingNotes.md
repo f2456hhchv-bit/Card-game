@@ -101,3 +101,31 @@ feel too "drafty" late, raise the quadratic term; if power plateaus, lower it.
   projectiles with first-pass tuning (M2).
 - **2026-06-28** — Added Arc Coil (chain) + Tempest Coil, and the Tidal Charm &
   Echo Stone relics with first-pass tuning (M2).
+
+## Campaign to Galaxy 100 + rebalance for the three build ecosystems (2026-07-01)
+
+With Commanders (specials), Ships (chassis passives), and 12×6 gear sets (6-piece
+capstones), the player's power ceiling rose a lot. Player power is nonetheless
+**bounded** (meta + gear grade/rarity/affix/set caps + Commander mastery cap +
+one chassis + in-run level), so enemy scaling is tuned to *achievable* strength
+rather than allowed to run away.
+
+- **Finite campaign:** the run now ends at **Galaxy 100 · Sector 10** (1000
+  Sectors). `GALAXY_COUNT`/`TOTAL_SECTORS`/`MAX_LEVEL` in campaignDefs; the map
+  clamps its display, and clearing the finale shows a "Campaign Complete" toast.
+- **HP difficulty curve** (`levelDifficulty`): reshaped from the old flat
+  `1 + level*0.06` (which reached ~61× at level 999 — an unkillable wall) to
+  `1 + level*0.025 + level²*8e-6`. Shape: G1 ≈ 1.0–1.2× · G10 ≈ 3.5× · G50 ≈ 15× ·
+  G100 ≈ 33×. Gentle early (approachable for newer players progressing through),
+  demanding but beatable at the finale.
+- **Damage curve split** (`levelDamageDifficulty`): enemy *damage* now climbs
+  **slower** than HP — `1 + level*0.015 + level²*3e-6` (~19× at G100 vs ~33× HP).
+  Deep-Galaxy foes are bullet sponges you out-damage, not glass cannons that
+  one-shot a maxed hull. Wired via a separate `damageDifficulty` in SpawnDirector
+  and used for boss contact damage too.
+- **Constants are deliberately easy to retune** from playtest feedback — the two
+  curve functions are the single source of truth for campaign difficulty.
+
+**To watch (needs live playtest):** the exact G80–G100 band for a fully-geared
+mono-set + best-chassis + Commander build; boss HP totals at G100 (tanky but
+should fall inside a Sector's fight, not a stalemate).

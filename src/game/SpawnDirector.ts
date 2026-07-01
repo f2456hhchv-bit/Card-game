@@ -28,8 +28,10 @@ export class SpawnDirector {
   private surgeRemaining = 0;
   /** Enemy ids eligible for this run's stage (null = the whole bestiary). */
   private pool: Set<string> | null = null;
-  /** Stage difficulty multiplier on HP/damage scaling (1 = base stage). */
+  /** Difficulty multiplier on enemy HP scaling (1 = base stage). */
   private difficulty = 1;
+  /** Difficulty multiplier on enemy damage scaling — may be milder than HP. */
+  private damageDifficulty = 1;
   /** Endless Ascension multipliers (HP, damage, spawn-rate); 1 = no ascension. */
   private ascHp = 1;
   private ascDmg = 1;
@@ -39,13 +41,14 @@ export class SpawnDirector {
    * @param pool optional stage enemy-id whitelist; omit for all enemies.
    * @param difficulty stage HP/damage multiplier (1 = base).
    */
-  reset(pool?: readonly string[], difficulty = 1): void {
+  reset(pool?: readonly string[], difficulty = 1, damageDifficulty = difficulty): void {
     this.spawnAccumulator = 0;
     this.eliteTimer = 22;
     this.surgeTimer = 45;
     this.surgeRemaining = 0;
     this.pool = pool ? new Set(pool) : null;
     this.difficulty = difficulty;
+    this.damageDifficulty = damageDifficulty;
     this.ascHp = 1;
     this.ascDmg = 1;
     this.ascRate = 1;
@@ -55,9 +58,10 @@ export class SpawnDirector {
    * Swap the active enemy pool + difficulty mid-run (Stage Gauntlet) without
    * disturbing the spawn/elite/surge timers.
    */
-  setStage(pool: readonly string[], difficulty: number): void {
+  setStage(pool: readonly string[], difficulty: number, damageDifficulty = difficulty): void {
     this.pool = new Set(pool);
     this.difficulty = difficulty;
+    this.damageDifficulty = damageDifficulty;
   }
 
   /** Set the endless Ascension multipliers (HP, damage, spawn-rate). */
@@ -77,7 +81,7 @@ export class SpawnDirector {
   damageScale(minutes: number): number {
     // Linear early, with a quadratic tail so that late enemies keep biting even
     // once the Warden's build is monstrous (addresses "too easy after ~20 min").
-    return (1 + minutes * 0.12 + minutes * minutes * 0.006) * this.difficulty * this.ascDmg;
+    return (1 + minutes * 0.12 + minutes * minutes * 0.006) * this.damageDifficulty * this.ascDmg;
   }
 
   /** Base spawn interval (seconds between spawns), shrinking over time. */
