@@ -691,6 +691,32 @@ export class World {
         this.chassisTimer = 4;
         this.fireDroneVolley();
         break;
+      case "shock":
+        this.chassisTimer = 5;
+        this.chainShock();
+        break;
+    }
+  }
+
+  /** Corsair shock hull: an arc of light zaps the nearest few foes. */
+  private chainShock(): void {
+    const p = this.player;
+    const near = this.enemyGrid.query(p.x, p.y, 320);
+    const targets = near
+      .filter((e) => e.active && !e.isBoss)
+      .sort(
+        (a, b) =>
+          (a.x - p.x) ** 2 + (a.y - p.y) ** 2 - ((b.x - p.x) ** 2 + (b.y - p.y) ** 2),
+      )
+      .slice(0, 3);
+    let fromX = p.x;
+    let fromY = p.y;
+    const dmg = 24 * p.stats.damageMult * this.damageBuff;
+    for (const e of targets) {
+      this.spawnArc(fromX, fromY, e.x, e.y, 190);
+      this.damageEnemy(e, dmg, false, 0, 0);
+      fromX = e.x;
+      fromY = e.y;
     }
   }
 
@@ -793,6 +819,24 @@ export class World {
       case "guard": {
         p.invuln = Math.max(p.invuln, sp.invuln ?? 3);
         this.spawnRing(p.x, p.y, 210, p.radius * 1.6, 0.8);
+        break;
+      }
+      case "vortex": {
+        // Gravity Well: haul nearby foes toward you and crush them together.
+        const r = (sp.radius ?? 300) * Math.sqrt(p.stats.areaMult);
+        const dmg = (sp.damage ?? 30) * p.stats.damageMult * this.damageBuff;
+        const r2 = r * r;
+        const near = this.enemyGrid.query(p.x, p.y, r);
+        for (let i = 0; i < near.length; i++) {
+          const e = near[i];
+          if (!e.active || e.isBoss) continue;
+          const dx = p.x - e.x;
+          const dy = p.y - e.y;
+          if (dx * dx + dy * dy > r2) continue;
+          const inv = 1 / (Math.hypot(dx, dy) || 1);
+          this.damageEnemy(e, dmg, false, dx * inv * 420, dy * inv * 420); // pull inward
+        }
+        this.spawnRing(p.x, p.y, 300, r, 0.6);
         break;
       }
     }

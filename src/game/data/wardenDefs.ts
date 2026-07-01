@@ -16,7 +16,7 @@ export interface CommanderSpecial {
   /** Cooldown between activations, in seconds. */
   cooldown: number;
   /** Which effect World applies. */
-  kind: "nova" | "heal" | "empower" | "dash" | "guard";
+  kind: "nova" | "heal" | "empower" | "dash" | "guard" | "vortex";
   /** nova: burst radius / damage. */
   radius?: number;
   damage?: number;
@@ -197,6 +197,50 @@ export const WARDEN_DEFS: Record<string, WardenDef> = {
       s.projectileSpeedMult *= 1.15;
       s.moveSpeed *= 1.08;
       s.maxHp -= 10;
+    },
+  },
+  vela: {
+    id: "vela",
+    name: "Vela",
+    description: "A gravitic savant who folds space around her foes.",
+    hue: 312,
+    starterWeapon: "frostFan",
+    unlockCost: 450,
+    perk: "+12% Area, +15 Pickup",
+    special: {
+      name: "Gravity Well",
+      description: "Wrenches nearby foes inward and crushes them together.",
+      icon: "🌌",
+      cooldown: 14,
+      kind: "vortex",
+      radius: 300,
+      damage: 34,
+    },
+    applyPerk: (s) => {
+      s.areaMult *= 1.12;
+      s.pickupRadius += 15;
+    },
+  },
+  rax: {
+    id: "rax",
+    name: "Rax",
+    description: "A reckless ace who charges headlong into the swarm.",
+    hue: 26,
+    starterWeapon: "glaiveRing",
+    unlockCost: 500,
+    perk: "+10% Damage, +20 Max HP",
+    special: {
+      name: "Warhead",
+      description: "Detonates a heavy warhead, gutting everything close by.",
+      icon: "💥",
+      cooldown: 15,
+      kind: "nova",
+      radius: 240,
+      damage: 95,
+    },
+    applyPerk: (s) => {
+      s.damageMult *= 1.1;
+      s.maxHp += 20;
     },
   },
 };

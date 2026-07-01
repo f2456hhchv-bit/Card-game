@@ -11,7 +11,7 @@ import type { DerivedStats } from "../entities/Player";
  */
 
 /** Passive hull specials, resolved in World.updateChassisPassive / damagePlayer. */
-export type ChassisPassive = "none" | "magnet" | "phase" | "drone" | "thorns";
+export type ChassisPassive = "none" | "magnet" | "phase" | "drone" | "thorns" | "shock";
 
 export interface ChassisDef {
   id: string;
@@ -21,6 +21,8 @@ export interface ChassisDef {
   description: string;
   hue: number;
   icon: string;
+  /** Ship silhouette shape for the generated card art. */
+  silhouette: "dart" | "broad" | "bulky" | "podded" | "winged";
   /** Mote cost to unlock (0 = free by default). */
   unlockCost: number;
   /** Passive hull special + its human-readable summary. */
@@ -38,6 +40,7 @@ export const CHASSIS_DEFS: Record<string, ChassisDef> = {
     description: "A dependable standard frame with no specialisation — the pilot's own choice carries the run.",
     hue: 210,
     icon: "🛰",
+    silhouette: "broad",
     unlockCost: 0,
     passive: "none",
     passiveNote: "No hull special — no weaknesses either.",
@@ -49,6 +52,7 @@ export const CHASSIS_DEFS: Record<string, ChassisDef> = {
     description: "A featherlight courier hull — swift, wide-reaching, but thinly plated.",
     hue: 150,
     icon: "🛸",
+    silhouette: "dart",
     unlockCost: 300,
     passive: "magnet",
     passiveNote: "Every 7s, draws in all light on the field.",
@@ -65,6 +69,7 @@ export const CHASSIS_DEFS: Record<string, ChassisDef> = {
     description: "A phase-tuned raider whose hull slips briefly out of reality on a rhythm.",
     hue: 258,
     icon: "🌀",
+    silhouette: "dart",
     unlockCost: 400,
     passive: "phase",
     passiveNote: "Every 9s, phases untouchable for 0.7s.",
@@ -80,6 +85,7 @@ export const CHASSIS_DEFS: Record<string, ChassisDef> = {
     description: "A siege-grade capital hull: overwhelming armour and vitality, ponderous to fly.",
     hue: 20,
     icon: "🛡",
+    silhouette: "bulky",
     unlockCost: 450,
     passive: "none",
     passiveNote: "Pure staying power — no hull special.",
@@ -97,6 +103,7 @@ export const CHASSIS_DEFS: Record<string, ChassisDef> = {
     description: "A weapons platform that trades plating for an extra barrel and a faster trigger.",
     hue: 12,
     icon: "🚀",
+    silhouette: "broad",
     unlockCost: 500,
     passive: "none",
     passiveNote: "All guns, little armour — no hull special.",
@@ -113,6 +120,7 @@ export const CHASSIS_DEFS: Record<string, ChassisDef> = {
     description: "A drone tender whose autonomous escort looses seeking fire alongside you.",
     hue: 90,
     icon: "✈",
+    silhouette: "podded",
     unlockCost: 550,
     passive: "drone",
     passiveNote: "Every 4s, an escort drone looses a seeking volley.",
@@ -127,6 +135,7 @@ export const CHASSIS_DEFS: Record<string, ChassisDef> = {
     description: "A warded defensive hull that punishes anything foolish enough to strike it.",
     hue: 280,
     icon: "🔰",
+    silhouette: "winged",
     unlockCost: 500,
     passive: "thorns",
     passiveNote: "Reflects a burst of damage to nearby foes when hit.",
@@ -134,6 +143,42 @@ export const CHASSIS_DEFS: Record<string, ChassisDef> = {
       s.maxHp += 40;
       s.armor += 0.06;
       s.regen += 0.6;
+    },
+  },
+  corsair: {
+    id: "corsair",
+    name: "Corsair",
+    identity: "Raider · shock hull",
+    description: "A nimble raider hull crackling with a charged arc that lashes at any foe that crowds it.",
+    hue: 190,
+    icon: "⚡",
+    silhouette: "dart",
+    unlockCost: 450,
+    passive: "shock",
+    passiveNote: "Every 5s, an arc zaps the nearest few foes.",
+    apply: (s) => {
+      s.attackSpeedMult *= 1.06;
+      s.moveSpeed *= 1.05;
+      s.maxHp -= 10;
+    },
+  },
+  monolith: {
+    id: "monolith",
+    name: "Monolith",
+    identity: "Fortress · regenerator",
+    description: "A living-metal fortress hull that mends itself faster than the dark can wear it down.",
+    hue: 262,
+    icon: "🏯",
+    silhouette: "bulky",
+    unlockCost: 500,
+    passive: "none",
+    passiveNote: "Relentless self-repair — no active hull special.",
+    apply: (s) => {
+      s.maxHp += 60;
+      s.regen += 1;
+      s.armor += 0.04;
+      s.moveSpeed *= 0.9;
+      s.attackSpeedMult *= 0.95;
     },
   },
 };

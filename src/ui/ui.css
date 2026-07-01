@@ -1624,3 +1624,17 @@
   color: var(--ui-text);
   line-height: 1.3;
 }
+
+/* Ship (chassis) art thumbnail on the select card. */
+.ship-art {
+  display: grid;
+  place-items: center;
+  margin: 6px 0 2px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 42%, rgba(255,255,255,0.06), transparent 70%);
+}
+.ship-art img {
+  height: 104px;
+  width: auto;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+}

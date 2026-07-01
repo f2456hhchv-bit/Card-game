@@ -12,6 +12,7 @@ import {
 } from "../game/data/wardenDefs";
 import { WEAPON_DEFS } from "../game/data/weaponDefs";
 import { CHASSIS_LIST } from "../game/data/chassisDefs";
+import { chassisSvg } from "../game/render/chassisArt";
 import {
   SLOTS,
   SLOT_META,
@@ -1031,9 +1032,15 @@ export class UIManager {
 
       const head = this.el("div", "shop-card-head");
       head.append(
-        this.el("div", "shop-name", `${def.icon} ${def.name}`),
+        this.el("div", "shop-name", def.name),
         this.el("div", "shop-level", selected ? "★ Piloting" : unlocked ? "Owned" : "Locked"),
       );
+      // Original generated ship art.
+      const art = this.el("div", "ship-art");
+      const img = document.createElement("img");
+      img.src = chassisSvg(def.silhouette, def.hue);
+      img.alt = def.name;
+      art.appendChild(img);
       const identity = this.el("div", "shop-next", def.identity);
       const desc = this.el("div", "shop-desc", def.description);
       const special = this.el("div", "warden-special");
@@ -1057,7 +1064,7 @@ export class UIManager {
         if (!affordable) btn.classList.add("cant-afford");
         btn.addEventListener("click", () => this.unlockChassis(def.id));
       }
-      card.append(head, identity, desc, special, btn);
+      card.append(head, art, identity, desc, special, btn);
       this.chassisGrid.appendChild(card);
     }
   }
