@@ -7,6 +7,7 @@ import { GameRenderer } from "./render/GameRenderer";
 import { AudioManager } from "./audio/AudioManager";
 import { SaveManager } from "./save/SaveManager";
 import { UIManager } from "../ui/UIManager";
+import { type RunSnapshot, SNAPSHOT_VERSION } from "./save/RunSnapshot";
 import type { DraftOption } from "./Loadout";
 import { metaMoteMultiplier } from "./data/metaDefs";
 import {
@@ -93,6 +94,7 @@ export class Game {
       onStartGauntlet: () => this.startRun(false, false, false, true),
       onStartCampaign: (level: number) => this.startCampaign(level),
       onNextLevel: () => this.startCampaign(this.campaignLevel + 1),
+      onContinueRun: () => this.resumeSavedRun(),
       onPause: () => this.pause(),
       onResume: () => this.resume(),
       onRestart: () =>
@@ -113,6 +115,12 @@ export class Game {
     this.bindEvents();
     this.applyAccessibility();
     window.addEventListener("resize", this.onResize);
+    // Persist a resumable snapshot if the player leaves mid-run (tab close,
+    // navigation, or the app being backgrounded on mobile).
+    window.addEventListener("pagehide", this.onLeave);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) this.onLeave();
+    });
     this.onResize();
   }
 
@@ -221,6 +229,7 @@ export class Game {
 
   private startRun(daily = false, bossRush = false, endless = false, gauntlet = false): void {
     this.audio.unlock();
+    this.save.clearRunSnapshot(); // a fresh run supersedes any resumable one
     this.isDailyRun = daily;
     this.isBossRush = bossRush;
     this.isEndless = endless;
@@ -263,6 +272,7 @@ export class Game {
    */
   private startCampaign(level: number): void {
     this.audio.unlock();
+    this.save.clearRunSnapshot(); // a fresh run supersedes any resumable one
     this.isDailyRun = false;
     this.isBossRush = false;
     this.isEndless = false;
@@ -331,6 +341,99 @@ export class Game {
     if (this.state !== "playing") return;
     this.state = "paused";
     this.ui.showPause();
+    // Snapshot on pause so the run survives even a hard tab close afterwards.
+    this.captureAndPersist();
+  }
+
+  // ---- Resumable run (mid-run "Continue") -------------------------------
+
+  /** True while a run is live (playing, paused or mid-draft). */
+  private inRun(): boolean {
+    return this.state === "playing" || this.state === "paused" || this.state === "draft";
+  }
+
+  /** Capture and persist the current run so it can be resumed later. */
+  private onLeave = (): void => {
+    this.captureAndPersist();
+  };
+
+  private captureAndPersist(): void {
+    if (!this.inRun()) return;
+    const snap: RunSnapshot = {
+      ...this.world.captureRunState(),
+      version: SNAPSHOT_VERSION,
+      mode: {
+        daily: this.isDailyRun,
+        bossRush: this.isBossRush,
+        endless: this.isEndless,
+        gauntlet: this.isGauntlet,
+        campaign: this.isCampaign,
+      },
+      runEvolved: this.runEvolved,
+      draftQueue: this.draftQueue,
+      savedAt: Date.now(),
+    };
+    this.save.saveRunSnapshot(snap);
+  }
+
+  /** Resume a run stored by a previous session, continuing where it left off. */
+  private resumeSavedRun(): void {
+    const snap = this.save.loadRunSnapshot();
+    if (!snap) {
+      this.ui.refreshMenu();
+      return;
+    }
+    this.audio.unlock();
+    const m = snap.mode;
+    this.isDailyRun = m.daily;
+    this.isBossRush = m.bossRush;
+    this.isEndless = m.endless;
+    this.isGauntlet = m.gauntlet;
+    this.isCampaign = m.campaign;
+    this.campaignLevel = snap.campaignLevel;
+    this.runEvolved = snap.runEvolved;
+    this.world.bossRush = m.bossRush;
+    this.world.endless = m.endless;
+    this.world.gauntlet = m.gauntlet;
+    this.world.campaign = m.campaign;
+    this.world.campaignLevel = snap.campaignLevel;
+    // Re-apply the same loadout sources the original run used, so recomputeStats
+    // during restore lands on the identical stat block (Daily is equal-footing).
+    if (m.daily) {
+      this.world.metaLevels = {};
+      this.world.gearInventory = {};
+      this.world.gearEquipped = emptyEquip();
+      this.world.signatureId = null;
+      this.world.selectedWarden = "lumen";
+      this.world.wardenLevel = 0;
+      this.world.stageId = "fade";
+    } else {
+      this.world.metaLevels = this.save.data.meta;
+      this.world.gearInventory = this.save.data.gear.inventory;
+      this.world.gearEquipped = this.save.data.gear.equipped;
+      this.world.signatureId = this.save.data.signatures.equipped;
+      this.world.selectedWarden = this.save.data.selectedWarden;
+      this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
+      this.world.stageId = snap.stageId;
+    }
+    this.world.reset();
+    this.world.restoreRunState(snap);
+
+    this.camera.snapTo(this.world.player.x, this.world.player.y);
+    this.applyAccessibility();
+    this.ui.hideMenu();
+    this.ui.hideGameOver();
+    this.ui.hideLevelCleared();
+    this.ui.hideDraft();
+    this.ui.hidePause();
+    this.ui.hideBossBar();
+    this.ui.hideHint();
+    this.ui.showHUD();
+    this.tutorialActive = false;
+    this.draftQueue = snap.draftQueue;
+    this.state = "playing";
+    // If a level-up draft was open when they left, reopen it immediately.
+    this.openDraftIfPending();
   }
 
   private resume(): void {
@@ -375,6 +478,7 @@ export class Game {
   /** A Campaign Sector was cleared — reward, record progress, offer to warp on. */
   private onLevelCleared(level: number): void {
     this.state = "cleared";
+    this.save.clearRunSnapshot(); // run resolved — nothing to resume
     this.audio.bossDown();
     this.camera.addShake(14, 0.7);
     const firstClear = level >= this.save.data.campaignProgress;
@@ -397,6 +501,7 @@ export class Game {
   private onPlayerDied(): void {
     this.audio.gameOver();
     this.state = "gameover";
+    this.save.clearRunSnapshot(); // run resolved — nothing to resume
     const stats = this.world.stats;
     // Reward: motes scale with time survived, kills and bosses felled (the last
     // makes Boss Rush worthwhile), boosted by Fortune.

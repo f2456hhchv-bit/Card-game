@@ -55,6 +55,8 @@ export interface UICallbacks {
   onStartCampaign(level: number): void;
   /** Warp to the next Campaign Sector from the cleared screen. */
   onNextLevel(): void;
+  /** Resume the previously-saved mid-run from the menu. */
+  onContinueRun(): void;
   onPause(): void;
   onResume(): void;
   onRestart(): void;
@@ -91,6 +93,7 @@ export class UIManager {
 
   private menu!: HTMLDivElement;
   private bossRushBtn!: HTMLButtonElement;
+  private continueBtn!: HTMLButtonElement;
   private draft!: HTMLDivElement;
   private pause!: HTMLDivElement;
   private gameover!: HTMLDivElement;
@@ -339,6 +342,10 @@ export class UIManager {
     const stageRow = this.el("div", "stage-row");
     stageRow.id = "stage-row";
 
+    // Continue — resume a run left mid-play. Only shown when one is stored.
+    this.continueBtn = this.el("button", "btn", "▶ Continue Run");
+    this.continueBtn.addEventListener("click", () => this.cb.onContinueRun());
+
     // Campaign is the primary progression: warp through Galaxies & Sectors.
     const campaignBtn = this.el("button", "btn", "Campaign");
     campaignBtn.addEventListener("click", () => this.openCampaign());
@@ -392,7 +399,7 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(campaignBtn, play, dailyBtn, this.bossRushBtn, endlessBtn, gauntletBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
+    btnRow.append(this.continueBtn, campaignBtn, play, dailyBtn, this.bossRushBtn, endlessBtn, gauntletBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
 
     o.append(title, sub, stats, stageRow, btnRow, dailyLine);
     this.root.appendChild(o);
@@ -1414,11 +1421,17 @@ export class UIManager {
   }
 
   showMenu(): void {
-    this.refreshMenuStats();
+    this.refreshMenu();
     this.menu.classList.remove("hidden");
   }
   hideMenu(): void {
     this.menu.classList.add("hidden");
+  }
+
+  /** Refresh menu stats and the resumable-run "Continue" button visibility. */
+  refreshMenu(): void {
+    this.refreshMenuStats();
+    this.continueBtn.style.display = this.save.hasRunSnapshot() ? "" : "none";
   }
 
   // ---- Level-up draft ----------------------------------------------------

@@ -1,5 +1,6 @@
 import type { AudioSettings } from "../audio/AudioManager";
 import type { RunStats } from "../World";
+import { type RunSnapshot, SNAPSHOT_VERSION } from "./RunSnapshot";
 import { signatureForBoss } from "../data/signatureDefs";
 import { wardenXpToNext } from "../data/wardenDefs";
 import {
@@ -26,6 +27,8 @@ import {
  */
 export const SAVE_VERSION = 1;
 const SAVE_KEY = "afterlight.save.v1";
+/** Separate key for the resumable mid-run snapshot (kept out of the profile). */
+const RUN_KEY = "afterlight.run.v1";
 
 export interface AccessibilitySettings {
   reduceMotion: boolean;
@@ -235,6 +238,47 @@ export class SaveManager {
       localStorage.setItem(SAVE_KEY, JSON.stringify(this.data));
     } catch {
       // Storage may be unavailable (private mode); progression is best-effort.
+    }
+  }
+
+  // ---- Resumable run snapshot (mid-run "Continue") ----------------------
+
+  /** Persist a mid-run snapshot so the run can be resumed later. */
+  saveRunSnapshot(snap: RunSnapshot): void {
+    try {
+      localStorage.setItem(RUN_KEY, JSON.stringify(snap));
+    } catch {
+      // Best-effort; a lost snapshot just means no resume prompt.
+    }
+  }
+
+  /** Load a resumable run snapshot, or null if none/incompatible/corrupt. */
+  loadRunSnapshot(): RunSnapshot | null {
+    try {
+      const raw = localStorage.getItem(RUN_KEY);
+      if (!raw) return null;
+      const snap = JSON.parse(raw) as RunSnapshot;
+      if (!snap || snap.version !== SNAPSHOT_VERSION) {
+        this.clearRunSnapshot();
+        return null;
+      }
+      return snap;
+    } catch {
+      return null;
+    }
+  }
+
+  /** True when a resumable run is stored. */
+  hasRunSnapshot(): boolean {
+    return this.loadRunSnapshot() !== null;
+  }
+
+  /** Discard any stored run snapshot (run ended or abandoned). */
+  clearRunSnapshot(): void {
+    try {
+      localStorage.removeItem(RUN_KEY);
+    } catch {
+      // Ignore.
     }
   }
 

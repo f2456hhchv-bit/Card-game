@@ -376,6 +376,81 @@ export class World {
     return this.endless ? ENDLESS_BOSS_INTERVAL : BOSS_INTERVAL;
   }
 
+  // ---- Resumable run snapshot -------------------------------------------
+
+  /**
+   * Snapshot the run's meaningful state (build, progress, timers) for a resume.
+   * Live enemies/projectiles/pickups are intentionally omitted — they regenerate.
+   */
+  captureRunState(): import("./save/RunSnapshot").WorldRunState {
+    const p = this.player;
+    return {
+      stageId: this.stageId,
+      campaignLevel: this.campaignLevel,
+      gauntletIndex: this.gauntletIndex,
+      rngState: this.rng.getState(),
+      player: {
+        x: p.x,
+        y: p.y,
+        hp: p.hp,
+        level: p.level,
+        xp: p.xp,
+        xpToNext: p.xpToNext,
+        facing: p.facing,
+      },
+      loadout: this.loadout.capture(),
+      stats: { ...this.stats },
+      nextBossTime: this.nextBossTime,
+      bossEncounter: this.bossEncounter,
+      ascHp: this.ascHp,
+      ascDmg: this.ascDmg,
+      ascTimer: this.ascTimer,
+      pulseTimer: this.pulseTimer,
+      revivesLeft: this.revivesLeft,
+      pendingLevelUps: this.pendingLevelUps,
+    };
+  }
+
+  /**
+   * Overlay a snapshot onto a freshly-{@link reset} World, continuing the run
+   * from where it was captured. The swarm respawns from empty — deliberately.
+   */
+  restoreRunState(s: import("./save/RunSnapshot").WorldRunState): void {
+    this.rng.setState(s.rngState);
+    // Restore the active arena (gauntlet's reset() forces the first stage) and
+    // re-point the spawn director at the correct pool/difficulty.
+    this.stageId = s.stageId;
+    this.campaignLevel = s.campaignLevel;
+    this.gauntletIndex = s.gauntletIndex;
+    this.spawnDirector.setStage(
+      this.activeEnemyPool as string[],
+      this.activeDifficulty,
+    );
+    const p = this.player;
+    p.x = s.player.x;
+    p.y = s.player.y;
+    p.level = s.player.level;
+    p.xp = s.player.xp;
+    p.xpToNext = s.player.xpToNext;
+    p.facing = s.player.facing;
+    this.loadout.restore(s.loadout, p);
+    p.hp = Math.min(s.player.hp, p.stats.maxHp);
+    Object.assign(this.stats, s.stats);
+    this.nextBossTime = s.nextBossTime;
+    this.bossEncounter = s.bossEncounter;
+    this.ascHp = s.ascHp;
+    this.ascDmg = s.ascDmg;
+    this.ascTimer = s.ascTimer;
+    this.spawnDirector.setAscension(this.ascHp, this.ascDmg, 1 + this.stats.ascension * 0.08);
+    this.pulseTimer = s.pulseTimer;
+    this.revivesLeft = s.revivesLeft;
+    this.pendingLevelUps = s.pendingLevelUps;
+    // The captured boss (if any) is gone; it reappears on its schedule. Make sure
+    // a boss that was mid-fight isn't left dangling.
+    this.boss = null;
+    this.bossController = null;
+  }
+
   /**
    * Gauntlet: clearing a stage's boss advances to the next stage (swapping its
    * enemy pool, difficulty and palette) until all are cleared, then keeps the

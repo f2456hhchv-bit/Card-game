@@ -94,6 +94,39 @@ export class Loadout {
     this.weapons.push({ def: starter, level: 1, cooldownRemaining: 0 });
   }
 
+  /** Serialise the run's owned weapons + passives for a resume snapshot. */
+  capture(): { weapons: { id: string; level: number; cooldownRemaining: number }[]; passives: [string, number][] } {
+    return {
+      weapons: this.weapons.map((w) => ({
+        id: w.def.id,
+        level: w.level,
+        cooldownRemaining: w.cooldownRemaining,
+      })),
+      passives: [...this.passives.entries()],
+    };
+  }
+
+  /**
+   * Rebuild owned weapons + passives from a snapshot (after {@link reset}). Unknown
+   * ids are skipped defensively so an old snapshot can't crash a resume.
+   */
+  restore(
+    snap: { weapons: { id: string; level: number; cooldownRemaining: number }[]; passives: [string, number][] },
+    player: Player,
+  ): void {
+    this.weapons.length = 0;
+    for (const w of snap.weapons) {
+      const def = WEAPON_DEFS[w.id];
+      if (def) this.weapons.push({ def, level: w.level, cooldownRemaining: w.cooldownRemaining });
+    }
+    if (this.weapons.length === 0) this.reset(); // never leave the Warden unarmed
+    this.passives.clear();
+    for (const [id, level] of snap.passives) {
+      if (PASSIVE_DEFS[id]) this.passives.set(id, level);
+    }
+    this.recomputeStats(player);
+  }
+
   hasWeapon(id: string): boolean {
     return this.weapons.some((w) => w.def.id === id);
   }
