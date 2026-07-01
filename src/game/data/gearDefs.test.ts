@@ -39,13 +39,15 @@ describe("gearDefs — items", () => {
     }
   });
 
-  it("every set's 2pc and 4pc bonuses apply without error", () => {
+  it("every set's 2pc/4pc/6pc bonuses apply without error", () => {
     for (const set of SET_LIST) {
       const s = { ...new Player().base };
       expect(() => set.bonus2(s)).not.toThrow();
       expect(() => set.bonus4(s)).not.toThrow();
+      expect(() => set.bonus6(s)).not.toThrow();
       expect(set.bonus2Note.length).toBeGreaterThan(0);
       expect(set.bonus4Note.length).toBeGreaterThan(0);
+      expect(set.bonus6Note.length).toBeGreaterThan(0);
     }
   });
 
@@ -186,20 +188,30 @@ describe("gearDefs — set bonuses", () => {
     expect(s.moveSpeed).toBeGreaterThan(before.moveSpeed); // engines slot stat only
   });
 
-  it("Bastion 4-piece grants a revive charge; Zephyr 4-piece grants +1 projectile", () => {
+  it("Bastion 4pc grants a revive; the full 6pc set grants a second", () => {
     const base = new Player().base;
+    const four = SLOTS.slice(0, 4);
 
-    const bastion = { ...base };
-    const bEquip = emptyEquip();
-    for (const slot of SLOTS) bEquip[slot] = itemId("bastion", slot);
-    applyGear(bastion, bEquip, inv(SLOTS.map((s) => itemId("bastion", s))));
-    expect(bastion.revive).toBe(1);
+    const b4 = { ...base };
+    const e4 = emptyEquip();
+    for (const slot of four) e4[slot] = itemId("bastion", slot);
+    applyGear(b4, e4, inv(four.map((s) => itemId("bastion", s))));
+    expect(b4.revive).toBe(1); // 4-piece only
 
-    const zephyr = { ...base };
+    const b6 = { ...base };
+    const e6 = emptyEquip();
+    for (const slot of SLOTS) e6[slot] = itemId("bastion", slot);
+    applyGear(b6, e6, inv(SLOTS.map((s) => itemId("bastion", s))));
+    expect(b6.revive).toBe(2); // 4-piece + 6-piece capstone
+  });
+
+  it("Zephyr full set adds +2 projectiles (4pc + 6pc)", () => {
+    const base = new Player().base;
+    const z = { ...base };
     const zEquip = emptyEquip();
     for (const slot of SLOTS) zEquip[slot] = itemId("zephyr", slot);
-    applyGear(zephyr, zEquip, inv(SLOTS.map((s) => itemId("zephyr", s))));
-    expect(zephyr.extraProjectiles).toBe(base.extraProjectiles + 1);
-    expect(zephyr.iframes).toBeGreaterThan(base.iframes);
+    applyGear(z, zEquip, inv(SLOTS.map((s) => itemId("zephyr", s))));
+    expect(z.extraProjectiles).toBe(base.extraProjectiles + 2);
+    expect(z.iframes).toBeGreaterThan(base.iframes);
   });
 });

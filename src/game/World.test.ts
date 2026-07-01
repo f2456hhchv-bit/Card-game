@@ -3,11 +3,12 @@ import { World } from "./World";
 import { WEAPON_DEFS } from "./data/weaponDefs";
 import { SLOTS, itemId, emptyEquip } from "./data/gearDefs";
 
-/** Equip a full 4-piece set on the world (grade 5) to trigger its 4pc perk. */
+/** Equip exactly four pieces of a set (grade 5) to trigger its 4-piece perk
+ *  without also triggering the 6-piece capstone. */
 function equipFullSet(world: World, setId: string): void {
   const equipped = emptyEquip();
   const inventory: Record<string, { grade: number; dupes: number }> = {};
-  for (const slot of SLOTS) {
+  for (const slot of SLOTS.slice(0, 4)) {
     const id = itemId(setId, slot);
     equipped[slot] = id;
     inventory[id] = { grade: 5, dupes: 0 };

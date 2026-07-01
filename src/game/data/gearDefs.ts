@@ -14,9 +14,27 @@ import type { DerivedStats } from "../entities/Player";
  * Item/equip/merge state lives in the save (`save.gear`).
  */
 
-/** The four ship-system slots. One item may be equipped in each. */
-export type GearSlot = "hull" | "core" | "engines" | "wings";
-export const SLOTS: GearSlot[] = ["hull", "core", "engines", "wings"];
+/**
+ * The ship-system slots. One item may be equipped in each — a full loadout is a
+ * whole ship built from many parts. (Internal keys are kept stable across the
+ * roster's growth so older saves keep their gear; display names live in
+ * {@link SLOT_META}.)
+ */
+export type GearSlot =
+  | "hull"
+  | "core"
+  | "engines"
+  | "wings"
+  | "shield"
+  | "targeting";
+export const SLOTS: GearSlot[] = [
+  "hull",
+  "core",
+  "engines",
+  "wings",
+  "shield",
+  "targeting",
+];
 
 /** A rolled bonus sub-stat on an item (id + magnitude). */
 export interface Affix {
@@ -289,6 +307,26 @@ export const SLOT_META: Record<
     note: (g, m) =>
       `+${(2.5 * g * m).toFixed(0)}% atk spd · +${(2 * g * m).toFixed(0)}% area`,
   },
+  shield: {
+    label: "Shield",
+    noun: "Deflector",
+    icon: "🔰",
+    apply: (s, g, m) => {
+      s.armor += 0.012 * g * m;
+      s.regen += 0.16 * g * m;
+    },
+    note: (g, m) => `+${(1.2 * g * m).toFixed(1)}% armour · +${(0.16 * g * m).toFixed(2)} regen/s`,
+  },
+  targeting: {
+    label: "Targeting",
+    noun: "Array",
+    icon: "🎯",
+    apply: (s, g, m) => {
+      s.critChance += 0.01 * g * m;
+      s.projectileSpeedMult *= 1 + 0.02 * g * m;
+    },
+    note: (g, m) => `+${(1 * g * m).toFixed(1)}% crit · +${(2 * g * m).toFixed(0)}% proj speed`,
+  },
 };
 
 export interface GearSetDef {
@@ -299,9 +337,12 @@ export interface GearSetDef {
   /** Bonus applied when 2+ pieces of the set are equipped. */
   bonus2: (s: DerivedStats) => void;
   bonus2Note: string;
-  /** Big payoff when all 4 pieces are equipped (grants a signature perk). */
+  /** Payoff when 4+ pieces are equipped (grants a signature perk). */
   bonus4: (s: DerivedStats) => void;
   bonus4Note: string;
+  /** Ultimate capstone when the whole 6-piece set is worn (all slots one set). */
+  bonus6: (s: DerivedStats) => void;
+  bonus6Note: string;
 }
 
 export const GEAR_SETS: Record<string, GearSetDef> = {
@@ -317,6 +358,12 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.maxHp += 25;
     },
     bonus4Note: "+8% damage & +25 Max HP",
+    bonus6: (s) => {
+      s.xpMult *= 1.12;
+      s.damageMult *= 1.1;
+      s.maxHp += 30;
+    },
+    bonus6Note: "Full ship: +12% XP, +10% damage & +30 Max HP",
   },
   solaris: {
     id: "solaris",
@@ -330,6 +377,11 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.damageMult *= 1.12;
     },
     bonus4Note: "Overdrive light pulse + 12% damage",
+    bonus6: (s) => {
+      s.pulseDamage = Math.max(s.pulseDamage, 48);
+      s.damageMult *= 1.15;
+    },
+    bonus6Note: "Full ship: overcharged Overdrive pulse & +15% damage",
   },
   bastion: {
     id: "bastion",
@@ -343,6 +395,12 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.armor += 0.06;
     },
     bonus4Note: "Aegis revive (survive a lethal hit) + 6% armour",
+    bonus6: (s) => {
+      s.revive += 1;
+      s.armor += 0.06;
+      s.maxHp += 50;
+    },
+    bonus6Note: "Full ship: extra Aegis revive, +6% armour & +50 Max HP",
   },
   zephyr: {
     id: "zephyr",
@@ -356,6 +414,11 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.iframes += 0.25;
     },
     bonus4Note: "+1 projectile on every weapon & +0.25s i-frames",
+    bonus6: (s) => {
+      s.extraProjectiles += 1;
+      s.moveSpeed *= 1.12;
+    },
+    bonus6Note: "Full ship: +1 projectile & +12% move speed",
   },
   tempest: {
     id: "tempest",
@@ -369,6 +432,11 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.attackSpeedMult *= 1.06;
     },
     bonus4Note: "+60% crit damage & +6% attack speed",
+    bonus6: (s) => {
+      s.critChance += 0.08;
+      s.critMult += 0.4;
+    },
+    bonus6Note: "Full ship: +8% crit chance & +40% crit damage",
   },
   nebula: {
     id: "nebula",
@@ -383,6 +451,12 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.armor += 0.05;
     },
     bonus4Note: "+40 Max HP, +0.7 regen/s & +5% armour",
+    bonus6: (s) => {
+      s.regen += 1.2;
+      s.maxHp += 50;
+      s.armor += 0.05;
+    },
+    bonus6Note: "Full ship: +1.2 regen/s, +50 Max HP & +5% armour",
   },
   vanguard: {
     id: "vanguard",
@@ -396,6 +470,11 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.critChance += 0.05;
     },
     bonus4Note: "+10% damage & +5% crit chance",
+    bonus6: (s) => {
+      s.damageMult *= 1.12;
+      s.attackSpeedMult *= 1.1;
+    },
+    bonus6Note: "Full ship: +12% damage & +10% attack speed",
   },
   warp: {
     id: "warp",
@@ -409,6 +488,11 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.projectileSpeedMult *= 1.12;
     },
     bonus4Note: "+15% area & +12% projectile speed",
+    bonus6: (s) => {
+      s.projectileSpeedMult *= 1.2;
+      s.areaMult *= 1.15;
+    },
+    bonus6Note: "Full ship: +20% projectile speed & +15% area",
   },
   harvester: {
     id: "harvester",
@@ -422,6 +506,11 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.pickupRadius += 25;
     },
     bonus4Note: "+14% XP gain & +25 pickup radius",
+    bonus6: (s) => {
+      s.xpMult *= 1.18;
+      s.pickupRadius += 40;
+    },
+    bonus6Note: "Full ship: +18% XP gain & +40 pickup radius",
   },
   juggernaut: {
     id: "juggernaut",
@@ -435,6 +524,12 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.armor += 0.08;
     },
     bonus4Note: "+10% damage & +8% armour",
+    bonus6: (s) => {
+      s.damageMult *= 1.12;
+      s.armor += 0.1;
+      s.maxHp += 40;
+    },
+    bonus6Note: "Full ship: +12% damage, +10% armour & +40 Max HP",
   },
   corona: {
     id: "corona",
@@ -448,6 +543,11 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.areaMult *= 1.08;
     },
     bonus4Note: "Overdrive light pulse + 8% area",
+    bonus6: (s) => {
+      s.pulseDamage = Math.max(s.pulseDamage, 44);
+      s.areaMult *= 1.12;
+    },
+    bonus6Note: "Full ship: searing Overdrive pulse & +12% area",
   },
   phantom: {
     id: "phantom",
@@ -461,6 +561,11 @@ export const GEAR_SETS: Record<string, GearSetDef> = {
       s.extraProjectiles += 1;
     },
     bonus4Note: "+10% move speed & +1 projectile",
+    bonus6: (s) => {
+      s.iframes += 0.25;
+      s.extraProjectiles += 1;
+    },
+    bonus6Note: "Full ship: +0.25s i-frames & +1 projectile",
   },
 };
 
@@ -527,9 +632,11 @@ export function rerollCost(rarity: number): number {
 /** Equipped map: slot → item id (or null when the slot is empty). */
 export type EquipMap = Record<GearSlot, string | null>;
 
-/** A fresh, all-empty equip map. */
+/** A fresh, all-empty equip map (one null per slot). */
 export function emptyEquip(): EquipMap {
-  return { hull: null, core: null, engines: null, wings: null };
+  const m = {} as EquipMap;
+  for (const slot of SLOTS) m[slot] = null;
+  return m;
 }
 
 /**
@@ -596,5 +703,6 @@ export function applyGear(
     if (!set) continue;
     if (counts[setId] >= 2) set.bonus2(stats);
     if (counts[setId] >= 4) set.bonus4(stats);
+    if (counts[setId] >= 6) set.bonus6(stats);
   }
 }

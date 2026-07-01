@@ -25,6 +25,7 @@ import {
   isBossSector,
 } from "./data/campaignDefs";
 import { WEAPON_DEFS } from "./data/weaponDefs";
+import { emptyEquip } from "./data/gearDefs";
 import { Input } from "../engine/Input";
 import { clamp, TAU } from "../core/math/MathUtils";
 
@@ -107,12 +108,7 @@ export class World {
   /** Owned gear inventory, supplied by Game from the save profile. */
   gearInventory: Record<string, import("./data/gearDefs").ModuleState> = {};
   /** Equipped gear per slot, supplied by Game from the save profile. */
-  gearEquipped: import("./data/gearDefs").EquipMap = {
-    hull: null,
-    core: null,
-    engines: null,
-    wings: null,
-  };
+  gearEquipped: import("./data/gearDefs").EquipMap = emptyEquip();
   /** Equipped boss-signature id, supplied by Game from the save profile. */
   signatureId: string | null = null;
   /** Selected Warden id, supplied by Game from the save profile. */

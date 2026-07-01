@@ -1127,8 +1127,9 @@ export class UIManager {
       const tiers: string[] = [];
       if (n >= 2) tiers.push(`2pc ${set.bonus2Note}`);
       if (n >= 4) tiers.push(`4pc ${set.bonus4Note}`);
+      if (n >= 6) tiers.push(`6pc ${set.bonus6Note}`);
       chip.append(
-        this.el("span", "bonus-set", `${set.name} (${n}/4)`),
+        this.el("span", "bonus-set", `${set.name} (${n}/${SLOTS.length})`),
         this.el("span", "bonus-text", tiers.length ? tiers.join("  ·  ") : "equip 2+ for a bonus"),
       );
       bonusWrap.appendChild(chip);
@@ -1157,13 +1158,14 @@ export class UIManager {
       const head = this.el("div", "set-head");
       head.append(
         this.el("div", "set-name", `${set.name}`),
-        this.el("div", "set-count", `${owned}/4 collected`),
+        this.el("div", "set-count", `${owned}/${SLOTS.length} collected`),
       );
       const setDesc = this.el("div", "set-desc", set.description);
       const setBonus = this.el("div", "set-bonus-lines");
       setBonus.append(
         this.el("div", "set-bonus-row", `2-piece — ${set.bonus2Note}`),
-        this.el("div", "set-bonus-row big", `4-piece — ${set.bonus4Note}`),
+        this.el("div", "set-bonus-row", `4-piece — ${set.bonus4Note}`),
+        this.el("div", "set-bonus-row big", `6-piece — ${set.bonus6Note}`),
       );
 
       const grid = this.el("div", "item-grid");
