@@ -331,6 +331,8 @@ export class UIManager {
 
   showHUD(): void {
     this.hud.classList.remove("hidden");
+    // A run is starting — the persistent tab bar must never show over gameplay.
+    this.tabBar?.classList.add("hidden");
   }
   hideHUD(): void {
     this.hud.classList.add("hidden");
@@ -404,42 +406,100 @@ export class UIManager {
 
     panels.append(this.journeyPanel, this.playPanel, this.morePanel);
 
-    // ---- Bottom tab bar ----
-    this.tabBar = this.el("div", "tab-bar");
-    const tab = (id: string, icon: string, label: string, onClick: () => void, inline: boolean) => {
+    // ---- Bottom tab bar — a persistent shell appended to the ROOT (not the
+    // menu overlay), so it stays visible and highlighted across every menu page.
+    this.tabBar = this.el("div", "tab-bar hidden");
+    const tab = (id: string, icon: string, label: string) => {
       const b = this.el("button", "tab-btn");
       b.append(this.el("span", "tab-icon", icon), this.el("span", "tab-label", label));
       b.dataset.tab = id;
-      b.addEventListener("click", () => {
-        this.audio.select();
-        if (inline) this.selectMenuTab(id);
-        onClick();
-      });
+      b.addEventListener("click", () => this.goTab(id));
       this.tabBar.appendChild(b);
     };
-    tab("journey", "🗺", "Journey", () => {}, true);
-    tab("play", "⚔", "Play", () => {}, true);
-    tab("wardens", "🛡", "Wardens", () => this.openWardens(), false);
-    tab("hangar", "🧩", "Hangar", () => this.openHangar(), false);
-    tab("shop", "🛒", "Shop", () => this.openShop(), false);
-    tab("more", "☰", "More", () => {}, true);
+    tab("journey", "🗺", "Journey");
+    tab("play", "⚔", "Play");
+    tab("wardens", "🛡", "Wardens");
+    tab("hangar", "🧩", "Hangar");
+    tab("shop", "🛒", "Shop");
+    tab("more", "☰", "More");
 
-    o.append(menuHeader, panels, this.tabBar);
+    o.append(menuHeader, panels);
     this.root.appendChild(o);
+    this.root.appendChild(this.tabBar);
     this.menu = o;
-    this.selectMenuTab("journey");
+    this.selectMenuPanel("journey");
+    this.setActiveTab("journey");
   }
 
-  /** Switch the active inline menu panel (Journey / Play / More). */
-  private selectMenuTab(tab: string): void {
-    this.activeMenuTab = tab;
+  /** Every full-screen menu sub-page (reached from a tab or a panel button). */
+  private hideSubPages(): void {
+    for (const o of [
+      this.wardens,
+      this.hangar,
+      this.shop,
+      this.records,
+      this.howto,
+      this.settings,
+      this.campaign,
+    ]) {
+      o?.classList.add("hidden");
+    }
+  }
+
+  /** Highlight the tab for the page the player is currently on. */
+  private setActiveTab(id: string): void {
+    this.activeMenuTab = id;
+    for (const b of Array.from(this.tabBar.children) as HTMLElement[]) {
+      b.classList.toggle("active", b.dataset.tab === id);
+    }
+  }
+
+  /** Show one of the three inline menu panels (Journey / Play / More). */
+  private selectMenuPanel(tab: string): void {
     this.journeyPanel.classList.toggle("hidden", tab !== "journey");
     this.playPanel.classList.toggle("hidden", tab !== "play");
     this.morePanel.classList.toggle("hidden", tab !== "more");
-    for (const b of Array.from(this.tabBar.children) as HTMLElement[]) {
-      b.classList.toggle("active", b.dataset.tab === tab);
-    }
     if (tab === "journey") this.refreshJourney();
+  }
+
+  /** Navigate to a tab's page (called by the persistent bottom tab bar). */
+  private goTab(id: string): void {
+    this.audio.select();
+    switch (id) {
+      case "wardens":
+        this.openWardens();
+        break;
+      case "hangar":
+        this.openHangar();
+        break;
+      case "shop":
+        this.openShop();
+        break;
+      default:
+        // Inline panel pages live inside the menu overlay.
+        this.hideSubPages();
+        this.menu.classList.remove("hidden");
+        this.selectMenuPanel(id);
+        this.setActiveTab(id);
+    }
+  }
+
+  /**
+   * Hide every menu surface (overlays + tab bar) and show the HUD — a guaranteed
+   * clean gameplay screen no matter which page the run was launched from. This
+   * is the single choke-point that prevents any overlay lingering over the game.
+   */
+  enterRunUI(): void {
+    this.hideSubPages();
+    this.menu.classList.add("hidden");
+    this.tabBar.classList.add("hidden");
+    this.hideGameOver();
+    this.hideLevelCleared();
+    this.hideDraft();
+    this.hidePause();
+    this.hideBossBar();
+    this.hideHint();
+    this.showHUD();
   }
 
   /**
@@ -522,8 +582,10 @@ export class UIManager {
   private openCampaignGalaxy(galaxy: number): void {
     this.viewedGalaxy = galaxy;
     this.refreshCampaign();
+    this.hideSubPages();
     this.menu.classList.add("hidden");
     this.campaign.classList.remove("hidden");
+    this.setActiveTab("journey");
   }
 
   /** Rebuild the stage chooser chips (unlock-gated) from the save. */
@@ -632,12 +694,13 @@ export class UIManager {
   }
 
   private openHowTo(): void {
+    this.hideSubPages();
     this.menu.classList.add("hidden");
     this.howto.classList.remove("hidden");
+    this.setActiveTab("more"); // How to Play lives under the More tab
   }
   private closeHowTo(): void {
-    this.howto.classList.add("hidden");
-    this.menu.classList.remove("hidden");
+    this.goTab("more");
   }
 
   // ---- Light Motes shop --------------------------------------------------
@@ -772,14 +835,15 @@ export class UIManager {
   }
 
   private openShop(): void {
+    this.hideSubPages();
     this.refreshShop();
     this.menu.classList.add("hidden");
     this.shop.classList.remove("hidden");
+    this.setActiveTab("shop");
   }
   private closeShop(): void {
-    this.shop.classList.add("hidden");
     this.refreshMenuStats(); // balance may have changed
-    this.menu.classList.remove("hidden");
+    this.goTab("journey");
   }
 
   // ---- Wardens (character select) ----------------------------------------
@@ -889,14 +953,15 @@ export class UIManager {
   }
 
   private openWardens(): void {
+    this.hideSubPages();
     this.refreshWardens();
     this.menu.classList.add("hidden");
     this.wardens.classList.remove("hidden");
+    this.setActiveTab("wardens");
   }
   private closeWardens(): void {
-    this.wardens.classList.add("hidden");
     this.refreshMenuStats();
-    this.menu.classList.remove("hidden");
+    this.goTab("journey");
   }
 
   // ---- Hangar (ship modules + merge) -------------------------------------
@@ -1253,13 +1318,14 @@ export class UIManager {
   }
 
   private openHangar(): void {
+    this.hideSubPages();
     this.refreshHangar();
     this.menu.classList.add("hidden");
     this.hangar.classList.remove("hidden");
+    this.setActiveTab("hangar");
   }
   private closeHangar(): void {
-    this.hangar.classList.add("hidden");
-    this.menu.classList.remove("hidden");
+    this.goTab("journey");
   }
 
   // ---- Records (lifetime stats + achievements) ---------------------------
@@ -1342,13 +1408,14 @@ export class UIManager {
   }
 
   private openRecords(): void {
+    this.hideSubPages();
     this.refreshRecords();
     this.menu.classList.add("hidden");
     this.records.classList.remove("hidden");
+    this.setActiveTab("more"); // Records lives under the More tab
   }
   private closeRecords(): void {
-    this.records.classList.add("hidden");
-    this.menu.classList.remove("hidden");
+    this.goTab("more");
   }
 
   // ---- Campaign map (Galaxies → Sectors) ---------------------------------
@@ -1448,12 +1515,13 @@ export class UIManager {
   private openCampaign(): void {
     this.viewedGalaxy = galaxyOf(this.campaignProgress());
     this.refreshCampaign();
+    this.hideSubPages();
     this.menu.classList.add("hidden");
     this.campaign.classList.remove("hidden");
+    this.setActiveTab("journey"); // the Sector map belongs to the Journey tab
   }
   private closeCampaign(): void {
-    this.campaign.classList.add("hidden");
-    this.menu.classList.remove("hidden");
+    this.goTab("journey");
   }
   /** Hide the campaign/sector overlay without returning to the menu (run start). */
   hideCampaign(): void {
@@ -1547,17 +1615,25 @@ export class UIManager {
   showMenu(): void {
     this.refreshMenu();
     this.menu.classList.remove("hidden");
+    this.tabBar.classList.remove("hidden"); // persistent shell returns with the menu
   }
   hideMenu(): void {
     this.menu.classList.add("hidden");
   }
 
-  /** Refresh menu stats, the Journey map and the "Continue" button visibility. */
+  /** Refresh menu stats, land on an inline page, and sync the tab highlight. */
   refreshMenu(): void {
     this.refreshMenuStats();
     this.continueBtn.style.display = this.save.hasRunSnapshot() ? "" : "none";
-    // Re-render the active panel (refreshes the Journey map if it's showing).
-    this.selectMenuTab(this.activeMenuTab);
+    // Returning to the menu always lands on an inline page (Journey/Play/More);
+    // if an overlay tab was last active, fall back to Journey.
+    const inline =
+      this.activeMenuTab === "play" || this.activeMenuTab === "more"
+        ? this.activeMenuTab
+        : "journey";
+    this.hideSubPages();
+    this.selectMenuPanel(inline);
+    this.setActiveTab(inline);
   }
 
   // ---- Level-up draft ----------------------------------------------------
@@ -1800,10 +1876,13 @@ export class UIManager {
     this.menu.classList.add("hidden");
     this.pause.classList.add("hidden");
     this.settings.classList.remove("hidden");
+    // From the menu, Settings sits under More; from pause it's an in-run overlay
+    // (tab bar stays hidden).
+    if (this.settingsReturn === "menu") this.setActiveTab("more");
   }
   private closeSettings(): void {
     this.settings.classList.add("hidden");
-    if (this.settingsReturn === "menu") this.menu.classList.remove("hidden");
+    if (this.settingsReturn === "menu") this.goTab("more");
     else this.pause.classList.remove("hidden");
   }
 

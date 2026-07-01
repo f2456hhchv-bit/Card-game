@@ -300,15 +300,9 @@ export class Game {
     this.camera.snapTo(this.world.player.x, this.world.player.y);
     this.draftQueue = 0;
     this.applyAccessibility();
-    this.ui.hideMenu();
-    this.ui.hideCampaign();
-    this.ui.hideGameOver();
-    this.ui.hideLevelCleared();
-    this.ui.hideDraft();
-    this.ui.hidePause();
-    this.ui.hideBossBar();
-    this.ui.hideHint();
-    this.ui.showHUD();
+    // One choke-point hides every menu surface (overlays + tab bar) and shows the
+    // HUD, so no page can ever be left covering the game.
+    this.ui.enterRunUI();
     this.state = "playing";
 
     // First run only: kick off the coach-hint sequence.
@@ -422,14 +416,7 @@ export class Game {
 
     this.camera.snapTo(this.world.player.x, this.world.player.y);
     this.applyAccessibility();
-    this.ui.hideMenu();
-    this.ui.hideGameOver();
-    this.ui.hideLevelCleared();
-    this.ui.hideDraft();
-    this.ui.hidePause();
-    this.ui.hideBossBar();
-    this.ui.hideHint();
-    this.ui.showHUD();
+    this.ui.enterRunUI();
     this.tutorialActive = false;
     this.draftQueue = snap.draftQueue;
     this.state = "playing";

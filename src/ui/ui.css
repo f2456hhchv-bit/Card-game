@@ -299,7 +299,8 @@
   background: var(--ui-bg);
   backdrop-filter: blur(6px);
   pointer-events: auto;
-  padding: 24px;
+  /* Extra bottom room so a page's own controls clear the persistent tab bar. */
+  padding: 24px 24px 92px;
   text-align: center;
   overflow-y: auto;
   /* Never scroll sideways — content is a single vertical column. */
@@ -1359,7 +1360,8 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 4px 12px 12px;
+  /* Bottom room so panel content clears the fixed tab bar. */
+  padding: 4px 12px 84px;
 }
 .menu-panel.hidden {
   display: none;
@@ -1378,17 +1380,27 @@
   width: min(360px, 90vw);
 }
 
-/* Bottom tab bar. */
+/* Bottom tab bar — a persistent shell pinned across every menu page. */
 .tab-bar {
-  flex: 0 0 auto;
-  display: flex;
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 40;
   width: 100%;
   max-width: 720px;
+  display: flex;
   gap: 2px;
   padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
-  background: rgba(9, 11, 19, 0.82);
+  background: rgba(9, 11, 19, 0.9);
   border-top: 1px solid rgba(125, 140, 255, 0.16);
+  border-radius: 16px 16px 0 0;
   backdrop-filter: blur(8px);
+  pointer-events: auto;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+}
+.tab-bar.hidden {
+  display: none;
 }
 .tab-btn {
   flex: 1;
