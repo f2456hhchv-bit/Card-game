@@ -16,7 +16,14 @@ import { WeaponSystem } from "./systems/WeaponSystem";
 import { BossController } from "./systems/BossController";
 import { bossForEncounter } from "./data/bossDefs";
 import { ENEMY_DEFS } from "./data/enemyDefs";
-import { getStage, type StageDef } from "./data/stageDefs";
+import { getStage, type StageDef, type StagePalette } from "./data/stageDefs";
+import {
+  getGalaxy,
+  galaxyOf,
+  levelDifficulty,
+  levelDuration,
+  isBossSector,
+} from "./data/campaignDefs";
 import { WEAPON_DEFS } from "./data/weaponDefs";
 import { Input } from "../engine/Input";
 import { clamp, TAU } from "../core/math/MathUtils";
@@ -33,6 +40,8 @@ const ENDLESS_BOSS_INTERVAL = 90;
 const GAUNTLET_ORDER = ["fade", "ember", "deep"] as const;
 const GAUNTLET_FIRST = 75;
 const GAUNTLET_GAP = 70;
+/** Campaign: seconds into a boss Sector before its boss warps in. */
+const CAMPAIGN_BOSS_AT = 18;
 
 /** Aggregate, read-only run statistics surfaced to HUD and endgame screen. */
 export interface RunStats {
@@ -68,6 +77,8 @@ export interface GameEvents {
   ascension: { level: number };
   /** Gauntlet advanced to a new stage (after clearing the previous one's boss). */
   stageAdvance: { stageId: string; name: string; cleared: number };
+  /** Campaign Sector cleared (survived the duration / felled the Sector boss). */
+  levelCleared: { level: number };
 }
 
 /** Position of an orbit-weapon orb, mirrored out for the renderer. */
@@ -127,6 +138,17 @@ export class World {
    */
   gauntlet = false;
   private gauntletIndex = 0;
+  /**
+   * Campaign mode: a finite Sector with a clear condition (survive the duration,
+   * or defeat the Sector boss). Cleared → the run ends in victory, not death.
+   */
+  campaign = false;
+  /** Global Sector index being played (galaxy*10 + sector), set by Game. */
+  campaignLevel = 0;
+  /** Set true the instant a Campaign Sector is cleared. */
+  levelCleared = false;
+  private levelDurationSec = 60;
+  private bossSector = false;
   /** Current Ascension tier (endless mode); mirrored into stats for the HUD. */
   private ascHp = 1;
   private ascDmg = 1;
@@ -224,9 +246,38 @@ export class World {
     return ARENA_RADIUS;
   }
 
-  /** The active stage definition (palette + enemy pool). */
+  /** The active stage definition (palette + enemy pool) for non-campaign modes. */
   get stage(): StageDef {
     return getStage(this.stageId);
+  }
+
+  /** Backdrop palette for the active arena (campaign Galaxy or stage). */
+  get palette(): StagePalette {
+    return this.campaign ? getGalaxy(galaxyOf(this.campaignLevel)).palette : this.stage.palette;
+  }
+
+  /** Stable cache key for the current palette (renderer rebakes on change). */
+  get paletteKey(): string {
+    return this.campaign ? `g${galaxyOf(this.campaignLevel)}` : this.stageId;
+  }
+
+  /** Enemy pool for the active arena. */
+  private get activeEnemyPool(): readonly string[] {
+    return this.campaign
+      ? getGalaxy(galaxyOf(this.campaignLevel)).enemyPool
+      : this.stage.enemyPool;
+  }
+
+  /** Boss pool for the active arena. */
+  private get activeBossPool(): readonly string[] {
+    return this.campaign
+      ? getGalaxy(galaxyOf(this.campaignLevel)).bossPool
+      : this.stage.bossPool;
+  }
+
+  /** Enemy HP/damage difficulty multiplier for the active arena. */
+  private get activeDifficulty(): number {
+    return this.campaign ? levelDifficulty(this.campaignLevel) : this.stage.difficulty;
   }
 
   /** Re-seed the world RNG (used to start a deterministic Daily Run). */
@@ -283,7 +334,7 @@ export class World {
     this.revivesLeft = this.player.stats.revive;
     this.pulseTimer = World.PULSE_INTERVAL;
     this.pulseFx = 0;
-    this.spawnDirector.reset(this.stage.enemyPool, this.stage.difficulty);
+    this.spawnDirector.reset(this.activeEnemyPool, this.activeDifficulty);
     this.ascHp = 1;
     this.ascDmg = 1;
     this.ascTimer = ASCENSION_INTERVAL;
@@ -304,11 +355,19 @@ export class World {
     this.orbitAngle = 0;
     this.boss = null;
     this.bossController = null;
+    // Campaign Sector setup: finite duration + a Sector boss on milestone Sectors.
+    this.levelCleared = false;
+    this.bossSector = this.campaign && isBossSector(this.campaignLevel);
+    this.levelDurationSec = this.campaign ? levelDuration(this.campaignLevel) : Infinity;
     this.nextBossTime = this.bossRush
       ? RUSH_FIRST
       : this.gauntlet
         ? GAUNTLET_FIRST
-        : this.bossInterval();
+        : this.campaign
+          ? this.bossSector
+            ? CAMPAIGN_BOSS_AT
+            : Infinity
+          : this.bossInterval();
     this.bossEncounter = 0;
   }
 
@@ -419,7 +478,7 @@ export class World {
   // ---- Main fixed-step update -------------------------------------------
 
   step(dt: number, input: Input): void {
-    if (this.isDead) return;
+    if (this.isDead || this.levelCleared) return;
     this.stats.elapsed += dt;
 
     this.updatePlayer(dt, input);
@@ -434,6 +493,19 @@ export class World {
     this.updatePickups(dt);
     this.updateOverdrive(dt);
     if (this.endless) this.updateAscension(dt);
+    this.checkCampaignClear();
+  }
+
+  /**
+   * Campaign clear: a non-boss Sector clears when its survival duration elapses;
+   * a boss Sector clears when its Sector boss is felled (handled in onBossDefeated).
+   */
+  private checkCampaignClear(): void {
+    if (!this.campaign || this.levelCleared) return;
+    if (!this.bossSector && this.stats.elapsed >= this.levelDurationSec) {
+      this.levelCleared = true;
+      this.events.emit("levelCleared", { level: this.campaignLevel });
+    }
   }
 
   /**
@@ -492,9 +564,9 @@ export class World {
     // Schedule a new boss when its time arrives and none is active.
     if (!this.bossActive && this.stats.elapsed >= this.nextBossTime) {
       this.spawnBoss();
-      // In rush the next boss is scheduled when this one dies; otherwise it
-      // recurs on the fixed interval. Push it far out so it can't double-spawn.
-      this.nextBossTime += this.bossRush ? 1e9 : this.bossInterval();
+      // In rush the next boss is scheduled when this one dies; a campaign Sector
+      // has exactly one boss; otherwise it recurs on the fixed interval.
+      this.nextBossTime += this.bossRush || this.campaign ? 1e9 : this.bossInterval();
     }
     if (this.boss && this.bossController) {
       if (!this.boss.active) {
@@ -526,7 +598,7 @@ export class World {
   }
 
   private spawnBoss(): void {
-    const def = bossForEncounter(this.bossEncounter, this.stage.bossPool);
+    const def = bossForEncounter(this.bossEncounter, this.activeBossPool);
     const minutes = this.stats.elapsed / 60;
     const e = this.enemyPool.obtain();
     const angle = this.rng.angle();
@@ -546,7 +618,7 @@ export class World {
     // HP scales with encounter index, a touch with time, stage difficulty, and
     // (in endless) the current Ascension tier.
     const encounterScale = 1 + this.bossEncounter * 0.85;
-    const diff = this.stage.difficulty;
+    const diff = this.activeDifficulty;
     e.maxHp = def.baseHp * encounterScale * (1 + minutes * 0.04) * diff * this.ascHp;
     e.hp = e.maxHp;
     e.damage = def.contactDamage * (1 + minutes * 0.08) * diff * this.ascDmg;
@@ -1012,6 +1084,11 @@ export class World {
     // Gauntlet: a boss kill clears the current stage; advance to the next.
     if (this.gauntlet) this.advanceGauntlet();
     this.events.emit("bossDefeated", { x: e.x, y: e.y, id: e.typeId });
+    // Campaign boss Sector: felling the Sector boss clears the level.
+    if (this.campaign && this.bossSector && !this.levelCleared) {
+      this.levelCleared = true;
+      this.events.emit("levelCleared", { level: this.campaignLevel });
+    }
 
     // Generous reward: a fan of XP shards plus guaranteed support drops.
     const shards = 14;

@@ -130,6 +130,13 @@ Goal: replace placeholder geometry with premium, original procedural art.
 - [x] **Weapon pass + new Wardens + Warden mastery**: 3 new weapons & evolutions,
       3 new Wardens, per-Warden mastery levelling (Veteran achievement → 17).
 
+- [x] **Campaign progression** (Galaxies → Sectors): a "clear it, warp onward"
+      loop replacing casual stage-select as the primary mode. 10 Sectors/Galaxy,
+      slow per-Sector strength ramp, boss Sectors (5 & 10), finite levels with
+      clear conditions, a Campaign map + Sector-Cleared flow, and **endless**
+      procedurally-generated Galaxies beyond the 5 authored ones.
+- [x] **Shop mote sinks**: infinite Supply Drop crate + 5 Tier-II upgrades.
+
 ## ▶ ART UPLIFT — IN PROGRESS (permanent standard, see docs/ArtDirection.md)
 Visual quality is now a primary success criterion. Working toward Survivor.io /
 Brotato-tier polish via a procedural+shader rendering pipeline (no external

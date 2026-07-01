@@ -218,7 +218,30 @@ Collecting all six unlocks the **Warlord** achievement. Equip/claim state shows 
 the Hangar's Signatures panel; signatures are stripped for the equal-footing Daily
 Run.
 
-### Stages ✅ (distinct battlegrounds)
+### Campaign ✅ (Galaxies → Sectors — the primary progression)
+Source of truth: `src/game/data/campaignDefs.ts`; progress in
+`save.campaignProgress` (the next global Sector to clear). Space is traversed as
+**Galaxies** (themed regions), each split into **10 Sectors** (the discrete
+levels). It's the "clear it, warp onward" loop:
+- A **Sector** is a *finite* run with a clear condition. Normal Sectors clear by
+  **surviving** a target duration (`levelDuration`, ~60→135s); Sectors **5 and
+  10** are **boss Sectors** that clear when the Sector boss is felled
+  (`World.campaign`, `isBossSector`, `levelCleared` event).
+- Enemy strength ramps **slowly per Sector** and steps up per Galaxy
+  (`levelDifficulty = 1 + level·0.06`, ~+60% per Galaxy). Palette + enemy/boss
+  pools come from the Galaxy (`getGalaxy`).
+- Clearing a Sector for the first time advances `campaignProgress`, pays Motes
+  (`levelReward`; replays pay 30%), salvages gear and grants Warden XP, then the
+  **Sector Cleared** screen offers **Next Sector / Campaign Map / Menu**.
+- The campaign is **endless**: 5 Galaxies are hand-authored, and Galaxies beyond
+  are **procedurally generated** (rotated palette, widened rosters) so it never
+  runs out. The main-menu **Campaign** button opens the map (Galaxy warp arrows +
+  cleared ✓ / current ▶ / locked / ☠ boss Sector nodes).
+
+Full-power run (meta + gear + signature + Warden mastery all apply). The other
+modes (Quick Play, Daily, Boss Rush, Endless, Gauntlet) are unchanged.
+
+### Stages ✅ (distinct battlegrounds — used by Quick Play & alt modes)
 Source of truth: `src/game/data/stageDefs.ts`; selection in `save.selectedStage`.
 Each stage has its own **palette** (sky/nebula/fog/star colours, baked by
 `Background.setStage`) and **enemy pool** (`SpawnDirector.reset(pool)`).

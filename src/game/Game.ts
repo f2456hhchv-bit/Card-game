@@ -18,6 +18,7 @@ import {
   rarityName,
 } from "./data/gearDefs";
 import { getStage, isStageUnlocked } from "./data/stageDefs";
+import { levelReward } from "./data/campaignDefs";
 import { SIGNATURE_DEFS, SIGNATURE_LIST } from "./data/signatureDefs";
 import { WARDEN_LIST } from "./data/wardenDefs";
 import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
@@ -33,7 +34,7 @@ function dailyDateString(): string {
 }
 
 /** High-level game states. The simulation only advances while `playing`. */
-export type GameState = "menu" | "playing" | "paused" | "draft" | "gameover";
+export type GameState = "menu" | "playing" | "paused" | "draft" | "gameover" | "cleared";
 
 /**
  * Top-level orchestrator. Wires the fixed-step loop to the World, routes input,
@@ -64,6 +65,9 @@ export class Game {
   private isEndless = false;
   /** True while the current run is a Stage Gauntlet. */
   private isGauntlet = false;
+  /** True while playing a Campaign Sector; `campaignLevel` is which one. */
+  private isCampaign = false;
+  private campaignLevel = 0;
   /** Whether a weapon was evolved this run (for the achievement). */
   private runEvolved = false;
 
@@ -87,10 +91,14 @@ export class Game {
       onStartBossRush: () => this.startRun(false, true),
       onStartEndless: () => this.startRun(false, false, true),
       onStartGauntlet: () => this.startRun(false, false, false, true),
+      onStartCampaign: (level: number) => this.startCampaign(level),
+      onNextLevel: () => this.startCampaign(this.campaignLevel + 1),
       onPause: () => this.pause(),
       onResume: () => this.resume(),
       onRestart: () =>
-        this.startRun(this.isDailyRun, this.isBossRush, this.isEndless, this.isGauntlet),
+        this.isCampaign
+          ? this.startCampaign(this.campaignLevel)
+          : this.startRun(this.isDailyRun, this.isBossRush, this.isEndless, this.isGauntlet),
       onToMenu: () => this.toMenu(),
       onPickDraft: (opt) => this.pickDraft(opt),
       onGearChanged: () => this.checkAchievements(),
@@ -206,6 +214,7 @@ export class Game {
       this.ui.flashDamage();
     });
     e.on("playerDied", () => this.onPlayerDied());
+    e.on("levelCleared", (l) => this.onLevelCleared(l.level));
   }
 
   // ---- State transitions -------------------------------------------------
@@ -216,10 +225,12 @@ export class Game {
     this.isBossRush = bossRush;
     this.isEndless = endless;
     this.isGauntlet = gauntlet;
+    this.isCampaign = false;
     this.runEvolved = false;
     this.world.bossRush = bossRush;
     this.world.endless = endless;
     this.world.gauntlet = gauntlet;
+    this.world.campaign = false;
     if (daily) {
       // Daily Run: a fair, equal challenge — fixed daily seed, default Warden,
       // and no permanent meta-upgrades, so the run is the same for everyone.
@@ -243,11 +254,45 @@ export class Game {
       this.world.stageId = this.selectedStageId();
       this.world.reset();
     }
+    this.beginRunUi();
+  }
+
+  /**
+   * Start a Campaign Sector: a finite level with a clear condition. Full loadout
+   * (meta/gear/signature/Warden mastery) applies — it's the main progression.
+   */
+  private startCampaign(level: number): void {
+    this.audio.unlock();
+    this.isDailyRun = false;
+    this.isBossRush = false;
+    this.isEndless = false;
+    this.isGauntlet = false;
+    this.isCampaign = true;
+    this.campaignLevel = level;
+    this.runEvolved = false;
+    this.world.bossRush = false;
+    this.world.endless = false;
+    this.world.gauntlet = false;
+    this.world.campaign = true;
+    this.world.campaignLevel = level;
+    this.world.metaLevels = this.save.data.meta;
+    this.world.gearInventory = this.save.data.gear.inventory;
+    this.world.gearEquipped = this.save.data.gear.equipped;
+    this.world.signatureId = this.save.data.signatures.equipped;
+    this.world.selectedWarden = this.save.data.selectedWarden;
+    this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
+    this.world.reset();
+    this.beginRunUi();
+  }
+
+  /** Shared setup after any run's World is reset (camera, overlays, HUD, hints). */
+  private beginRunUi(): void {
     this.camera.snapTo(this.world.player.x, this.world.player.y);
     this.draftQueue = 0;
     this.applyAccessibility();
     this.ui.hideMenu();
     this.ui.hideGameOver();
+    this.ui.hideLevelCleared();
     this.ui.hideDraft();
     this.ui.hidePause();
     this.ui.hideBossBar();
@@ -275,6 +320,7 @@ export class Game {
     this.ui.hideHUD();
     this.ui.hidePause();
     this.ui.hideGameOver();
+    this.ui.hideLevelCleared();
     this.ui.hideDraft();
     this.ui.hideBossBar();
     this.ui.hideHint();
@@ -324,6 +370,28 @@ export class Game {
     this.state = "playing";
     // Immediately surface the next draft if more level-ups are queued.
     this.openDraftIfPending();
+  }
+
+  /** A Campaign Sector was cleared — reward, record progress, offer to warp on. */
+  private onLevelCleared(level: number): void {
+    this.state = "cleared";
+    this.audio.bossDown();
+    this.camera.addShake(14, 0.7);
+    const firstClear = level >= this.save.data.campaignProgress;
+    // Reward Motes (first clear pays full; replays pay a fraction), + Fortune.
+    const base = levelReward(level) * (firstClear ? 1 : 0.3);
+    const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
+    this.save.data.motes += motes;
+    if (firstClear) this.save.data.campaignProgress = level + 1;
+    // Every clear salvages gear + earns the Warden mastery XP.
+    this.salvageGear();
+    const wid = this.save.data.selectedWarden;
+    this.save.grantWardenXp(wid, 20 + level * 4 + this.world.stats.kills);
+    this.save.save();
+    this.checkAchievements();
+    const hasNext = true; // the campaign is endless (procedural galaxies)
+    this.ui.hideHUD();
+    this.ui.showLevelCleared(level, motes, firstClear, hasNext);
   }
 
   private onPlayerDied(): void {

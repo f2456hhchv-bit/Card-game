@@ -710,6 +710,100 @@
   opacity: 0.5;
 }
 
+/* Campaign map — Galaxies & Sectors. */
+.campaign-body {
+  width: min(640px, 94vw);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+.galaxy-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  justify-content: space-between;
+}
+.galaxy-nav {
+  pointer-events: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: var(--ui-panel);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--card-accent, #fff);
+}
+.galaxy-nav:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.galaxy-title {
+  text-align: center;
+  flex: 1;
+}
+.galaxy-name {
+  font-weight: 900;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  color: var(--card-accent);
+}
+.galaxy-sub {
+  font-size: 0.8rem;
+  color: var(--ui-text-dim);
+  font-style: italic;
+}
+.sector-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.sector-node {
+  pointer-events: auto;
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  background: var(--ui-panel);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-text);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+}
+.sector-node .sector-num {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+.sector-node .sector-tag {
+  position: absolute;
+  top: 4px;
+  right: 7px;
+  font-size: 0.7rem;
+}
+.sector-node.cleared {
+  border-color: color-mix(in srgb, var(--card-accent) 55%, transparent);
+  color: var(--card-accent);
+}
+.sector-node.current {
+  box-shadow: 0 0 0 2px var(--card-accent),
+    0 0 18px color-mix(in srgb, var(--card-accent) 45%, transparent);
+}
+.sector-node.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.sector-node.boss .sector-num {
+  color: #ff6a8a;
+}
+.sector-node:not(.locked):hover {
+  transform: translateY(-2px);
+}
+
 /* Stage chooser on the main menu. */
 .stage-row {
   display: flex;

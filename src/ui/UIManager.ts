@@ -28,6 +28,14 @@ import {
 import { ACHIEVEMENT_DEFS } from "../game/data/achievementDefs";
 import { STAGE_LIST, getStage, isStageUnlocked } from "../game/data/stageDefs";
 import { SIGNATURE_LIST } from "../game/data/signatureDefs";
+import {
+  getGalaxy,
+  galaxyOf,
+  levelLabel,
+  isBossSector,
+  levelDifficulty,
+  SECTORS_PER_GALAXY,
+} from "../game/data/campaignDefs";
 import { formatTime } from "../core/format";
 
 /**
@@ -43,6 +51,10 @@ export interface UICallbacks {
   onStartBossRush(): void;
   onStartEndless(): void;
   onStartGauntlet(): void;
+  /** Launch a Campaign Sector by its global level index. */
+  onStartCampaign(level: number): void;
+  /** Warp to the next Campaign Sector from the cleared screen. */
+  onNextLevel(): void;
   onPause(): void;
   onResume(): void;
   onRestart(): void;
@@ -83,6 +95,11 @@ export class UIManager {
   private pause!: HTMLDivElement;
   private gameover!: HTMLDivElement;
   private settings!: HTMLDivElement;
+  private campaign!: HTMLDivElement;
+  private campaignBody!: HTMLDivElement;
+  private levelCleared!: HTMLDivElement;
+  /** Which Galaxy the campaign map is currently showing. */
+  private viewedGalaxy = 0;
 
   private showPerf = false;
   private flashTimer = 0;
@@ -125,6 +142,8 @@ export class UIManager {
     this.buildWardens();
     this.buildHangar();
     this.buildRecords();
+    this.buildCampaign();
+    this.buildLevelCleared();
     this.toastLayer = this.el("div", "toast-layer");
     this.root.appendChild(this.toastLayer);
   }
@@ -320,7 +339,11 @@ export class UIManager {
     const stageRow = this.el("div", "stage-row");
     stageRow.id = "stage-row";
 
-    const play = this.el("button", "btn", "Begin Vigil");
+    // Campaign is the primary progression: warp through Galaxies & Sectors.
+    const campaignBtn = this.el("button", "btn", "Campaign");
+    campaignBtn.addEventListener("click", () => this.openCampaign());
+
+    const play = this.el("button", "btn secondary", "Quick Play");
     play.addEventListener("click", () => this.cb.onStart());
 
     const dailyBtn = this.el("button", "btn secondary", "Daily Run");
@@ -369,7 +392,7 @@ export class UIManager {
     btnRow.style.gap = "12px";
     btnRow.style.flexWrap = "wrap";
     btnRow.style.justifyContent = "center";
-    btnRow.append(play, dailyBtn, this.bossRushBtn, endlessBtn, gauntletBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
+    btnRow.append(campaignBtn, play, dailyBtn, this.bossRushBtn, endlessBtn, gauntletBtn, wardensBtn, hangarBtn, shopBtn, recordsBtn, howBtn, settingsBtn);
 
     o.append(title, sub, stats, stageRow, btnRow, dailyLine);
     this.root.appendChild(o);
@@ -1177,6 +1200,158 @@ export class UIManager {
   private closeRecords(): void {
     this.records.classList.add("hidden");
     this.menu.classList.remove("hidden");
+  }
+
+  // ---- Campaign map (Galaxies → Sectors) ---------------------------------
+
+  private buildCampaign(): void {
+    const o = this.el("div", "overlay hidden");
+    const title = this.el("h2", undefined, "CAMPAIGN");
+    this.campaignBody = this.el("div", "campaign-body");
+    const back = this.el("button", "btn", "Back");
+    back.addEventListener("click", () => this.closeCampaign());
+    o.append(title, this.campaignBody, back);
+    this.root.appendChild(o);
+    this.campaign = o;
+  }
+
+  /** The furthest global level the player has reached (next to clear). */
+  private campaignProgress(): number {
+    return this.save.data.campaignProgress;
+  }
+
+  private refreshCampaign(): void {
+    const progress = this.campaignProgress();
+    const maxGalaxy = galaxyOf(progress); // furthest galaxy with any unlocked sector
+    this.viewedGalaxy = Math.max(0, Math.min(this.viewedGalaxy, maxGalaxy));
+    const g = getGalaxy(this.viewedGalaxy);
+    const accent = `hsl(${g.palette.fogHue} 70% 62%)`;
+
+    this.campaignBody.replaceChildren();
+
+    // Galaxy header with prev/next warp arrows.
+    const header = this.el("div", "galaxy-head");
+    header.style.setProperty("--card-accent", accent);
+    const prev = this.el("button", "galaxy-nav", "‹");
+    prev.disabled = this.viewedGalaxy <= 0;
+    prev.addEventListener("click", () => {
+      this.viewedGalaxy--;
+      this.refreshCampaign();
+    });
+    const next = this.el("button", "galaxy-nav", "›");
+    next.disabled = this.viewedGalaxy >= maxGalaxy;
+    next.addEventListener("click", () => {
+      this.viewedGalaxy++;
+      this.refreshCampaign();
+    });
+    const titleWrap = this.el("div", "galaxy-title");
+    titleWrap.append(
+      this.el("div", "galaxy-name", `Galaxy ${this.viewedGalaxy + 1} — ${g.name}`),
+      this.el("div", "galaxy-sub", g.title),
+    );
+    header.append(prev, titleWrap, next);
+    this.campaignBody.appendChild(header);
+
+    // Sector node grid.
+    const grid = this.el("div", "sector-grid");
+    for (let s = 0; s < SECTORS_PER_GALAXY; s++) {
+      const level = this.viewedGalaxy * SECTORS_PER_GALAXY + s;
+      const cleared = level < progress;
+      const current = level === progress;
+      const locked = level > progress;
+      const boss = isBossSector(level);
+
+      const node = this.el("button", "sector-node");
+      node.style.setProperty("--card-accent", accent);
+      if (cleared) node.classList.add("cleared");
+      if (current) node.classList.add("current");
+      if (locked) node.classList.add("locked");
+      if (boss) node.classList.add("boss");
+
+      node.append(
+        this.el("div", "sector-num", boss ? "☠" : `${s + 1}`),
+        this.el("div", "sector-tag", cleared ? "✓" : current ? "▶" : locked ? "🔒" : ""),
+      );
+      node.title = `${levelLabel(level)} · ×${levelDifficulty(level).toFixed(2)} threat`;
+      if (!locked) {
+        node.addEventListener("click", () => {
+          this.audio.select();
+          this.cb.onStartCampaign(level);
+        });
+      } else {
+        node.disabled = true;
+      }
+      grid.appendChild(node);
+    }
+    this.campaignBody.appendChild(grid);
+
+    // Big "continue" launch button for the current sector (if in this galaxy).
+    if (galaxyOf(progress) === this.viewedGalaxy) {
+      const launch = this.el("button", "btn", `Launch — ${levelLabel(progress)}`);
+      launch.addEventListener("click", () => {
+        this.audio.select();
+        this.cb.onStartCampaign(progress);
+      });
+      this.campaignBody.appendChild(launch);
+    }
+  }
+
+  private openCampaign(): void {
+    this.viewedGalaxy = galaxyOf(this.campaignProgress());
+    this.refreshCampaign();
+    this.menu.classList.add("hidden");
+    this.campaign.classList.remove("hidden");
+  }
+  private closeCampaign(): void {
+    this.campaign.classList.add("hidden");
+    this.menu.classList.remove("hidden");
+  }
+
+  // ---- Sector-cleared screen ---------------------------------------------
+
+  private buildLevelCleared(): void {
+    const o = this.el("div", "overlay hidden");
+    const title = this.el("h2", undefined, "SECTOR CLEARED");
+    title.id = "lc-title";
+    const stats = this.el("div", "menu-stats");
+    stats.id = "lc-stats";
+    const next = this.el("button", "btn", "Next Sector ›");
+    next.id = "lc-next";
+    next.addEventListener("click", () => this.cb.onNextLevel());
+    const map = this.el("button", "btn secondary", "Campaign Map");
+    map.addEventListener("click", () => {
+      this.hideLevelCleared();
+      this.openCampaign();
+    });
+    const menu = this.el("button", "btn secondary", "Menu");
+    menu.addEventListener("click", () => this.cb.onToMenu());
+    o.append(title, stats, next, map, menu);
+    this.root.appendChild(o);
+    this.levelCleared = o;
+  }
+
+  showLevelCleared(level: number, motes: number, firstClear: boolean, hasNext: boolean): void {
+    const title = this.levelCleared.querySelector("#lc-title");
+    if (title) title.textContent = firstClear ? "SECTOR CLEARED!" : "SECTOR CLEARED";
+    const stats = this.levelCleared.querySelector("#lc-stats");
+    if (stats) {
+      const stat = (label: string, value: string) => {
+        const s = this.el("div", "stat");
+        s.append(this.el("b", undefined, value), this.el("span", undefined, label));
+        return s;
+      };
+      stats.replaceChildren(
+        stat("Cleared", levelLabel(level)),
+        stat("Reward", `✦ ${motes}`),
+        stat("Total Motes", `${this.save.data.motes}`),
+      );
+    }
+    const next = this.levelCleared.querySelector("#lc-next") as HTMLButtonElement | null;
+    if (next) next.style.display = hasNext ? "" : "none";
+    this.levelCleared.classList.remove("hidden");
+  }
+  hideLevelCleared(): void {
+    this.levelCleared.classList.add("hidden");
   }
 
   private refreshMenuStats(): void {

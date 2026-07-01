@@ -300,6 +300,41 @@ describe("World — combat integration", () => {
     expect(world.player.hp).toBeGreaterThanOrEqual(hpBefore - 1);
   });
 
+  it("a non-boss Campaign Sector clears once its survival duration elapses", () => {
+    const world = new World(61);
+    world.campaign = true;
+    world.campaignLevel = 0; // Galaxy 1 · Sector 1 — not a boss Sector
+    world.reset();
+    world.player.stats.maxHp = 1e9;
+    world.player.hp = 1e9;
+    let cleared = -1;
+    world.events.on("levelCleared", (l) => (cleared = l.level));
+    // Sector 0 duration is 60s; step just past it.
+    for (let i = 0; i < 60 * 61 && cleared < 0; i++) world.step(1 / 60, STILL);
+    expect(cleared).toBe(0);
+    expect(world.levelCleared).toBe(true);
+  });
+
+  it("a boss Campaign Sector clears when its Sector boss is felled", () => {
+    const world = new World(62);
+    world.campaign = true;
+    world.campaignLevel = 4; // Sector 5 — a boss Sector
+    world.reset();
+    world.player.stats.maxHp = 1e9;
+    world.player.hp = 1e9;
+    let cleared = -1;
+    world.events.on("levelCleared", (l) => (cleared = l.level));
+    // Boss warps in at ~18s; run until it's active.
+    for (let i = 0; i < 60 * 25 && !world.bossActive; i++) world.step(1 / 60, STILL);
+    expect(world.bossActive).toBe(true);
+    expect(cleared).toBe(-1); // not cleared just by surviving on a boss Sector
+    // Fell the boss → Sector clears.
+    world.damageEnemy(world.boss!, world.boss!.maxHp + 1, false, 0, 0);
+    world.step(1 / 60, STILL);
+    expect(cleared).toBe(4);
+    expect(world.levelCleared).toBe(true);
+  });
+
   it("kills award XP and can trigger a level-up draft", () => {
     const world = new World(99);
     world.reset();

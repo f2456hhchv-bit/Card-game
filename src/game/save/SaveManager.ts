@@ -78,6 +78,8 @@ export interface SaveData {
   endlessBest: number;
   /** Best Stage Gauntlet result: most stages cleared (0–3). */
   gauntletBest: number;
+  /** Campaign progress: number of Sectors cleared (= index of the next to play). */
+  campaignProgress: number;
   /** Best time/kills per stage id (normal runs), for the Records screen. */
   stageBest: Record<string, { time: number; kills: number }>;
   /** Boss signatures: which are unlocked, and which one is equipped. */
@@ -113,6 +115,7 @@ function defaultSave(): SaveData {
     bossRushBest: 0,
     endlessBest: 0,
     gauntletBest: 0,
+    campaignProgress: 0,
     stageBest: {},
     signatures: { owned: [], equipped: null },
     wardens: ["lumen"],
@@ -173,6 +176,7 @@ export class SaveManager {
       bossRushBest: parsed.bossRushBest ?? 0,
       endlessBest: parsed.endlessBest ?? 0,
       gauntletBest: parsed.gauntletBest ?? 0,
+      campaignProgress: parsed.campaignProgress ?? 0,
       stageBest: parsed.stageBest ?? {},
       signatures: parsed.signatures ?? { owned: [], equipped: null },
       lifetime: parsed.lifetime ?? { time: 0, damage: 0, bosses: 0, elites: 0 },

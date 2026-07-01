@@ -35,7 +35,7 @@ export class GameRenderer {
     const w = renderer.width;
     const h = renderer.height;
     this.background.resize(w, h);
-    this.background.setStage(world.stageId, world.stage.palette);
+    this.background.setStage(world.paletteKey, world.palette);
     this.background.draw(ctx, camera.x, camera.y, w, h, world.stats.elapsed, this.reduceMotion);
 
     this.drawArenaBoundary(ctx, camera, world);
