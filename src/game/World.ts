@@ -26,6 +26,7 @@ import {
 } from "./data/campaignDefs";
 import { WEAPON_DEFS } from "./data/weaponDefs";
 import { emptyEquip } from "./data/gearDefs";
+import { getWarden, type CommanderSpecial } from "./data/wardenDefs";
 import { Input } from "../engine/Input";
 import { clamp, TAU } from "../core/math/MathUtils";
 
@@ -80,6 +81,8 @@ export interface GameEvents {
   stageAdvance: { stageId: string; name: string; cleared: number };
   /** Campaign Sector cleared (survived the duration / felled the Sector boss). */
   levelCleared: { level: number };
+  /** The Commander's activated special power fired. */
+  special: { name: string; kind: string };
 }
 
 /** Position of an orbit-weapon orb, mirrored out for the renderer. */
@@ -149,6 +152,13 @@ export class World {
   private ascHp = 1;
   private ascDmg = 1;
   private ascTimer = 0;
+
+  /** Commander special-ability cooldown (seconds remaining) and its maximum. */
+  private specialCd = 0;
+  private specialCdMax = 12;
+  /** Temporary damage multiplier from an "empower" special (1 = none). */
+  damageBuff = 1;
+  private buffTimer = 0;
 
   /** Reactor "Overdrive" pulse timer (seconds until next pulse). */
   private pulseTimer = 0;
@@ -330,6 +340,11 @@ export class World {
     this.revivesLeft = this.player.stats.revive;
     this.pulseTimer = World.PULSE_INTERVAL;
     this.pulseFx = 0;
+    // Commander special: ready at run start, cooldown from the selected Commander.
+    this.specialCdMax = getWarden(this.selectedWarden).special.cooldown;
+    this.specialCd = 0;
+    this.damageBuff = 1;
+    this.buffTimer = 0;
     this.spawnDirector.reset(this.activeEnemyPool, this.activeDifficulty);
     this.ascHp = 1;
     this.ascDmg = 1;
@@ -552,6 +567,11 @@ export class World {
     if (this.isDead || this.levelCleared) return;
     this.stats.elapsed += dt;
 
+    if (this.specialCd > 0) this.specialCd = Math.max(0, this.specialCd - dt);
+    if (this.buffTimer > 0) {
+      this.buffTimer -= dt;
+      if (this.buffTimer <= 0) this.damageBuff = 1;
+    }
     this.updatePlayer(dt, input);
     this.rebuildGrid();
     // Boss Rush suppresses fodder spawns — only bosses and their summons appear.
@@ -627,6 +647,80 @@ export class World {
     this.pulseFx = r;
     this.spawnRing(px, py, 30, r, 0.45);
     this.events.emit("pulse", { x: px, y: py, radius: r });
+  }
+
+  // ---- Commander special ability -----------------------------------------
+
+  /** True when the special is off cooldown and ready to fire. */
+  get specialReady(): boolean {
+    return this.specialCd <= 0;
+  }
+  /** 0 (ready) … 1 (just used) — drives the cooldown sweep on the HUD button. */
+  get specialCooldownFraction(): number {
+    return this.specialCdMax > 0 ? this.specialCd / this.specialCdMax : 0;
+  }
+  /** The selected Commander's special (for the HUD icon / label). */
+  get special(): CommanderSpecial {
+    return getWarden(this.selectedWarden).special;
+  }
+
+  /** Fire the Commander's special if ready. Returns whether it activated. */
+  activateSpecial(): boolean {
+    if (this.isDead || this.levelCleared || this.specialCd > 0) return false;
+    const sp = this.special;
+    this.applySpecial(sp);
+    this.specialCd = this.specialCdMax;
+    this.events.emit("special", { name: sp.name, kind: sp.kind });
+    return true;
+  }
+
+  private applySpecial(sp: CommanderSpecial): void {
+    const p = this.player;
+    switch (sp.kind) {
+      case "nova": {
+        const r = (sp.radius ?? 200) * Math.sqrt(p.stats.areaMult);
+        const dmg = (sp.damage ?? 50) * p.stats.damageMult * this.damageBuff;
+        const r2 = r * r;
+        const near = this.enemyGrid.query(p.x, p.y, r);
+        for (let i = 0; i < near.length; i++) {
+          const e = near[i];
+          if (!e.active) continue;
+          const dx = e.x - p.x;
+          const dy = e.y - p.y;
+          if (dx * dx + dy * dy > r2) continue;
+          const inv = 1 / (Math.hypot(dx, dy) || 1);
+          this.damageEnemy(e, dmg, false, dx * inv * 240, dy * inv * 240);
+        }
+        this.spawnRing(p.x, p.y, 200, r, 0.55);
+        this.spawnRing(p.x, p.y, 190, r * 0.6, 0.7);
+        p.invuln = Math.max(p.invuln, 0.4);
+        break;
+      }
+      case "heal": {
+        p.hp = Math.min(p.stats.maxHp, p.hp + p.stats.maxHp * (sp.healFrac ?? 0.3));
+        this.spawnRing(p.x, p.y, 150, p.radius * 1.6, 0.7);
+        break;
+      }
+      case "empower": {
+        this.damageBuff = sp.mult ?? 1.5;
+        this.buffTimer = sp.duration ?? 5;
+        this.spawnRing(p.x, p.y, 20, p.radius * 1.3, 0.6);
+        break;
+      }
+      case "dash": {
+        const d = sp.distance ?? 200;
+        p.x = clamp(p.x + Math.cos(p.facing) * d, -ARENA_RADIUS, ARENA_RADIUS);
+        p.y = clamp(p.y + Math.sin(p.facing) * d, -ARENA_RADIUS, ARENA_RADIUS);
+        p.invuln = Math.max(p.invuln, sp.invuln ?? 0.5);
+        this.spawnRing(p.x, p.y, 190, p.radius * 1.3, 0.5);
+        break;
+      }
+      case "guard": {
+        p.invuln = Math.max(p.invuln, sp.invuln ?? 3);
+        this.spawnRing(p.x, p.y, 210, p.radius * 1.6, 0.8);
+        break;
+      }
+    }
   }
 
   // ---- Boss lifecycle ----------------------------------------------------

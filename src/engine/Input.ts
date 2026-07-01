@@ -24,6 +24,7 @@ export class Input {
 
   // One-shot action flags consumed by the UI layer.
   private pausePressed = false;
+  private specialPressed = false;
 
   constructor(element: HTMLElement) {
     this.element = element;
@@ -56,6 +57,8 @@ export class Input {
       this.pausePressed = true;
       e.preventDefault();
     }
+    // Space triggers the Commander's special ability.
+    if (code === "Space") this.specialPressed = true;
     // Prevent arrow keys / space from scrolling the page.
     if (MOVE_CODES.has(code) || code === "Space") e.preventDefault();
     this.keys.add(code);
@@ -147,6 +150,18 @@ export class Input {
     const v = this.pausePressed;
     this.pausePressed = false;
     return v;
+  }
+
+  /** Returns true exactly once per special-ability press (Space or the button). */
+  consumeSpecial(): boolean {
+    const v = this.specialPressed;
+    this.specialPressed = false;
+    return v;
+  }
+
+  /** Trigger the special from an on-screen button (touch). */
+  pressSpecial(): void {
+    this.specialPressed = true;
   }
 
   isKeyDown(code: string): boolean {

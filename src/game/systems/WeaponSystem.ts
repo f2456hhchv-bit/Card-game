@@ -114,7 +114,7 @@ export class WeaponSystem {
 
   private rollDamage(world: World, base: number): { dmg: number; crit: boolean } {
     const s = world.player.stats;
-    let dmg = base * s.damageMult;
+    let dmg = base * s.damageMult * world.damageBuff;
     let crit = false;
     if (world.rng.chance(s.critChance)) {
       dmg *= s.critMult;

@@ -97,6 +97,9 @@ export class Game {
       onContinueRun: () => this.resumeSavedRun(),
       onPause: () => this.pause(),
       onResume: () => this.resume(),
+      onSpecial: () => {
+        if (this.state === "playing") this.world.activateSpecial();
+      },
       onRestart: () =>
         this.isCampaign
           ? this.startCampaign(this.campaignLevel)
@@ -223,6 +226,10 @@ export class Game {
     });
     e.on("playerDied", () => this.onPlayerDied());
     e.on("levelCleared", (l) => this.onLevelCleared(l.level));
+    e.on("special", (sp) => {
+      this.audio.evolveFanfare();
+      this.camera.addShake(sp.kind === "nova" ? 12 : 7, 0.45);
+    });
   }
 
   // ---- State transitions -------------------------------------------------
@@ -525,7 +532,7 @@ export class Game {
       const res = this.save.grantWardenXp(wid, xp);
       if (res.gained > 0) {
         const w = WARDEN_LIST.find((x) => x.id === wid);
-        this.ui.showToast("⬆", `${w?.name ?? "Warden"} — Level ${res.level}`, "Warden mastery deepens.");
+        this.ui.showToast("⬆", `${w?.name ?? "Commander"} — Level ${res.level}`, "Commander mastery deepens.");
       }
     }
     this.checkAchievements();
@@ -606,6 +613,10 @@ export class Game {
     if (this.input.consumePause()) {
       if (this.state === "playing") this.pause();
       else if (this.state === "paused") this.resume();
+    }
+
+    if (this.input.consumeSpecial() && this.state === "playing") {
+      this.world.activateSpecial();
     }
 
     if (this.state === "playing") {

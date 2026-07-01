@@ -111,7 +111,7 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   {
     id: "collector",
     name: "Collector",
-    description: "Unlock every Warden.",
+    description: "Unlock every Commander.",
     icon: "👥",
     check: (c) => c.wardensUnlocked >= c.wardensTotal,
   },
@@ -153,7 +153,7 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   {
     id: "veteran",
     name: "Veteran",
-    description: "Raise a Warden to mastery level 10.",
+    description: "Raise a Commander to mastery level 10.",
     icon: "🎖",
     check: (c) => c.wardenMaxLevel >= 10,
   },

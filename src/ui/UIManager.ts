@@ -59,6 +59,8 @@ export interface UICallbacks {
   onContinueRun(): void;
   onPause(): void;
   onResume(): void;
+  /** Fire the Commander's special ability (on-screen button). */
+  onSpecial(): void;
   onRestart(): void;
   onToMenu(): void;
   onPickDraft(option: DraftOption): void;
@@ -83,6 +85,9 @@ export class UIManager {
   private hpFill!: HTMLDivElement;
   private hpText!: HTMLDivElement;
   private loadoutBar!: HTMLDivElement;
+  private specialBtn!: HTMLButtonElement;
+  private specialIcon!: HTMLSpanElement;
+  private specialCdEl!: HTMLDivElement;
   private perf!: HTMLDivElement;
   private flash!: HTMLDivElement;
   private hint!: HTMLDivElement;
@@ -232,7 +237,15 @@ export class UIManager {
       this.cb.onPause();
     });
 
-    hud.append(top, this.bossBar, this.hint, hpWrap, this.loadoutBar, pauseBtn, this.perf, this.flash);
+    // Commander special-ability button (bottom-right thumb reach; Space on desktop).
+    this.specialBtn = this.el("button", "special-btn");
+    this.specialBtn.setAttribute("aria-label", "Special ability");
+    this.specialCdEl = this.el("div", "special-cd");
+    this.specialIcon = this.el("span", "special-icon", "✦");
+    this.specialBtn.append(this.specialCdEl, this.specialIcon);
+    this.specialBtn.addEventListener("click", () => this.cb.onSpecial());
+
+    hud.append(top, this.bossBar, this.hint, hpWrap, this.loadoutBar, pauseBtn, this.specialBtn, this.perf, this.flash);
     this.root.appendChild(hud);
     this.hud = hud;
   }
@@ -280,6 +293,12 @@ export class UIManager {
     this.hpFill.style.width = `${hpFrac * 100}%`;
     this.hpText.textContent = `${Math.ceil(p.hp)} / ${Math.round(p.stats.maxHp)}`;
     this.updateLoadoutBar(world.loadout);
+
+    // Commander special button: icon + radial cooldown sweep + ready glow.
+    this.specialIcon.textContent = world.special.icon;
+    const cd = world.specialCooldownFraction;
+    this.specialCdEl.style.height = `${cd * 100}%`;
+    this.specialBtn.classList.toggle("ready", world.specialReady);
 
     if (world.bossActive) {
       this.bossFill.style.width = `${world.bossHpFraction * 100}%`;
@@ -418,7 +437,7 @@ export class UIManager {
     };
     tab("journey", "🗺", "Journey");
     tab("play", "⚔", "Play");
-    tab("wardens", "🛡", "Wardens");
+    tab("wardens", "🎖", "Commanders");
     tab("hangar", "🧩", "Hangar");
     tab("shop", "🛒", "Shop");
     tab("more", "☰", "More");
@@ -665,7 +684,7 @@ export class UIManager {
     );
 
     // Systems guide — a plain-language tour of everything the menus unlock, so
-    // new players aren't lost among Wardens, the Hangar and the game modes.
+    // new players aren't lost among Commanders, the Hangar and the game modes.
     const guideTitle = this.el("h3", "howto-subhead", "THE SYSTEMS");
     const guide = this.el("div", "howto");
     const grow = (icon: string, name: string, text: string) => {
@@ -676,7 +695,7 @@ export class UIManager {
       return r;
     };
     guide.append(
-      grow("🛡", "Wardens", "The heroes you play. Each starts with a different weapon and a permanent perk (more damage, more HP, faster fire…). Playing a Warden levels up its Mastery for a small lasting bonus. Unlock new Wardens with Light Motes."),
+      grow("🎖", "Commanders", "The heroes you pilot. Each starts with a different weapon, a permanent perk, and a signature special power (tap the glowing button, bottom-right, or press Space). Playing a Commander levels up its Mastery for a lasting bonus. Unlock new Commanders with Light Motes."),
       grow("🧩", "Hangar", "Your gear inventory. Equip one item per slot (Hull / Core / Engines / Wings). Items roll a rarity and bonus affixes, and matching a full 4-piece Set grants a powerful set bonus. Merge duplicates to raise an item's grade."),
       grow("⚙", "Alloy & Salvage", "Dismantle spare gear into Alloy, then spend it to re-roll an item's affixes — turning unwanted drops into the stats you actually want."),
       grow("🌌", "Campaign", "The main journey: clear a Sector to warp to the next. Survive the timer (or fell the Sector boss) to advance. Difficulty climbs slowly, Galaxy by Galaxy — endlessly."),
@@ -854,7 +873,7 @@ export class UIManager {
 
   private buildWardens(): void {
     const o = this.el("div", "overlay hidden");
-    const title = this.el("h2", undefined, "WARDENS");
+    const title = this.el("h2", undefined, "COMMANDERS");
     this.wardensBalance = this.el("div", "shop-balance");
     this.wardensGrid = this.el("div", "shop-grid");
     const back = this.el("button", "btn", "Back");
@@ -885,6 +904,12 @@ export class UIManager {
       const desc = this.el("div", "shop-desc", def.description);
       const perk = this.el("div", "shop-next", def.perk);
       const weap = this.el("div", "warden-weapon", `Starts with: ${starter}`);
+      // Signature special power.
+      const special = this.el("div", "warden-special");
+      special.append(
+        this.el("span", "warden-special-name", `${def.special.icon} ${def.special.name}`),
+        this.el("span", "warden-special-desc", def.special.description),
+      );
 
       // Mastery: level + XP progress + the cumulative bonus (owned wardens only).
       const prog = d.wardenProgress[def.id] ?? { level: 0, xp: 0 };
@@ -926,7 +951,7 @@ export class UIManager {
         if (!affordable) btn.classList.add("cant-afford");
         btn.addEventListener("click", () => this.unlockWarden(def.id));
       }
-      card.append(head, desc, perk, weap);
+      card.append(head, desc, perk, weap, special);
       if (mastery) card.append(mastery);
       card.append(btn);
       this.wardensGrid.appendChild(card);
