@@ -182,7 +182,9 @@ export class GameRenderer {
       // Spawn-in "birth": scale up with a slight overshoot over the first ~0.24s.
       const spawnT = Math.min(1, e.age / 0.24);
       const spawnScale = this.reduceMotion ? 1 : spawnT * (1.14 - 0.14 * spawnT);
-      const r = e.radius * camera.zoom * 1.25 * e.hitScale * spawnScale;
+      // Gentle breathing pulse so idle/moving foes feel alive, not static.
+      const breathe = this.reduceMotion ? 1 : 1 + Math.sin(t * 6 + e.animPhase) * 0.045;
+      const r = e.radius * camera.zoom * 1.25 * e.hitScale * spawnScale * breathe;
 
       this.shadow(ctx, x, camera.worldToScreenY(e.y), e.radius * camera.zoom);
 
@@ -305,13 +307,17 @@ export class GameRenderer {
       ctx.restore();
     }
 
+    // Bosses pop on being hit too, but at half the amplitude of fodder so the
+    // huge silhouette only flinches rather than lurching.
+    const pop = 1 + (boss.hitScale - 1) * 0.5;
+
     const art = this.assets.get(`boss/${boss.typeId}`);
     if (art) {
       // Illustrated bosses sway/breathe rather than spinning like the abstract
       // procedural sprite, so their silhouette stays readable.
       const sway = this.reduceMotion ? 0 : Math.sin(t * 0.7) * 0.05;
       const breathe = this.reduceMotion ? 1 : 1 + Math.sin(t * 1.6) * 0.02;
-      const rr = r * 1.2 * breathe;
+      const rr = r * 1.2 * breathe * pop;
       const k = rr / art.radius;
       ctx.save();
       ctx.translate(x, y);
@@ -326,14 +332,14 @@ export class GameRenderer {
       ctx.restore();
     } else {
       const rot = this.reduceMotion ? 0 : t * 0.35;
-      this.blit(ctx, this.forge.bossSprite(boss.typeId), x, y, r * 1.2, rot);
+      this.blit(ctx, this.forge.bossSprite(boss.typeId), x, y, r * 1.2 * pop, rot);
       if (boss.hitFlash > 0) {
         this.blit(
           ctx,
           this.forge.bossWhite(boss.typeId),
           x,
           y,
-          r * 1.2,
+          r * 1.2 * pop,
           rot,
           Math.min(1, boss.hitFlash / 0.08),
         );
