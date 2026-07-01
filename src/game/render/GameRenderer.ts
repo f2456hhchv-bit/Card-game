@@ -179,7 +179,10 @@ export class GameRenderer {
       const x = camera.worldToScreenX(e.x);
       const yBob = this.reduceMotion ? 0 : Math.sin(t * 5 + e.animPhase) * e.radius * 0.07 * camera.zoom;
       const y = camera.worldToScreenY(e.y) + yBob;
-      const r = e.radius * camera.zoom * 1.25 * e.hitScale;
+      // Spawn-in "birth": scale up with a slight overshoot over the first ~0.24s.
+      const spawnT = Math.min(1, e.age / 0.24);
+      const spawnScale = this.reduceMotion ? 1 : spawnT * (1.14 - 0.14 * spawnT);
+      const r = e.radius * camera.zoom * 1.25 * e.hitScale * spawnScale;
 
       this.shadow(ctx, x, camera.worldToScreenY(e.y), e.radius * camera.zoom);
 
@@ -250,16 +253,55 @@ export class GameRenderer {
 
     this.shadow(ctx, x, y, r * 0.95);
 
-    // Telegraph: an expanding warning ring during attack wind-up.
+    // Telegraph: a dramatic charge-up during the attack wind-up. `tele` runs
+    // 0→1 as the boss finishes winding up, so the ring contracts inward (classic
+    // anticipation), a charge arc fills, and energy streaks are pulled in.
     const tele = world.bossTelegraph;
     if (tele > 0) {
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      ctx.strokeStyle = `hsla(${boss.hue} 100% 72% / ${0.5 * (1 - tele)})`;
-      ctx.lineWidth = 4 + tele * 12;
+      const hue = boss.hue;
+
+      // Building glow around the boss, brightening as release nears.
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 2.5);
+      glow.addColorStop(0, `hsla(${hue} 100% 70% / ${0.14 + 0.26 * tele})`);
+      glow.addColorStop(1, `hsla(${hue} 100% 60% / 0)`);
+      ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(x, y, r * (1.15 + tele * 0.9), 0, TAU);
+      ctx.arc(x, y, r * 2.5, 0, TAU);
+      ctx.fill();
+
+      // Contracting warning ring — the tell the player reads to dodge.
+      const ringR = r * (2.35 - tele * 1.05);
+      ctx.strokeStyle = `hsla(${hue} 100% 78% / ${0.3 + 0.55 * tele})`;
+      ctx.lineWidth = (2 + tele * 5) * camera.zoom;
+      ctx.beginPath();
+      ctx.arc(x, y, ringR, 0, TAU);
       ctx.stroke();
+
+      // Charge arc filling clockwise around the boss as it winds up.
+      ctx.strokeStyle = `hsl(${hue} 100% 82%)`;
+      ctx.lineWidth = 3.5 * camera.zoom;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 1.32, -Math.PI / 2, -Math.PI / 2 + TAU * tele);
+      ctx.stroke();
+
+      // Energy streaks pulled inward toward the boss (renderer-only, no state).
+      if (!this.reduceMotion) {
+        const streaks = 10;
+        const spin = t * 1.6;
+        ctx.lineWidth = 2 * camera.zoom;
+        for (let i = 0; i < streaks; i++) {
+          const a = (i / streaks) * TAU + spin;
+          const outer = ringR + 14 * (1 - tele);
+          const inner = ringR - 6;
+          ctx.strokeStyle = `hsla(${hue} 100% 80% / ${0.15 + 0.55 * tele})`;
+          ctx.beginPath();
+          ctx.moveTo(x + Math.cos(a) * outer, y + Math.sin(a) * outer);
+          ctx.lineTo(x + Math.cos(a) * inner, y + Math.sin(a) * inner);
+          ctx.stroke();
+        }
+      }
       ctx.restore();
     }
 

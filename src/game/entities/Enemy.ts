@@ -37,6 +37,8 @@ export class Enemy implements SpatialEntity {
   hitFlash = 0;
   /** Squash-and-stretch pop on being hit; eases back to 1 (see World). */
   hitScale = 1;
+  /** Seconds since this enemy spawned — drives the scale-in "birth" animation. */
+  age = 0;
   /** Knockback velocity decays separately from steering velocity. */
   knockX = 0;
   knockY = 0;
@@ -51,6 +53,7 @@ export class Enemy implements SpatialEntity {
     this.active = false;
     this.hitFlash = 0;
     this.hitScale = 1;
+    this.age = 0;
     this.knockX = 0;
     this.knockY = 0;
     this.contactCooldown = 0;

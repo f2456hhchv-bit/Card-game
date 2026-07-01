@@ -858,6 +858,7 @@ export class World {
     const py = this.player.y;
     for (let i = arr.length - 1; i >= 0; i--) {
       const e = arr[i];
+      e.age += dt;
       e.hitFlash = Math.max(0, e.hitFlash - dt);
       if (e.hitScale !== 1) e.hitScale += (1 - e.hitScale) * Math.min(1, dt * 16);
       e.contactCooldown = Math.max(0, e.contactCooldown - dt);
@@ -1278,9 +1279,12 @@ export class World {
       pt.active = true;
       this.particles.push(pt);
     }
-    // A shockwave ring punctuates bigger kills.
+    // A shockwave ring punctuates every kill — bigger and brighter for bigger
+    // foes — so deaths land with a satisfying pop.
     if (e.isElite || e.isBoss) {
       this.spawnRing(e.x, e.y, e.hue, e.radius * 0.8, e.isBoss ? 0.7 : 0.5);
+    } else if (this.particles.length < 380) {
+      this.spawnRing(e.x, e.y, e.hue, e.radius * 0.5, 0.28);
     }
   }
 
