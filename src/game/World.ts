@@ -675,6 +675,15 @@ export class World {
     if (this.isDead || this.levelCleared) return;
     this.stats.elapsed += dt;
 
+    // Record previous-tick positions before ANY movement, so the renderer can
+    // interpolate. Done here (not in updateEnemies) because the boss moves in
+    // updateBoss, which runs first — capturing later left bosses unsmoothed.
+    for (let i = 0; i < this.enemies.length; i++) {
+      const e = this.enemies[i];
+      e.prevX = e.x;
+      e.prevY = e.y;
+    }
+
     if (this.specialCd > 0) this.specialCd = Math.max(0, this.specialCd - dt);
     if (this.buffTimer > 0) {
       this.buffTimer -= dt;
@@ -1242,8 +1251,6 @@ export class World {
     const py = this.player.y;
     for (let i = arr.length - 1; i >= 0; i--) {
       const e = arr[i];
-      e.prevX = e.x;
-      e.prevY = e.y;
       e.age += dt;
       e.hitFlash = Math.max(0, e.hitFlash - dt);
       if (e.hitScale !== 1) e.hitScale += (1 - e.hitScale) * Math.min(1, dt * 16);

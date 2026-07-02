@@ -472,7 +472,17 @@ export class UIManager {
     settingsBtn.addEventListener("click", () => this.openSettings());
     const moreGrid = this.el("div", "mode-grid");
     moreGrid.append(recordsBtn, howBtn, settingsBtn);
-    this.morePanel.append(this.el("div", "panel-head", "More"), moreGrid);
+    // Build stamp — settles "which version is my phone actually running?"
+    // at a glance (the id is the build's UTC timestamp).
+    const stamp = new Date(Number(__BUILD_ID__));
+    const stampText = Number.isFinite(stamp.getTime())
+      ? `build ${stamp.toISOString().slice(0, 16).replace("T", " ")} UTC`
+      : "dev build";
+    this.morePanel.append(
+      this.el("div", "panel-head", "More"),
+      moreGrid,
+      this.el("div", "build-stamp", stampText),
+    );
 
     panels.append(this.journeyPanel, this.playPanel, this.morePanel);
 

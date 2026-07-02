@@ -23,6 +23,8 @@ export interface GameLoopCallbacks {
 
 const FIXED_DT = 1 / 60; // 60 Hz simulation — the gameplay heartbeat.
 const MAX_FRAME_TIME = 0.25; // Clamp huge gaps (tab switch) to avoid spirals.
+/** Common display intervals for delta snapping (see tick). */
+const REFRESH_RATES = [120, 90, 80, 60, 40, 30, 20];
 
 export class GameLoop {
   private readonly callbacks: GameLoopCallbacks;
@@ -65,6 +67,18 @@ export class GameLoop {
     let frameTime = (now - this.lastTime) / 1000;
     this.lastTime = now;
     if (frameTime > MAX_FRAME_TIME) frameTime = MAX_FRAME_TIME;
+    // Delta snapping: Safari (especially iOS) coarsens rAF timestamps to ~1ms,
+    // so measured deltas wobble around the true refresh interval. That noise
+    // leaks into the interpolation alpha and reads as micro-judder against the
+    // display's perfectly regular scanout. Snap to the nearest common refresh
+    // interval when within 12% of it; genuine hitches fall through unsnapped.
+    for (const hz of REFRESH_RATES) {
+      const t = 1 / hz;
+      if (Math.abs(frameTime - t) < t * 0.12) {
+        frameTime = t;
+        break;
+      }
+    }
 
     // FPS measurement (rolling, updated ~4x/sec).
     this.fpsAccum += frameTime;
@@ -88,7 +102,7 @@ export class GameLoop {
       }
     }
 
-    const alpha = this.accumulator / FIXED_DT;
+    const alpha = Math.min(1, Math.max(0, this.accumulator / FIXED_DT));
     this.callbacks.render(alpha, frameTime);
   };
 }
