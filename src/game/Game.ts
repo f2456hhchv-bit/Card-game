@@ -672,10 +672,9 @@ export class Game {
 
     if (this.state === "playing") {
       this.world.step(dt, this.input);
-      this.camera.follow(this.world.player.x, this.world.player.y, dt);
-      const acc = this.save.data.accessibility;
-      const shakeScale = acc.screenShake ? 1 : 0;
-      this.camera.updateShake(dt, this.shakeRand, shakeScale);
+      // Camera follow/shake moved to render() so they advance at the display's
+      // refresh rate (120Hz iPhones) against the interpolated ship position —
+      // stepping them at the 60Hz sim rate made motion judder ("flicker").
       if (this.tutorialActive) this.updateTutorial(dt);
       // Surface any pending level-up draft (pauses the sim).
       this.openDraftIfPending();
@@ -733,17 +732,25 @@ export class Game {
 
   // ---- Render ------------------------------------------------------------
 
-  private render(_alpha: number, frameDt: number): void {
+  private render(alpha: number, frameDt: number): void {
     // Cosmetic systems update on real time even while drafting/paused looks
     // frozen — but we freeze them too for a clean "time stop" feel on overlays.
+    const interp = this.state === "playing" ? alpha : 1;
     if (this.state === "playing") {
       this.world.updateCosmetic(frameDt);
       const intensity = clamp(this.world.enemies.length / 300, 0, 1);
       this.audio.updateMusic(frameDt, intensity);
+      // Track the ship's interpolated position at full display refresh rate.
+      const p = this.world.player;
+      const px = p.prevX + (p.x - p.prevX) * interp;
+      const py = p.prevY + (p.y - p.prevY) * interp;
+      this.camera.follow(px, py, frameDt);
+      const acc = this.save.data.accessibility;
+      this.camera.updateShake(frameDt, this.shakeRand, acc.screenShake ? 1 : 0);
     }
 
     this.renderer.begin("#05060a");
-    this.gameRenderer.render(this.renderer, this.camera, this.world, this.input);
+    this.gameRenderer.render(this.renderer, this.camera, this.world, this.input, interp);
 
     if (this.state === "playing" || this.state === "paused" || this.state === "draft") {
       this.ui.updateHUD(this.world, this.loop.fps);

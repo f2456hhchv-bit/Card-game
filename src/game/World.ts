@@ -1084,13 +1084,21 @@ export class World {
   private updatePlayer(dt: number, input: Input): void {
     const p = this.player;
     const s = p.stats;
+    p.prevX = p.x;
+    p.prevY = p.y;
     p.invuln = Math.max(0, p.invuln - dt);
     p.hitFlash = Math.max(0, p.hitFlash - dt);
 
     p.x += input.moveX * s.moveSpeed * dt;
     p.y += input.moveY * s.moveSpeed * dt;
     if (input.moveX !== 0 || input.moveY !== 0) {
-      p.facing = Math.atan2(input.moveY, input.moveX);
+      // Turn toward the stick smoothly — an instant snap made the sprite
+      // jitter with every thumb wobble (the reported movement flicker).
+      const target = Math.atan2(input.moveY, input.moveX);
+      let d = target - p.facing;
+      while (d > Math.PI) d -= TAU;
+      while (d < -Math.PI) d += TAU;
+      p.facing += d * Math.min(1, dt * 14);
     }
 
     // Keep inside the circular arena.
@@ -1190,6 +1198,8 @@ export class World {
     const arr = this.projectiles;
     for (let i = arr.length - 1; i >= 0; i--) {
       const p = arr[i];
+      p.prevX = p.x;
+      p.prevY = p.y;
       p.life -= dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
@@ -1232,6 +1242,8 @@ export class World {
     const py = this.player.y;
     for (let i = arr.length - 1; i >= 0; i--) {
       const e = arr[i];
+      e.prevX = e.x;
+      e.prevY = e.y;
       e.age += dt;
       e.hitFlash = Math.max(0, e.hitFlash - dt);
       if (e.hitScale !== 1) e.hitScale += (1 - e.hitScale) * Math.min(1, dt * 16);
@@ -1360,6 +1372,8 @@ export class World {
     const p = this.player;
     for (let i = arr.length - 1; i >= 0; i--) {
       const ep = arr[i];
+      ep.prevX = ep.x;
+      ep.prevY = ep.y;
       ep.life -= dt;
       ep.x += ep.vx * dt;
       ep.y += ep.vy * dt;
@@ -1427,6 +1441,8 @@ export class World {
     const pickR2 = pickR * pickR;
     for (let i = arr.length - 1; i >= 0; i--) {
       const k = arr[i];
+      k.prevX = k.x;
+      k.prevY = k.y;
       k.bob += dt * 4;
 
       // Timed pickups (Supply Pods) burn down and vanish uncollected.

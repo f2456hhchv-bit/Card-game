@@ -9,6 +9,9 @@ export type PickupKind = "xp" | "heal" | "magnet" | "bomb" | "mote" | "pod";
 export class Pickup implements SpatialEntity {
   x = 0;
   y = 0;
+  /** Position at the previous sim tick — the renderer interpolates. */
+  prevX = 0;
+  prevY = 0;
   radius = 8;
   active = false;
 

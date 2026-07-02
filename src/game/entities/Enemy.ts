@@ -13,6 +13,9 @@ export class Enemy implements SpatialEntity {
   y = 0;
   vx = 0;
   vy = 0;
+  /** Position at the previous sim tick — the renderer interpolates. */
+  prevX = 0;
+  prevY = 0;
   radius = 14;
   active = false;
 

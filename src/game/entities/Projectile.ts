@@ -10,6 +10,9 @@ export type ProjectileStyle = "bolt" | "orb" | "shard" | "beam" | "arc";
 export class Projectile implements SpatialEntity {
   x = 0;
   y = 0;
+  /** Position at the previous sim tick — the renderer interpolates. */
+  prevX = 0;
+  prevY = 0;
   vx = 0;
   vy = 0;
   radius = 6;

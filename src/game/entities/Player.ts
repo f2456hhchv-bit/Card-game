@@ -42,6 +42,9 @@ export class Player {
   y = 0;
   radius = 16;
   facing = 0; // radians, last movement / aim direction
+  /** Position at the previous sim tick — the renderer interpolates. */
+  prevX = 0;
+  prevY = 0;
 
   hp = 100;
   level = 1;

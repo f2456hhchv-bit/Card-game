@@ -31,7 +31,16 @@ export class GameRenderer {
     this.postFx.enabled = v;
   }
 
-  render(renderer: Renderer, camera: Camera, world: World, input: Input): void {
+  /** Interpolation factor between the last two sim ticks (set per frame). */
+  private alpha = 1;
+
+  /** Interpolated coordinate — snaps on teleports/spawns/pool reuse. */
+  private ix(prev: number, cur: number): number {
+    return Math.abs(cur - prev) > 200 ? cur : prev + (cur - prev) * this.alpha;
+  }
+
+  render(renderer: Renderer, camera: Camera, world: World, input: Input, alpha = 1): void {
+    this.alpha = alpha;
     const ctx = renderer.ctx;
     const w = renderer.width;
     const h = renderer.height;
@@ -140,8 +149,8 @@ export class GameRenderer {
 
   private drawPlayer(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
     const p = world.player;
-    const x = camera.worldToScreenX(p.x);
-    const y = camera.worldToScreenY(p.y);
+    const x = camera.worldToScreenX(this.ix(p.prevX, p.x));
+    const y = camera.worldToScreenY(this.ix(p.prevY, p.y));
     const r = p.radius * camera.zoom;
 
     this.shadow(ctx, x, y, r);
@@ -181,9 +190,11 @@ export class GameRenderer {
       if (e.isBoss) continue; // bespoke draw
       if (e.x < bounds.minX || e.x > bounds.maxX || e.y < bounds.minY || e.y > bounds.maxY)
         continue;
-      const x = camera.worldToScreenX(e.x);
+      const ex = this.ix(e.prevX, e.x);
+      const ey = this.ix(e.prevY, e.y);
+      const x = camera.worldToScreenX(ex);
       const yBob = this.reduceMotion ? 0 : Math.sin(t * 5 + e.animPhase) * e.radius * 0.07 * camera.zoom;
-      const y = camera.worldToScreenY(e.y) + yBob;
+      const y = camera.worldToScreenY(ey) + yBob;
       // Spawn-in "birth": scale up with a slight overshoot over the first ~0.24s.
       const spawnT = Math.min(1, e.age / 0.24);
       const spawnScale = this.reduceMotion ? 1 : spawnT * (1.14 - 0.14 * spawnT);
@@ -191,7 +202,7 @@ export class GameRenderer {
       const breathe = this.reduceMotion ? 1 : 1 + Math.sin(t * 6 + e.animPhase) * 0.045;
       const r = e.radius * camera.zoom * 1.25 * e.hitScale * spawnScale * breathe;
 
-      this.shadow(ctx, x, camera.worldToScreenY(e.y), e.radius * camera.zoom);
+      this.shadow(ctx, x, camera.worldToScreenY(ey), e.radius * camera.zoom);
 
       // Directional types point at the Warden; others wobble gently.
       let rot = this.reduceMotion ? 0 : Math.sin(t * 2.5 + e.animPhase) * 0.08;
@@ -271,8 +282,8 @@ export class GameRenderer {
   private drawBoss(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
     const boss = world.boss;
     if (!boss || !boss.active) return;
-    const x = camera.worldToScreenX(boss.x);
-    const y = camera.worldToScreenY(boss.y);
+    const x = camera.worldToScreenX(this.ix(boss.prevX, boss.x));
+    const y = camera.worldToScreenY(this.ix(boss.prevY, boss.y));
     const r = boss.radius * camera.zoom;
     const t = world.stats.elapsed;
 
@@ -409,8 +420,8 @@ export class GameRenderer {
     ctx.globalCompositeOperation = "lighter";
     for (let i = 0; i < world.projectiles.length; i++) {
       const p = world.projectiles[i];
-      const x = camera.worldToScreenX(p.x);
-      const y = camera.worldToScreenY(p.y);
+      const x = camera.worldToScreenX(this.ix(p.prevX, p.x));
+      const y = camera.worldToScreenY(this.ix(p.prevY, p.y));
       const r = p.radius * camera.zoom * (p.evolved ? 1.2 : 1);
       const sat = p.crit ? 100 : 92;
       const lum = p.crit ? 80 : 66;
@@ -518,8 +529,8 @@ export class GameRenderer {
     ctx.globalCompositeOperation = "lighter";
     for (let i = 0; i < world.enemyProjectiles.length; i++) {
       const p = world.enemyProjectiles[i];
-      const x = camera.worldToScreenX(p.x);
-      const y = camera.worldToScreenY(p.y);
+      const x = camera.worldToScreenX(this.ix(p.prevX, p.x));
+      const y = camera.worldToScreenY(this.ix(p.prevY, p.y));
       const r = p.radius * camera.zoom;
       const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.7);
       g.addColorStop(0, `hsl(${p.hue} 100% 80%)`);
@@ -560,8 +571,8 @@ export class GameRenderer {
 
   private drawAura(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
     if (world.auraRadius <= 0) return;
-    const x = camera.worldToScreenX(world.player.x);
-    const y = camera.worldToScreenY(world.player.y);
+    const x = camera.worldToScreenX(this.ix(world.player.prevX, world.player.x));
+    const y = camera.worldToScreenY(this.ix(world.player.prevY, world.player.y));
     const r = world.auraRadius * camera.zoom;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
@@ -579,8 +590,8 @@ export class GameRenderer {
   /** Overdrive light pulse: a bright expanding ring at the moment it fires. */
   private drawPulse(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
     if (world.pulseFx <= 0) return;
-    const x = camera.worldToScreenX(world.player.x);
-    const y = camera.worldToScreenY(world.player.y);
+    const x = camera.worldToScreenX(this.ix(world.player.prevX, world.player.x));
+    const y = camera.worldToScreenY(this.ix(world.player.prevY, world.player.y));
     const r = world.pulseFx * camera.zoom;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
@@ -606,9 +617,9 @@ export class GameRenderer {
       const k = world.pickups[i];
       if (k.x < bounds.minX || k.x > bounds.maxX || k.y < bounds.minY || k.y > bounds.maxY)
         continue;
-      const x = camera.worldToScreenX(k.x);
+      const x = camera.worldToScreenX(this.ix(k.prevX, k.x));
       const bobY = this.reduceMotion ? 0 : Math.sin(k.bob) * 2.5;
-      const y = camera.worldToScreenY(k.y) + bobY;
+      const y = camera.worldToScreenY(this.ix(k.prevY, k.y)) + bobY;
       const r = k.radius * camera.zoom * 1.5;
       const spin = k.kind === "xp" && !this.reduceMotion ? Math.sin(t * 2 + k.bob) * 0.3 : 0;
       // Painted gems when available; big XP drops (elite/boss shards) get the

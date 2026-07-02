@@ -277,6 +277,17 @@ artist; production-art seam via `ArtManifest`).
       (setBossMode, wired to boss spawn/defeat/run-start). SFX gained a shared
       white-noise layer: bomb sub-thump + debris, hurt crunch, kill tick, boss
       riser and victory sparkle. Damage numbers ≥10k abbreviate (12.4k).
+- [x] **Movement flicker fixed (frame interpolation + turn smoothing)**: the
+      60Hz sim now records previous-tick positions for the ship, enemies,
+      projectiles and pickups, and the renderer interpolates between ticks
+      using the loop's alpha — so 120Hz iPhones no longer double-image while
+      scrolling. Camera follow/shake moved to the render loop (display
+      refresh rate, tracking the interpolated ship), and the ship now turns
+      toward the stick smoothly instead of snapping to every thumb wobble.
+- [x] **New flyable ship art** (user hull sheet): all nine chassis re-keyed
+      from the top-down sheet via tools/shipSheet.mjs (border-median chroma
+      flood, nose-up as authored, geometric-mean radii) — Skiff's green
+      arrowhead through Dreadnought's armoured twin-hull.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen
