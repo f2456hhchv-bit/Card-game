@@ -31,6 +31,7 @@ import theSovereignSvg from "../../assets/art/boss/theSovereign.svg?raw";
 import seerSvg from "../../assets/art/enemy/seer.svg?raw";
 import lancerSvg from "../../assets/art/enemy/lancer.svg?raw";
 import { BOSS_RASTER } from "./bossRaster";
+import { CHASSIS_SPRITES, CHASSIS_SPRITE_RADII } from "./chassisSprites";
 
 export interface ArtImage {
   img: HTMLImageElement;
@@ -81,6 +82,12 @@ export class AssetManager {
     // painted mass reads slightly larger than the hit circle, like the SVGs.
     for (const id in BOSS_RASTER) {
       this.register(`boss/${id}`, BOSS_RASTER[id], 95);
+    }
+    // Per-chassis player ship sprites (user card art, keyed + nose-up). Each
+    // ships its own design radius (long thin hulls get a smaller radius so they
+    // render larger and stay readable).
+    for (const id in CHASSIS_SPRITES) {
+      this.register(`chassis/${id}`, CHASSIS_SPRITES[id], CHASSIS_SPRITE_RADII[id] ?? 105);
     }
   }
 

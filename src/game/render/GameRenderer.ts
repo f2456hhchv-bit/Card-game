@@ -162,8 +162,12 @@ export class GameRenderer {
 
     // Body sprite faces up; rotate toward facing. Invuln blink after a hit.
     // Rendered noticeably larger than the hitbox so the ship reads big on screen.
+    // The flown ship is the selected chassis' painted sprite when available,
+    // falling back to the classic warden art (then procedural).
     const blink = p.invuln > 0 && Math.sin(p.invuln * 40) < -0.2 ? 0.45 : 1;
-    this.blitKey(ctx, "hero/warden", this.forge.warden, x, y, r * 2.0, p.facing + Math.PI / 2, blink);
+    const chassisKey = `chassis/${world.selectedChassis}`;
+    const shipKey = this.assets.get(chassisKey) ? chassisKey : "hero/warden";
+    this.blitKey(ctx, shipKey, this.forge.warden, x, y, r * 2.0, p.facing + Math.PI / 2, blink);
   }
 
   private drawEnemies(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
