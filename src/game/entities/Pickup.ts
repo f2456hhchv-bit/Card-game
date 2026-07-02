@@ -1,6 +1,6 @@
 import type { SpatialEntity } from "../../core/SpatialHashGrid";
 
-export type PickupKind = "xp" | "heal" | "magnet" | "bomb" | "mote";
+export type PickupKind = "xp" | "heal" | "magnet" | "bomb" | "mote" | "pod";
 
 /**
  * Collectible dropped by enemies. XP shards are by far the most common, so the
@@ -24,10 +24,14 @@ export class Pickup implements SpatialEntity {
   /** Bob animation phase. */
   bob = 0;
 
+  /** Seconds until despawn (-1 = never). Supply Pods are on the clock. */
+  life = -1;
+
   reset(): void {
     this.active = false;
     this.homing = false;
     this.vx = 0;
     this.vy = 0;
+    this.life = -1;
   }
 }

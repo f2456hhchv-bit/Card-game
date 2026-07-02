@@ -401,6 +401,54 @@ describe("World — combat integration", () => {
     expect(world.player.hp).toBeLessThan(before);
   });
 
+  it("Supply Pods spawn on the clock, expire uncollected, and pay out when secured", () => {
+    const world = new World(21);
+    world.reset();
+    // Fast-forward past the first pod window.
+    for (let i = 0; i < 60 * 60 && !world.pickups.some((k) => k.kind === "pod"); i++) {
+      world.player.hp = world.player.stats.maxHp;
+      world.pendingLevelUps = 0;
+      world.step(1 / 60, STILL);
+    }
+    const pod = world.pickups.find((k) => k.kind === "pod");
+    expect(pod).toBeDefined();
+    expect(pod!.life).toBeGreaterThan(0);
+    // Never homes, even inside pickup radius.
+    pod!.x = world.player.x + 40;
+    pod!.y = world.player.y;
+    world.step(1 / 60, STILL);
+    expect(pod!.homing).toBe(false);
+    // Secure it: walk it into contact range → pays heal/motes/shards. The
+    // payout lands at the ship's feet, so give it a few frames to be scooped.
+    world.player.hp = world.player.stats.maxHp * 0.5;
+    const hpBefore = world.player.hp;
+    pod!.x = world.player.x;
+    pod!.y = world.player.y;
+    for (let i = 0; i < 30; i++) world.step(1 / 60, STILL);
+    expect(world.stats.podsCollected).toBe(1);
+    expect(world.stats.motesCollected).toBeGreaterThanOrEqual(4);
+    expect(world.player.hp).toBeGreaterThan(hpBefore);
+    // A second pod left alone burns down and despawns.
+    const world2 = new World(22);
+    world2.reset();
+    for (let i = 0; i < 60 * 60 && !world2.pickups.some((k) => k.kind === "pod"); i++) {
+      world2.player.hp = world2.player.stats.maxHp;
+      world2.pendingLevelUps = 0;
+      world2.step(1 / 60, STILL);
+    }
+    const pod2 = world2.pickups.find((k) => k.kind === "pod");
+    expect(pod2).toBeDefined();
+    pod2!.x = world2.player.x + 2000; // out of reach
+    pod2!.y = world2.player.y + 2000;
+    for (let i = 0; i < 60 * 21; i++) {
+      world2.player.hp = world2.player.stats.maxHp; // stay alive; dead worlds freeze
+      world2.pendingLevelUps = 0;
+      world2.step(1 / 60, STILL);
+    }
+    expect(world2.pickups.some((k) => k.kind === "pod")).toBe(false);
+    expect(world2.stats.podsCollected).toBe(0);
+  });
+
   it("elites always drop a Light Mote purse that banks into motesCollected", () => {
     const world = new World(7);
     world.reset();

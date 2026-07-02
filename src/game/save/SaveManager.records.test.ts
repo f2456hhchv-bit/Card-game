@@ -11,6 +11,8 @@ function stats(over: Partial<RunStats> = {}): RunStats {
     damageDealt: 0,
     xpCollected: 0,
     motesCollected: 0,
+    affixKills: 0,
+    podsCollected: 0,
     level: 1,
     ascension: 0,
     stagesCleared: 0,

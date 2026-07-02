@@ -65,6 +65,10 @@ export interface RunStats {
   xpCollected: number;
   /** Light Motes physically collected on the field this run (bonus currency). */
   motesCollected: number;
+  /** Affixed elite champions felled this run. */
+  affixKills: number;
+  /** Supply Pods secured this run (timed run-events). */
+  podsCollected: number;
   level: number;
   /** Endless mode: highest Ascension tier reached this run (0 otherwise). */
   ascension: number;
@@ -79,6 +83,7 @@ export interface GameEvents {
   playerDied: Record<string, never>;
   levelUp: { level: number };
   pickup: { kind: string };
+  podSpawned: { x: number; y: number };
   weaponFired: { weaponId: string };
   bombDetonate: { x: number; y: number };
   bossSpawned: { name: string; title: string };
@@ -242,6 +247,8 @@ export class World {
     damageDealt: 0,
     xpCollected: 0,
     motesCollected: 0,
+    affixKills: 0,
+    podsCollected: 0,
     level: 1,
     ascension: 0,
     stagesCleared: 0,
@@ -391,6 +398,9 @@ export class World {
     this.stats.damageDealt = 0;
     this.stats.xpCollected = 0;
     this.stats.motesCollected = 0;
+    this.stats.affixKills = 0;
+    this.stats.podsCollected = 0;
+    this.podTimer = World.POD_FIRST;
     this.stats.level = 1;
     this.stats.ascension = 0;
     this.stats.stagesCleared = 0;
@@ -680,10 +690,60 @@ export class World {
     this.updateEnemies(dt);
     this.updateEnemyProjectiles(dt);
     this.updatePickups(dt);
+    this.updateSupplyPods(dt);
     this.updateOverdrive(dt);
     this.updateChassisPassive(dt);
     if (this.endless) this.updateAscension(dt);
     if (this.campaign) this.updateCampaignWaves(dt);
+  }
+
+  /** Supply Pod run-event: first drop and recurrence window (seconds). */
+  private static readonly POD_FIRST = 55;
+  private static readonly POD_MIN_GAP = 80;
+  private static readonly POD_MAX_GAP = 115;
+  private static readonly POD_LIFE = 20;
+  private podTimer = World.POD_FIRST;
+
+  /**
+   * Run-event: a Supply Pod periodically drifts in at the field's edge and
+   * self-destructs after {@link POD_LIFE}s — reach it in time for a cache of
+   * healing, Motes and light. It never homes to the ship (the trek IS the
+   * event) and holds off while a boss commands the field.
+   */
+  private updateSupplyPods(dt: number): void {
+    if (this.bossRush) return; // boss-only mode has no fodder lulls to fill
+    if (this.bossActive) return;
+    this.podTimer -= dt;
+    if (this.podTimer > 0) return;
+    this.podTimer = this.rng.range(World.POD_MIN_GAP, World.POD_MAX_GAP);
+    const a = this.rng.angle();
+    const dist = this.rng.range(420, 620);
+    const k = this.pickupPool.obtain();
+    k.kind = "pod";
+    k.value = 0;
+    k.x = clamp(this.player.x + Math.cos(a) * dist, -ARENA_RADIUS + 60, ARENA_RADIUS - 60);
+    k.y = clamp(this.player.y + Math.sin(a) * dist, -ARENA_RADIUS + 60, ARENA_RADIUS - 60);
+    k.radius = 20;
+    k.life = World.POD_LIFE;
+    k.active = true;
+    k.bob = this.rng.range(0, TAU);
+    this.pickups.push(k);
+    this.events.emit("podSpawned", { x: k.x, y: k.y });
+  }
+
+  /** Crack a secured Supply Pod open: heal, Motes and a fan of light shards. */
+  private openSupplyPod(k: Pickup): void {
+    this.stats.podsCollected++;
+    this.spawnRing(k.x, k.y, 190, 60, 0.6);
+    this.dropSpecial(k.x - 18, k.y + 6, "heal", 30);
+    this.dropSpecial(k.x + 18, k.y + 6, "mote", 4);
+    const shards = 5;
+    const shardValue = 2 + Math.round(this.player.level * 0.6);
+    for (let i = 0; i < shards; i++) {
+      const a = (i / shards) * TAU;
+      this.dropSpecial(k.x + Math.cos(a) * 26, k.y - 8 + Math.sin(a) * 26, "xp", shardValue);
+    }
+    this.events.emit("pickup", { kind: "pod" });
   }
 
   /**
@@ -1368,11 +1428,24 @@ export class World {
     for (let i = arr.length - 1; i >= 0; i--) {
       const k = arr[i];
       k.bob += dt * 4;
+
+      // Timed pickups (Supply Pods) burn down and vanish uncollected.
+      if (k.life > 0) {
+        k.life -= dt;
+        if (k.life <= 0) {
+          this.pickupPool.release(k);
+          arr[i] = arr[arr.length - 1];
+          arr.pop();
+          continue;
+        }
+      }
+
       const dx = p.x - k.x;
       const dy = p.y - k.y;
       const dSq = dx * dx + dy * dy;
 
-      if (!k.homing && dSq <= pickR2) k.homing = true;
+      // Pods never home — reaching them is the event.
+      if (!k.homing && dSq <= pickR2 && k.kind !== "pod") k.homing = true;
 
       if (k.homing) {
         const d = Math.sqrt(dSq) || 1;
@@ -1409,8 +1482,8 @@ export class World {
         break;
       }
       case "magnet": {
-        // Pull every pickup on the field toward the Warden.
-        for (const other of this.pickups) other.homing = true;
+        // Pull every pickup on the field toward the Warden (pods stay put).
+        for (const other of this.pickups) if (other.kind !== "pod") other.homing = true;
         this.events.emit("pickup", { kind: "magnet" });
         break;
       }
@@ -1423,6 +1496,10 @@ export class World {
         // Banked into the end-of-run Light Mote payout (see Game reward math).
         this.stats.motesCollected += k.value;
         this.events.emit("pickup", { kind: "mote" });
+        break;
+      }
+      case "pod": {
+        this.openSupplyPod(k);
         break;
       }
     }
@@ -1475,6 +1552,7 @@ export class World {
     e.active = false;
     this.stats.kills++;
     if (e.isElite) this.stats.eliteKills++;
+    if (e.isElite && e.affix) this.stats.affixKills++;
     this.events.emit("enemyKilled", { x: e.x, y: e.y, xp: e.xpValue, elite: e.isElite });
     this.spawnDeathBurst(e);
 

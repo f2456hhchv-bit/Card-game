@@ -13,11 +13,22 @@ export interface AchievementContext {
   runLevel: number;
   runEvolved: boolean;
   runDaily: boolean;
+  runMotes: number;
+  runAffixKills: number;
+  runPods: number;
+  runAscension: number;
+  runStagesCleared: number;
+  /** True when a Sector with an active Modifier was just cleared. */
+  runModifierCleared: boolean;
   // Lifetime / profile
   lifetimeBosses: number;
   metaPurchases: number;
+  runsPlayed: number;
+  campaignProgress: number;
   wardensUnlocked: number;
   wardensTotal: number;
+  chassisUnlocked: number;
+  chassisTotal: number;
   // Gear
   fullSetsOwned: number;
   setsTotal: number;
@@ -156,5 +167,157 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     description: "Raise a Commander to mastery level 10.",
     icon: "🎖",
     check: (c) => c.wardenMaxLevel >= 10,
+  },
+  // ---- Slaughter & endurance tiers ----------------------------------------
+  {
+    id: "legion-ender",
+    name: "Legion Ender",
+    description: "Fell 1,000 Hollow in a single run.",
+    icon: "🌋",
+    check: (c) => c.runKills >= 1000,
+  },
+  {
+    id: "eternal-flame",
+    name: "Eternal Flame",
+    description: "Survive 20 minutes in a single run.",
+    icon: "🔥",
+    check: (c) => c.runTime >= 1200,
+  },
+  {
+    id: "paragon",
+    name: "Paragon",
+    description: "Reach level 40 in a single run.",
+    icon: "🌟",
+    check: (c) => c.runLevel >= 40,
+  },
+  {
+    id: "champion-hunter",
+    name: "Champion Hunter",
+    description: "Fell 12 elites in a single run.",
+    icon: "🏹",
+    check: (c) => c.runEliteKills >= 12,
+  },
+  {
+    id: "ringbreaker",
+    name: "Ringbreaker",
+    description: "Fell 5 affixed elites (coloured rings) in a single run.",
+    icon: "💫",
+    check: (c) => c.runAffixKills >= 5,
+  },
+  // ---- Economy & run-events -------------------------------------------------
+  {
+    id: "prospector",
+    name: "Prospector",
+    description: "Gather 50 Light Motes on the field in a single run.",
+    icon: "⬡",
+    check: (c) => c.runMotes >= 50,
+  },
+  {
+    id: "golden-wake",
+    name: "Golden Wake",
+    description: "Gather 150 Light Motes on the field in a single run.",
+    icon: "☀",
+    check: (c) => c.runMotes >= 150,
+  },
+  {
+    id: "salvager",
+    name: "Salvager",
+    description: "Secure a Supply Pod before it self-destructs.",
+    icon: "📦",
+    check: (c) => c.runPods >= 1,
+  },
+  {
+    id: "pod-runner",
+    name: "Pod Runner",
+    description: "Secure 3 Supply Pods in a single run.",
+    icon: "🛰",
+    check: (c) => c.runPods >= 3,
+  },
+  // ---- Campaign journey -----------------------------------------------------
+  {
+    id: "trailblazer",
+    name: "Trailblazer",
+    description: "Reach Galaxy 2 of the campaign.",
+    icon: "🧭",
+    check: (c) => c.campaignProgress >= 10,
+  },
+  {
+    id: "voidfarer",
+    name: "Voidfarer",
+    description: "Reach Galaxy 5 of the campaign.",
+    icon: "🌀",
+    check: (c) => c.campaignProgress >= 40,
+  },
+  {
+    id: "deeplight",
+    name: "Deeplight",
+    description: "Reach Galaxy 10 of the campaign.",
+    icon: "🌌",
+    check: (c) => c.campaignProgress >= 90,
+  },
+  {
+    id: "conqueror",
+    name: "Conqueror",
+    description: "Clear all 100 Galaxies. Hold back the dark, forever.",
+    icon: "♛",
+    check: (c) => c.campaignProgress >= 1000,
+  },
+  {
+    id: "storm-rider",
+    name: "Storm Rider",
+    description: "Clear a Sector that carries a Sector Modifier.",
+    icon: "🌪",
+    check: (c) => c.runModifierCleared,
+  },
+  // ---- Alt modes --------------------------------------------------------------
+  {
+    id: "starclimber",
+    name: "Starclimber",
+    description: "Reach Ascension 5 in Endless mode.",
+    icon: "▲",
+    check: (c) => c.runAscension >= 5,
+  },
+  {
+    id: "iron-vigil",
+    name: "Iron Vigil",
+    description: "Clear all three stages of the Gauntlet on one life.",
+    icon: "🏰",
+    check: (c) => c.runStagesCleared >= 3,
+  },
+  {
+    id: "bossbreaker",
+    name: "Bossbreaker",
+    description: "Fell 3 bosses in a single run.",
+    icon: "⚡",
+    check: (c) => c.runBossKills >= 3,
+  },
+  // ---- Fleet & devotion ------------------------------------------------------
+  {
+    id: "fleet-admiral",
+    name: "Fleet Admiral",
+    description: "Unlock every Ship in the fleet.",
+    icon: "🚀",
+    check: (c) => c.chassisTotal > 0 && c.chassisUnlocked >= c.chassisTotal,
+  },
+  {
+    id: "benefactor",
+    name: "Benefactor",
+    description: "Purchase 25 permanent upgrade levels.",
+    icon: "💠",
+    check: (c) => c.metaPurchases >= 25,
+  },
+  {
+    id: "centennial",
+    name: "Centennial",
+    description: "Fly 100 runs.",
+    icon: "💯",
+    check: (c) => c.runsPlayed >= 100,
+  },
+  {
+    id: "dreadbane",
+    name: "Dreadbane",
+    description: "Defeat 25 bosses across all runs.",
+    icon: "🗿",
+    check: (c) => c.lifetimeBosses >= 25,
   },
 ];

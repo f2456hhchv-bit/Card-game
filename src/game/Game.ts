@@ -22,6 +22,7 @@ import { getStage, isStageUnlocked } from "./data/stageDefs";
 import { levelReward, isFinalLevel, MAX_LEVEL } from "./data/campaignDefs";
 import { SIGNATURE_DEFS, SIGNATURE_LIST } from "./data/signatureDefs";
 import { WARDEN_LIST } from "./data/wardenDefs";
+import { CHASSIS_LIST } from "./data/chassisDefs";
 import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
 import { Rng } from "../core/math/Rng";
 import { clamp } from "../core/math/MathUtils";
@@ -71,6 +72,8 @@ export class Game {
   private campaignLevel = 0;
   /** Whether a weapon was evolved this run (for the achievement). */
   private runEvolved = false;
+  /** Whether a modified Sector was just cleared (for the achievement). */
+  private runModifierCleared = false;
 
   // First-run tutorial (non-blocking coach hints).
   private tutorialActive = false;
@@ -178,7 +181,16 @@ export class Game {
     e.on("pickup", (p) => {
       if (p.kind === "xp") this.audio.pickup();
       else if (p.kind === "bomb") this.audio.bomb();
-      else this.audio.select();
+      else if (p.kind === "pod") {
+        // Securing a Supply Pod is a headline moment — fanfare + a beat of shake.
+        this.audio.levelUp();
+        this.camera.addShake(8, 0.3);
+        this.checkAchievements();
+      } else this.audio.select();
+    });
+    e.on("podSpawned", () => {
+      this.audio.bossWarn();
+      this.ui.showToast("📦", "Supply Pod inbound", "Reach it before it self-destructs — 20 seconds.", "Run Event");
     });
     e.on("bombDetonate", () => this.camera.addShake(16, 0.5));
     e.on("levelUp", () => {
@@ -247,6 +259,7 @@ export class Game {
     this.isGauntlet = gauntlet;
     this.isCampaign = false;
     this.runEvolved = false;
+    this.runModifierCleared = false;
     this.world.bossRush = bossRush;
     this.world.endless = endless;
     this.world.gauntlet = gauntlet;
@@ -293,6 +306,7 @@ export class Game {
     this.isCampaign = true;
     this.campaignLevel = level;
     this.runEvolved = false;
+    this.runModifierCleared = false;
     this.world.bossRush = false;
     this.world.endless = false;
     this.world.gauntlet = false;
@@ -491,6 +505,7 @@ export class Game {
     this.audio.bossDown();
     this.camera.addShake(14, 0.7);
     const firstClear = level >= this.save.data.campaignProgress;
+    this.runModifierCleared = this.world.modifier != null;
     // Reward Motes (first clear pays full; replays pay a fraction), + Fortune.
     // Field-collected Motes join the payout (and enjoy the Fortune multiplier).
     // Sector Modifiers pay a premium for the tougher rules.
@@ -604,10 +619,20 @@ export class Game {
       runLevel: s.level,
       runEvolved: this.runEvolved,
       runDaily: this.isDailyRun,
+      runMotes: s.motesCollected,
+      runAffixKills: s.affixKills,
+      runPods: s.podsCollected,
+      runAscension: s.ascension,
+      runStagesCleared: s.stagesCleared,
+      runModifierCleared: this.runModifierCleared,
       lifetimeBosses: d.lifetime.bosses + s.bossKills,
       metaPurchases,
+      runsPlayed: d.runsPlayed,
+      campaignProgress: d.campaignProgress,
       wardensUnlocked: d.wardens.length,
       wardensTotal: WARDEN_LIST.length,
+      chassisUnlocked: d.chassis.length,
+      chassisTotal: CHASSIS_LIST.length,
       fullSetsOwned: completedSets(d.gear.inventory),
       setsTotal: SET_LIST.length,
       maxedGearItems: maxedItems(d.gear.inventory),

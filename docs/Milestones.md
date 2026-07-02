@@ -256,6 +256,17 @@ artist; production-art seam via `ArtManifest`).
       Summoner (fodder reinforcements) — and shed a 5-Mote purse instead
       of 3. Toasts across the game also gained honest titles (Supply Drop /
       Sector Modifier / Mastery... instead of always "Achievement Unlocked").
+- [x] **Achievements expanded 17 → 38**: slaughter/endurance tiers (Legion
+      Ender, Eternal Flame, Paragon), economy + run-events (Prospector, Golden
+      Wake, Salvager, Pod Runner, Ringbreaker), campaign journey (Trailblazer
+      → Conqueror, Storm Rider), alt modes (Starclimber, Iron Vigil,
+      Bossbreaker) and fleet/devotion (Fleet Admiral, Benefactor, Centennial,
+      Dreadbane).
+- [x] **Supply Pod run-events**: every ~80–115s (first at 55s, paused during
+      boss fights) a golden beacon pod drifts in at the field's edge and
+      self-destructs after 20s — reach it for a heal, a 4-Mote purse and a fan
+      of XP shards. Announced by a "Run Event" toast, blinks its final 5s,
+      never magnetised (the trek is the event), and tracked in run stats.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

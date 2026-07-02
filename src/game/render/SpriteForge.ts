@@ -678,6 +678,7 @@ export class SpriteForge {
     this.pickups.set("heal", bakeBauble(140, "+"));
     this.pickups.set("magnet", bakeBauble(280, "✦"));
     this.pickups.set("bomb", bakeBauble(18, "✸"));
+    this.pickups.set("pod", bakeBauble(45, "▣"));
   }
 
   enemy(typeId: string): Sprite {

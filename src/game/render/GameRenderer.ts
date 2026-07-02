@@ -616,7 +616,25 @@ export class GameRenderer {
       const artKey = k.kind === "xp" && k.radius >= 10 ? "pickup/xpBig" : `pickup/${k.kind}`;
       // Motes fall back to the xp shard shape (the forge predates the kind).
       const fallback = this.forge.pickup(k.kind === "mote" ? "xp" : k.kind);
-      this.blitKey(ctx, artKey, fallback, x, y, r, spin);
+      // Supply Pods: a beacon glow, and an urgent blink over the final 5s.
+      let alpha = 1;
+      if (k.kind === "pod") {
+        if (k.life > 0 && k.life < 5 && !this.reduceMotion) {
+          alpha = 0.45 + 0.55 * Math.abs(Math.sin(t * 6));
+        }
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        const pulse = this.reduceMotion ? 1 : 1 + Math.sin(t * 3 + k.bob) * 0.18;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r * 2.6 * pulse);
+        g.addColorStop(0, `hsla(45 95% 62% / ${0.4 * alpha})`);
+        g.addColorStop(1, "hsla(45 95% 62% / 0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 2.6 * pulse, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+      }
+      this.blitKey(ctx, artKey, fallback, x, y, r, spin, alpha);
     }
   }
 
