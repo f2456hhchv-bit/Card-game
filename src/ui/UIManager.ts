@@ -13,6 +13,7 @@ import {
 import { WEAPON_DEFS } from "../game/data/weaponDefs";
 import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
+import { nebulaBg, slabBg, lockSvg, tabIcon } from "./inkArt";
 import {
   SLOTS,
   SLOT_META,
@@ -365,6 +366,10 @@ export class UIManager {
 
   private buildMenu(): void {
     const o = this.el("div", "overlay menu-overlay");
+    // Hand-inked nebula backdrop (procedural SVG, matches the designed artwork).
+    o.style.backgroundImage = nebulaBg();
+    o.style.backgroundSize = "cover";
+    o.style.backgroundPosition = "center";
     const menuHeader = this.el("div", "menu-header");
     const title = this.el("h1", "menu-title", "AFTERLIGHT");
     const sub = this.el("div", "subtitle", "Hold back the dark");
@@ -373,7 +378,8 @@ export class UIManager {
     menuHeader.append(title, sub, stats);
 
     // Continue — resume a run left mid-play. Only shown when one is stored.
-    this.continueBtn = this.el("button", "btn", "▶ Continue Run");
+    this.continueBtn = this.el("button", "btn continue-slab", "▶ Continue Run");
+    this.continueBtn.style.backgroundImage = slabBg(99, "rgba(18,14,34,0.95)");
     this.continueBtn.addEventListener("click", () => this.cb.onContinueRun());
 
     // ---- Inline panels (switched by the bottom tab bar) ----
@@ -432,20 +438,22 @@ export class UIManager {
     // ---- Bottom tab bar — a persistent shell appended to the ROOT (not the
     // menu overlay), so it stays visible and highlighted across every menu page.
     this.tabBar = this.el("div", "tab-bar hidden");
-    const tab = (id: string, icon: string, label: string) => {
+    const tab = (id: string, label: string) => {
       const b = this.el("button", "tab-btn");
-      b.append(this.el("span", "tab-icon", icon), this.el("span", "tab-label", label));
+      const icon = this.el("span", "tab-icon");
+      icon.innerHTML = tabIcon(id); // hand-drawn stroke icon (original SVG)
+      b.append(icon, this.el("span", "tab-label", label));
       b.dataset.tab = id;
       b.addEventListener("click", () => this.goTab(id));
       this.tabBar.appendChild(b);
     };
-    tab("journey", "🗺", "Journey");
-    tab("play", "⚔", "Play");
-    tab("wardens", "🎖", "Crew");
-    tab("ships", "🚀", "Ships");
-    tab("hangar", "🧩", "Hangar");
-    tab("shop", "🛒", "Shop");
-    tab("more", "☰", "More");
+    tab("journey", "Journey");
+    tab("play", "Play");
+    tab("wardens", "Crew");
+    tab("ships", "Ships");
+    tab("hangar", "Hangar");
+    tab("shop", "Shop");
+    tab("more", "More");
 
     o.append(menuHeader, panels);
     this.root.appendChild(o);
@@ -568,13 +576,19 @@ export class UIManager {
       if (isCurrent) stop.classList.add("current");
       if (complete) stop.classList.add("complete");
       stop.style.setProperty("--accent", accent);
+      // Hand-cut stone-slab panel; a different wobble per Galaxy.
+      stop.style.backgroundImage = slabBg(i + 3);
 
       const emblem = this.el("div", "galaxy-emblem");
       emblem.style.background =
         `radial-gradient(circle at 34% 30%, hsl(${hues[0]} 78% 64%), ` +
         `hsl(${hues[1] ?? hues[0]} 60% 34%) 52%, ${g.palette.baseBottom} 100%)`;
       emblem.append(this.el("div", "galaxy-emblem-core"));
-      if (!unlocked) emblem.append(this.el("div", "galaxy-lock", "🔒"));
+      if (!unlocked) {
+        const emblemLock = this.el("div", "galaxy-lock");
+        emblemLock.innerHTML = lockSvg(22); // inked padlock, not an emoji
+        emblem.append(emblemLock);
+      }
 
       const info = this.el("div", "galaxy-info");
       info.append(
@@ -598,6 +612,10 @@ export class UIManager {
           this.openCampaignGalaxy(i);
         });
       } else {
+        // Big sketchy padlock on the right, matching the designed artwork.
+        const lockRight = this.el("div", "galaxy-lock-right");
+        lockRight.innerHTML = lockSvg(38);
+        stop.appendChild(lockRight);
         stop.disabled = true;
       }
       if (isCurrent) this.currentStop = stop;
@@ -1714,8 +1732,10 @@ export class UIManager {
     const d = this.save.data;
     const container = this.menu.querySelector("#menu-stats");
     if (!container) return;
+    let slabSeed = 0;
     const stat = (label: string, value: string) => {
-      const s = this.el("div", "stat");
+      const s = this.el("div", "stat stat-slab");
+      s.style.backgroundImage = slabBg(40 + slabSeed++);
       const b = this.el("b", undefined, value);
       const l = this.el("span", undefined, label);
       s.append(b, l);

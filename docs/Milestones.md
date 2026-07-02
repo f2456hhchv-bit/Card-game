@@ -181,6 +181,12 @@ artist; production-art seam via `ArtManifest`).
       foes (Cinder/Revenant), frost drifting off ice foes (Shard/Colossus) — for
       instant on-field identity. All budget-capped so dense swarms stay cheap.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
+- [x] **Journey page hand-inked art pass** (to the user's designed artwork): a
+      procedural SVG **nebula backdrop** (feTurbulence cyan/magenta wisps), rough
+      **stone-slab** panels for stats/Continue/Galaxy cards, an **electric aura**
+      on the current Galaxy, inked padlocks (emblem + right-side), cyan dashed
+      trail, chunky inked progress pips, and **hand-drawn stroke icons** for the
+      tab bar. All original, generated in-code (`src/ui/inkArt.ts`).
 - [x] **Main-menu redesign**: bottom **tab bar** (Journey / Play / Wardens /
       Hangar / Shop / More) declutters the main screen, and the hero screen is now
       a scrollable vertical **Galaxy pathway** — each Galaxy an emblem node joined
