@@ -139,8 +139,13 @@ export class UIManager {
     this.cb = cb;
     this.root = document.createElement("div");
     this.root.className = "ui-root";
-    // Every full-page overlay shares the inked nebula backdrop (see .overlay.page).
+    // Every full-page overlay shares the inked nebula backdrop (see .overlay.page),
+    // and three shared slab shapes back the generic buttons/chips/toasts so every
+    // border in the UI is the same hand-inked stone as the start screen.
     this.root.style.setProperty("--nebula-bg", nebulaBg());
+    this.root.style.setProperty("--slab-a", slabBg(501, "rgba(24,20,44,0.94)", 70));
+    this.root.style.setProperty("--slab-b", slabBg(502, "rgba(16,13,30,0.92)", 70));
+    this.root.style.setProperty("--slab-c", slabBg(503, "rgba(15,12,28,0.94)", 110));
     parent.appendChild(this.root);
     this.build();
   }
