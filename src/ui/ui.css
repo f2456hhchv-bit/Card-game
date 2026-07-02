@@ -353,8 +353,9 @@
   background: var(--ui-bg);
   backdrop-filter: blur(6px);
   pointer-events: auto;
-  /* Extra bottom room so a page's own controls clear the persistent tab bar. */
-  padding: 24px 24px 92px;
+  /* Clear the phone's camera cutout / status bar at the top (fullscreen app
+     mode extends under it), and leave bottom room for the persistent tab bar. */
+  padding: calc(env(safe-area-inset-top, 0px) + 24px) 24px 92px;
   text-align: center;
   overflow-y: auto;
   /* Never scroll sideways — content is a single vertical column. */
@@ -1381,7 +1382,8 @@
   justify-content: flex-start;
   overflow: hidden;
   gap: 10px;
-  padding: 14px 0 0;
+  /* Keep the title clear of the camera cutout in fullscreen app mode. */
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 0 0;
 }
 .menu-header {
   flex: 0 0 auto;
