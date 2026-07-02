@@ -1,6 +1,6 @@
 import type { SpatialEntity } from "../../core/SpatialHashGrid";
 
-export type PickupKind = "xp" | "heal" | "magnet" | "bomb";
+export type PickupKind = "xp" | "heal" | "magnet" | "bomb" | "mote";
 
 /**
  * Collectible dropped by enemies. XP shards are by far the most common, so the

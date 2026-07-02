@@ -80,6 +80,23 @@
   color: var(--ui-text-dim);
   font-weight: 600;
 }
+/* In-run Light Mote counter (field-collected purse, paid out at run's end). */
+.hud-motes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ui-warn);
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(255, 209, 102, 0.35);
+}
+/* Inline currency glyphs (painted Mote octagon / Alloy diamond). */
+.cur-icon {
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.22em;
+  display: inline-block;
+  filter: drop-shadow(0 0 4px rgba(255, 200, 90, 0.35));
+}
 .hud-asc {
   margin-top: 4px;
   align-self: center;
@@ -585,67 +602,84 @@
   color: rgba(180, 192, 255, 0.7);
 }
 
-/* Light Motes shop. */
+/* Light Motes shop — hand-inked neon cards (from the designed mock). */
 .shop-balance {
-  font-size: 1.15rem;
+  font-size: 1.3rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--ui-warn);
-  margin-top: -8px;
+  margin-top: -12px;
+  text-shadow: 0 0 14px rgba(255, 209, 102, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.shop-balance .cur-icon {
+  width: 1.3em;
+  height: 1.3em;
+}
+.shop-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: min(560px, 100%);
 }
 .shop-crate {
-  width: min(760px, 100%);
+  width: 100%;
+}
+/* Shared inked-frame card shell: the wobbly accent border is the background
+   SVG (set inline per-card via inkFrame); the accent glow is a box-shadow. */
+.ink-card {
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: none;
+  border-radius: 20px;
+  box-shadow:
+    0 0 22px -4px color-mix(in srgb, var(--card-accent, #ffd166) 55%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--card-accent, #ffd166) 10%, transparent);
 }
 .crate-card {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  border-radius: 14px;
-  background: linear-gradient(120deg, rgba(255, 209, 102, 0.14), rgba(120, 90, 255, 0.12));
-  border: 1px solid rgba(255, 209, 102, 0.45);
-  box-shadow: 0 0 22px rgba(255, 209, 102, 0.12);
+  gap: 12px;
+  padding: 18px 20px;
 }
 .crate-body {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex: 1;
   text-align: left;
 }
 .crate-icon {
-  font-size: 2rem;
+  font-size: 2.3rem;
   line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(255, 209, 102, 0.4));
 }
 .crate-name {
   font-weight: 900;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   color: var(--ui-warn);
   letter-spacing: 0.03em;
 }
 .crate-desc {
-  font-size: 0.8rem;
-  color: var(--ui-text-dim);
-  line-height: 1.3;
+  font-size: 0.82rem;
+  color: var(--ui-text);
+  opacity: 0.88;
+  line-height: 1.35;
 }
 .shop-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-  width: min(760px, 100%);
-  max-height: 60vh;
-  overflow-y: auto;
-  padding: 4px;
-}
-.shop-card {
-  background: var(--ui-panel);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-left: 3px solid var(--card-accent, var(--ui-accent));
-  border-radius: 12px;
-  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 20px;
+  width: 100%;
+}
+.shop-card {
+  padding: 16px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
   text-align: left;
 }
 .shop-card-head {
@@ -655,42 +689,96 @@
   gap: 8px;
 }
 .shop-name {
-  font-weight: 800;
-  font-size: 1.02rem;
+  font-weight: 900;
+  font-size: 1.18rem;
+  color: var(--card-accent, var(--ui-text));
+  text-shadow: 0 0 12px color-mix(in srgb, var(--card-accent, #fff) 45%, transparent);
 }
 .shop-level {
-  font-size: 0.78rem;
-  color: var(--ui-text-dim);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--card-accent, var(--ui-text-dim));
+  opacity: 0.9;
   font-variant-numeric: tabular-nums;
 }
 .shop-desc {
-  font-size: 0.82rem;
-  color: var(--ui-text-dim);
-  line-height: 1.3;
+  font-size: 0.88rem;
+  color: var(--ui-text);
+  opacity: 0.92;
+  line-height: 1.35;
 }
 .shop-next {
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 700;
+  color: var(--ui-warn);
+}
+.shop-next.maxed {
   color: var(--ui-good);
 }
 .btn.buy {
   pointer-events: auto;
   margin-top: 4px;
   padding: 9px 12px;
-  font-size: 0.9rem;
-  border-radius: 10px;
+  font-size: 0.95rem;
+  border-radius: 12px;
   text-transform: none;
   letter-spacing: 0.02em;
+}
+/* Full-width slab button inside inked shop cards, tinted to the card accent. */
+.btn.buy.wide {
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  background: color-mix(in srgb, var(--card-accent, #ffd166) 18%, rgba(10, 10, 24, 0.6));
+  border: 2px solid color-mix(in srgb, var(--card-accent, #ffd166) 65%, transparent);
+}
+/* Compact price pill (Supply Drop cost, right-aligned like the mock). */
+.btn.buy.pill {
+  white-space: nowrap;
+  font-weight: 900;
+  background: rgba(60, 45, 16, 0.75);
+  border: 2px solid rgba(255, 209, 102, 0.65);
+  color: var(--ui-warn);
 }
 .btn.buy.cant-afford {
   opacity: 0.45;
   cursor: not-allowed;
 }
 .btn.buy.maxed {
+  opacity: 0.85;
+  border-color: color-mix(in srgb, var(--card-accent, #8affc1) 55%, transparent);
+  color: var(--card-accent, var(--ui-good));
+  cursor: default;
+}
+/* Commander/Ship roster cards keep the classic panel look (the inked neon
+   frame above is Shop-specific), so restate the base panel shell here. */
+.warden-card {
+  background: var(--ui-panel);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid var(--card-accent, var(--ui-accent));
+  border-radius: 12px;
+  padding: 12px 14px;
+  gap: 6px;
+}
+.warden-card .shop-name {
+  font-size: 1.02rem;
+  color: var(--ui-text);
+  text-shadow: none;
+}
+.warden-card .shop-level {
+  color: var(--ui-text-dim);
+  font-size: 0.78rem;
+}
+.warden-card .shop-desc {
+  font-size: 0.82rem;
+  color: var(--ui-text-dim);
+}
+.warden-card .btn.buy.maxed {
   opacity: 0.6;
   border-color: rgba(138, 255, 193, 0.4);
   color: var(--ui-good);
-  cursor: default;
 }
 .warden-card.selected {
   box-shadow: 0 0 0 2px var(--card-accent),

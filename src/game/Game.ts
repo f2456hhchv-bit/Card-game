@@ -487,7 +487,8 @@ export class Game {
     this.camera.addShake(14, 0.7);
     const firstClear = level >= this.save.data.campaignProgress;
     // Reward Motes (first clear pays full; replays pay a fraction), + Fortune.
-    const base = levelReward(level) * (firstClear ? 1 : 0.3);
+    // Field-collected Motes join the payout (and enjoy the Fortune multiplier).
+    const base = levelReward(level) * (firstClear ? 1 : 0.3) + this.world.stats.motesCollected;
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     this.save.data.motes += motes;
     // Advance progress (may reach TOTAL_SECTORS = "all cleared"; the map clamps
@@ -519,7 +520,8 @@ export class Game {
       stats.kills * 0.2 +
       stats.bossKills * 15 +
       stats.ascension * 8 +
-      stats.stagesCleared * 20;
+      stats.stagesCleared * 20 +
+      stats.motesCollected;
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     const records = this.save.recordRun(stats, motes, {
       stageId: this.world.stageId,

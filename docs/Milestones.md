@@ -226,6 +226,18 @@ artist; production-art seam via `ArtManifest`).
       Sector map.
 - [x] **Resumable runs**: leave mid-run (pause / close tab) and pick up exactly
       where you left off via a menu "Continue" button.
+- [x] **Light Mote field drops + currency iconography**: Light Motes now drop
+      on the battlefield as the painted gold octagon (elites always shed a
+      3-Mote purse, fodder rarely sheds 1, bosses shower 6); collected Motes
+      bank into a HUD counter and join the end-of-run / Sector-clear payout
+      (boosted by Fortune). The gold octagon (Motes) and gold diamond (Alloy)
+      from the user's crystal sheet now badge every balance, price button and
+      reward stat across the UI in place of the old ✦/⬢ glyphs.
+- [x] **Shop redesign to the user's mock**: hand-inked neon card frames
+      (`inkFrame` in `src/ui/inkArt.ts`) in each upgrade's accent colour with
+      an outer glow, accent-coloured names + Lv counters, gold "Next:" lines,
+      full-width MAX/price slab buttons, a gold Supply Drop hero card with a
+      price pill, and the balance as a glowing subtitle under LIGHT MOTES.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

@@ -14,7 +14,8 @@ import { WEAPON_DEFS } from "../game/data/weaponDefs";
 import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
 import { CHASSIS_RASTER } from "../game/render/chassisRaster";
-import { nebulaBg, slabBg, lockSvg, tabIcon } from "./inkArt";
+import { nebulaBg, slabBg, lockSvg, tabIcon, inkFrame } from "./inkArt";
+import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import {
   SLOTS,
   SLOT_META,
@@ -87,6 +88,8 @@ export class UIManager {
   private levelLabel!: HTMLDivElement;
   private timerLabel!: HTMLDivElement;
   private killsLabel!: HTMLDivElement;
+  private motesLabel!: HTMLDivElement;
+  private lastHudMotes = -1;
   private hpFill!: HTMLDivElement;
   private hpText!: HTMLDivElement;
   private loadoutBar!: HTMLDivElement;
@@ -193,6 +196,23 @@ export class UIManager {
     setTimeout(() => t.remove(), 4100);
   }
 
+  // ---- Currency iconography ------------------------------------------------
+
+  /** Inline painted currency icon: the gold Mote octagon / Alloy diamond. */
+  private curIcon(kind: "mote" | "alloy"): HTMLImageElement {
+    const img = document.createElement("img");
+    img.className = "cur-icon";
+    img.src = PICKUP_RASTER[kind];
+    img.alt = kind === "mote" ? "Light Motes" : "Alloy";
+    img.draggable = false;
+    return img;
+  }
+
+  /** Replace an element's content with `⟨icon⟩ amount [label]`. */
+  private setCurrency(el: HTMLElement, kind: "mote" | "alloy", amount: number | string, label = ""): void {
+    el.replaceChildren(this.curIcon(kind), document.createTextNode(` ${amount}${label ? ` ${label}` : ""}`));
+  }
+
   // ---- HUD ---------------------------------------------------------------
 
   private buildHUD(): void {
@@ -207,7 +227,8 @@ export class UIManager {
     this.levelLabel = this.el("div", "hud-level", "LV 1");
     this.timerLabel = this.el("div", "hud-timer", "00:00");
     this.killsLabel = this.el("div", "hud-kills", "0 felled");
-    row.append(this.levelLabel, this.timerLabel, this.killsLabel);
+    this.motesLabel = this.el("div", "hud-motes");
+    row.append(this.levelLabel, this.timerLabel, this.motesLabel, this.killsLabel);
 
     // Endless-only Ascension badge (hidden in other modes).
     this.ascLabel = this.el("div", "hud-asc hidden", "▲ 0");
@@ -285,6 +306,10 @@ export class UIManager {
     this.levelLabel.textContent = `LV ${p.level}`;
     this.timerLabel.textContent = formatTime(world.stats.elapsed);
     this.killsLabel.textContent = `${world.stats.kills} felled`;
+    if (this.lastHudMotes !== world.stats.motesCollected) {
+      this.lastHudMotes = world.stats.motesCollected;
+      this.setCurrency(this.motesLabel, "mote", world.stats.motesCollected);
+    }
     // Mode badge: campaign wave, Endless Ascension tier, or Gauntlet progress.
     if (world.campaign) {
       this.ascLabel.classList.remove("hidden");
@@ -521,6 +546,7 @@ export class UIManager {
       default:
         // Inline panel pages live inside the menu overlay.
         this.hideSubPages();
+        this.refreshMenuStats(); // balances may have changed on other pages
         this.menu.classList.remove("hidden");
         this.selectMenuPanel(id);
         this.setActiveTab(id);
@@ -773,9 +799,9 @@ export class UIManager {
     this.shopBalance = this.el("div", "shop-balance");
     this.shopCrate = this.el("div", "shop-crate");
     this.shopGrid = this.el("div", "shop-grid");
-    const back = this.el("button", "btn", "Back");
-    back.addEventListener("click", () => this.closeShop());
-    o.append(title, this.shopBalance, this.shopCrate, this.shopGrid, back);
+    const scroll = this.el("div", "shop-scroll");
+    scroll.append(this.shopCrate, this.shopGrid);
+    o.append(title, this.shopBalance, scroll);
     this.root.appendChild(o);
     this.shop = o;
   }
@@ -785,7 +811,9 @@ export class UIManager {
     const d = this.save.data;
     const cost = UIManager.SUPPLY_DROP_COST;
     this.shopCrate.replaceChildren();
-    const card = this.el("div", "crate-card");
+    const card = this.el("div", "crate-card ink-card");
+    card.style.setProperty("--card-accent", "#ffb545");
+    card.style.backgroundImage = inkFrame(3, "#ffb545", "rgba(38,28,14,0.72)");
     const body = this.el("div", "crate-body");
     body.append(
       this.el("div", "crate-icon", "🎁"),
@@ -802,9 +830,9 @@ export class UIManager {
         return t;
       })(),
     );
-    const buy = this.el("button", "btn buy");
+    const buy = this.el("button", "btn buy pill");
     const affordable = d.motes >= cost;
-    buy.textContent = `✦ ${cost}`;
+    this.setCurrency(buy, "mote", cost);
     buy.disabled = !affordable;
     if (!affordable) buy.classList.add("cant-afford");
     buy.addEventListener("click", () => this.buySupplyDrop());
@@ -834,16 +862,19 @@ export class UIManager {
 
   private refreshShop(): void {
     const d = this.save.data;
-    this.shopBalance.textContent = `✦ ${d.motes} Light Motes`;
+    this.setCurrency(this.shopBalance, "mote", d.motes, "Light Motes");
     this.refreshShopCrate();
     this.shopGrid.replaceChildren();
+    let seed = 11;
     for (const def of META_LIST) {
       const level = d.meta[def.id] ?? 0;
       const maxed = level >= def.maxLevel;
       const cost = maxed ? 0 : def.cost(level);
+      const accent = `hsl(${def.hue} 85% 62%)`;
 
-      const card = this.el("div", "shop-card");
-      card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
+      const card = this.el("div", "shop-card ink-card");
+      card.style.setProperty("--card-accent", accent);
+      card.style.backgroundImage = inkFrame(seed++, accent);
       const head = this.el("div", "shop-card-head");
       head.append(
         this.el("div", "shop-name", def.name),
@@ -852,17 +883,17 @@ export class UIManager {
       const desc = this.el("div", "shop-desc", def.description);
       const next = this.el(
         "div",
-        "shop-next",
+        `shop-next${maxed ? " maxed" : ""}`,
         maxed ? "Fully upgraded" : `Next: ${def.note(level + 1)}`,
       );
 
-      const buy = this.el("button", "btn buy");
+      const buy = this.el("button", "btn buy wide");
       if (maxed) {
         buy.textContent = "MAX";
         buy.classList.add("maxed");
         buy.disabled = true;
       } else {
-        buy.textContent = `✦ ${cost}`;
+        this.setCurrency(buy, "mote", cost);
         const affordable = d.motes >= cost;
         buy.disabled = !affordable;
         if (!affordable) buy.classList.add("cant-afford");
@@ -895,11 +926,6 @@ export class UIManager {
     this.shop.classList.remove("hidden");
     this.setActiveTab("shop");
   }
-  private closeShop(): void {
-    this.refreshMenuStats(); // balance may have changed
-    this.goTab("journey");
-  }
-
   // ---- Wardens (character select) ----------------------------------------
 
   private wardens!: HTMLDivElement;
@@ -920,7 +946,7 @@ export class UIManager {
 
   private refreshWardens(): void {
     const d = this.save.data;
-    this.wardensBalance.textContent = `✦ ${d.motes} Light Motes`;
+    this.setCurrency(this.wardensBalance, "mote", d.motes, "Light Motes");
     this.wardensGrid.replaceChildren();
     for (const def of WARDEN_LIST) {
       const unlocked = d.wardens.includes(def.id);
@@ -980,7 +1006,7 @@ export class UIManager {
         btn.textContent = "Select";
         btn.addEventListener("click", () => this.selectWarden(def.id));
       } else {
-        btn.textContent = `✦ ${def.unlockCost}`;
+        this.setCurrency(btn, "mote", def.unlockCost);
         const affordable = d.motes >= def.unlockCost;
         btn.disabled = !affordable;
         if (!affordable) btn.classList.add("cant-afford");
@@ -1045,7 +1071,7 @@ export class UIManager {
 
   private refreshChassis(): void {
     const d = this.save.data;
-    this.chassisBalance.textContent = `✦ ${d.motes} Light Motes`;
+    this.setCurrency(this.chassisBalance, "mote", d.motes, "Light Motes");
     this.chassisGrid.replaceChildren();
     for (const def of CHASSIS_LIST) {
       const unlocked = d.chassis.includes(def.id);
@@ -1085,7 +1111,7 @@ export class UIManager {
         btn.textContent = "Pilot";
         btn.addEventListener("click", () => this.selectChassis(def.id));
       } else {
-        btn.textContent = `✦ ${def.unlockCost}`;
+        this.setCurrency(btn, "mote", def.unlockCost);
         const affordable = d.motes >= def.unlockCost;
         btn.disabled = !affordable;
         if (!affordable) btn.classList.add("cant-afford");
@@ -1162,7 +1188,7 @@ export class UIManager {
   }
 
   private refreshHangar(): void {
-    this.hangarBalance.textContent = `⬢ ${this.save.data.alloy} Alloy`;
+    this.setCurrency(this.hangarBalance, "alloy", this.save.data.alloy, "Alloy");
     this.refreshEquipPanel();
     this.refreshSignatures();
     this.refreshSetList();
@@ -1424,7 +1450,11 @@ export class UIManager {
           const cost = rerollCost(rarity);
           const rr = this.el("button", "btn mini");
           const canAfford = this.save.data.alloy >= cost;
-          rr.textContent = `Reroll ⬢${cost}`;
+          rr.replaceChildren(
+            document.createTextNode("Reroll "),
+            this.curIcon("alloy"),
+            document.createTextNode(` ${cost}`),
+          );
           rr.title = "Reroll this item's affixes";
           rr.disabled = !canAfford;
           if (!canAfford) rr.classList.add("cant-afford");
@@ -1723,11 +1753,11 @@ export class UIManager {
         s.append(this.el("b", undefined, value), this.el("span", undefined, label));
         return s;
       };
-      stats.replaceChildren(
-        stat("Cleared", levelLabel(level)),
-        stat("Reward", `✦ ${motes}`),
-        stat("Total Motes", `${this.save.data.motes}`),
-      );
+      const reward = stat("Reward", `${motes}`);
+      reward.querySelector("b")?.prepend(this.curIcon("mote"), " ");
+      const total = stat("Total Motes", `${this.save.data.motes}`);
+      total.querySelector("b")?.prepend(this.curIcon("mote"), " ");
+      stats.replaceChildren(stat("Cleared", levelLabel(level)), reward, total);
     }
     const next = this.levelCleared.querySelector("#lc-next") as HTMLButtonElement | null;
     if (next) next.style.display = hasNext ? "" : "none";
@@ -1750,11 +1780,13 @@ export class UIManager {
       s.append(b, l);
       return s;
     };
+    const moteStat = stat("Light Motes", `${d.motes}`);
+    moteStat.querySelector("b")?.prepend(this.curIcon("mote"), " ");
     container.replaceChildren(
       stat("Best Time", formatTime(d.bestTime)),
       stat("Most Felled", `${d.bestKills}`),
       stat("Runs", `${d.runsPlayed}`),
-      stat("Light Motes", `${d.motes}`),
+      moteStat,
     );
 
     this.refreshStageChooser();
@@ -1949,12 +1981,14 @@ export class UIManager {
       else if (gauntlet)
         tiles.push(stat("Stages", `${stats.stagesCleared}/3`, records.newBestGauntlet));
       else if (bossRush) tiles.push(stat("Bosses", `${stats.bossKills}`, stats.bossKills > 0));
+      const moteTile = stat("Motes", `+${motesEarned}`);
+      moteTile.querySelector("b")?.prepend(this.curIcon("mote"), " ");
       tiles.push(
         stat("Felled", `${stats.kills}`, records.newBestKills),
         stat("Elites", `${stats.eliteKills}`),
         stat("Level", `${stats.level}`),
         stat("Damage", dmg),
-        stat("Motes", `+${motesEarned}`),
+        moteTile,
       );
       container.replaceChildren(...tiles);
     }

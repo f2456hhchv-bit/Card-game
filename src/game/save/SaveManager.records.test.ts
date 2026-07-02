@@ -10,6 +10,7 @@ function stats(over: Partial<RunStats> = {}): RunStats {
     bossKills: 0,
     damageDealt: 0,
     xpCollected: 0,
+    motesCollected: 0,
     level: 1,
     ascension: 0,
     stagesCleared: 0,

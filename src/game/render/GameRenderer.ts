@@ -595,7 +595,9 @@ export class GameRenderer {
       // Painted gems when available; big XP drops (elite/boss shards) get the
       // purple crystal. Procedural sprite remains the fallback.
       const artKey = k.kind === "xp" && k.radius >= 10 ? "pickup/xpBig" : `pickup/${k.kind}`;
-      this.blitKey(ctx, artKey, this.forge.pickup(k.kind), x, y, r, spin);
+      // Motes fall back to the xp shard shape (the forge predates the kind).
+      const fallback = this.forge.pickup(k.kind === "mote" ? "xp" : k.kind);
+      this.blitKey(ctx, artKey, fallback, x, y, r, spin);
     }
   }
 

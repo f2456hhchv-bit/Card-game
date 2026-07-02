@@ -79,6 +79,43 @@ export function slabBg(seed = 1, fill = "rgba(16,13,30,0.94)"): string {
   return uri(svg);
 }
 
+/**
+ * A hand-inked neon frame: an irregular rounded rectangle drawn twice with a
+ * wobbly accent-coloured stroke over a dark panel fill — the glowing card
+ * border from the designed Shop mock. Stretches via preserveAspectRatio='none';
+ * pair with a CSS box-shadow in the same accent for the outer glow.
+ */
+export function inkFrame(seed = 1, accent = "#ffd166", fill = "rgba(11,10,26,0.92)"): string {
+  const w = 340;
+  const h = 150;
+  // Two independently-jittered passes of the same loop read as hand-traced.
+  const loop = (s: number, inset: number) => {
+    const r = rng(s * 7919 + 13);
+    const jx = () => (r() - 0.5) * 6;
+    const jy = () => (r() - 0.5) * 5;
+    const i = inset;
+    const p = {
+      tl: [12 + i + jx(), 12 + i + jy()],
+      tm: [w / 2 + jx() * 2, 7 + i + jy()],
+      tr: [w - 12 - i + jx(), 12 + i + jy()],
+      rm: [w - 6 - i + jx(), h / 2 + jy()],
+      br: [w - 12 - i + jx(), h - 12 - i + jy()],
+      bm: [w / 2 + jx() * 2, h - 6 - i + jy()],
+      bl: [12 + i + jx(), h - 12 - i + jy()],
+      lm: [6 + i + jx(), h / 2 + jy()],
+    };
+    return `M${p.tl} Q${p.tm} ${p.tr} Q${p.rm} ${p.br} Q${p.bm} ${p.bl} Q${p.lm} ${p.tl[0]} ${p.tl[1]} Z`;
+  };
+  const d1 = loop(seed, 0);
+  const d2 = loop(seed + 101, 3);
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}' preserveAspectRatio='none'>` +
+    `<path d='${d1}' fill='${fill}' stroke='${accent}' stroke-width='5' stroke-linejoin='round' opacity='0.95'/>` +
+    `<path d='${d2}' fill='none' stroke='${accent}' stroke-width='2' stroke-linejoin='round' opacity='0.55'/>` +
+    `</svg>`;
+  return uri(svg);
+}
+
 /** Sketchy padlock (emblem overlay + the big right-side lock on locked slabs). */
 export function lockSvg(size = 34): string {
   return (

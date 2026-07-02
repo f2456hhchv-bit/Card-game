@@ -169,3 +169,13 @@ a Sector. Two changes:
 Net at wave 8 (~3.2 min in): fodder HP 3.39×→2.31× (−32%), damage 1.95×→1.53×
 (−22%). Waves 1–3 nearly unchanged. Other modes untouched (dilation is
 campaign-only; wave mults don't apply outside campaign).
+
+## Light Mote field-drop economy (2026-07-02)
+
+Motes now also drop physically in-run (gold octagon pickup): fodder 1.2% × 1,
+elites a guaranteed +3, bosses +6 in the loot shower. Collected Motes are added
+to the run's payout base (death **and** Sector-clear) so they ride the Fortune
+multiplier. Expected extra income: ~1 Mote per ~83 fodder kills + 3/elite +
+6/boss ≈ +10–25 per mid-game run — a visible "coins on the floor" reward loop
+without inflating the meta-upgrade curve (costs unchanged). To watch: if
+Supply-Drop chasing gets too fast late-game, trim the elite purse to +2.

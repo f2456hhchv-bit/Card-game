@@ -60,6 +60,8 @@ export interface RunStats {
   bossKills: number;
   damageDealt: number;
   xpCollected: number;
+  /** Light Motes physically collected on the field this run (bonus currency). */
+  motesCollected: number;
   level: number;
   /** Endless mode: highest Ascension tier reached this run (0 otherwise). */
   ascension: number;
@@ -234,6 +236,7 @@ export class World {
     bossKills: 0,
     damageDealt: 0,
     xpCollected: 0,
+    motesCollected: 0,
     level: 1,
     ascension: 0,
     stagesCleared: 0,
@@ -382,6 +385,7 @@ export class World {
     this.stats.bossKills = 0;
     this.stats.damageDealt = 0;
     this.stats.xpCollected = 0;
+    this.stats.motesCollected = 0;
     this.stats.level = 1;
     this.stats.ascension = 0;
     this.stats.stagesCleared = 0;
@@ -1360,6 +1364,12 @@ export class World {
         this.events.emit("pickup", { kind: "bomb" });
         break;
       }
+      case "mote": {
+        // Banked into the end-of-run Light Mote payout (see Game reward math).
+        this.stats.motesCollected += k.value;
+        this.events.emit("pickup", { kind: "mote" });
+        break;
+      }
     }
   }
 
@@ -1461,6 +1471,7 @@ export class World {
     }
     this.dropSpecial(e.x - 20, e.y, "heal", 45);
     this.dropSpecial(e.x + 20, e.y, "magnet", 0);
+    this.dropSpecial(e.x, e.y - 24, "mote", 6);
   }
 
   private dropLoot(e: Enemy): void {
@@ -1484,6 +1495,11 @@ export class World {
     else if (roll < bombChance + magnetChance) this.dropSpecial(e.x, e.y, "magnet");
     else if (roll < bombChance + magnetChance + healChance)
       this.dropSpecial(e.x, e.y, "heal", e.isElite ? 30 : 12);
+
+    // Light Motes: elites always shed a small purse; fodder rarely sheds one.
+    // A separate roll so mote luck never competes with support drops.
+    if (e.isElite) this.dropSpecial(e.x, e.y - 10, "mote", 3);
+    else if (this.rng.next() < 0.012) this.dropSpecial(e.x, e.y, "mote", 1);
   }
 
   private dropSpecial(x: number, y: number, kind: Pickup["kind"], value = 0): void {

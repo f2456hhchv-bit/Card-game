@@ -361,4 +361,21 @@ describe("World — combat integration", () => {
     expect(killed).toBeGreaterThan(0);
     expect(world.stats.kills).toBe(killed);
   });
+
+  it("elites always drop a Light Mote purse that banks into motesCollected", () => {
+    const world = new World(7);
+    world.reset();
+    addEnemyNear(world);
+    const elite = world.enemies[0];
+    elite.isElite = true;
+    world.damageEnemy(elite, 999999, false, 0, 0);
+    const mote = world.pickups.find((k) => k.kind === "mote");
+    expect(mote).toBeDefined();
+    expect(mote!.value).toBe(3);
+    // Drag it onto the ship and step once — collection banks the purse.
+    mote!.x = world.player.x;
+    mote!.y = world.player.y;
+    world.step(1 / 60, STILL);
+    expect(world.stats.motesCollected).toBe(3);
+  });
 });

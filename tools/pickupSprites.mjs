@@ -19,6 +19,8 @@ const CELLS = {
   magnet: [0, 1], // blue magnet
   bomb: [1, 2], // orange starburst
   heal: [2, 2], // green heart flask
+  mote: [2, 0], // gold octagon medal (Light Mote currency)
+  alloy: [2, 1], // gold diamond (Alloy currency)
 };
 
 const b = await chromium.launch({
