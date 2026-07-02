@@ -13,7 +13,6 @@ import {
 import { WEAPON_DEFS } from "../game/data/weaponDefs";
 import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
-import logoUrl from "../assets/ui/logo.jpg";
 import {
   SLOTS,
   SLOT_META,
@@ -367,15 +366,11 @@ export class UIManager {
   private buildMenu(): void {
     const o = this.el("div", "overlay menu-overlay");
     const menuHeader = this.el("div", "menu-header");
-    // The logo art carries the wordmark, so it replaces the old h1 title.
-    const logo = document.createElement("img");
-    logo.className = "menu-logo";
-    logo.src = logoUrl;
-    logo.alt = "AFTERLIGHT";
+    const title = this.el("h1", "menu-title", "AFTERLIGHT");
     const sub = this.el("div", "subtitle", "Hold back the dark");
     const stats = this.el("div", "menu-stats");
     stats.id = "menu-stats";
-    menuHeader.append(logo, sub, stats);
+    menuHeader.append(title, sub, stats);
 
     // Continue — resume a run left mid-play. Only shown when one is stored.
     this.continueBtn = this.el("button", "btn", "▶ Continue Run");
