@@ -139,6 +139,8 @@ export class UIManager {
     this.cb = cb;
     this.root = document.createElement("div");
     this.root.className = "ui-root";
+    // Every full-page overlay shares the inked nebula backdrop (see .overlay.page).
+    this.root.style.setProperty("--nebula-bg", nebulaBg());
     parent.appendChild(this.root);
     this.build();
   }
@@ -724,12 +726,14 @@ export class UIManager {
 
   private howto!: HTMLDivElement;
   private buildHowTo(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "HOW TO PLAY");
 
     const list = this.el("div", "howto");
+    let slabSeed = 60;
     const row = (icon: string, text: string) => {
       const r = this.el("div", "howto-row");
+      r.style.backgroundImage = slabBg(slabSeed++);
       r.append(this.el("div", "howto-icon", icon), this.el("div", "howto-text", text));
       return r;
     };
@@ -750,6 +754,7 @@ export class UIManager {
     const guide = this.el("div", "howto");
     const grow = (icon: string, name: string, text: string) => {
       const r = this.el("div", "howto-row");
+      r.style.backgroundImage = slabBg(slabSeed++);
       const body = this.el("div", "howto-text");
       body.append(this.el("strong", undefined, name + " — "), document.createTextNode(text));
       r.append(this.el("div", "howto-icon", icon), body);
@@ -794,7 +799,7 @@ export class UIManager {
   private static readonly SUPPLY_DROP_COST = 150;
 
   private buildShop(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "LIGHT MOTES");
     this.shopBalance = this.el("div", "shop-balance");
     this.shopCrate = this.el("div", "shop-crate");
@@ -933,7 +938,7 @@ export class UIManager {
   private wardensGrid!: HTMLDivElement;
 
   private buildWardens(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "COMMANDERS");
     this.wardensBalance = this.el("div", "shop-balance");
     this.wardensGrid = this.el("div", "shop-grid");
@@ -948,12 +953,14 @@ export class UIManager {
     const d = this.save.data;
     this.setCurrency(this.wardensBalance, "mote", d.motes, "Light Motes");
     this.wardensGrid.replaceChildren();
+    let slabSeed = 130;
     for (const def of WARDEN_LIST) {
       const unlocked = d.wardens.includes(def.id);
       const selected = d.selectedWarden === def.id;
       const starter = WEAPON_DEFS[def.starterWeapon]?.name ?? def.starterWeapon;
 
       const card = this.el("div", "shop-card warden-card");
+      card.style.backgroundImage = slabBg(slabSeed++, "rgba(15,12,28,0.93)", 320);
       card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
       if (selected) card.classList.add("selected");
 
@@ -1057,7 +1064,7 @@ export class UIManager {
   private chassisGrid!: HTMLDivElement;
 
   private buildChassis(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "SHIPS");
     const sub = this.el("div", "subtitle", "Choose your hull — each flies its own way");
     this.chassisBalance = this.el("div", "shop-balance");
@@ -1073,11 +1080,13 @@ export class UIManager {
     const d = this.save.data;
     this.setCurrency(this.chassisBalance, "mote", d.motes, "Light Motes");
     this.chassisGrid.replaceChildren();
+    let slabSeed = 160;
     for (const def of CHASSIS_LIST) {
       const unlocked = d.chassis.includes(def.id);
       const selected = d.selectedChassis === def.id;
 
       const card = this.el("div", "shop-card warden-card");
+      card.style.backgroundImage = slabBg(slabSeed++, "rgba(15,12,28,0.93)", 320);
       card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
       if (selected) card.classList.add("selected");
 
@@ -1158,7 +1167,7 @@ export class UIManager {
   private hangarBalance!: HTMLDivElement;
 
   private buildHangar(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "HANGAR");
     const sub = this.el(
       "div",
@@ -1200,6 +1209,7 @@ export class UIManager {
     this.hangarSignatures.replaceChildren();
 
     const group = this.el("div", "set-group");
+    group.style.backgroundImage = slabBg(190, "rgba(15,12,28,0.93)", 260);
     group.style.setProperty("--card-accent", "hsl(45 90% 62%)");
     const head = this.el("div", "set-head");
     head.append(
@@ -1286,6 +1296,7 @@ export class UIManager {
       const st = equippedId ? g.inventory[equippedId] : null;
 
       const tile = this.el("div", "equip-slot");
+      tile.style.backgroundImage = slabBg(180 + SLOTS.indexOf(slot));
       if (item) tile.style.setProperty("--card-accent", `hsl(${item.hue} 80% 65%)`);
       tile.append(this.el("div", "equip-slot-icon", meta.icon));
       tile.append(this.el("div", "equip-slot-label", meta.label));
@@ -1333,11 +1344,13 @@ export class UIManager {
     const g = this.save.data.gear;
     this.hangarSets.replaceChildren();
 
+    let setSlabSeed = 0;
     for (const set of SET_LIST) {
       const accent = `hsl(${set.hue} 80% 65%)`;
       const owned = SLOTS.filter((slot) => (g.inventory[itemId(set.id, slot)]?.grade ?? 0) > 0).length;
 
       const group = this.el("div", "set-group");
+      group.style.backgroundImage = slabBg(200 + setSlabSeed++, "rgba(15,12,28,0.93)", 260);
       group.style.setProperty("--card-accent", accent);
 
       const head = this.el("div", "set-head");
@@ -1527,7 +1540,7 @@ export class UIManager {
   private recordsGrid!: HTMLDivElement;
 
   private buildRecords(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "RECORDS");
     this.recordsStats = this.el("div", "records-stats");
     this.recordsStages = this.el("div", "records-stages");
@@ -1542,8 +1555,10 @@ export class UIManager {
 
   private refreshRecords(): void {
     const d = this.save.data;
+    let slabSeed = 240;
     const stat = (label: string, value: string) => {
-      const s = this.el("div", "stat");
+      const s = this.el("div", "stat stat-slab");
+      s.style.backgroundImage = slabBg(slabSeed++);
       s.append(this.el("b", undefined, value), this.el("span", undefined, label));
       return s;
     };
@@ -1585,6 +1600,7 @@ export class UIManager {
     for (const a of ACHIEVEMENT_DEFS) {
       const got = unlocked.has(a.id);
       const card = this.el("div", `ach-card${got ? " got" : ""}`);
+      card.style.backgroundImage = slabBg(slabSeed++, "rgba(15,12,28,0.9)");
       const icon = this.el("div", "ach-icon", got ? a.icon : "🔒");
       const body = this.el("div", "ach-body");
       body.append(
@@ -1612,7 +1628,7 @@ export class UIManager {
   // ---- Campaign map (Galaxies → Sectors) ---------------------------------
 
   private buildCampaign(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "CAMPAIGN");
     this.campaignBody = this.el("div", "campaign-body");
     const back = this.el("button", "btn", "Back");
@@ -2001,9 +2017,10 @@ export class UIManager {
   // ---- Settings ----------------------------------------------------------
 
   private buildSettings(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "SETTINGS");
     const panel = this.el("div", "settings");
+    panel.style.backgroundImage = slabBg(300, "rgba(15,12,28,0.93)", 300);
 
     const sliderRow = (
       label: string,

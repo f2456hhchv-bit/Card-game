@@ -238,6 +238,12 @@ artist; production-art seam via `ArtManifest`).
       an outer glow, accent-coloured names + Lv counters, gold "Next:" lines,
       full-width MAX/price slab buttons, a gold Supply Drop hero card with a
       price pill, and the balance as a glowing subtitle under LIGHT MOTES.
+- [x] **Inked identity on every tab page**: the Journey's designed look now
+      covers Crew, Ships, Hangar, Shop, Campaign, How-to-Play, Records and
+      Settings — marbled nebula backdrop, the bundled hand-print font,
+      ink-gradient page titles, and hand-cut stone-slab plaques (taller slab
+      designs for tall cards) behind roster cards, gear sets, equip tiles,
+      achievements, how-to rows and the settings sheet.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

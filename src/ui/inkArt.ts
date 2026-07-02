@@ -52,10 +52,9 @@ function rng(seed: number): () => number {
  * ink outline and a faint lighter inner edge, stretched to fit its element via
  * `preserveAspectRatio='none'` + `background-size: 100% 100%`.
  */
-export function slabBg(seed = 1, fill = "rgba(16,13,30,0.94)"): string {
+export function slabBg(seed = 1, fill = "rgba(16,13,30,0.94)", h = 90): string {
   const r = rng(seed * 7919 + 13);
   const w = 300;
-  const h = 90;
   const jx = () => (r() - 0.5) * 7;
   const jy = () => (r() - 0.5) * 6;
   // Corner + midpoint wobble for the hand-cut edge.
