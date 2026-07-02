@@ -83,7 +83,9 @@ const out = await p.evaluate(
       const pushIf = (x, y) => {
         if (x < 0 || y < 0 || x >= sw || y >= sh) return;
         const i = y * sw + x;
-        if (!bg[i] && chroma(i) < 30) {
+        // Wider tolerance than the enemy sheets: this backdrop carries a soft
+        // vignette, and a tight key left a translucent box around each hull.
+        if (!bg[i] && chroma(i) < 52) {
           bg[i] = 1;
           stack.push(i);
         }
@@ -104,6 +106,39 @@ const out = await p.evaluate(
         pushIf(x - 1, y);
         pushIf(x, y + 1);
         pushIf(x, y - 1);
+      }
+      // Second pass: the sheet paints a soft ambient glow around each hull,
+      // contiguous with the backdrop — a hard key leaves it as a boxy haze.
+      // Expand the bg through any dim, low-chroma pixel (the glow) so it eats
+      // inward and stops only at the hull's crisp, saturated edge. Interior
+      // dark linework is enclosed by the hull, so the flood can't reach it.
+      const lum = (i) => 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2];
+      const bgLum = 0.299 * bgc[0] + 0.587 * bgc[1] + 0.114 * bgc[2];
+      const pushGlow = (x, y) => {
+        if (x < 0 || y < 0 || x >= sw || y >= sh) return;
+        const i = y * sw + x;
+        if (!bg[i] && chroma(i) < 78 && lum(i) < bgLum + 72) {
+          bg[i] = 1;
+          stack.push(i);
+        }
+      };
+      for (let i = 0; i < n; i++) {
+        if (!bg[i]) continue;
+        const x = i % sw;
+        const y = (i / sw) | 0;
+        pushGlow(x + 1, y);
+        pushGlow(x - 1, y);
+        pushGlow(x, y + 1);
+        pushGlow(x, y - 1);
+      }
+      while (stack.length) {
+        const i = stack.pop();
+        const x = i % sw;
+        const y = (i / sw) | 0;
+        pushGlow(x + 1, y);
+        pushGlow(x - 1, y);
+        pushGlow(x, y + 1);
+        pushGlow(x, y - 1);
       }
       for (let i = 0; i < n; i++) if (bg[i]) px[i * 4 + 3] = 0;
       ctx.putImageData(d, 0, 0);
@@ -165,7 +200,8 @@ const montage = await p.evaluate(async ({ out }) => {
   c.width = S * 5;
   c.height = S * 2;
   const ctx = c.getContext("2d");
-  ctx.fillStyle = "#101226";
+  // Deliberately light so any leftover backdrop haze is impossible to miss.
+  ctx.fillStyle = "#5a6288";
   ctx.fillRect(0, 0, c.width, c.height);
   ctx.font = "12px sans-serif";
   ctx.textAlign = "center";

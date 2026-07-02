@@ -13,7 +13,7 @@ import {
 import { WEAPON_DEFS } from "../game/data/weaponDefs";
 import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
-import { CHASSIS_RASTER } from "../game/render/chassisRaster";
+import { CHASSIS_SPRITES } from "../game/render/chassisSprites";
 import { nebulaBg, slabBg, lockSvg, tabIcon, inkFrame } from "./inkArt";
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import {
@@ -1106,10 +1106,10 @@ export class UIManager {
         this.el("div", "shop-name", def.name),
         this.el("div", "shop-level", selected ? "★ Piloting" : unlocked ? "Owned" : "Locked"),
       );
-      // Painted card illustration (user artwork) when available; otherwise the
-      // parametric SVG ship as a fallback for hulls awaiting designs.
-      const painted = CHASSIS_RASTER[def.id];
-      const art = this.el("div", painted ? "ship-art ship-art-card" : "ship-art");
+      // The FLYABLE hull sprite (user hull sheet) — so the card shows exactly
+      // the ship you'll pilot; parametric SVG covers hulls awaiting designs.
+      const painted = CHASSIS_SPRITES[def.id];
+      const art = this.el("div", "ship-art");
       const img = document.createElement("img");
       img.src = painted ?? chassisSvg(def.silhouette, def.hue);
       img.alt = def.name;
