@@ -1733,7 +1733,10 @@
 /* ===== Hand-inked Journey styling (matches the designed artwork) ===== */
 .menu-overlay,
 .tab-bar {
-  font-family: "Chalkboard SE", "Comic Sans MS", "Segoe Print", "Bradley Hand", cursive;
+  /* The bundled font leads so EVERY device renders the same hand-drawn look;
+     the system names are only emergency fallbacks (never generic `cursive` —
+     Android maps that to a flowery script). */
+  font-family: "Afterlight Hand", "Chalkboard SE", "Comic Sans MS", "Segoe Print", sans-serif;
 }
 .menu-overlay .menu-title {
   font-weight: 700;

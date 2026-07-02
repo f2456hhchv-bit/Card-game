@@ -1,3 +1,4 @@
+import "./ui/fonts.css";
 import "./ui/ui.css";
 import { Game } from "./game/Game";
 
