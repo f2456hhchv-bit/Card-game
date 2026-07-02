@@ -10,6 +10,26 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 //                                         offline play with no server.
 const single = process.env.AFTERLIGHT_SINGLE === "1";
 
+// Unique id per build — baked into the bundle AND written to dist/version.json
+// so the running app can detect that a newer deploy exists and self-update
+// (GitHub Pages caches for ~10 minutes and iOS home-screen apps cache harder).
+const buildId = `${Date.now()}`;
+
+/** Emit dist/version.json alongside the bundle (served build only). */
+function versionFile(): Plugin {
+  return {
+    name: "afterlight-version-file",
+    closeBundle() {
+      if (single) return;
+      try {
+        writeFileSync(resolve(__dirname, "dist/version.json"), JSON.stringify({ id: buildId }));
+      } catch {
+        // Non-fatal: the app treats a missing version.json as "no update".
+      }
+    },
+  };
+}
+
 /**
  * The single-file build must run from a `file://` URL with no web server.
  * Browsers (notably Firefox and Safari) refuse to execute `<script type=
@@ -36,7 +56,10 @@ function classicScriptForFileProtocol(): Plugin {
 
 export default defineConfig({
   base: "./",
-  plugins: single ? [viteSingleFile(), classicScriptForFileProtocol()] : [],
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId),
+  },
+  plugins: single ? [viteSingleFile(), classicScriptForFileProtocol()] : [versionFile()],
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),

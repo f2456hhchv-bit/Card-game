@@ -49,6 +49,31 @@ function boot(): void {
   const game = new Game(canvas, app);
   game.start();
 
+  // ---- Self-update check ---------------------------------------------------
+  // GitHub Pages caches for ~10 minutes and iOS home-screen apps cache far
+  // longer, so "refresh" often serves a stale build. The app instead polls a
+  // tiny cache-bypassed version.json and reloads itself (at a safe moment)
+  // when a newer build is live. No-ops offline and in the single-file build.
+  const checkForUpdate = async (): Promise<void> => {
+    try {
+      const res = await fetch(`./version.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const v = (await res.json()) as { id?: string };
+      if (!v.id || v.id === __BUILD_ID__) return;
+      // Guard against reload loops if the server keeps serving a mismatch.
+      if (sessionStorage.getItem("afterlight.updatedTo") === v.id) return;
+      sessionStorage.setItem("afterlight.updatedTo", v.id);
+      game.markUpdateReady(v.id);
+    } catch {
+      // Offline / file:// — self-update simply doesn't apply.
+    }
+  };
+  void checkForUpdate();
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) void checkForUpdate();
+  });
+  window.setInterval(() => void checkForUpdate(), 5 * 60 * 1000);
+
   // Optional debug console hook: open with `#dev` to expose `window.afterlight`.
   if (location.hash === "#dev") {
     (window as unknown as { afterlight: unknown }).afterlight = game.getDebugApi();

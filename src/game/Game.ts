@@ -355,9 +355,33 @@ export class Game {
     return "fade";
   }
 
+  /**
+   * Self-update: a newer build is live on the server. Reload immediately if
+   * we're on the menu; otherwise wait for the run to end (never yank a run —
+   * the pagehide snapshot makes even that safe, but it would feel rude).
+   */
+  private updateReadyId: string | null = null;
+  markUpdateReady(id: string): void {
+    this.updateReadyId = id;
+    if (this.state === "menu") this.applyUpdate();
+  }
+  private applyUpdate(): void {
+    const id = this.updateReadyId;
+    if (!id) return;
+    this.updateReadyId = null;
+    this.ui.showToast("⬆", "Update ready", "Loading the newest build…", "Update");
+    // Navigate with a cache-busting query so a stale cached index.html can't
+    // be served back to us (GitHub Pages caches for ~10 minutes; iOS
+    // home-screen apps cache harder still).
+    setTimeout(() => {
+      window.location.replace(`${window.location.pathname}?v=${id}${window.location.hash}`);
+    }, 900);
+  }
+
   private toMenu(): void {
     this.state = "menu";
     this.tutorialActive = false;
+    if (this.updateReadyId) this.applyUpdate();
     this.ui.hideHUD();
     this.ui.hidePause();
     this.ui.hideGameOver();
