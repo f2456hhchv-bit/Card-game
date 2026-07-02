@@ -355,7 +355,7 @@
   pointer-events: auto;
   /* Clear the phone's camera cutout / status bar at the top (fullscreen app
      mode extends under it), and leave bottom room for the persistent tab bar. */
-  padding: calc(env(safe-area-inset-top, 0px) + 24px) 24px 92px;
+  padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 24px) 24px 92px;
   text-align: center;
   overflow-y: auto;
   /* Never scroll sideways — content is a single vertical column. */
@@ -1383,7 +1383,7 @@
   overflow: hidden;
   gap: 10px;
   /* Keep the title clear of the camera cutout in fullscreen app mode. */
-  padding: calc(env(safe-area-inset-top, 0px) + 14px) 0 0;
+  padding: calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 14px) 0 0;
 }
 .menu-header {
   flex: 0 0 auto;
