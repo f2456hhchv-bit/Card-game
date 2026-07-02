@@ -181,6 +181,11 @@ artist; production-art seam via `ArtManifest`).
       foes (Cinder/Revenant), frost drifting off ice foes (Shard/Colossus) — for
       instant on-field identity. All budget-capped so dense swarms stay cheap.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
+- [x] **Painted ship card art** (user-supplied card designs): all 9 chassis cards
+      now show the artist's ship illustration (cropped via tools/shipCardArt.mjs
+      into bundled WebP data-URIs; parametric SVG remains the fallback for any
+      future hull without art). The Gunner hull was **renamed Infiltrator** to
+      match its card.
 - [x] **Painted boss illustrations** (user-supplied artwork, mapped by element):
       The Maw = toothed violet devourer · The Choir = cyan crystal chorus · The
       Pyre = blazing sun · The Forge = molten magma boulder · The Sovereign =

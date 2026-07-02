@@ -97,10 +97,11 @@ export const CHASSIS_DEFS: Record<string, ChassisDef> = {
     },
   },
   gunship: {
+    // Renamed from "Gunship" — the id stays for save compatibility.
     id: "gunship",
-    name: "Gunship",
-    identity: "Gunner · raw firepower",
-    description: "A weapons platform that trades plating for an extra barrel and a faster trigger.",
+    name: "Infiltrator",
+    identity: "Infiltrator · high damage",
+    description: "A nimble combat craft built for speed and firepower, trading durability for offensive capability.",
     hue: 12,
     icon: "🚀",
     silhouette: "broad",
