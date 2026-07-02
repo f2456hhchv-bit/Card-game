@@ -179,3 +179,17 @@ multiplier. Expected extra income: ~1 Mote per ~83 fodder kills + 3/elite +
 6/boss ≈ +10–25 per mid-game run — a visible "coins on the floor" reward loop
 without inflating the meta-upgrade curve (costs unchanged). To watch: if
 Supply-Drop chasing gets too fast late-game, trim the elite purse to +2.
+
+## Sector Modifiers + Elite Affixes (2026-07-02)
+
+Progression texture layer. Modifiers gate at Galaxy 2 (level ≥ 10), never on
+boss Sectors, ~55% coverage via stable integer hash (map/run/resume all agree).
+Stat swings kept within ±40% of one axis each so no modifier double-dips;
+payout premium ×1.25–1.4 scales with how much the rule warps play (Dim Light
+highest — slower levelling compounds). Elite affixes: 60% roll chance, gated
+to campaign ≥ Galaxy 2 / survival ≥ 4 min so new players meet plain elites
+first. Warded's 45% shrug ≈ +82% effective HP (vs Iron Hollow's flat +35%);
+Swift trades 15% HP for 55% speed; Summoner caps at 80 live enemies. Affixed
+purse 5 (vs 3) keeps champion-hunting profitable. To watch: Unstable Cores +
+melee builds (blast = 0.9× contact damage inside r+70) and Crimson Nebula late
+game where elite pairs already spawn.

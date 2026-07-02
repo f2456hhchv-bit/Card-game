@@ -49,6 +49,11 @@ export class Enemy implements SpatialEntity {
   stateTimer = 0;
   attackCooldown = 0;
 
+  /** Elite affix id (see data/affixDefs), or null for a plain enemy. */
+  affix: string | null = null;
+  /** Cooldown clock for affix behaviours (Summoner reinforcements). */
+  affixTimer = 0;
+
   reset(): void {
     this.active = false;
     this.hitFlash = 0;
@@ -61,5 +66,7 @@ export class Enemy implements SpatialEntity {
     this.isBoss = false;
     this.stateTimer = 0;
     this.attackCooldown = 0;
+    this.affix = null;
+    this.affixTimer = 0;
   }
 }

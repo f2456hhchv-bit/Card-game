@@ -362,6 +362,45 @@ describe("World — combat integration", () => {
     expect(world.stats.kills).toBe(killed);
   });
 
+  it("Warded elites shrug off part of every hit; affixed elites pay a fatter purse", () => {
+    const world = new World(11);
+    world.reset();
+    addEnemyNear(world);
+    const e = world.enemies[0];
+    e.isElite = true;
+    e.affix = "warded";
+    e.maxHp = 1000;
+    e.hp = 1000;
+    world.damageEnemy(e, 100, false, 0, 0);
+    // 45% reduction → 55 damage taken.
+    expect(e.hp).toBeCloseTo(945, 0);
+    world.damageEnemy(e, 999999, false, 0, 0);
+    const mote = world.pickups.find((k) => k.kind === "mote");
+    expect(mote?.value).toBe(5);
+  });
+
+  it("Unstable Cores Sectors make slain fodder detonate on the Warden", () => {
+    const world = new World(12);
+    world.reset();
+    addEnemyNear(world);
+    world.modifier = {
+      id: "unstableCores",
+      name: "Unstable Cores",
+      icon: "💥",
+      description: "",
+      rewardMult: 1.35,
+      volatile: true,
+    };
+    const e = world.enemies[0];
+    e.x = world.player.x + 10;
+    e.y = world.player.y;
+    e.damage = 20;
+    world.player.invuln = 0;
+    const before = world.player.hp;
+    world.damageEnemy(e, 999999, false, 0, 0);
+    expect(world.player.hp).toBeLessThan(before);
+  });
+
   it("elites always drop a Light Mote purse that banks into motesCollected", () => {
     const world = new World(7);
     world.reset();

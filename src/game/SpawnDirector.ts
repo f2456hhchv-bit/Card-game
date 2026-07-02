@@ -40,6 +40,8 @@ export class SpawnDirector {
   private waveHp = 1;
   private waveDmg = 1;
   private waveRate = 1;
+  /** Elite cadence multiplier (Crimson Nebula Sector Modifier doubles it). */
+  private eliteRate = 1;
 
   /**
    * @param pool optional stage enemy-id whitelist; omit for all enemies.
@@ -48,6 +50,7 @@ export class SpawnDirector {
   reset(pool?: readonly string[], difficulty = 1, damageDifficulty = difficulty): void {
     this.spawnAccumulator = 0;
     this.eliteTimer = 22;
+    this.eliteRate = 1;
     this.surgeTimer = 45;
     this.surgeRemaining = 0;
     this.pool = pool ? new Set(pool) : null;
@@ -83,6 +86,11 @@ export class SpawnDirector {
     this.waveHp = hp;
     this.waveDmg = dmg;
     this.waveRate = rate;
+  }
+
+  /** Elite cadence multiplier (2 = elites twice as often). */
+  setEliteRate(mult: number): void {
+    this.eliteRate = mult;
   }
 
   /** Burst-spawn requests for a wave opener, drawn from the active pool. */
@@ -173,7 +181,7 @@ export class SpawnDirector {
       : this.enemyCap(minutes);
     if (liveCount >= cap) {
       // At cap: still tick elite timer but suppress fodder spawns.
-      this.eliteTimer -= dt;
+      this.eliteTimer -= dt * this.eliteRate;
       return requests;
     }
 
@@ -191,7 +199,7 @@ export class SpawnDirector {
 
     // Elite spawns — tankier, rewarding targets that punctuate the run. Late in
     // a run they arrive faster and in pairs, keeping veterans honest.
-    this.eliteTimer -= dt;
+    this.eliteTimer -= dt * this.eliteRate;
     if (this.eliteTimer <= 0 && minutes >= 1) {
       const floor = minutes >= 14 ? 8 : 12;
       this.eliteTimer = Math.max(floor, 26 - minutes) + rng.range(-3, 3);

@@ -7,6 +7,7 @@ import { SpriteForge, type Sprite } from "./SpriteForge";
 import { Background } from "./Background";
 import { PostFx } from "./PostFx";
 import { AssetManager } from "./AssetManager";
+import { getAffix } from "../data/affixDefs";
 
 /**
  * Draws the world. All art is procedural and asset-free: characters are baked
@@ -210,6 +211,24 @@ export class GameRenderer {
         ctx.arc(x, y, r * 1.8, 0, TAU);
         ctx.fill();
         ctx.restore();
+      }
+
+      // Affix telegraph: a rotating dashed ring in the affix colour, so the
+      // twist (Warded / Volatile / Summoner...) is readable before contact.
+      if (e.affix) {
+        const affix = getAffix(e.affix);
+        if (affix) {
+          ctx.save();
+          ctx.strokeStyle = affix.color;
+          ctx.lineWidth = Math.max(2, r * 0.09);
+          ctx.globalAlpha = 0.85;
+          ctx.setLineDash([r * 0.42, r * 0.26]);
+          ctx.lineDashOffset = this.reduceMotion ? 0 : -t * r * 1.4;
+          ctx.beginPath();
+          ctx.arc(x, y, r * 1.32, 0, TAU);
+          ctx.stroke();
+          ctx.restore();
+        }
       }
 
       // Prefer a production asset; fall back to the procedural baked sprite.

@@ -201,14 +201,14 @@ export class Game {
       const sig = this.save.unlockSignature(b.id);
       if (sig?.isNew) {
         const def = SIGNATURE_DEFS[sig.id];
-        this.ui.showToast(def.icon, `${def.name} claimed`, def.description);
+        this.ui.showToast(def.icon, `${def.name} claimed`, def.description, "Boss Signature");
       }
       this.checkAchievements(); // immediate boss-kill toasts
     });
     e.on("ascension", (a) => {
       this.audio.bossWarn();
       this.camera.addShake(8, 0.4);
-      this.ui.showToast("▲", `Ascension ${a.level}`, "The Hollow grow stronger — push on.");
+      this.ui.showToast("▲", `Ascension ${a.level}`, "The Hollow grow stronger — push on.", "Endless");
     });
     e.on("stageAdvance", (s) => {
       // Reward clearing a stage with a breather heal, then press on.
@@ -216,7 +216,7 @@ export class Game {
       p.hp = Math.min(p.stats.maxHp, p.hp + p.stats.maxHp * 0.3);
       this.audio.bossDown();
       this.camera.addShake(10, 0.5);
-      this.ui.showToast("⟶", `Stage ${s.cleared} cleared`, `Onward to ${s.name}…`);
+      this.ui.showToast("⟶", `Stage ${s.cleared} cleared`, `Onward to ${s.name}…`, "Gauntlet");
     });
     e.on("revived", () => {
       // Aegis save — a dramatic beat the player should feel.
@@ -307,6 +307,11 @@ export class Game {
     this.world.selectedChassis = this.save.data.selectedChassis;
     this.world.reset();
     this.beginRunUi();
+    // Announce the Sector's Modifier so its rules never feel like a cheap shot.
+    const mod = this.world.modifier;
+    if (mod) {
+      this.ui.showToast(mod.icon, mod.name, `${mod.description} Reward ×${mod.rewardMult}.`, "Sector Modifier");
+    }
   }
 
   /** Shared setup after any run's World is reset (camera, overlays, HUD, hints). */
@@ -488,7 +493,9 @@ export class Game {
     const firstClear = level >= this.save.data.campaignProgress;
     // Reward Motes (first clear pays full; replays pay a fraction), + Fortune.
     // Field-collected Motes join the payout (and enjoy the Fortune multiplier).
-    const base = levelReward(level) * (firstClear ? 1 : 0.3) + this.world.stats.motesCollected;
+    // Sector Modifiers pay a premium for the tougher rules.
+    const modMult = this.world.modifier?.rewardMult ?? 1;
+    const base = levelReward(level) * (firstClear ? 1 : 0.3) * modMult + this.world.stats.motesCollected;
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     this.save.data.motes += motes;
     // Advance progress (may reach TOTAL_SECTORS = "all cleared"; the map clamps
@@ -502,7 +509,7 @@ export class Game {
     this.checkAchievements();
     const final = isFinalLevel(level);
     if (final) {
-      this.ui.showToast("★", "Campaign Complete!", "You have conquered all 100 Galaxies. The dark is held.");
+      this.ui.showToast("★", "Campaign Complete!", "You have conquered all 100 Galaxies. The dark is held.", "Victory");
     }
     this.ui.hideHUD();
     this.ui.showLevelCleared(level, motes, firstClear, !final);
@@ -548,7 +555,7 @@ export class Game {
       const res = this.save.grantWardenXp(wid, xp);
       if (res.gained > 0) {
         const w = WARDEN_LIST.find((x) => x.id === wid);
-        this.ui.showToast("⬆", `${w?.name ?? "Commander"} — Level ${res.level}`, "Commander mastery deepens.");
+        this.ui.showToast("⬆", `${w?.name ?? "Commander"} — Level ${res.level}`, "Commander mastery deepens.", "Mastery");
       }
     }
     this.checkAchievements();
@@ -582,7 +589,7 @@ export class Game {
       title = `${def.name} core`;
       body = "Duplicate core banked. Merge it in the Hangar to upgrade.";
     }
-    this.ui.showToast(def.icon, title, body);
+    this.ui.showToast(def.icon, title, body, "Gear Salvaged");
   }
 
   private achievementContext(): AchievementContext {

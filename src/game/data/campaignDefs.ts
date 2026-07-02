@@ -253,3 +253,101 @@ export function starsFor(hpFraction: number): number {
   if (hpFraction >= 0.5) return 2;
   return 1;
 }
+
+// ---- Sector Modifiers -------------------------------------------------------
+
+/**
+ * A Sector Modifier mutates one Sector's rules — the campaign's texture layer.
+ * Taking on a harder Sector pays more Motes (rewardMult). Assignment is
+ * deterministic per Sector (see {@link modifierForLevel}) so the map can warn
+ * the player before launch and resumed runs keep their rules.
+ */
+export interface SectorModifier {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  /** Mote payout multiplier for clearing the modified Sector. */
+  rewardMult: number;
+  /** Enemy stat hooks (all default 1). */
+  enemySpeedMult?: number;
+  enemyHpMult?: number;
+  enemyDamageMult?: number;
+  /** Spawn pressure: scales the director clock (more/fewer spawns). */
+  spawnRateMult?: number;
+  /** XP shard value multiplier (famine sectors). */
+  xpMult?: number;
+  /** Fodder detonates on death (stand clear!). */
+  volatile?: boolean;
+  /** Elites spawn twice as often. */
+  eliteFrenzy?: boolean;
+}
+
+export const SECTOR_MODIFIERS: SectorModifier[] = [
+  {
+    id: "solarWinds",
+    name: "Solar Winds",
+    icon: "🌪",
+    description: "Charged currents drive the Hollow — enemies move 25% faster.",
+    rewardMult: 1.25,
+    enemySpeedMult: 1.25,
+  },
+  {
+    id: "locustSwarm",
+    name: "Locust Swarm",
+    icon: "🦗",
+    description: "The Hollow pour in thick — 40% more spawns, each a little frailer.",
+    rewardMult: 1.3,
+    spawnRateMult: 1.4,
+    enemyHpMult: 0.85,
+  },
+  {
+    id: "ironHollow",
+    name: "Iron Hollow",
+    icon: "🛡",
+    description: "Armoured husks — enemies have 35% more vitality but drift slower.",
+    rewardMult: 1.3,
+    enemyHpMult: 1.35,
+    enemySpeedMult: 0.9,
+  },
+  {
+    id: "unstableCores",
+    name: "Unstable Cores",
+    icon: "💥",
+    description: "Slain Hollow detonate — keep your distance from every kill.",
+    rewardMult: 1.35,
+    volatile: true,
+  },
+  {
+    id: "dimLight",
+    name: "Dim Light",
+    icon: "🌑",
+    description: "Light shards carry 25% less essence — level-ups come slower.",
+    rewardMult: 1.4,
+    xpMult: 0.75,
+  },
+  {
+    id: "crimsonNebula",
+    name: "Crimson Nebula",
+    icon: "👑",
+    description: "Champions stalk this Sector — elites appear twice as often.",
+    rewardMult: 1.35,
+    eliteFrenzy: true,
+  },
+];
+
+/**
+ * The (deterministic) modifier for a Sector, or null. The first Galaxy is
+ * clean; from there roughly every other non-boss Sector is modified, chosen by
+ * a stable hash so the map, the run, and any resume all agree.
+ */
+export function modifierForLevel(level: number): SectorModifier | null {
+  if (level < SECTORS_PER_GALAXY) return null; // Galaxy 1 teaches the basics
+  if (isBossSector(level)) return null; // boss Sectors stay pure duels
+  // Cheap integer hash → stable pseudo-random pick per level.
+  let h = (level + 1) * 2654435761;
+  h = (h ^ (h >>> 13)) * 2246822519;
+  h = (h ^ (h >>> 16)) >>> 0;
+  if (h % 100 < 45) return null; // ~55% of eligible Sectors carry a modifier
+  return SECTOR_MODIFIERS[h % SECTOR_MODIFIERS.length];
+}

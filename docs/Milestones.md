@@ -244,6 +244,18 @@ artist; production-art seam via `ArtManifest`).
       ink-gradient page titles, and hand-cut stone-slab plaques (taller slab
       designs for tall cards) behind roster cards, gear sets, equip tiles,
       achievements, how-to rows and the settings sheet.
+- [x] **Sector Modifiers**: from Galaxy 2, ~55% of non-boss Sectors carry a
+      deterministic rule twist — Solar Winds (+25% enemy speed), Locust Swarm
+      (+40% spawns, frailer), Iron Hollow (+35% HP), Unstable Cores (kills
+      detonate), Dim Light (−25% XP), Crimson Nebula (elites ×2) — each paying
+      ×1.25–1.4 Motes. Announced on the campaign map (inked notice card),
+      at launch (toast) and in the HUD wave badge; stable across resume.
+- [x] **Elite Affixes**: past Galaxy 2 (or 4 min into survival modes), 60% of
+      elites roll a trait telegraphed by a coloured dashed ring — Swift,
+      Warded (45% damage shrug), Volatile (death blast), Regenerator,
+      Summoner (fodder reinforcements) — and shed a 5-Mote purse instead
+      of 3. Toasts across the game also gained honest titles (Supply Drop /
+      Sector Modifier / Mastery... instead of always "Achievement Unlocked").
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

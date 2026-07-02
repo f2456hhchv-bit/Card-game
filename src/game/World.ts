@@ -31,7 +31,10 @@ import {
   waveDamageMult,
   waveRateMult,
   waveBurstCount,
+  modifierForLevel,
+  type SectorModifier,
 } from "./data/campaignDefs";
+import { ELITE_AFFIXES, getAffix, SUMMON_INTERVAL } from "./data/affixDefs";
 import { WEAPON_DEFS } from "./data/weaponDefs";
 import { emptyEquip } from "./data/gearDefs";
 import { getWarden, type CommanderSpecial } from "./data/wardenDefs";
@@ -161,6 +164,8 @@ export class World {
   campaignLevel = 0;
   /** Set true the instant a Campaign Sector is cleared. */
   levelCleared = false;
+  /** The Sector Modifier in force this run (campaign only; null = clean). */
+  modifier: SectorModifier | null = null;
   /** Current campaign wave (1..WAVES_PER_SECTOR); 0 outside campaign. */
   waveNumber = 0;
   private waveTimer = 0;
@@ -399,6 +404,7 @@ export class World {
     // Campaign: fought in waves; the final wave IS the Sector boss, so the
     // interval-based boss scheduler stays off (startWave spawns it directly).
     this.levelCleared = false;
+    this.modifier = this.campaign ? modifierForLevel(this.campaignLevel) : null;
     this.nextBossTime = this.bossRush
       ? RUSH_FIRST
       : this.gauntlet
@@ -1050,8 +1056,12 @@ export class World {
   }
 
   private spawnEnemies(dt: number): void {
+    // Sector Modifiers can throttle the director clock (Locust Swarm etc.);
+    // Crimson Nebula doubles the elite cadence specifically.
+    const rate = this.modifier?.spawnRateMult ?? 1;
+    this.spawnDirector.setEliteRate(this.modifier?.eliteFrenzy ? 2 : 1);
     const requests = this.spawnDirector.update(
-      dt,
+      dt * rate,
       this.directorElapsed,
       this.enemies.length,
       this.rng,
@@ -1085,13 +1095,35 @@ export class World {
     const eliteHp = req.elite ? 6 : 1;
     const eliteDmg = req.elite ? 1.8 : 1;
     const eliteSize = req.elite ? 1.7 : 1;
-    e.maxHp = def.hp * hpScale * eliteHp;
+    // Sector Modifier stat hooks (campaign texture layer).
+    const mod = this.modifier;
+    e.maxHp = def.hp * hpScale * eliteHp * (mod?.enemyHpMult ?? 1);
     e.hp = e.maxHp;
-    e.damage = def.damage * dmgScale * eliteDmg;
+    e.damage = def.damage * dmgScale * eliteDmg * (mod?.enemyDamageMult ?? 1);
     e.radius = def.radius * eliteSize;
+    e.speed = def.speed * (mod?.enemySpeedMult ?? 1);
     e.xpValue = def.xpValue * (req.elite ? 8 : 1);
+    // Elite Affixes: deeper in, champions roll a telegraphed twist.
+    if (req.elite && this.affixesUnlocked() && this.rng.next() < 0.6) {
+      const affix = ELITE_AFFIXES[Math.floor(this.rng.next() * ELITE_AFFIXES.length)];
+      e.affix = affix.id;
+      e.affixTimer = SUMMON_INTERVAL;
+      if (affix.hpMult) {
+        e.maxHp *= affix.hpMult;
+        e.hp = e.maxHp;
+      }
+      if (affix.speedMult) e.speed *= affix.speedMult;
+    }
     e.active = true;
     this.enemies.push(e);
+  }
+
+  /**
+   * Affixed elites arrive once the player has found their feet: campaign
+   * Galaxy 2+, or four minutes into any survival mode.
+   */
+  private affixesUnlocked(): boolean {
+    return this.campaign ? this.campaignLevel >= 10 : this.stats.elapsed >= 240;
   }
 
   private updateProjectiles(dt: number): void {
@@ -1144,6 +1176,28 @@ export class World {
       e.hitFlash = Math.max(0, e.hitFlash - dt);
       if (e.hitScale !== 1) e.hitScale += (1 - e.hitScale) * Math.min(1, dt * 16);
       e.contactCooldown = Math.max(0, e.contactCooldown - dt);
+
+      // Elite affix upkeep: Regenerators knit themselves back together;
+      // Summoners call fodder reinforcements on a fixed clock.
+      if (e.affix) {
+        const affix = getAffix(e.affix);
+        if (affix?.regenFrac && e.hp > 0) {
+          e.hp = Math.min(e.maxHp, e.hp + e.maxHp * affix.regenFrac * dt);
+        }
+        if (affix?.summoner) {
+          e.affixTimer -= dt;
+          if (e.affixTimer <= 0 && this.enemies.length < 80) {
+            e.affixTimer = SUMMON_INTERVAL;
+            const pool = this.activeEnemyPool;
+            const addId = pool[0] ?? "drifter";
+            for (let s = 0; s < 2; s++) {
+              const a = this.rng.angle();
+              this.spawnAdd(addId, e.x + Math.cos(a) * (e.radius + 14), e.y + Math.sin(a) * (e.radius + 14));
+            }
+            this.spawnRing(e.x, e.y, 130, e.radius * 1.2, 0.4);
+          }
+        }
+      }
 
       const dx = px - e.x;
       const dy = py - e.y;
@@ -1341,7 +1395,8 @@ export class World {
   private collectPickup(k: Pickup): void {
     switch (k.kind) {
       case "xp": {
-        const gain = k.value * this.player.stats.xpMult;
+        // Dim Light Sectors thin the essence in every shard.
+        const gain = k.value * this.player.stats.xpMult * (this.modifier?.xpMult ?? 1);
         this.player.xp += gain;
         this.stats.xpCollected += gain;
         this.checkLevelUp();
@@ -1402,6 +1457,9 @@ export class World {
   /** Apply damage to an enemy, spawn feedback, and handle death. */
   damageEnemy(e: Enemy, amount: number, crit: boolean, knockX: number, knockY: number): void {
     if (!e.active) return;
+    // Warded elites shrug off a chunk of every hit (their purple ring says so).
+    const ward = getAffix(e.affix)?.damageReduction;
+    if (ward) amount *= 1 - ward;
     e.hp -= amount;
     e.hitFlash = 0.08;
     e.hitScale = crit ? 1.5 : 1.32; // squash-and-stretch pop, eased back in updateEnemies
@@ -1423,6 +1481,10 @@ export class World {
     if (e.isBoss) {
       this.onBossDefeated(e);
     } else {
+      // Death detonations: Unstable Cores Sectors make every kill a hazard;
+      // Volatile elites always go out with a bang. Telegraphed by a ring.
+      const detonates = getAffix(e.affix)?.volatile || (this.modifier?.volatile && !e.isElite);
+      if (detonates) this.detonateCorpse(e);
       this.dropLoot(e);
       // Splitters burst into a cluster of smaller enemies on death.
       const def = ENEMY_DEFS[e.typeId];
@@ -1444,6 +1506,21 @@ export class World {
       arr.pop();
     }
     this.enemyPool.release(e);
+  }
+
+  /**
+   * A slain enemy detonates (Unstable Cores Sectors / Volatile elites): a
+   * visible blast ring, and the Warden takes contact-grade damage if caught
+   * inside it. Enemies are unharmed — the hazard is aimed at the player.
+   */
+  private detonateCorpse(e: Enemy): void {
+    const r = e.radius + (e.isElite ? 110 : 70);
+    this.spawnRing(e.x, e.y, 200, r, 0.45);
+    const dx = this.player.x - e.x;
+    const dy = this.player.y - e.y;
+    if (dx * dx + dy * dy <= r * r) {
+      this.damagePlayer(e.damage * 0.9);
+    }
   }
 
   /** Boss death: clear refs, big celebratory loot shower, and an event. */
@@ -1496,9 +1573,9 @@ export class World {
     else if (roll < bombChance + magnetChance + healChance)
       this.dropSpecial(e.x, e.y, "heal", e.isElite ? 30 : 12);
 
-    // Light Motes: elites always shed a small purse; fodder rarely sheds one.
-    // A separate roll so mote luck never competes with support drops.
-    if (e.isElite) this.dropSpecial(e.x, e.y - 10, "mote", 3);
+    // Light Motes: elites always shed a small purse (affixed champions pay
+    // extra for the added danger); fodder rarely sheds one.
+    if (e.isElite) this.dropSpecial(e.x, e.y - 10, "mote", e.affix ? 5 : 3);
     else if (this.rng.next() < 0.012) this.dropSpecial(e.x, e.y, "mote", 1);
   }
 

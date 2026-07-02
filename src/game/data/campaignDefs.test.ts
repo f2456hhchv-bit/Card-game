@@ -15,6 +15,8 @@ import {
   WAVES_PER_SECTOR,
   WAVE_DURATION,
   WAVE_MIN_TIME,
+  modifierForLevel,
+  SECTOR_MODIFIERS,
   waveHpMult,
   waveDamageMult,
   waveRateMult,
@@ -92,5 +94,20 @@ describe("campaignDefs", () => {
     expect(far.enemyPool.length).toBeGreaterThan(0);
     expect(far.bossPool.length).toBeGreaterThan(0);
     expect(SECTORS_PER_GALAXY).toBe(10);
+  });
+
+  it("Sector Modifiers: none in Galaxy 1 or boss Sectors, deterministic elsewhere", () => {
+    for (let l = 0; l < SECTORS_PER_GALAXY; l++) expect(modifierForLevel(l)).toBeNull();
+    for (let l = 0; l < 300; l++) {
+      if (isBossSector(l)) expect(modifierForLevel(l)).toBeNull();
+      // Deterministic: same level, same answer.
+      expect(modifierForLevel(l)).toBe(modifierForLevel(l));
+    }
+    // A healthy share of eligible Sectors do carry one, and every modifier
+    // pays a premium.
+    let modified = 0;
+    for (let l = SECTORS_PER_GALAXY; l < 500; l++) if (modifierForLevel(l)) modified++;
+    expect(modified).toBeGreaterThan(80);
+    for (const m of SECTOR_MODIFIERS) expect(m.rewardMult).toBeGreaterThan(1);
   });
 });

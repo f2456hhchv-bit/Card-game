@@ -41,6 +41,7 @@ import {
   levelDifficulty,
   SECTORS_PER_GALAXY,
   GALAXY_COUNT,
+  modifierForLevel,
 } from "../game/data/campaignDefs";
 import { formatTime } from "../core/format";
 
@@ -184,13 +185,13 @@ export class UIManager {
 
   private toastLayer!: HTMLDivElement;
 
-  /** Pop a transient achievement-unlock notification. */
-  showToast(icon: string, name: string, description: string): void {
+  /** Pop a transient notification (achievements, gear finds, Sector rules...). */
+  showToast(icon: string, name: string, description: string, title = "Achievement Unlocked"): void {
     const t = this.el("div", "toast");
     const ic = this.el("div", "toast-icon", icon);
     const body = this.el("div", "toast-body");
     body.append(
-      this.el("div", "toast-title", "Achievement Unlocked"),
+      this.el("div", "toast-title", title),
       this.el("div", "toast-name", name),
       this.el("div", "toast-desc", description),
     );
@@ -320,10 +321,11 @@ export class UIManager {
     // Mode badge: campaign wave, Endless Ascension tier, or Gauntlet progress.
     if (world.campaign) {
       this.ascLabel.classList.remove("hidden");
+      const mod = world.modifier ? ` · ${world.modifier.icon} ${world.modifier.name}` : "";
       this.ascLabel.textContent =
         world.waveNumber >= world.wavesTotal
           ? "☠ BOSS WAVE"
-          : `Wave ${world.waveNumber}/${world.wavesTotal}`;
+          : `Wave ${world.waveNumber}/${world.wavesTotal}${mod}`;
     } else if (world.endless) {
       this.ascLabel.classList.remove("hidden");
       this.ascLabel.textContent = `▲ Ascension ${world.stats.ascension}`;
@@ -442,7 +444,7 @@ export class UIManager {
     this.bossRushBtn = this.el("button", "btn secondary", "Boss Rush");
     this.bossRushBtn.addEventListener("click", () => {
       if (this.bossRushBtn.classList.contains("locked")) {
-        this.showToast("☠", "Boss Rush locked", "Fell a boss in a normal run to unlock the gauntlet.");
+        this.showToast("☠", "Boss Rush locked", "Fell a boss in a normal run to unlock the gauntlet.", "Locked");
         return;
       }
       this.cb.onStartBossRush();
@@ -770,6 +772,8 @@ export class UIManager {
       grow("🧩", "Hangar", "Your gear inventory. Equip one item per slot (Hull / Core / Engines / Wings). Items roll a rarity and bonus affixes, and matching a full 4-piece Set grants a powerful set bonus. Merge duplicates to raise an item's grade."),
       grow("⚙", "Alloy & Salvage", "Dismantle spare gear into Alloy, then spend it to re-roll an item's affixes — turning unwanted drops into the stats you actually want."),
       grow("🌌", "Campaign", "The main journey: each Sector is ten escalating waves ending in a Sector boss — slay it to warp onward. Clearing the field early skips ahead. Difficulty climbs Galaxy by Galaxy, all the way to Galaxy 100."),
+      grow("🌪", "Sector Modifiers", "From Galaxy 2, some Sectors carry a rule twist — faster enemies, denser swarms, detonating kills, dimmed XP… The map warns you before launch, and modified Sectors pay bonus Motes."),
+      grow("💫", "Elite Affixes", "Deeper in, elite champions roll a trait shown by a coloured dashed ring: Swift (cyan), Warded (purple, shrugs off damage), Volatile (orange, explodes on death), Regenerator (green) or Summoner (pink). Affixed elites drop bigger Mote purses."),
       grow("♾", "Endless", "One run, difficulty ramps every 45s without limit. A pure high-score chase — how far up the Ascension tiers can you climb?"),
       grow("⚔", "Boss Rush", "No fodder — just boss after escalating boss. The place to test a finished build."),
       grow("🏰", "Gauntlet", "Clear three stages back-to-back on a single life. Your HP, level and loadout carry across each stage — pace yourself."),
@@ -864,6 +868,7 @@ export class UIManager {
         def.icon,
         drop.isNew ? `${rarity} ${def.name} found` : drop.rarityUp ? `${def.name} → ${rarity}!` : `${def.name} core`,
         drop.isNew ? "New gear — equip it in the Hangar." : "Banked toward a merge in the Hangar.",
+        "Supply Drop",
       );
     }
     this.audio.levelUp();
@@ -1520,6 +1525,7 @@ export class UIManager {
         def.icon,
         `${def.name} — Grade ${newGrade}`,
         `Max grade reached: ${def.note(newGrade, rarityMult(r))}`,
+        "Hangar",
       );
     }
     this.refreshHangar();
@@ -1715,6 +1721,22 @@ export class UIManager {
       grid.appendChild(node);
     }
     this.campaignBody.appendChild(grid);
+
+    // Sector Modifier notice for the next sector to fly (rules + bonus pay).
+    if (galaxyOf(progress) === this.viewedGalaxy) {
+      const mod = modifierForLevel(progress);
+      if (mod) {
+        const card = this.el("div", "modifier-card");
+        card.style.backgroundImage = slabBg(420, "rgba(26,18,12,0.9)");
+        const head = this.el("div", "modifier-head");
+        head.append(
+          this.el("span", "modifier-name", `${mod.icon} ${mod.name}`),
+          this.el("span", "modifier-bonus", `Reward ×${mod.rewardMult}`),
+        );
+        card.append(head, this.el("div", "modifier-desc", mod.description));
+        this.campaignBody.appendChild(card);
+      }
+    }
 
     // Big "continue" launch button for the current sector (if in this galaxy).
     if (galaxyOf(progress) === this.viewedGalaxy) {
