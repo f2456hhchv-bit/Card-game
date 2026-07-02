@@ -181,6 +181,9 @@ artist; production-art seam via `ArtManifest`).
       foes (Cinder/Revenant), frost drifting off ice foes (Shard/Colossus) — for
       instant on-field identity. All budget-capped so dense swarms stay cheap.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
+- [x] **Painted pickup gems** (user crystal sheet): XP = cyan light shard, elite/
+      boss XP = purple crystal, plus magnet / starburst bomb / heart-flask heal
+      (tools/pickupSprites.mjs; procedural fallback intact).
 - [x] **Painted small-enemy sprites** (user creature sheets): all 13 fodder
       enemies now use the artist's creatures — drifter/mote/lunger/wisp/spore/
       shard/husk/caster from the inked sheet, seer/cinder/revenant/colossus/

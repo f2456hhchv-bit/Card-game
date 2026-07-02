@@ -592,7 +592,10 @@ export class GameRenderer {
       const y = camera.worldToScreenY(k.y) + bobY;
       const r = k.radius * camera.zoom * 1.5;
       const spin = k.kind === "xp" && !this.reduceMotion ? Math.sin(t * 2 + k.bob) * 0.3 : 0;
-      this.blit(ctx, this.forge.pickup(k.kind), x, y, r, spin);
+      // Painted gems when available; big XP drops (elite/boss shards) get the
+      // purple crystal. Procedural sprite remains the fallback.
+      const artKey = k.kind === "xp" && k.radius >= 10 ? "pickup/xpBig" : `pickup/${k.kind}`;
+      this.blitKey(ctx, artKey, this.forge.pickup(k.kind), x, y, r, spin);
     }
   }
 

@@ -33,6 +33,7 @@ import lancerSvg from "../../assets/art/enemy/lancer.svg?raw";
 import { BOSS_RASTER } from "./bossRaster";
 import { CHASSIS_SPRITES, CHASSIS_SPRITE_RADII } from "./chassisSprites";
 import { ENEMY_RASTER, ENEMY_RASTER_RADII } from "./enemyRaster";
+import { PICKUP_RASTER, PICKUP_RASTER_RADII } from "./pickupRaster";
 
 export interface ArtImage {
   img: HTMLImageElement;
@@ -88,6 +89,10 @@ export class AssetManager {
     // enemies; per-sprite body radii keep on-field sizing consistent.
     for (const id in ENEMY_RASTER) {
       this.register(`enemy/${id}`, ENEMY_RASTER[id], ENEMY_RASTER_RADII[id] ?? 54);
+    }
+    // Painted pickup gems (user crystal sheet): xp / xpBig / heal / magnet / bomb.
+    for (const id in PICKUP_RASTER) {
+      this.register(`pickup/${id}`, PICKUP_RASTER[id], PICKUP_RASTER_RADII[id] ?? 40);
     }
     // Per-chassis player ship sprites (user card art, keyed + nose-up). Each
     // ships its own design radius (long thin hulls get a smaller radius so they
