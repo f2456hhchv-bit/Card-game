@@ -481,11 +481,14 @@
 .card {
   pointer-events: auto;
   width: min(260px, 78vw);
-  background: var(--ui-panel);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid var(--card-accent, var(--ui-accent));
+  /* Inked slab plaque (image set inline via slabBg); the option's accent
+     colour lives in the icon, name and hover glow. */
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: none;
   border-radius: var(--ui-radius);
-  padding: 20px 18px;
+  padding: 24px 20px;
   cursor: pointer;
   text-align: left;
   transition: transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
@@ -532,10 +535,7 @@
 
 /* Evolution cards — rare, build-defining; make them unmistakable. */
 .card.evolve {
-  border-top-width: 4px;
-  border-color: #ffd166;
-  background: linear-gradient(180deg, rgba(255, 209, 102, 0.16), var(--ui-panel));
-  box-shadow: 0 0 22px rgba(255, 209, 102, 0.3);
+  box-shadow: 0 0 26px rgba(255, 209, 102, 0.45), inset 0 0 30px rgba(255, 209, 102, 0.12);
   animation: evolve-pulse 1.6s ease-in-out infinite;
 }
 .card.evolve .card-kind {
@@ -854,10 +854,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 7px 12px;
+  padding: 10px 16px;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.03);
-  border-left: 3px solid var(--card-accent, var(--ui-accent));
+  /* Inked slab plaque (image set inline via slabBg). */
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: none;
 }
 .stage-best-name {
   font-weight: 800;
@@ -930,8 +933,11 @@
   position: relative;
   aspect-ratio: 1;
   border-radius: 14px;
-  background: var(--ui-panel);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  /* Inked slab tile (image set inline via slabBg). */
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -950,8 +956,8 @@
   font-size: 0.7rem;
 }
 .sector-node.cleared {
-  border-color: color-mix(in srgb, var(--card-accent) 55%, transparent);
   color: var(--card-accent);
+  box-shadow: 0 0 12px -4px color-mix(in srgb, var(--card-accent) 60%, transparent);
 }
 .sector-node.current {
   box-shadow: 0 0 0 2px var(--card-accent),
@@ -1751,12 +1757,13 @@
 
 
 /* ===== Hand-inked Journey styling (matches the designed artwork) ===== */
-.menu-overlay,
-.overlay.page,
-.tab-bar {
+.overlay,
+.tab-bar,
+.toast-layer {
   /* The bundled font leads so EVERY device renders the same hand-drawn look;
      the system names are only emergency fallbacks (never generic `cursive` —
-     Android maps that to a flowery script). */
+     Android maps that to a flowery script). Applied to every overlay surface
+     (pages, pause, draft, endgame) — only the in-run HUD keeps the sans. */
   font-family: "Afterlight Hand", "Chalkboard SE", "Comic Sans MS", "Segoe Print", sans-serif;
 }
 /* Every tab page shares the Journey's inked identity: the marbled nebula
@@ -1766,7 +1773,8 @@
   background-size: cover;
   background-position: center top;
 }
-.overlay.page h2 {
+/* Ink-gradient page titles everywhere (pause/draft dialogs included). */
+.overlay h2 {
   letter-spacing: 0.2em;
   text-indent: 0.2em;
   background: linear-gradient(180deg, #ffffff 20%, #b9a8ff 90%);
@@ -1809,6 +1817,17 @@
 }
 
 /* Continue Run — glowing slab with a cyan→magenta neon edge. */
+/* Generic inked slab button (Campaign launch etc.; image set inline). */
+.btn.slab-btn {
+  background-color: transparent;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: none;
+  border-radius: 14px;
+  padding: 16px 36px;
+  letter-spacing: 0.1em;
+  box-shadow: 0 0 0 2px rgba(125, 140, 255, 0.4), 0 0 16px rgba(125, 140, 255, 0.3);
+}
 .btn.continue-slab {
   background-color: transparent;
   background-size: 100% 100%;

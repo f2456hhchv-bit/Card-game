@@ -1584,6 +1584,7 @@ export class UIManager {
       for (const s of played) {
         const best = d.stageBest[s.id];
         const row = this.el("div", "stage-best-row");
+        row.style.backgroundImage = slabBg(slabSeed++);
         row.style.setProperty("--card-accent", `hsl(${s.accentHue} 80% 62%)`);
         row.append(
           this.el("span", "stage-best-name", s.name),
@@ -1686,6 +1687,7 @@ export class UIManager {
       const boss = isBossSector(level);
 
       const node = this.el("button", "sector-node");
+      node.style.backgroundImage = slabBg(400 + s, "rgba(15,12,28,0.92)", 150);
       node.style.setProperty("--card-accent", accent);
       if (cleared) node.classList.add("cleared");
       if (current) node.classList.add("current");
@@ -1711,7 +1713,8 @@ export class UIManager {
 
     // Big "continue" launch button for the current sector (if in this galaxy).
     if (galaxyOf(progress) === this.viewedGalaxy) {
-      const launch = this.el("button", "btn", `Launch — ${levelLabel(progress)}`);
+      const launch = this.el("button", "btn slab-btn", `Launch — ${levelLabel(progress)}`);
+      launch.style.backgroundImage = slabBg(410, "rgba(18,14,34,0.95)");
       launch.addEventListener("click", () => {
         this.audio.select();
         this.cb.onStartCampaign(progress);
@@ -1739,7 +1742,7 @@ export class UIManager {
   // ---- Sector-cleared screen ---------------------------------------------
 
   private buildLevelCleared(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "SECTOR CLEARED");
     title.id = "lc-title";
     const stats = this.el("div", "menu-stats");
@@ -1764,8 +1767,10 @@ export class UIManager {
     if (title) title.textContent = firstClear ? "SECTOR CLEARED!" : "SECTOR CLEARED";
     const stats = this.levelCleared.querySelector("#lc-stats");
     if (stats) {
+      let slabSeed = 320;
       const stat = (label: string, value: string) => {
-        const s = this.el("div", "stat");
+        const s = this.el("div", "stat stat-slab");
+        s.style.backgroundImage = slabBg(slabSeed++);
         s.append(this.el("b", undefined, value), this.el("span", undefined, label));
         return s;
       };
@@ -1864,8 +1869,10 @@ export class UIManager {
     const container = this.draft.querySelector("#draft-cards");
     if (!container) return;
     container.replaceChildren();
+    let slabSeed = 360;
     for (const opt of options) {
       const card = this.el("div", "card");
+      card.style.backgroundImage = slabBg(slabSeed++, "rgba(15,12,28,0.95)", 240);
       card.style.setProperty("--card-accent", `hsl(${opt.hue} 80% 65%)`);
       // Evolutions get a distinct golden, glowing treatment.
       if (opt.kind === "weapon-evolve") card.classList.add("evolve");
@@ -1933,7 +1940,7 @@ export class UIManager {
   // ---- Game over ---------------------------------------------------------
 
   private buildGameOver(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "THE LIGHT FADES");
     title.id = "go-title";
     const stats = this.el("div", "menu-stats");
@@ -1977,8 +1984,10 @@ export class UIManager {
     }
     const container = this.gameover.querySelector("#go-stats");
     if (container) {
+      let slabSeed = 340;
       const stat = (label: string, value: string, highlight = false) => {
-        const s = this.el("div", "stat");
+        const s = this.el("div", "stat stat-slab");
+        s.style.backgroundImage = slabBg(slabSeed++);
         const b = this.el("b", undefined, value);
         if (highlight) b.style.color = "var(--ui-warn)";
         const l = this.el("span", undefined, label);
