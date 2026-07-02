@@ -30,6 +30,7 @@ import theNadirSvg from "../../assets/art/boss/theNadir.svg?raw";
 import theSovereignSvg from "../../assets/art/boss/theSovereign.svg?raw";
 import seerSvg from "../../assets/art/enemy/seer.svg?raw";
 import lancerSvg from "../../assets/art/enemy/lancer.svg?raw";
+import { BOSS_RASTER } from "./bossRaster";
 
 export interface ArtImage {
   img: HTMLImageElement;
@@ -72,18 +73,28 @@ export class AssetManager {
   constructor() {
     for (const key in ART_SOURCES) {
       const { svg, radius } = ART_SOURCES[key];
-      const img = new Image();
-      const entry: ArtImage = { img, radius, loaded: false };
-      img.onload = () => {
-        entry.loaded = true;
-      };
-      img.onerror = () => {
-        // Leave loaded=false → renderer keeps the procedural fallback.
-      };
       // Bundled data URI: no network, works in file:// and on GitHub Pages.
-      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-      this.map.set(key, entry);
+      this.register(key, `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`, radius);
     }
+    // Painted boss illustrations (user-supplied artwork) override the SVG
+    // bosses. 256px canvases, body filling ~82% → design radius ≈ 95 so the
+    // painted mass reads slightly larger than the hit circle, like the SVGs.
+    for (const id in BOSS_RASTER) {
+      this.register(`boss/${id}`, BOSS_RASTER[id], 95);
+    }
+  }
+
+  private register(key: string, src: string, radius: number): void {
+    const img = new Image();
+    const entry: ArtImage = { img, radius, loaded: false };
+    img.onload = () => {
+      entry.loaded = true;
+    };
+    img.onerror = () => {
+      // Leave loaded=false → renderer keeps the procedural fallback.
+    };
+    img.src = src;
+    this.map.set(key, entry);
   }
 
   /** A loaded production asset for `key`, or null to use the procedural fallback. */

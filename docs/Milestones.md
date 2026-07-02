@@ -181,6 +181,13 @@ artist; production-art seam via `ArtManifest`).
       foes (Cinder/Revenant), frost drifting off ice foes (Shard/Colossus) — for
       instant on-field identity. All budget-capped so dense swarms stay cheap.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
+- [x] **Painted boss illustrations** (user-supplied artwork, mapped by element):
+      The Maw = toothed violet devourer · The Choir = cyan crystal chorus · The
+      Pyre = blazing sun · The Forge = molten magma boulder · The Sovereign =
+      violet crystal crown · The Rime = ice-spiked sphere · The Nadir = ringed
+      deep planet. Cropped/keyed from the artist sheets into bundled WebP
+      data-URIs (bossRaster.ts) that override the SVG bosses in AssetManager,
+      with the procedural fallback intact.
 - [x] **Journey page hand-inked art pass** (to the user's designed artwork): a
       procedural SVG **nebula backdrop** (feTurbulence cyan/magenta wisps), rough
       **stone-slab** panels for stats/Continue/Galaxy cards, an **electric aura**
