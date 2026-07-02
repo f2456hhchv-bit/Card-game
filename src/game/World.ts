@@ -415,6 +415,17 @@ export class World {
   }
 
   /**
+   * Elapsed time as fed to the spawn director's scaling curves. The underlying
+   * time ramp was tuned for 10–20-minute survival runs; a campaign Sector is a
+   * ~5-minute fight whose difficulty should come from its WAVES, so campaign
+   * dilates the clock — without this the two ramps compound and waves 7–8 spike
+   * (playtest feedback).
+   */
+  private get directorElapsed(): number {
+    return this.campaign ? this.stats.elapsed * 0.55 : this.stats.elapsed;
+  }
+
+  /**
    * Begin wave `n`. Waves 1..N-1: set the director's wave intensity and
    * burst-spawn an opening pack. The final wave summons the Sector boss —
    * felling it clears the Sector (see onBossDefeated).
@@ -428,7 +439,7 @@ export class World {
       this.spawnBoss();
     } else {
       this.spawnDirector.setWaveIntensity(waveHpMult(n), waveDamageMult(n), waveRateMult(n));
-      const minutes = this.stats.elapsed / 60;
+      const minutes = this.directorElapsed / 60;
       for (const req of this.spawnDirector.requestBurst(waveBurstCount(n), minutes, this.rng)) {
         this.spawnFromRequest(req);
       }
@@ -978,7 +989,7 @@ export class World {
   /** Spawn a normal enemy add at a position (used by boss summons). */
   private spawnAdd(typeId: string, x: number, y: number): void {
     const def = ENEMY_DEFS[typeId] ?? ENEMY_DEFS.husk;
-    const minutes = this.stats.elapsed / 60;
+    const minutes = this.directorElapsed / 60;
     const e = this.enemyPool.obtain();
     e.x = clamp(x, -ARENA_RADIUS, ARENA_RADIUS);
     e.y = clamp(y, -ARENA_RADIUS, ARENA_RADIUS);
@@ -1037,7 +1048,7 @@ export class World {
   private spawnEnemies(dt: number): void {
     const requests = this.spawnDirector.update(
       dt,
-      this.stats.elapsed,
+      this.directorElapsed,
       this.enemies.length,
       this.rng,
       this.bossActive,
@@ -1047,7 +1058,7 @@ export class World {
 
   /** Materialise one director spawn request just outside the visible ring. */
   private spawnFromRequest(req: import("./SpawnDirector").SpawnRequest): void {
-    const minutes = this.stats.elapsed / 60;
+    const minutes = this.directorElapsed / 60;
     const hpScale = this.spawnDirector.hpScale(minutes);
     const dmgScale = this.spawnDirector.damageScale(minutes);
     const e = this.enemyPool.obtain();

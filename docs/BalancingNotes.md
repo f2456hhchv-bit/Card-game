@@ -151,3 +151,21 @@ survive-the-timer clears):
 **To watch:** whether wave-9 pressure at G30+ outpaces mid-Sector levelling, and
 whether 25s feels long on cleared-but-not-quite fields (the ≤2-enemies early
 advance may want loosening to ≤4).
+
+## Wave 7/8 difficulty spike fix (2026-07-02, playtest)
+
+Player report: "gets quite hard at wave 7/8". Root cause: **double ramp** — the
+per-wave multipliers stack on the director's elapsed-time scaling, which was
+tuned for 10–20-minute survival runs and reaches ~2.1× HP just ~3 minutes into
+a Sector. Two changes:
+
+- **Campaign time dilation**: the director's clock runs at 0.55× inside a
+  Sector (`World.directorElapsed`), so Sector difficulty comes from the waves,
+  not the survival-mode ramp. Applied to trickle, bursts and boss summons;
+  boss HP/projectile time factors (small) stay on real time.
+- **Gentler wave layer**: HP +9%→+7%/wave, damage +5%→+3.5%/wave (rate kept at
+  +6% — pressure via count is fun; deaths came from stat inflation).
+
+Net at wave 8 (~3.2 min in): fodder HP 3.39×→2.31× (−32%), damage 1.95×→1.53×
+(−22%). Waves 1–3 nearly unchanged. Other modes untouched (dilation is
+campaign-only; wave mults don't apply outside campaign).

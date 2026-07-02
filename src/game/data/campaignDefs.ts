@@ -170,13 +170,15 @@ export const WAVE_DURATION = 25;
 /** Minimum seconds a wave runs before clearing the field advances it early. */
 export const WAVE_MIN_TIME = 8;
 
-/** Enemy HP multiplier for a wave (1-based) — climbs against player levelling. */
+/** Enemy HP multiplier for a wave (1-based) — climbs against player levelling.
+ *  Softened after playtest ("quite hard at wave 7/8"): the time-based ramp
+ *  underneath already compounds with this, so the wave layer stays gentle. */
 export function waveHpMult(wave: number): number {
-  return 1 + (Math.max(1, wave) - 1) * 0.09;
+  return 1 + (Math.max(1, wave) - 1) * 0.07;
 }
 /** Enemy damage multiplier for a wave — milder than HP (sponges, not one-shots). */
 export function waveDamageMult(wave: number): number {
-  return 1 + (Math.max(1, wave) - 1) * 0.05;
+  return 1 + (Math.max(1, wave) - 1) * 0.035;
 }
 /** Spawn-rate multiplier for a wave. */
 export function waveRateMult(wave: number): number {
