@@ -20,10 +20,17 @@ import { getStage, type StageDef, type StagePalette } from "./data/stageDefs";
 import {
   getGalaxy,
   galaxyOf,
+  sectorOf,
   levelDifficulty,
   levelDamageDifficulty,
-  levelDuration,
-  isBossSector,
+  sectorBossMult,
+  WAVES_PER_SECTOR,
+  WAVE_DURATION,
+  WAVE_MIN_TIME,
+  waveHpMult,
+  waveDamageMult,
+  waveRateMult,
+  waveBurstCount,
 } from "./data/campaignDefs";
 import { WEAPON_DEFS } from "./data/weaponDefs";
 import { emptyEquip } from "./data/gearDefs";
@@ -44,8 +51,6 @@ const ENDLESS_BOSS_INTERVAL = 90;
 const GAUNTLET_ORDER = ["fade", "ember", "deep"] as const;
 const GAUNTLET_FIRST = 75;
 const GAUNTLET_GAP = 70;
-/** Campaign: seconds into a boss Sector before its boss warps in. */
-const CAMPAIGN_BOSS_AT = 18;
 
 /** Aggregate, read-only run statistics surfaced to HUD and endgame screen. */
 export interface RunStats {
@@ -81,8 +86,10 @@ export interface GameEvents {
   ascension: { level: number };
   /** Gauntlet advanced to a new stage (after clearing the previous one's boss). */
   stageAdvance: { stageId: string; name: string; cleared: number };
-  /** Campaign Sector cleared (survived the duration / felled the Sector boss). */
+  /** Campaign Sector cleared (the Sector boss on the final wave was felled). */
   levelCleared: { level: number };
+  /** A campaign wave began (wave = 1-based; the final wave is the boss). */
+  waveStarted: { wave: number; total: number };
   /** The Commander's activated special power fired. */
   special: { name: string; kind: string };
 }
@@ -152,8 +159,10 @@ export class World {
   campaignLevel = 0;
   /** Set true the instant a Campaign Sector is cleared. */
   levelCleared = false;
-  private levelDurationSec = 60;
-  private bossSector = false;
+  /** Current campaign wave (1..WAVES_PER_SECTOR); 0 outside campaign. */
+  waveNumber = 0;
+  private waveTimer = 0;
+  private waveMinTimer = 0;
   /** Current Ascension tier (endless mode); mirrored into stats for the HUD. */
   private ascHp = 1;
   private ascDmg = 1;
@@ -383,20 +392,63 @@ export class World {
     this.orbitAngle = 0;
     this.boss = null;
     this.bossController = null;
-    // Campaign Sector setup: finite duration + a Sector boss on milestone Sectors.
+    // Campaign: fought in waves; the final wave IS the Sector boss, so the
+    // interval-based boss scheduler stays off (startWave spawns it directly).
     this.levelCleared = false;
-    this.bossSector = this.campaign && isBossSector(this.campaignLevel);
-    this.levelDurationSec = this.campaign ? levelDuration(this.campaignLevel) : Infinity;
     this.nextBossTime = this.bossRush
       ? RUSH_FIRST
       : this.gauntlet
         ? GAUNTLET_FIRST
         : this.campaign
-          ? this.bossSector
-            ? CAMPAIGN_BOSS_AT
-            : Infinity
+          ? Infinity
           : this.bossInterval();
     this.bossEncounter = 0;
+    this.waveNumber = 0;
+    if (this.campaign) this.startWave(1);
+  }
+
+  // ---- Campaign waves ------------------------------------------------------
+
+  /** Total waves per Sector (mirrored for the HUD). */
+  get wavesTotal(): number {
+    return WAVES_PER_SECTOR;
+  }
+
+  /**
+   * Begin wave `n`. Waves 1..N-1: set the director's wave intensity and
+   * burst-spawn an opening pack. The final wave summons the Sector boss —
+   * felling it clears the Sector (see onBossDefeated).
+   */
+  private startWave(n: number): void {
+    this.waveNumber = n;
+    this.waveTimer = WAVE_DURATION;
+    this.waveMinTimer = WAVE_MIN_TIME;
+    if (n >= WAVES_PER_SECTOR) {
+      // Boss wave: fodder pressure eases automatically (bossActive throttle).
+      this.spawnBoss();
+    } else {
+      this.spawnDirector.setWaveIntensity(waveHpMult(n), waveDamageMult(n), waveRateMult(n));
+      const minutes = this.stats.elapsed / 60;
+      for (const req of this.spawnDirector.requestBurst(waveBurstCount(n), minutes, this.rng)) {
+        this.spawnFromRequest(req);
+      }
+    }
+    this.events.emit("waveStarted", { wave: n, total: WAVES_PER_SECTOR });
+  }
+
+  /**
+   * Advance the wave clock: the next wave auto-starts when the timer lapses, or
+   * early once the field is (nearly) cleared past the minimum wave time — strong
+   * builds accelerate the Sector instead of standing around.
+   */
+  private updateCampaignWaves(dt: number): void {
+    if (this.levelCleared || this.waveNumber >= WAVES_PER_SECTOR) return;
+    this.waveTimer -= dt;
+    this.waveMinTimer -= dt;
+    const fieldCleared = this.waveMinTimer <= 0 && this.enemies.length <= 2;
+    if (this.waveTimer <= 0 || fieldCleared) {
+      this.startWave(this.waveNumber + 1);
+    }
   }
 
   /** Seconds between bosses for the current mode (endless recurs faster). */
@@ -430,6 +482,8 @@ export class World {
       stats: { ...this.stats },
       nextBossTime: this.nextBossTime,
       bossEncounter: this.bossEncounter,
+      waveNumber: this.waveNumber,
+      waveTimer: this.waveTimer,
       ascHp: this.ascHp,
       ascDmg: this.ascDmg,
       ascTimer: this.ascTimer,
@@ -477,6 +531,12 @@ export class World {
     // a boss that was mid-fight isn't left dangling.
     this.boss = null;
     this.bossController = null;
+    // Campaign: re-enter the captured wave (a boss-wave resume respawns the
+    // boss via startWave; earlier waves re-apply intensity + a fresh burst).
+    if (this.campaign) {
+      this.startWave(Math.max(1, s.waveNumber ?? 1));
+      if (s.waveTimer !== undefined) this.waveTimer = s.waveTimer;
+    }
   }
 
   /**
@@ -602,19 +662,7 @@ export class World {
     this.updateOverdrive(dt);
     this.updateChassisPassive(dt);
     if (this.endless) this.updateAscension(dt);
-    this.checkCampaignClear();
-  }
-
-  /**
-   * Campaign clear: a non-boss Sector clears when its survival duration elapses;
-   * a boss Sector clears when its Sector boss is felled (handled in onBossDefeated).
-   */
-  private checkCampaignClear(): void {
-    if (!this.campaign || this.levelCleared) return;
-    if (!this.bossSector && this.stats.elapsed >= this.levelDurationSec) {
-      this.levelCleared = true;
-      this.events.emit("levelCleared", { level: this.campaignLevel });
-    }
+    if (this.campaign) this.updateCampaignWaves(dt);
   }
 
   /**
@@ -882,7 +930,12 @@ export class World {
   }
 
   private spawnBoss(): void {
-    const def = bossForEncounter(this.bossEncounter, this.activeBossPool);
+    // Campaign: cycle the Galaxy's boss pool by Sector so consecutive Sectors
+    // meet different bosses; other modes cycle by encounter as before.
+    const def = bossForEncounter(
+      this.campaign ? sectorOf(this.campaignLevel) : this.bossEncounter,
+      this.activeBossPool,
+    );
     const minutes = this.stats.elapsed / 60;
     const e = this.enemyPool.obtain();
     const angle = this.rng.angle();
@@ -903,7 +956,9 @@ export class World {
     // (in endless) the current Ascension tier.
     const encounterScale = 1 + this.bossEncounter * 0.85;
     const diff = this.activeDifficulty;
-    e.maxHp = def.baseHp * encounterScale * (1 + minutes * 0.04) * diff * this.ascHp;
+    // Campaign milestone Sectors (5 & 10) field elite bosses.
+    const milestone = this.campaign ? sectorBossMult(this.campaignLevel) : 1;
+    e.maxHp = def.baseHp * encounterScale * (1 + minutes * 0.04) * diff * this.ascHp * milestone;
     e.hp = e.maxHp;
     // Boss damage uses the milder damage curve so deep-Galaxy bosses are tanky,
     // not one-shot machines.
@@ -987,41 +1042,41 @@ export class World {
       this.rng,
       this.bossActive,
     );
-    if (requests.length === 0) return;
+    for (const req of requests) this.spawnFromRequest(req);
+  }
+
+  /** Materialise one director spawn request just outside the visible ring. */
+  private spawnFromRequest(req: import("./SpawnDirector").SpawnRequest): void {
     const minutes = this.stats.elapsed / 60;
     const hpScale = this.spawnDirector.hpScale(minutes);
     const dmgScale = this.spawnDirector.damageScale(minutes);
-
-    for (const req of requests) {
-      const e = this.enemyPool.obtain();
-      const def = req.def;
-      // Spawn just outside the camera-visible ring around the player.
-      const angle = this.rng.angle();
-      const dist = 560 + this.rng.range(0, 120);
-      e.x = clamp(this.player.x + Math.cos(angle) * dist, -ARENA_RADIUS, ARENA_RADIUS);
-      e.y = clamp(this.player.y + Math.sin(angle) * dist, -ARENA_RADIUS, ARENA_RADIUS);
-      e.vx = 0;
-      e.vy = 0;
-      e.typeId = def.id;
-      e.behaviour = def.behaviour;
-      e.radius = def.radius;
-      e.speed = def.speed;
-      e.hue = def.hue;
-      e.xpValue = def.xpValue;
-      e.animPhase = this.rng.range(0, TAU);
-      e.isElite = req.elite;
-      e.isBoss = false;
-      const eliteHp = req.elite ? 6 : 1;
-      const eliteDmg = req.elite ? 1.8 : 1;
-      const eliteSize = req.elite ? 1.7 : 1;
-      e.maxHp = def.hp * hpScale * eliteHp;
-      e.hp = e.maxHp;
-      e.damage = def.damage * dmgScale * eliteDmg;
-      e.radius = def.radius * eliteSize;
-      e.xpValue = def.xpValue * (req.elite ? 8 : 1);
-      e.active = true;
-      this.enemies.push(e);
-    }
+    const e = this.enemyPool.obtain();
+    const def = req.def;
+    const angle = this.rng.angle();
+    const dist = 560 + this.rng.range(0, 120);
+    e.x = clamp(this.player.x + Math.cos(angle) * dist, -ARENA_RADIUS, ARENA_RADIUS);
+    e.y = clamp(this.player.y + Math.sin(angle) * dist, -ARENA_RADIUS, ARENA_RADIUS);
+    e.vx = 0;
+    e.vy = 0;
+    e.typeId = def.id;
+    e.behaviour = def.behaviour;
+    e.radius = def.radius;
+    e.speed = def.speed;
+    e.hue = def.hue;
+    e.xpValue = def.xpValue;
+    e.animPhase = this.rng.range(0, TAU);
+    e.isElite = req.elite;
+    e.isBoss = false;
+    const eliteHp = req.elite ? 6 : 1;
+    const eliteDmg = req.elite ? 1.8 : 1;
+    const eliteSize = req.elite ? 1.7 : 1;
+    e.maxHp = def.hp * hpScale * eliteHp;
+    e.hp = e.maxHp;
+    e.damage = def.damage * dmgScale * eliteDmg;
+    e.radius = def.radius * eliteSize;
+    e.xpValue = def.xpValue * (req.elite ? 8 : 1);
+    e.active = true;
+    this.enemies.push(e);
   }
 
   private updateProjectiles(dt: number): void {
@@ -1380,8 +1435,8 @@ export class World {
     // Gauntlet: a boss kill clears the current stage; advance to the next.
     if (this.gauntlet) this.advanceGauntlet();
     this.events.emit("bossDefeated", { x: e.x, y: e.y, id: e.typeId });
-    // Campaign boss Sector: felling the Sector boss clears the level.
-    if (this.campaign && this.bossSector && !this.levelCleared) {
+    // Campaign: every Sector's final wave is its boss — felling it clears.
+    if (this.campaign && !this.levelCleared) {
       this.levelCleared = true;
       this.events.emit("levelCleared", { level: this.campaignLevel });
     }

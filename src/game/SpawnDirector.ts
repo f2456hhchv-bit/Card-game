@@ -36,6 +36,10 @@ export class SpawnDirector {
   private ascHp = 1;
   private ascDmg = 1;
   private ascRate = 1;
+  /** Campaign wave multipliers (HP, damage, spawn-rate); 1 = wave 1 / no waves. */
+  private waveHp = 1;
+  private waveDmg = 1;
+  private waveRate = 1;
 
   /**
    * @param pool optional stage enemy-id whitelist; omit for all enemies.
@@ -52,6 +56,9 @@ export class SpawnDirector {
     this.ascHp = 1;
     this.ascDmg = 1;
     this.ascRate = 1;
+    this.waveHp = 1;
+    this.waveDmg = 1;
+    this.waveRate = 1;
   }
 
   /**
@@ -71,23 +78,47 @@ export class SpawnDirector {
     this.ascRate = rate;
   }
 
+  /** Set the campaign wave multipliers (HP, damage, spawn-rate). */
+  setWaveIntensity(hp: number, dmg: number, rate: number): void {
+    this.waveHp = hp;
+    this.waveDmg = dmg;
+    this.waveRate = rate;
+  }
+
+  /** Burst-spawn requests for a wave opener, drawn from the active pool. */
+  requestBurst(count: number, minutes: number, rng: Rng): SpawnRequest[] {
+    const defs = this.availableDefs(minutes);
+    if (defs.length === 0) return [];
+    const weights = defs.map((d) => d.weight);
+    const out: SpawnRequest[] = [];
+    for (let i = 0; i < count; i++) {
+      out.push({ def: rng.weighted(defs, weights), elite: false });
+    }
+    return out;
+  }
+
   /** Difficulty multiplier on enemy HP as a function of elapsed minutes. */
   hpScale(minutes: number): number {
     // Gentle quadratic-ish ramp: ~1x at 0min, ~2.5x at 5min, ~6x at 12min.
-    return (1 + minutes * 0.28 + minutes * minutes * 0.018) * this.difficulty * this.ascHp;
+    return (1 + minutes * 0.28 + minutes * minutes * 0.018) * this.difficulty * this.ascHp * this.waveHp;
   }
 
   /** Difficulty multiplier on enemy damage. */
   damageScale(minutes: number): number {
     // Linear early, with a quadratic tail so that late enemies keep biting even
     // once the Warden's build is monstrous (addresses "too easy after ~20 min").
-    return (1 + minutes * 0.12 + minutes * minutes * 0.006) * this.damageDifficulty * this.ascDmg;
+    return (
+      (1 + minutes * 0.12 + minutes * minutes * 0.006) *
+      this.damageDifficulty *
+      this.ascDmg *
+      this.waveDmg
+    );
   }
 
   /** Base spawn interval (seconds between spawns), shrinking over time. */
   private spawnInterval(minutes: number): number {
     // From ~0.7s early to ~0.12s late, clamped; ascension shortens it further.
-    const v = (0.72 - minutes * 0.05) / this.ascRate;
+    const v = (0.72 - minutes * 0.05) / (this.ascRate * this.waveRate);
     return Math.max(0.08, v);
   }
 

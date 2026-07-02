@@ -301,39 +301,49 @@ describe("World — combat integration", () => {
     expect(world.player.hp).toBeGreaterThanOrEqual(hpBefore - 1);
   });
 
-  it("a non-boss Campaign Sector clears once its survival duration elapses", () => {
+  it("a Campaign Sector runs 10 waves ending in a boss; felling it clears", () => {
     const world = new World(61);
     world.campaign = true;
-    world.campaignLevel = 0; // Galaxy 1 · Sector 1 — not a boss Sector
+    world.campaignLevel = 0; // Galaxy 1 · Sector 1
     world.reset();
     world.player.stats.maxHp = 1e9;
     world.player.hp = 1e9;
+    expect(world.waveNumber).toBe(1); // waves begin immediately
+    const waves: number[] = [];
+    world.events.on("waveStarted", (w) => waves.push(w.wave));
     let cleared = -1;
     world.events.on("levelCleared", (l) => (cleared = l.level));
-    // Sector 0 duration is 60s; step just past it.
-    for (let i = 0; i < 60 * 61 && cleared < 0; i++) world.step(1 / 60, STILL);
+
+    // Play through: cull the field each step so waves early-advance, until the
+    // boss wave arrives (bounded well above 10 waves × the full duration).
+    for (let i = 0; i < 60 * 300 && !world.bossActive; i++) {
+      world.step(1 / 60, STILL);
+      for (const e of [...world.enemies]) {
+        if (!e.isBoss) world.damageEnemy(e, 1e9, false, 0, 0);
+      }
+    }
+    expect(world.bossActive).toBe(true);
+    expect(world.waveNumber).toBe(10); // the final wave IS the boss
+    expect(waves).toContain(2); // waves advanced along the way
+    expect(cleared).toBe(-1); // surviving alone doesn't clear
+    // Fell the Sector boss → the Sector clears.
+    world.damageEnemy(world.boss!, world.boss!.maxHp + 1, false, 0, 0);
+    world.step(1 / 60, STILL);
     expect(cleared).toBe(0);
     expect(world.levelCleared).toBe(true);
   });
 
-  it("a boss Campaign Sector clears when its Sector boss is felled", () => {
+  it("campaign waves auto-advance on the timer even if the field stays hostile", () => {
     const world = new World(62);
     world.campaign = true;
-    world.campaignLevel = 4; // Sector 5 — a boss Sector
+    world.campaignLevel = 0;
     world.reset();
     world.player.stats.maxHp = 1e9;
     world.player.hp = 1e9;
-    let cleared = -1;
-    world.events.on("levelCleared", (l) => (cleared = l.level));
-    // Boss warps in at ~18s; run until it's active.
-    for (let i = 0; i < 60 * 25 && !world.bossActive; i++) world.step(1 / 60, STILL);
-    expect(world.bossActive).toBe(true);
-    expect(cleared).toBe(-1); // not cleared just by surviving on a boss Sector
-    // Fell the boss → Sector clears.
-    world.damageEnemy(world.boss!, world.boss!.maxHp + 1, false, 0, 0);
-    world.step(1 / 60, STILL);
-    expect(cleared).toBe(4);
-    expect(world.levelCleared).toBe(true);
+    // Never kill anything: after one full wave duration, wave 2 must begin.
+    for (let i = 0; i < 60 * 26 && world.waveNumber < 2; i++) world.step(1 / 60, STILL);
+    expect(world.waveNumber).toBeGreaterThanOrEqual(2);
+    expect(world.levelCleared).toBe(false);
   });
 
   it("kills award XP and can trigger a level-up draft", () => {

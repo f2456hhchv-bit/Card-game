@@ -159,15 +159,47 @@ export function levelDamageDifficulty(level: number): number {
   return 1 + l * 0.015 + l * l * 0.000003;
 }
 
-/** Survival target (seconds) for a non-boss Sector — grows slowly, then caps. */
-export function levelDuration(level: number): number {
-  return 60 + Math.min(level, 25) * 3;
+// ---- Waves ------------------------------------------------------------------
+// A Sector is fought in {@link WAVES_PER_SECTOR} waves. Waves 1–9 escalate
+// (burst + trickle, strength climbing per wave against in-run levelling); the
+// final wave is the **Sector boss** — every Sector ends with a boss kill.
+
+export const WAVES_PER_SECTOR = 10;
+/** Seconds before the next wave auto-starts. */
+export const WAVE_DURATION = 25;
+/** Minimum seconds a wave runs before clearing the field advances it early. */
+export const WAVE_MIN_TIME = 8;
+
+/** Enemy HP multiplier for a wave (1-based) — climbs against player levelling. */
+export function waveHpMult(wave: number): number {
+  return 1 + (Math.max(1, wave) - 1) * 0.09;
+}
+/** Enemy damage multiplier for a wave — milder than HP (sponges, not one-shots). */
+export function waveDamageMult(wave: number): number {
+  return 1 + (Math.max(1, wave) - 1) * 0.05;
+}
+/** Spawn-rate multiplier for a wave. */
+export function waveRateMult(wave: number): number {
+  return 1 + (Math.max(1, wave) - 1) * 0.06;
+}
+/** Enemies burst-spawned at a wave's start. */
+export function waveBurstCount(wave: number): number {
+  return 6 + Math.max(1, wave) * 2;
 }
 
-/** Boss Sectors: the 5th (mini-boss) and the 10th (Galaxy boss). */
+/**
+ * Milestone Sectors (the 5th and 10th of each Galaxy) — their end-of-Sector
+ * bosses are **elite**: the mid-Galaxy boss and the Galaxy finale.
+ */
 export function isBossSector(level: number): boolean {
   const s = sectorOf(level);
   return s === 4 || s === 9;
+}
+
+/** Boss HP multiplier for a Sector's final-wave boss (elite on milestones). */
+export function sectorBossMult(level: number): number {
+  const s = sectorOf(level);
+  return s === 9 ? 1.5 : s === 4 ? 1.2 : 1;
 }
 
 /** The final Sector of the campaign (Galaxy 100 · Sector 10). */
@@ -175,9 +207,11 @@ export function isFinalLevel(level: number): boolean {
   return level >= MAX_LEVEL;
 }
 
-/** Motes awarded for clearing a Sector (first clear pays more — see Game). */
+/** Motes awarded for clearing a Sector (first clear pays more — see Game).
+ *  Base raised for the wave rework: every Sector is now a ~5-minute, ten-wave
+ *  fight ending in a boss. Milestone Sectors still pay a bonus. */
 export function levelReward(level: number): number {
-  return 30 + level * 6 + (isBossSector(level) ? 60 : 0);
+  return 60 + level * 6 + (isBossSector(level) ? 60 : 0);
 }
 
 // ---- Per-Sector variety ----------------------------------------------------

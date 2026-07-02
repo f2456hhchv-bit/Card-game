@@ -285,8 +285,14 @@ export class UIManager {
     this.levelLabel.textContent = `LV ${p.level}`;
     this.timerLabel.textContent = formatTime(world.stats.elapsed);
     this.killsLabel.textContent = `${world.stats.kills} felled`;
-    // Mode badge: Endless Ascension tier, or Gauntlet stage progress.
-    if (world.endless) {
+    // Mode badge: campaign wave, Endless Ascension tier, or Gauntlet progress.
+    if (world.campaign) {
+      this.ascLabel.classList.remove("hidden");
+      this.ascLabel.textContent =
+        world.waveNumber >= world.wavesTotal
+          ? "☠ BOSS WAVE"
+          : `Wave ${world.waveNumber}/${world.wavesTotal}`;
+    } else if (world.endless) {
       this.ascLabel.classList.remove("hidden");
       this.ascLabel.textContent = `▲ Ascension ${world.stats.ascension}`;
     } else if (world.gauntlet) {
@@ -727,7 +733,7 @@ export class UIManager {
       grow("🎖", "Commanders", "The heroes you pilot. Each starts with a different weapon, a permanent perk, and a signature special power (tap the glowing button, bottom-right, or press Space). Playing a Commander levels up its Mastery for a lasting bonus. Unlock new Commanders with Light Motes."),
       grow("🧩", "Hangar", "Your gear inventory. Equip one item per slot (Hull / Core / Engines / Wings). Items roll a rarity and bonus affixes, and matching a full 4-piece Set grants a powerful set bonus. Merge duplicates to raise an item's grade."),
       grow("⚙", "Alloy & Salvage", "Dismantle spare gear into Alloy, then spend it to re-roll an item's affixes — turning unwanted drops into the stats you actually want."),
-      grow("🌌", "Campaign", "The main journey: clear a Sector to warp to the next. Survive the timer (or fell the Sector boss) to advance. Difficulty climbs slowly, Galaxy by Galaxy — endlessly."),
+      grow("🌌", "Campaign", "The main journey: each Sector is ten escalating waves ending in a Sector boss — slay it to warp onward. Clearing the field early skips ahead. Difficulty climbs Galaxy by Galaxy, all the way to Galaxy 100."),
       grow("♾", "Endless", "One run, difficulty ramps every 45s without limit. A pure high-score chase — how far up the Ascension tiers can you climb?"),
       grow("⚔", "Boss Rush", "No fodder — just boss after escalating boss. The place to test a finished build."),
       grow("🏰", "Gauntlet", "Clear three stages back-to-back on a single life. Your HP, level and loadout carry across each stage — pace yourself."),

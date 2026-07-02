@@ -129,3 +129,25 @@ rather than allowed to run away.
 **To watch (needs live playtest):** the exact G80–G100 band for a fully-geared
 mono-set + best-chassis + Commander build; boss HP totals at G100 (tanky but
 should fall inside a Sector's fight, not a stalemate).
+
+## Campaign wave rework (2026-07-02)
+
+Every Sector is now a ~5-minute, ten-wave fight ending in a boss (no more
+survive-the-timer clears):
+
+- **Waves 1–9**: opening burst (`waveBurstCount = 6 + wave*2`) + director trickle.
+  Per-wave multipliers on top of Sector difficulty: HP `1+(w-1)*0.09` (→1.72 at
+  wave 9), damage `1+(w-1)*0.05` (milder — sponges, not one-shots), spawn rate
+  `1+(w-1)*0.06`. Tuned against in-run levelling (~L8–12 by wave 10 early on).
+- **Pacing**: `WAVE_DURATION = 25s` auto-advance, `WAVE_MIN_TIME = 8s` then an
+  early advance when the field is (nearly) cleared — strong builds accelerate
+  the Sector instead of waiting out timers. Chosen over a flat 20s (too rushed
+  when swarmed) and 30s (dead air for strong builds).
+- **Wave 10 = the Sector boss.** Every Sector ends with a boss kill. Bosses now
+  cycle the Galaxy pool by Sector (variety back-to-back). Milestone Sectors keep
+  elite bosses: Sector 5 ×1.2 HP, Sector 10 (Galaxy finale) ×1.5 HP.
+- **Reward**: levelReward base raised 30→60 for the longer Sector.
+
+**To watch:** whether wave-9 pressure at G30+ outpaces mid-Sector levelling, and
+whether 25s feels long on cleared-but-not-quite fields (the ≤2-enemies early
+advance may want loosening to ≤4).

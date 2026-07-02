@@ -44,6 +44,9 @@ export interface WorldRunState {
   stats: RunStats;
   nextBossTime: number;
   bossEncounter: number;
+  /** Campaign wave state (0/undefined outside campaign or on old snapshots). */
+  waveNumber: number;
+  waveTimer: number;
   ascHp: number;
   ascDmg: number;
   ascTimer: number;

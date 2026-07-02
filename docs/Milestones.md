@@ -181,6 +181,12 @@ artist; production-art seam via `ArtManifest`).
       foes (Cinder/Revenant), frost drifting off ice foes (Shard/Colossus) — for
       instant on-field identity. All budget-capped so dense swarms stay cheap.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
+- [x] **Campaign wave rework**: every Sector is now a ~5-minute, **ten-wave**
+      fight — escalating waves (burst + trickle, per-wave HP/damage/rate mults
+      balanced against in-run levelling), 25s auto-advance with an early skip on
+      clearing the field, and **wave 10 is the Sector boss** (every Sector ends
+      with a boss kill; bosses cycle the Galaxy pool by Sector; milestone
+      Sectors field elite bosses). HUD shows Wave N/10 · ☠ BOSS WAVE.
 - [x] **Per-chassis in-game ship sprites**: the flown ship is now the selected
       hull's painted design — background flood-keyed to transparency, floaters
       (stars/nebula) culled, rotated nose-up, with per-ship design radii so long

@@ -4,7 +4,6 @@ import {
   galaxyOf,
   sectorOf,
   levelDifficulty,
-  levelDuration,
   isBossSector,
   isFinalLevel,
   levelLabel,
@@ -13,6 +12,14 @@ import {
   GALAXY_COUNT,
   TOTAL_SECTORS,
   MAX_LEVEL,
+  WAVES_PER_SECTOR,
+  WAVE_DURATION,
+  WAVE_MIN_TIME,
+  waveHpMult,
+  waveDamageMult,
+  waveRateMult,
+  waveBurstCount,
+  sectorBossMult,
 } from "./campaignDefs";
 import { ENEMY_DEFS } from "./enemyDefs";
 import { BOSS_DEFS } from "./bossDefs";
@@ -48,12 +55,28 @@ describe("campaignDefs", () => {
     expect(levelLabel(MAX_LEVEL)).toBe("Galaxy 100 · Sector 10");
   });
 
-  it("boss Sectors are the 5th and 10th of each Galaxy", () => {
+  it("milestone Sectors are the 5th and 10th of each Galaxy, with elite bosses", () => {
     expect(isBossSector(4)).toBe(true); // Sector 5
     expect(isBossSector(9)).toBe(true); // Sector 10
     expect(isBossSector(0)).toBe(false);
     expect(isBossSector(14)).toBe(true); // Galaxy 2 · Sector 5
-    expect(levelDuration(0)).toBeGreaterThan(0);
+    expect(sectorBossMult(0)).toBe(1);
+    expect(sectorBossMult(4)).toBeGreaterThan(1);
+    expect(sectorBossMult(9)).toBeGreaterThan(sectorBossMult(4)); // Galaxy finale
+  });
+
+  it("waves escalate within a Sector and pace sensibly", () => {
+    expect(WAVES_PER_SECTOR).toBe(10);
+    expect(WAVE_DURATION).toBeGreaterThanOrEqual(20);
+    expect(WAVE_DURATION).toBeLessThanOrEqual(30);
+    expect(WAVE_MIN_TIME).toBeLessThan(WAVE_DURATION);
+    // Strength climbs per wave; damage climbs slower than HP.
+    expect(waveHpMult(1)).toBe(1);
+    expect(waveHpMult(9)).toBeGreaterThan(waveHpMult(5));
+    expect(waveDamageMult(9)).toBeLessThan(waveHpMult(9));
+    expect(waveRateMult(9)).toBeGreaterThan(1);
+    // Wave openers grow.
+    expect(waveBurstCount(9)).toBeGreaterThan(waveBurstCount(1));
   });
 
   it("hand-authored Galaxies reference only real enemies and bosses", () => {

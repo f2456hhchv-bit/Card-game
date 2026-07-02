@@ -226,6 +226,10 @@ export class Game {
     });
     e.on("playerDied", () => this.onPlayerDied());
     e.on("levelCleared", (l) => this.onLevelCleared(l.level));
+    e.on("waveStarted", (w) => {
+      // The boss wave announces itself via bossSpawned; earlier waves get a tick.
+      if (w.wave > 1 && w.wave < w.total) this.audio.select();
+    });
     e.on("special", (sp) => {
       this.audio.evolveFanfare();
       this.camera.addShake(sp.kind === "nova" ? 12 : 7, 0.45);
