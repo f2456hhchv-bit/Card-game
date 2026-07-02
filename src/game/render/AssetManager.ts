@@ -32,6 +32,7 @@ import seerSvg from "../../assets/art/enemy/seer.svg?raw";
 import lancerSvg from "../../assets/art/enemy/lancer.svg?raw";
 import { BOSS_RASTER } from "./bossRaster";
 import { CHASSIS_SPRITES, CHASSIS_SPRITE_RADII } from "./chassisSprites";
+import { ENEMY_RASTER, ENEMY_RASTER_RADII } from "./enemyRaster";
 
 export interface ArtImage {
   img: HTMLImageElement;
@@ -82,6 +83,11 @@ export class AssetManager {
     // painted mass reads slightly larger than the hit circle, like the SVGs.
     for (const id in BOSS_RASTER) {
       this.register(`boss/${id}`, BOSS_RASTER[id], 95);
+    }
+    // Painted small-enemy sprites (user creature sheets) override the SVG
+    // enemies; per-sprite body radii keep on-field sizing consistent.
+    for (const id in ENEMY_RASTER) {
+      this.register(`enemy/${id}`, ENEMY_RASTER[id], ENEMY_RASTER_RADII[id] ?? 54);
     }
     // Per-chassis player ship sprites (user card art, keyed + nose-up). Each
     // ships its own design radius (long thin hulls get a smaller radius so they

@@ -181,6 +181,11 @@ artist; production-art seam via `ArtManifest`).
       foes (Cinder/Revenant), frost drifting off ice foes (Shard/Colossus) — for
       instant on-field identity. All budget-capped so dense swarms stay cheap.
 - [x] **Overlay scroll fix**: tall menus (Hangar) now scroll on phones.
+- [x] **Painted small-enemy sprites** (user creature sheets): all 13 fodder
+      enemies now use the artist's creatures — drifter/mote/lunger/wisp/spore/
+      shard/husk/caster from the inked sheet, seer/cinder/revenant/colossus/
+      lancer from the pixel sheet — chroma-flood keyed with per-sprite body
+      radii (tools/enemySprites.mjs); SVG art remains the fallback.
 - [x] **Campaign wave rework**: every Sector is now a ~5-minute, **ten-wave**
       fight — escalating waves (burst + trickle, per-wave HP/damage/rate mults
       balanced against in-run levelling), 25s auto-advance with an early skip on
