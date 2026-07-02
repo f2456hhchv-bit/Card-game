@@ -714,7 +714,14 @@ export class GameRenderer {
       ctx.lineWidth = 3;
       ctx.strokeStyle = "rgba(0,0,0,0.6)";
       ctx.fillStyle = d.crit ? "#ffe27a" : "#ffffff";
-      const text = d.crit ? `${d.value}!` : `${d.value}`;
+      // Large hits abbreviate (12.4k) so late-game numbers stay readable.
+      const v =
+        d.value >= 100000
+          ? `${Math.round(d.value / 1000)}k`
+          : d.value >= 10000
+            ? `${(d.value / 1000).toFixed(1)}k`
+            : `${d.value}`;
+      const text = d.crit ? `${v}!` : v;
       ctx.strokeText(text, x, y);
       ctx.fillText(text, x, y);
     }

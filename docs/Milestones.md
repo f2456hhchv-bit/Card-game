@@ -267,6 +267,16 @@ artist; production-art seam via `ArtManifest`).
       self-destructs after 20s — reach it for a heal, a 4-Mote purse and a fan
       of XP shards. Announced by a "Run Event" toast, blinks its final 5s,
       never magnetised (the trek is the event), and tracked in run stats.
+- [x] **Generative music engine + SFX depth pass** (quality-loop: audio was
+      the weakest category): master bus gained a soft-knee compressor; music
+      bus gained a filtered feedback-delay "space echo". Music is now a real
+      generative score — an A-minor pad progression (two detuned triangles per
+      chord tone through an intensity-driven lowpass) over a sub-bass root,
+      with an arpeggio layer whose density rides battlefield pressure — and a
+      darker, faster diminished progression while a boss holds the field
+      (setBossMode, wired to boss spawn/defeat/run-start). SFX gained a shared
+      white-noise layer: bomb sub-thump + debris, hurt crunch, kill tick, boss
+      riser and victory sparkle. Damage numbers ≥10k abbreviate (12.4k).
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

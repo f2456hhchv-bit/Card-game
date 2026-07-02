@@ -200,11 +200,13 @@ export class Game {
     e.on("bossSpawned", (b) => {
       this.ui.showBossBar(b.name, b.title);
       this.audio.bossWarn();
+      this.audio.setBossMode(true); // darker, faster score for the duel
       this.camera.addShake(12, 0.6);
     });
     e.on("bossDefeated", (b) => {
       this.ui.hideBossBar();
       this.audio.bossDown();
+      this.audio.setBossMode(false);
       this.camera.addShake(20, 0.8);
       // Bosses are the headline reward moment — guarantee a gear salvage so they
       // meaningfully advance set completion, on top of the loot shower.
@@ -332,6 +334,7 @@ export class Game {
   private beginRunUi(): void {
     this.camera.snapTo(this.world.player.x, this.world.player.y);
     this.draftQueue = 0;
+    this.audio.setBossMode(false); // fresh run starts on the calm score
     this.applyAccessibility();
     // One choke-point hides every menu surface (overlays + tab bar) and shows the
     // HUD, so no page can ever be left covering the game.
