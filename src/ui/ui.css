@@ -1638,3 +1638,11 @@
   width: auto;
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
 }
+
+/* Main-menu logo art (replaces the old text wordmark). */
+.menu-logo {
+  width: min(230px, 52vw);
+  height: auto;
+  border-radius: 20px;
+  box-shadow: 0 0 44px rgba(255, 140, 40, 0.22), 0 10px 30px rgba(0, 0, 0, 0.55);
+}
