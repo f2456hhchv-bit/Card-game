@@ -107,40 +107,47 @@ const out = await p.evaluate(
         pushIf(x, y + 1);
         pushIf(x, y - 1);
       }
-      // Second pass: the sheet paints a soft ambient glow around each hull,
-      // contiguous with the backdrop — a hard key leaves it as a boxy haze.
-      // Expand the bg through any dim, low-chroma pixel (the glow) so it eats
-      // inward and stops only at the hull's crisp, saturated edge. Interior
-      // dark linework is enclosed by the hull, so the flood can't reach it.
-      const lum = (i) => 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2];
-      const bgLum = 0.299 * bgc[0] + 0.587 * bgc[1] + 0.114 * bgc[2];
-      const pushGlow = (x, y) => {
-        if (x < 0 || y < 0 || x >= sw || y >= sh) return;
-        const i = y * sw + x;
-        if (!bg[i] && chroma(i) < 78 && lum(i) < bgLum + 72) {
-          bg[i] = 1;
-          stack.push(i);
-        }
-      };
+      // `bg` now marks ONLY the exterior backdrop (border-connected). Because
+      // the flood starts at the borders and stops at the hull's edge, the
+      // ship's darker interior panels are never reached — so the hull stays
+      // solid with no holes, and separate-but-attached parts keep their shape.
+      // (An earlier "glow-eating" second pass floated dim interior pixels into
+      //  the background, punching holes through dark ships — removed.)
+
+      // Speck cull: drop tiny disconnected foreground fragments (JPEG/bloom
+      // crumbs) so nothing floats beside the hull, but keep every sizeable part
+      // (wings, pods) that belongs to the ship.
+      const label = new Int32Array(n).fill(-1);
+      const areas = [];
       for (let i = 0; i < n; i++) {
-        if (!bg[i]) continue;
-        const x = i % sw;
-        const y = (i / sw) | 0;
-        pushGlow(x + 1, y);
-        pushGlow(x - 1, y);
-        pushGlow(x, y + 1);
-        pushGlow(x, y - 1);
+        if (bg[i] || label[i] !== -1) continue;
+        const L = areas.length;
+        let area = 0;
+        const q = [i];
+        label[i] = L;
+        while (q.length) {
+          const j = q.pop();
+          area++;
+          const x = j % sw;
+          const y = (j / sw) | 0;
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= sw || ny >= sh) continue;
+            const k = ny * sw + nx;
+            if (!bg[k] && label[k] === -1) {
+              label[k] = L;
+              q.push(k);
+            }
+          }
+        }
+        areas.push(area);
       }
-      while (stack.length) {
-        const i = stack.pop();
-        const x = i % sw;
-        const y = (i / sw) | 0;
-        pushGlow(x + 1, y);
-        pushGlow(x - 1, y);
-        pushGlow(x, y + 1);
-        pushGlow(x, y - 1);
+      const maxArea = Math.max(...areas, 1);
+      for (let i = 0; i < n; i++) {
+        if (bg[i]) px[i * 4 + 3] = 0;
+        else if (areas[label[i]] < maxArea * 0.02) px[i * 4 + 3] = 0; // speck
       }
-      for (let i = 0; i < n; i++) if (bg[i]) px[i * 4 + 3] = 0;
       ctx.putImageData(d, 0, 0);
 
       // Trim, centre on 192px with the hull filling ~90%.
