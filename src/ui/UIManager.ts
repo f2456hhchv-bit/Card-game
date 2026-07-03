@@ -2095,7 +2095,7 @@ export class UIManager {
   // ---- Level-up draft ----------------------------------------------------
 
   private buildDraft(): void {
-    const o = this.el("div", "overlay hidden");
+    const o = this.el("div", "overlay draft-overlay hidden");
     const title = this.el("div", "draft-title", "Channel the Light");
     const cards = this.el("div", "draft-cards");
     cards.id = "draft-cards";
@@ -2151,7 +2151,9 @@ export class UIManager {
       const name = this.el("div", "card-name", opt.name);
       const note = this.el("div", "card-note", opt.note);
       const desc = this.el("div", "card-desc", opt.description);
-      card.append(icon, kind, name, note, desc);
+      const body = this.el("div", "card-body");
+      body.append(kind, name, note, desc);
+      card.append(icon, body);
       card.addEventListener("click", () => {
         this.audio.select();
         this.cb.onPickDraft(opt);
