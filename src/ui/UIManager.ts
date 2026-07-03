@@ -15,6 +15,7 @@ import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
 import { CHASSIS_SPRITES } from "../game/render/chassisSprites";
 import { nebulaBg, slabBg, lockSvg, tabIcon, inkFrame } from "./inkArt";
+import { weaponIcon, relicIcon } from "./iconArt";
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import { BOSS_RASTER } from "../game/render/bossRaster";
 import {
@@ -427,8 +428,12 @@ export class UIManager {
     this.loadoutBar.replaceChildren();
     for (const w of loadout.weapons) {
       const slot = this.el("div", "slot");
-      slot.style.background = `hsl(${w.def.hue} 80% 65%)`;
-      slot.textContent = w.def.name.slice(0, 2).toUpperCase();
+      const img = document.createElement("img");
+      img.className = "slot-icon";
+      img.src = weaponIcon(w.def.style, w.def.hue);
+      img.alt = w.def.name;
+      img.draggable = false;
+      slot.appendChild(img);
       const lvl = this.el("span", "lvl", `${w.level}`);
       slot.appendChild(lvl);
       slot.title = w.def.name;
@@ -2011,7 +2016,19 @@ export class UIManager {
       // Evolutions get a distinct golden, glowing treatment.
       if (opt.kind === "weapon-evolve") card.classList.add("evolve");
 
-      const icon = this.el("div", "card-icon", opt.name.slice(0, 2).toUpperCase());
+      // Shape icon matching the reward: the weapon's projectile silhouette, or
+      // a faceted relic gem for passives.
+      const icon = this.el("div", "card-icon");
+      const iconImg = document.createElement("img");
+      if (opt.kind === "passive-new" || opt.kind === "passive-up") {
+        iconImg.src = relicIcon(opt.hue);
+      } else {
+        const wid = opt.kind === "weapon-evolve" ? opt.into : opt.id;
+        iconImg.src = weaponIcon(WEAPON_DEFS[wid]?.style ?? "orb", opt.hue);
+      }
+      iconImg.alt = opt.name;
+      iconImg.draggable = false;
+      icon.appendChild(iconImg);
       let kindLabel: string;
       switch (opt.kind) {
         case "weapon-new":

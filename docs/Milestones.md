@@ -332,6 +332,13 @@ artist; production-art seam via `ArtManifest`).
       a spinning toothed **saw** disc, Warden's Halo & Aegis Corona keep the
       **orb** sphere. Two new shapes (glaive, saw) added to the projectile
       style set. Verified in-browser; 163 tests, no console errors.
+- [x] **Weapon/relic icon pass**: the loadout bar and level-up draft cards
+      showed 2-letter abbreviations. New `src/ui/iconArt.ts` bakes memoised
+      data-URI icons in the same shape language — each weapon renders its
+      projectile silhouette (bolt/dart/lance/spark/orb/shard/crystal/hex/
+      star/arc/glaive/saw) tinted to its hue, and each relic a faceted gem
+      with facet lines + a specular glint. Wired into the HUD loadout tiles
+      and the draft-card icons. Verified in-browser; 163 tests, no errors.
 - [ ] Stage modifiers / more Wardens & weapons
 - [x] **Visual variety pass** (quality-loop): each Galaxy's sky is now baked
       from a per-id seed (hashSeed), so star + nebula layouts are genuinely
