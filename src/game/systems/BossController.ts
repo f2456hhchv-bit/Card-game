@@ -1,5 +1,6 @@
 import type { Enemy } from "../entities/Enemy";
 import type { BossDef } from "../data/bossDefs";
+import type { EnemyProjectileStyle } from "../entities/EnemyProjectile";
 import { TAU } from "../../core/math/MathUtils";
 import type { Rng } from "../../core/math/Rng";
 
@@ -11,7 +12,7 @@ export interface BossContext {
   player: { x: number; y: number };
   elapsedMinutes: number;
   rng: Rng;
-  /** Fire a hostile projectile. */
+  /** Fire a hostile projectile (with the boss's signature bullet silhouette). */
   fireEnemyProjectile(
     x: number,
     y: number,
@@ -20,6 +21,7 @@ export interface BossContext {
     damage: number,
     hue: number,
     radius: number,
+    style?: EnemyProjectileStyle,
   ): void;
   /** Summon a normal enemy add at a world position. */
   spawnAdd(typeId: string, x: number, y: number): void;
@@ -64,6 +66,8 @@ export class BossController {
   private cycleStep = 0;
   /** Rotating base for the rigid "cross" signature. */
   private crossAngle = 0;
+  /** Advancing base for the "sweep" clock-hand signature. */
+  private sweepAngle = 0;
 
   constructor(def: BossDef) {
     this.def = def;
@@ -153,13 +157,16 @@ export class BossController {
    */
   private phaseCycle(): AttackKind[] {
     const sig = this.def.signature;
+    // The signature carries the fight — it appears immediately and dominates by
+    // the last phase — with just enough shared aimed/radial pressure between
+    // beats to keep the boss readable. This is what makes each boss feel its own.
     switch (this.phase) {
       case 0:
-        return ["aimed", "radial", sig];
+        return ["aimed", sig, sig, "radial"];
       case 1:
-        return ["aimed", sig, "radial", "spiral"];
+        return [sig, "aimed", sig, "radial", sig];
       default:
-        return [sig, "radial", sig, "spiral", "aimed"];
+        return [sig, sig, "aimed", sig, sig, "radial"];
     }
   }
 
@@ -191,6 +198,10 @@ export class BossController {
         return 3 + p; // arms per side
       case "wall":
         return 7 + p * 2; // parallel bullets across the wall
+      case "lattice":
+        return 7 + p * 2; // bullets per ring (fired twice, interleaved)
+      case "sweep":
+        return 4 + p; // bullets along the sweeping arm
     }
   }
 
@@ -295,8 +306,42 @@ export class BossController {
           const off = (i - (n - 1) / 2) * spacing;
           const sx = boss.x + perpX * off + dirX * boss.radius;
           const sy = boss.y + perpY * off + dirY * boss.radius;
-          ctx.fireEnemyProjectile(sx, sy, dirX * attack.speed, dirY * attack.speed, dmg, this.def.hue, r);
+          ctx.fireEnemyProjectile(
+            sx,
+            sy,
+            dirX * attack.speed,
+            dirY * attack.speed,
+            dmg,
+            this.def.hue,
+            r,
+            this.def.bulletStyle,
+          );
         }
+        break;
+      }
+      case "lattice": {
+        // Two interleaved rings — an outer fast ring and an inner, half-step
+        // offset, slower one — that expand into a crystalline mesh. The Rime's
+        // freezing signature: dense, but the lanes between rings can be threaded.
+        const offset = ctx.rng.angle();
+        const n = attack.count;
+        for (let i = 0; i < n; i++) {
+          this.spawn(boss, ctx, offset + (i / n) * TAU, attack.speed, dmg, r);
+          this.spawn(boss, ctx, offset + ((i + 0.5) / n) * TAU, attack.speed * 0.62, dmg, r);
+        }
+        break;
+      }
+      case "sweep": {
+        // A rotating spoke that advances a fixed step each volley, sweeping
+        // around the arena like a clock hand — you must orbit ahead of it. The
+        // Nadir's inexorable signature. A staggered line makes the arm long.
+        this.sweepAngle += 0.7;
+        const line = attack.count;
+        for (let k = 0; k < line; k++) {
+          this.spawn(boss, ctx, this.sweepAngle, attack.speed * (0.55 + k * 0.16), dmg, r);
+        }
+        this.spawn(boss, ctx, this.sweepAngle + 0.13, attack.speed * 0.85, dmg, r);
+        this.spawn(boss, ctx, this.sweepAngle - 0.13, attack.speed * 0.85, dmg, r);
         break;
       }
     }
@@ -318,6 +363,7 @@ export class BossController {
       dmg,
       this.def.hue,
       radius,
+      this.def.bulletStyle,
     );
   }
 }

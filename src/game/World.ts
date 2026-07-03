@@ -4,7 +4,7 @@ import { Projectile } from "./entities/Projectile";
 import { Pickup } from "./entities/Pickup";
 import { Particle } from "./entities/Particle";
 import { DamageNumber } from "./entities/DamageNumber";
-import { EnemyProjectile } from "./entities/EnemyProjectile";
+import { EnemyProjectile, type EnemyProjectileStyle } from "./entities/EnemyProjectile";
 import { ArcEffect } from "./entities/ArcEffect";
 import { ObjectPool } from "../core/ObjectPool";
 import { SpatialHashGrid } from "../core/SpatialHashGrid";
@@ -657,6 +657,7 @@ export class World {
     damage: number,
     hue: number,
     radius: number,
+    style: EnemyProjectileStyle = "orb",
   ): void {
     const p = this.enemyProjectilePool.obtain();
     p.x = x;
@@ -666,6 +667,8 @@ export class World {
     p.damage = damage;
     p.hue = hue;
     p.radius = radius;
+    p.style = style;
+    p.rotation = 0;
     p.life = 5;
     p.active = true;
     this.enemyProjectiles.push(p);
@@ -1030,7 +1033,8 @@ export class World {
         damage: number,
         hue: number,
         radius: number,
-      ) => this.fireEnemyProjectile(x, y, vx, vy, damage, hue, radius),
+        style: EnemyProjectileStyle = "orb",
+      ) => this.fireEnemyProjectile(x, y, vx, vy, damage, hue, radius, style),
       spawnAdd: (typeId: string, x: number, y: number) => this.spawnAdd(typeId, x, y),
     };
   }

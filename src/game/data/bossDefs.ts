@@ -7,6 +7,8 @@
  * variety. Per-boss tuning (summon type/counts, attack cadence, projectile
  * speed) lets bosses feel distinct without controller changes.
  */
+import type { EnemyProjectileStyle } from "../entities/EnemyProjectile";
+
 export interface BossDef {
   id: string;
   name: string;
@@ -35,6 +37,8 @@ export interface BossDef {
    * See {@link BossAttackKind} in BossController for the vocabulary.
    */
   signature: BossSignature;
+  /** The silhouette of this boss's bullets — its visual signature. */
+  bulletStyle: EnemyProjectileStyle;
 }
 
 /** Signature attack ids a boss can be built around (see BossController.fire). */
@@ -43,7 +47,9 @@ export type BossSignature =
   | "spiralTwin" // two counter-rotating spiral arms
   | "aimedSpread" // tight shotgun cluster fired at the Warden
   | "cross" // rigid rotating cross of bullet-lines
-  | "wall"; // a sweeping wall of parallel bullets
+  | "wall" // a sweeping wall of parallel bullets
+  | "lattice" // interleaved double-ring crystalline mesh
+  | "sweep"; // a rotating clock-hand spoke that sweeps around
 
 export const BOSS_DEFS: Record<string, BossDef> = {
   theMaw: {
@@ -61,6 +67,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     projectileSpeedMult: 1,
     cadenceMult: 1,
     signature: "ringGap",
+    bulletStyle: "orb",
   },
   theChoir: {
     id: "theChoir",
@@ -79,6 +86,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     projectileSpeedMult: 1.3,
     cadenceMult: 0.82,
     signature: "spiralTwin",
+    bulletStyle: "ring",
   },
   // ---- Ember Wastes (stage 2) bosses ------------------------------------
   thePyre: {
@@ -97,6 +105,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     projectileSpeedMult: 1.45,
     cadenceMult: 0.8,
     signature: "aimedSpread",
+    bulletStyle: "ember",
   },
   theForge: {
     id: "theForge",
@@ -114,6 +123,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     projectileSpeedMult: 1.15,
     cadenceMult: 0.9,
     signature: "cross",
+    bulletStyle: "bolt",
   },
   theSovereign: {
     id: "theSovereign",
@@ -132,6 +142,7 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     projectileSpeedMult: 1.25,
     cadenceMult: 0.82,
     signature: "wall",
+    bulletStyle: "star",
   },
   // ---- Hollow Deep (stage 3) bosses -------------------------------------
   theRime: {
@@ -149,7 +160,8 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     addCounts: [6, 9],
     projectileSpeedMult: 1.5,
     cadenceMult: 0.78,
-    signature: "ringGap",
+    signature: "lattice",
+    bulletStyle: "crystal",
   },
   theNadir: {
     id: "theNadir",
@@ -166,7 +178,8 @@ export const BOSS_DEFS: Record<string, BossDef> = {
     addCounts: [2, 3],
     projectileSpeedMult: 1.2,
     cadenceMult: 0.88,
-    signature: "cross",
+    signature: "sweep",
+    bulletStyle: "hex",
   },
 };
 

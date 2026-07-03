@@ -4,7 +4,20 @@
  * Warden, not against enemies — different target, different pool, no shared hot
  * loop. Pooled like everything else.
  */
-export type EnemyProjectileStyle = "orb" | "spike";
+/**
+ * Bullet silhouettes, in the game's shape language. Ranged fodder use the plain
+ * "orb"; each boss fires a signature style so its volleys read as *its* attack.
+ */
+export type EnemyProjectileStyle =
+  | "orb"
+  | "shard"
+  | "crystal"
+  | "star"
+  | "hex"
+  | "bolt"
+  | "ring"
+  | "ember"
+  | "spike";
 
 export class EnemyProjectile {
   x = 0;

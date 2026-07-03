@@ -502,27 +502,220 @@ export class GameRenderer {
     camera: Camera,
     world: World,
   ): void {
-    ctx.save();
-    ctx.globalCompositeOperation = "lighter";
+    const t = world.stats.elapsed;
     for (let i = 0; i < world.enemyProjectiles.length; i++) {
       const p = world.enemyProjectiles[i];
       const x = camera.worldToScreenX(this.ix(p.prevX, p.x));
       const y = camera.worldToScreenY(this.ix(p.prevY, p.y));
       const r = p.radius * camera.zoom;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.7);
-      g.addColorStop(0, `hsl(${p.hue} 100% 80%)`);
-      g.addColorStop(0.6, `hsl(${p.hue} 90% 55%)`);
+      const ang = Math.atan2(p.vy, p.vx);
+
+      // Additive halo — keeps every bullet legible against a busy field.
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.9);
+      g.addColorStop(0, `hsl(${p.hue} 100% 82%)`);
+      g.addColorStop(0.55, `hsla(${p.hue} 92% 58% / 0.75)`);
       g.addColorStop(1, `hsla(${p.hue} 90% 50% / 0)`);
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(x, y, r * 1.7, 0, TAU);
+      ctx.arc(x, y, r * 1.9, 0, TAU);
       ctx.fill();
-      ctx.fillStyle = `hsl(${p.hue} 90% 30%)`;
-      ctx.beginPath();
-      ctx.arc(x, y, r * 0.55, 0, TAU);
-      ctx.fill();
+      ctx.restore();
+
+      // Solid silhouette on top — the boss's signature bullet shape.
+      this.drawEnemyBulletShape(ctx, p.style, x, y, r, p.hue, ang, t + i);
+    }
+  }
+
+  /** One hostile-bullet silhouette in the game's shape language. */
+  private drawEnemyBulletShape(
+    ctx: CanvasRenderingContext2D,
+    style: string,
+    x: number,
+    y: number,
+    r: number,
+    hue: number,
+    ang: number,
+    spin: number,
+  ): void {
+    const core = `hsl(${hue} 100% 88%)`;
+    const body = `hsl(${hue} 92% 60%)`;
+    const edge = `hsl(${hue} 85% 30%)`;
+    ctx.save();
+    ctx.translate(x, y);
+
+    switch (style) {
+      case "shard": {
+        // A sharp sliver flung along its flight path.
+        ctx.rotate(ang);
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.moveTo(r * 2.1, 0);
+        ctx.lineTo(-r * 0.9, r * 0.85);
+        ctx.lineTo(-r * 0.4, 0);
+        ctx.lineTo(-r * 0.9, -r * 0.85);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = edge;
+        ctx.lineWidth = r * 0.28;
+        ctx.stroke();
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.moveTo(r * 1.3, 0);
+        ctx.lineTo(-r * 0.2, r * 0.32);
+        ctx.lineTo(-r * 0.2, -r * 0.32);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case "crystal": {
+        // An icy rhombus with a bright facet.
+        ctx.rotate(ang);
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.moveTo(r * 1.5, 0);
+        ctx.lineTo(0, r * 0.95);
+        ctx.lineTo(-r * 1.5, 0);
+        ctx.lineTo(0, -r * 0.95);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = edge;
+        ctx.lineWidth = r * 0.22;
+        ctx.stroke();
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.moveTo(r * 0.9, 0);
+        ctx.lineTo(0, r * 0.34);
+        ctx.lineTo(0, -r * 0.34);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case "star": {
+        ctx.rotate(spin * 1.5);
+        ctx.fillStyle = body;
+        this.starPath(ctx, r * 1.7, r * 0.62, 4);
+        ctx.fill();
+        ctx.strokeStyle = edge;
+        ctx.lineWidth = r * 0.2;
+        ctx.stroke();
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.42, 0, TAU);
+        ctx.fill();
+        break;
+      }
+      case "hex": {
+        ctx.rotate(spin * 0.9);
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        for (let s = 0; s < 6; s++) {
+          const a = (s / 6) * TAU;
+          const px = Math.cos(a) * r * 1.35;
+          const py = Math.sin(a) * r * 1.35;
+          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = edge;
+        ctx.lineWidth = r * 0.24;
+        ctx.stroke();
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.4, 0, TAU);
+        ctx.fill();
+        break;
+      }
+      case "bolt": {
+        // A heavy dart/lozenge.
+        ctx.rotate(ang);
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * 1.7, r * 0.7, 0, 0, TAU);
+        ctx.fill();
+        ctx.strokeStyle = edge;
+        ctx.lineWidth = r * 0.26;
+        ctx.stroke();
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.ellipse(-r * 0.15, 0, r * 0.8, r * 0.3, 0, 0, TAU);
+        ctx.fill();
+        break;
+      }
+      case "ring": {
+        // A hollow echoing ring.
+        ctx.strokeStyle = body;
+        ctx.lineWidth = r * 0.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.1, 0, TAU);
+        ctx.stroke();
+        ctx.strokeStyle = core;
+        ctx.lineWidth = r * 0.2;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.1, 0, TAU);
+        ctx.stroke();
+        break;
+      }
+      case "ember": {
+        // A hot teardrop with a flickering tail along its flight.
+        ctx.rotate(ang);
+        const flick = 1 + Math.sin(spin * 12) * 0.12;
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.9 * flick, 0);
+        ctx.quadraticCurveTo(r * 0.2, r * 1.0, r * 1.2, 0);
+        ctx.quadraticCurveTo(r * 0.2, -r * 1.0, -r * 1.9 * flick, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(r * 0.55, 0, r * 0.5, 0, TAU);
+        ctx.fill();
+        break;
+      }
+      case "spike": {
+        ctx.rotate(spin);
+        ctx.fillStyle = body;
+        this.starPath(ctx, r * 1.6, r * 0.4, 4);
+        ctx.fill();
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.4, 0, TAU);
+        ctx.fill();
+        break;
+      }
+      default: {
+        // orb — a dark-hearted void sphere.
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.95, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = edge;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.5, 0, TAU);
+        ctx.fill();
+      }
     }
     ctx.restore();
+  }
+
+  /** An n-pointed star path centred at the origin (outer/inner radii). */
+  private starPath(
+    ctx: CanvasRenderingContext2D,
+    outer: number,
+    inner: number,
+    points: number,
+  ): void {
+    ctx.beginPath();
+    for (let s = 0; s < points * 2; s++) {
+      const a = (s / (points * 2)) * TAU - Math.PI / 2;
+      const rad = s % 2 ? inner : outer;
+      const px = Math.cos(a) * rad;
+      const py = Math.sin(a) * rad;
+      s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
   }
 
   private drawOrbitOrbs(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
