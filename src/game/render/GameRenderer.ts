@@ -528,7 +528,12 @@ export class GameRenderer {
     }
   }
 
-  /** One hostile-bullet silhouette in the game's shape language. */
+  /**
+   * One hostile-bullet silhouette, hand-inked to match the game's art: a rough,
+   * organic outline (never a clean geometric primitive), a dark ink stroke, a
+   * shaded painterly fill and a small glint — the same language as the ships,
+   * galaxy bodies and glyph icons.
+   */
   private drawEnemyBulletShape(
     ctx: CanvasRenderingContext2D,
     style: string,
@@ -539,183 +544,239 @@ export class GameRenderer {
     ang: number,
     spin: number,
   ): void {
-    const core = `hsl(${hue} 100% 88%)`;
-    const body = `hsl(${hue} 92% 60%)`;
-    const edge = `hsl(${hue} 85% 30%)`;
+    const INK = "rgba(9,7,15,0.92)";
+    const lite = `hsl(${hue} 100% 85%)`;
+    const body = `hsl(${hue} 90% 58%)`;
+    const deep = `hsl(${hue} 82% 32%)`;
     ctx.save();
     ctx.translate(x, y);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    // Trace a closed path smoothed through segment midpoints — the wobble baked
+    // into the vertices reads as a drawn-by-hand edge, not a crisp polygon.
+    const sub = (pts: [number, number][]): void => {
+      const n = pts.length;
+      const mid = (a: [number, number], b: [number, number]): [number, number] => [
+        (a[0] + b[0]) / 2,
+        (a[1] + b[1]) / 2,
+      ];
+      const m0 = mid(pts[n - 1], pts[0]);
+      ctx.moveTo(m0[0], m0[1]);
+      for (let i = 0; i < n; i++) {
+        const mp = mid(pts[i], pts[(i + 1) % n]);
+        ctx.quadraticCurveTo(pts[i][0], pts[i][1], mp[0], mp[1]);
+      }
+    };
+    // A lumpy blob of `count` vertices — an irregular near-circle.
+    const lump = (count: number, scale: number, amp: number, ph: number, sy = 1): [number, number][] => {
+      const pts: [number, number][] = [];
+      for (let i = 0; i < count; i++) {
+        const a = (i / count) * TAU;
+        const w = 1 + amp * Math.sin(a * 3 + ph) + amp * 0.55 * Math.sin(a * 5 + ph * 1.7);
+        pts.push([Math.cos(a) * r * scale * w, Math.sin(a) * r * scale * w * sy]);
+      }
+      return pts;
+    };
+    const grad = (rad: number): CanvasGradient => {
+      const g = ctx.createRadialGradient(-rad * 0.35, -rad * 0.4, rad * 0.1, 0, 0, rad * 1.1);
+      g.addColorStop(0, lite);
+      g.addColorStop(0.55, body);
+      g.addColorStop(1, deep);
+      return g;
+    };
+    const paint = (pts: [number, number][], gradR: number, w = 0.15): void => {
+      ctx.beginPath();
+      sub(pts);
+      ctx.closePath();
+      ctx.fillStyle = grad(gradR);
+      ctx.fill();
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = r * w;
+      ctx.stroke();
+    };
+    const glint = (gx: number, gy: number, gr: number): void => {
+      ctx.fillStyle = "rgba(255,255,255,0.72)";
+      ctx.beginPath();
+      ctx.ellipse(gx, gy, gr, gr * 0.6, -0.6, 0, TAU);
+      ctx.fill();
+    };
 
     switch (style) {
       case "shard": {
-        // A sharp sliver flung along its flight path.
+        // A jagged rock sliver flung point-first.
         ctx.rotate(ang);
-        ctx.fillStyle = body;
-        ctx.beginPath();
-        ctx.moveTo(r * 2.1, 0);
-        ctx.lineTo(-r * 0.9, r * 0.85);
-        ctx.lineTo(-r * 0.4, 0);
-        ctx.lineTo(-r * 0.9, -r * 0.85);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = edge;
-        ctx.lineWidth = r * 0.28;
-        ctx.stroke();
-        ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.moveTo(r * 1.3, 0);
-        ctx.lineTo(-r * 0.2, r * 0.32);
-        ctx.lineTo(-r * 0.2, -r * 0.32);
-        ctx.closePath();
-        ctx.fill();
+        const pts: [number, number][] = [
+          [r * 2.1, r * 0.06],
+          [r * 0.3, r * 0.82],
+          [-r * 0.7, r * 0.5],
+          [-r * 0.5, 0],
+          [-r * 0.8, -r * 0.55],
+          [r * 0.25, -r * 0.7],
+        ];
+        paint(pts, r * 1.3, 0.16);
+        glint(-r * 0.1, -r * 0.28, r * 0.28);
         break;
       }
       case "crystal": {
-        // An icy rhombus with a bright facet.
+        // A chipped ice shard — angular but hand-cut, flying point-first.
         ctx.rotate(ang);
-        ctx.fillStyle = body;
+        const pts: [number, number][] = [
+          [r * 1.7, 0],
+          [r * 0.45, r * 0.62],
+          [-r * 0.5, r * 0.9],
+          [-r * 1.5, r * 0.08],
+          [-r * 0.5, -r * 0.85],
+          [r * 0.45, -r * 0.66],
+        ];
+        paint(pts, r * 1.4, 0.14);
+        ctx.strokeStyle = "rgba(255,255,255,0.6)";
+        ctx.lineWidth = r * 0.1;
         ctx.beginPath();
-        ctx.moveTo(r * 1.5, 0);
-        ctx.lineTo(0, r * 0.95);
-        ctx.lineTo(-r * 1.5, 0);
-        ctx.lineTo(0, -r * 0.95);
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = edge;
-        ctx.lineWidth = r * 0.22;
+        ctx.moveTo(r * 1.2, 0);
+        ctx.lineTo(-r * 0.5, -r * 0.1);
         ctx.stroke();
-        ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.moveTo(r * 0.9, 0);
-        ctx.lineTo(0, r * 0.34);
-        ctx.lineTo(0, -r * 0.34);
-        ctx.closePath();
-        ctx.fill();
         break;
       }
       case "star": {
-        ctx.rotate(spin * 1.5);
-        ctx.fillStyle = body;
-        this.starPath(ctx, r * 1.7, r * 0.62, 4);
-        ctx.fill();
-        ctx.strokeStyle = edge;
-        ctx.lineWidth = r * 0.2;
-        ctx.stroke();
-        ctx.fillStyle = core;
+        // A four-point star with slightly bent, organic arms.
+        ctx.rotate(spin * 1.2);
+        const pts: [number, number][] = [];
+        for (let s = 0; s < 8; s++) {
+          const a = (s / 8) * TAU - Math.PI / 2 + Math.sin(s * 1.3) * 0.06;
+          const rad = (s % 2 ? r * 0.6 : r * 1.75) * (1 + 0.05 * Math.sin(s * 2.1));
+          pts.push([Math.cos(a) * rad, Math.sin(a) * rad]);
+        }
+        paint(pts, r * 1.5, 0.13);
+        ctx.fillStyle = lite;
         ctx.beginPath();
-        ctx.arc(0, 0, r * 0.42, 0, TAU);
+        ctx.arc(0, 0, r * 0.34, 0, TAU);
         ctx.fill();
         break;
       }
       case "hex": {
-        ctx.rotate(spin * 0.9);
-        ctx.fillStyle = body;
-        ctx.beginPath();
+        // A broken hex chunk of frozen rock, with a fracture line.
+        ctx.rotate(spin * 0.8);
+        const pts: [number, number][] = [];
         for (let s = 0; s < 6; s++) {
-          const a = (s / 6) * TAU;
-          const px = Math.cos(a) * r * 1.35;
-          const py = Math.sin(a) * r * 1.35;
-          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+          const a = (s / 6) * TAU + 0.3;
+          const rad = r * 1.35 * (1 + 0.13 * Math.sin(s * 1.7 + 0.5));
+          pts.push([Math.cos(a) * rad, Math.sin(a) * rad]);
         }
-        ctx.closePath();
-        ctx.fill();
-        ctx.strokeStyle = edge;
-        ctx.lineWidth = r * 0.24;
-        ctx.stroke();
-        ctx.fillStyle = core;
+        paint(pts, r * 1.35, 0.15);
+        ctx.strokeStyle = "rgba(9,7,15,0.5)";
+        ctx.lineWidth = r * 0.1;
         ctx.beginPath();
-        ctx.arc(0, 0, r * 0.4, 0, TAU);
-        ctx.fill();
+        ctx.moveTo(-r * 0.9, -r * 0.3);
+        ctx.lineTo(r * 0.2, r * 0.15);
+        ctx.lineTo(r * 0.6, -r * 0.6);
+        ctx.stroke();
+        glint(-r * 0.35, -r * 0.4, r * 0.24);
         break;
       }
       case "bolt": {
-        // A heavy dart/lozenge.
+        // A heavy forged chunk, chipped and hot-cored — stout, not a needle.
         ctx.rotate(ang);
-        ctx.fillStyle = body;
+        const pts: [number, number][] = [
+          [r * 1.5, 0],
+          [r * 0.55, r * 0.78],
+          [-r * 0.6, r * 0.74],
+          [-r * 1.25, r * 0.06],
+          [-r * 0.6, -r * 0.72],
+          [r * 0.55, -r * 0.76],
+        ];
+        paint(pts, r * 1.35, 0.16);
+        ctx.fillStyle = lite;
         ctx.beginPath();
-        ctx.ellipse(0, 0, r * 1.7, r * 0.7, 0, 0, TAU);
-        ctx.fill();
-        ctx.strokeStyle = edge;
-        ctx.lineWidth = r * 0.26;
-        ctx.stroke();
-        ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.ellipse(-r * 0.15, 0, r * 0.8, r * 0.3, 0, 0, TAU);
+        sub([
+          [r * 0.85, 0],
+          [r * 0.1, r * 0.32],
+          [-r * 0.45, 0],
+          [r * 0.1, -r * 0.32],
+        ]);
+        ctx.closePath();
         ctx.fill();
         break;
       }
       case "ring": {
-        // A hollow echoing ring.
-        ctx.strokeStyle = body;
-        ctx.lineWidth = r * 0.5;
+        // A rough, uneven echo-ring — a hand-drawn torus with a true hollow so
+        // the halo shows through the centre.
+        ctx.rotate(spin * 0.5);
+        const outer = lump(11, 1.2, 0.08, 0.7);
+        const inner = lump(11, 0.56, 0.11, 2.3);
         ctx.beginPath();
-        ctx.arc(0, 0, r * 1.1, 0, TAU);
+        sub(outer);
+        ctx.closePath();
+        sub(inner);
+        ctx.closePath();
+        ctx.fillStyle = grad(r * 1.2);
+        ctx.fill("evenodd");
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = r * 0.12;
+        ctx.beginPath();
+        sub(outer);
+        ctx.closePath();
         ctx.stroke();
-        ctx.strokeStyle = core;
-        ctx.lineWidth = r * 0.2;
         ctx.beginPath();
-        ctx.arc(0, 0, r * 1.1, 0, TAU);
+        sub(inner);
+        ctx.closePath();
         ctx.stroke();
         break;
       }
       case "ember": {
-        // A hot teardrop with a flickering tail along its flight.
+        // A licking flame-mote: a wavering teardrop with a hot heart, tail
+        // trailing behind its flight and flickering over time.
         ctx.rotate(ang);
-        const flick = 1 + Math.sin(spin * 12) * 0.12;
-        ctx.fillStyle = body;
+        const fl = 1 + Math.sin(spin * 11) * 0.14;
+        const pts: [number, number][] = [
+          [r * 1.35, 0],
+          [r * 0.5, r * 0.74],
+          [-r * 0.55, r * 0.6],
+          [-r * 1.85 * fl, r * 0.07],
+          [-r * 0.55, -r * 0.6],
+          [r * 0.5, -r * 0.74],
+        ];
+        paint(pts, r * 1.4, 0.14);
+        // Hot inner tongue.
+        ctx.fillStyle = `hsl(${(hue + 12) % 360} 100% 82%)`;
         ctx.beginPath();
-        ctx.moveTo(-r * 1.9 * flick, 0);
-        ctx.quadraticCurveTo(r * 0.2, r * 1.0, r * 1.2, 0);
-        ctx.quadraticCurveTo(r * 0.2, -r * 1.0, -r * 1.9 * flick, 0);
+        sub([
+          [r * 0.9, 0],
+          [r * 0.1, r * 0.3],
+          [-r * 0.7, 0],
+          [r * 0.1, -r * 0.3],
+        ]);
         ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.arc(r * 0.55, 0, r * 0.5, 0, TAU);
         ctx.fill();
         break;
       }
       case "spike": {
+        // A rough caltrop — four stubby organic spikes.
         ctx.rotate(spin);
-        ctx.fillStyle = body;
-        this.starPath(ctx, r * 1.6, r * 0.4, 4);
-        ctx.fill();
-        ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.4, 0, TAU);
-        ctx.fill();
+        const pts: [number, number][] = [];
+        for (let s = 0; s < 8; s++) {
+          const a = (s / 8) * TAU + Math.sin(s) * 0.05;
+          const rad = s % 2 ? r * 0.42 : r * 1.6;
+          pts.push([Math.cos(a) * rad, Math.sin(a) * rad]);
+        }
+        paint(pts, r * 1.4, 0.15);
+        glint(-r * 0.2, -r * 0.24, r * 0.2);
         break;
       }
       default: {
-        // orb — a dark-hearted void sphere.
-        ctx.fillStyle = body;
+        // orb — a devouring void mote: a lumpy sphere with a dark, ragged heart.
+        ctx.rotate(spin * 0.3);
+        const pts = lump(9, 0.98, 0.1, 1.3);
+        paint(pts, r, 0.15);
+        ctx.fillStyle = `hsl(${hue} 85% 14%)`;
         ctx.beginPath();
-        ctx.arc(0, 0, r * 0.95, 0, TAU);
+        sub(lump(8, 0.5, 0.16, 3.0));
+        ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = edge;
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.5, 0, TAU);
-        ctx.fill();
+        glint(-r * 0.42, -r * 0.44, r * 0.22);
       }
     }
     ctx.restore();
-  }
-
-  /** An n-pointed star path centred at the origin (outer/inner radii). */
-  private starPath(
-    ctx: CanvasRenderingContext2D,
-    outer: number,
-    inner: number,
-    points: number,
-  ): void {
-    ctx.beginPath();
-    for (let s = 0; s < points * 2; s++) {
-      const a = (s / (points * 2)) * TAU - Math.PI / 2;
-      const rad = s % 2 ? inner : outer;
-      const px = Math.cos(a) * rad;
-      const py = Math.sin(a) * rad;
-      s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-    }
-    ctx.closePath();
   }
 
   private drawOrbitOrbs(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
