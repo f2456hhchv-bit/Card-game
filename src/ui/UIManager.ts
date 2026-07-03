@@ -15,7 +15,7 @@ import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
 import { CHASSIS_SPRITES } from "../game/render/chassisSprites";
 import { nebulaBg, slabBg, lockSvg, tabIcon, inkFrame } from "./inkArt";
-import { weaponIcon, relicIcon } from "./iconArt";
+import { weaponIcon, relicIcon, gearIcon, signatureIcon } from "./iconArt";
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import { BOSS_RASTER } from "../game/render/bossRaster";
 import {
@@ -167,6 +167,21 @@ export class UIManager {
     return e;
   }
 
+  /** A wrapper element holding a baked icon <img> (illustrated, not emoji). */
+  private iconEl<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className: string,
+    src: string,
+  ): HTMLElementTagNameMap[K] {
+    const wrap = this.el(tag, className);
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "";
+    img.draggable = false;
+    wrap.appendChild(img);
+    return wrap;
+  }
+
   private build(): void {
     this.buildHUD();
     this.buildMenu();
@@ -193,7 +208,9 @@ export class UIManager {
   /** Pop a transient notification (achievements, gear finds, Sector rules...). */
   showToast(icon: string, name: string, description: string, title = "Achievement Unlocked"): void {
     const t = this.el("div", "toast");
-    const ic = this.el("div", "toast-icon", icon);
+    const ic = icon.startsWith("data:")
+      ? this.iconEl("div", "toast-icon", icon)
+      : this.el("div", "toast-icon", icon);
     const body = this.el("div", "toast-body");
     body.append(
       this.el("div", "toast-title", title),
@@ -944,7 +961,7 @@ export class UIManager {
     if (def) {
       const rarity = rarityName(drop.rarity);
       this.showToast(
-        def.icon,
+        gearIcon(def.slot),
         drop.isNew ? `${rarity} ${def.name} found` : drop.rarityUp ? `${def.name} → ${rarity}!` : `${def.name} core`,
         drop.isNew ? "New gear — equip it in the Hangar." : "Banked toward a merge in the Hangar.",
         "Supply Drop",
@@ -1324,7 +1341,7 @@ export class UIManager {
 
       const top = this.el("div", "item-top");
       top.append(
-        this.el("span", "item-icon", def.icon),
+        this.iconEl("span", "item-icon", signatureIcon(def.id, def.hue)),
         this.el("div", "item-name", owned ? def.name : "??? Signature"),
       );
       const sm = this.el("div", "item-grade", owned ? def.title : "Locked");
@@ -1387,7 +1404,7 @@ export class UIManager {
       const tile = this.el("div", "equip-slot");
       tile.style.backgroundImage = slabBg(180 + SLOTS.indexOf(slot));
       if (item) tile.style.setProperty("--card-accent", `hsl(${item.hue} 80% 65%)`);
-      tile.append(this.el("div", "equip-slot-icon", meta.icon));
+      tile.append(this.iconEl("div", "equip-slot-icon", gearIcon(slot)));
       tile.append(this.el("div", "equip-slot-label", meta.label));
       const itemLine = this.el(
         "div",
@@ -1472,7 +1489,7 @@ export class UIManager {
 
         const top = this.el("div", "item-top");
         top.append(
-          this.el("span", "item-icon", def.icon),
+          this.iconEl("span", "item-icon", gearIcon(slot)),
           this.el("div", "item-name", isOwned ? def.name : `${SLOT_META[slot].label}`),
         );
         const gradeRow = this.el("div", "item-grade");
@@ -1601,7 +1618,7 @@ export class UIManager {
     if (def && newGrade >= def.maxGrade) {
       const r = this.save.data.gear.inventory[id]?.rarity ?? 0;
       this.showToast(
-        def.icon,
+        gearIcon(def.slot),
         `${def.name} — Grade ${newGrade}`,
         `Max grade reached: ${def.note(newGrade, rarityMult(r))}`,
         "Hangar",
