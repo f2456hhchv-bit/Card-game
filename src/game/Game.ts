@@ -178,12 +178,18 @@ export class Game {
     e.on("weaponFired", () => this.audio.shoot());
     e.on("enemyKilled", (p) => {
       this.audio.kill();
-      if (p.elite) this.camera.addShake(7, 0.25);
+      // Elite kills land with weight: a shake and a crisp hit-stop.
+      if (p.elite) {
+        this.camera.addShake(7, 0.25);
+        this.hitstop(0.05);
+      }
     });
     e.on("playerHit", () => {
       this.audio.playerHurt();
       this.ui.flashDamage();
       this.camera.addShake(6, 0.22);
+      // Getting struck bites — a brief freeze (throttled by the ~0.5s iframes).
+      this.hitstop(0.04);
     });
     e.on("pickup", (p) => {
       if (p.kind === "xp") this.audio.pickup();
@@ -737,6 +743,15 @@ export class Game {
     this.slowmoTime = dur;
     this.slowmoDur = dur;
     this.slowmoScale = scale;
+  }
+
+  /**
+   * A hit-stop: a very brief near-freeze that snaps back to full speed — the
+   * classic "impact" juice. Implemented as an instant slow-mo from ~0. Natural
+   * throttling: it won't retrigger while one is already in flight.
+   */
+  private hitstop(dur: number): void {
+    this.slowmo(dur, 0.02);
   }
 
   /** Current sim time-scale (1 = normal), advancing any active slow-mo. */

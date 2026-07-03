@@ -9,6 +9,13 @@ import { PostFx } from "./PostFx";
 import { AssetManager } from "./AssetManager";
 import { getAffix } from "../data/affixDefs";
 
+/** Overshooting ease for pop-in animations (settles slightly past 1, back to 1). */
+function easeOutBack(x: number): number {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+}
+
 /**
  * Draws the world. All art is procedural and asset-free: characters are baked
  * once by the SpriteForge into offscreen canvases and blitted here (fast +
@@ -719,11 +726,17 @@ export class GameRenderer {
       const x = camera.worldToScreenX(d.x);
       const y = camera.worldToScreenY(d.y);
       const t = d.life / d.maxLife;
-      ctx.globalAlpha = Math.max(0, 1 - t);
-      const size = (d.crit ? 22 : 15) * camera.zoom;
-      ctx.font = `${d.crit ? "800" : "700"} ${size}px ui-sans-serif, system-ui, sans-serif`;
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "rgba(0,0,0,0.6)";
+      // Hold full opacity, then fade only over the last third — readable, punchy.
+      ctx.globalAlpha = t < 0.66 ? 1 : Math.max(0, 1 - (t - 0.66) / 0.34);
+      // Pop-in: scale up from small with an overshoot over the first ~90ms.
+      const popT = this.reduceMotion ? 1 : Math.min(1, d.life / 0.09);
+      const pop = popT >= 1 ? 1 : 0.35 + easeOutBack(popT) * 0.65;
+      // Bigger hits read bigger: a gentle log-scaled size bonus.
+      const mag = Math.max(0, Math.min(3, Math.log10(Math.max(1, d.value)) - 1));
+      const size = ((d.crit ? 21 : 14) + mag * 4) * camera.zoom * pop;
+      ctx.font = `${d.crit ? "800" : "700"} ${size}px "Afterlight Hand", ui-sans-serif, system-ui, sans-serif`;
+      ctx.lineWidth = Math.max(2.5, size * 0.14);
+      ctx.strokeStyle = "rgba(0,0,0,0.65)";
       ctx.fillStyle = d.crit ? "#ffe27a" : "#ffffff";
       // Large hits abbreviate (12.4k) so late-game numbers stay readable.
       const v =
@@ -733,8 +746,13 @@ export class GameRenderer {
             ? `${(d.value / 1000).toFixed(1)}k`
             : `${d.value}`;
       const text = d.crit ? `${v}!` : v;
+      if (d.crit) {
+        ctx.shadowColor = "rgba(255,190,60,0.9)";
+        ctx.shadowBlur = 12 * camera.zoom;
+      }
       ctx.strokeText(text, x, y);
       ctx.fillText(text, x, y);
+      ctx.shadowBlur = 0;
     }
     ctx.globalAlpha = 1;
     ctx.restore();

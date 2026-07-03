@@ -307,6 +307,14 @@ artist; production-art seam via `ArtManifest`).
       push-in (`Camera.punchZoom`/`updateZoom`), and a generalised screen flash
       (`UIManager.flashScreen`). Spawn = shake + push-in + held-breath slow-mo;
       death = bigger shake + white blowout + savour slow-mo. Verified in-browser.
+- [x] **Game-feel juice pass** (quality-loop): (1) selective **hit-stop** —
+      a ~40–50ms near-freeze via the slow-mo system on player hits (throttled
+      by iframes) and elite kills, the classic impact punch; boss death keeps
+      its longer savour beat. (2) **Damage numbers** rebuilt — pop-in with an
+      overshoot ease, size that scales with hit magnitude (log-scaled, so a
+      1500 dwarfs a 7), crits glow gold in the hand-print font, and a
+      hold-then-fade so they stay readable. Verified in-browser across a spread
+      of magnitudes + crits; 163 tests green, zero console errors.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen
