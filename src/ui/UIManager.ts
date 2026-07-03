@@ -16,6 +16,7 @@ import { chassisSvg } from "../game/render/chassisArt";
 import { CHASSIS_SPRITES } from "../game/render/chassisSprites";
 import { nebulaBg, slabBg, lockSvg, tabIcon, inkFrame } from "./inkArt";
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
+import { BOSS_RASTER } from "../game/render/bossRaster";
 import {
   SLOTS,
   SLOT_META,
@@ -128,6 +129,9 @@ export class UIManager {
 
   private showPerf = false;
   private flashTimer = 0;
+  private flashDur = 0.3;
+  private flashRgb = "255,60,90";
+  private flashPeak = 0.5;
 
   constructor(
     parent: HTMLElement,
@@ -298,6 +302,53 @@ export class UIManager {
     this.hint.classList.add("hidden");
   }
 
+  private bossIntroLayer: HTMLDivElement | null = null;
+  private bossIntroTimer = 0;
+
+  /**
+   * Cinematic boss reveal: a darkening wash, a WARNING strip, the boss's
+   * painted portrait haloed in its hue, and the name + title sweeping in.
+   * Self-dismisses after ~2s; a fresh spawn replaces any in-flight card.
+   */
+  showBossIntro(name: string, title: string, id: string, hue: number): void {
+    this.hideBossIntro();
+    const layer = this.el("div", "boss-intro");
+    layer.style.setProperty("--boss-hue", `${hue}`);
+
+    const portrait = BOSS_RASTER[id];
+    if (portrait) {
+      const wrap = this.el("div", "boss-intro-portrait");
+      const img = document.createElement("img");
+      img.src = portrait;
+      img.alt = name;
+      img.draggable = false;
+      wrap.appendChild(img);
+      layer.appendChild(wrap);
+    }
+
+    const warn = this.el("div", "boss-intro-warning", "⚠ WARNING ⚠");
+    const nameEl = this.el("div", "boss-intro-name", name);
+    const titleEl = this.el("div", "boss-intro-title", title);
+    layer.append(warn, nameEl, titleEl);
+
+    this.root.appendChild(layer);
+    this.bossIntroLayer = layer;
+    // Trigger the enter animation next frame, then auto-dismiss.
+    requestAnimationFrame(() => layer.classList.add("show"));
+    this.bossIntroTimer = window.setTimeout(() => {
+      layer.classList.add("leaving");
+      window.setTimeout(() => layer.remove(), 500);
+      this.bossIntroLayer = null;
+    }, 1900);
+  }
+
+  /** Remove any boss intro card immediately (run end / fresh run). */
+  hideBossIntro(): void {
+    window.clearTimeout(this.bossIntroTimer);
+    this.bossIntroLayer?.remove();
+    this.bossIntroLayer = null;
+  }
+
   /** Show the boss bar with a name; called when a boss spawns. */
   showBossBar(name: string, title: string): void {
     this.bossName.textContent = `${name} — ${title}`;
@@ -356,11 +407,11 @@ export class UIManager {
         `${world.enemies.length} hollow\n` +
         `${world.entityCount} entities`;
     }
-    // Decay damage flash.
+    // Decay the screen flash (damage tint / boss-death blowout).
     if (this.flashTimer > 0) {
       this.flashTimer -= 0.016;
-      const a = Math.max(0, this.flashTimer) * 0.5;
-      this.flash.style.background = `rgba(255,60,90,${a})`;
+      const a = Math.max(0, this.flashTimer / this.flashDur) * this.flashPeak;
+      this.flash.style.background = `rgba(${this.flashRgb},${a})`;
     }
   }
 
@@ -391,7 +442,18 @@ export class UIManager {
   }
 
   flashDamage(): void {
+    this.flashRgb = "255,60,90";
+    this.flashDur = 0.3;
+    this.flashPeak = 0.5;
     this.flashTimer = 0.3;
+  }
+
+  /** A full-screen colour blowout (e.g. a boss-death white flash). */
+  flashScreen(r: number, g: number, b: number, peak: number, dur = 0.45): void {
+    this.flashRgb = `${r},${g},${b}`;
+    this.flashDur = dur;
+    this.flashPeak = peak;
+    this.flashTimer = dur;
   }
 
   showHUD(): void {
@@ -586,6 +648,7 @@ export class UIManager {
     this.hideDraft();
     this.hidePause();
     this.hideBossBar();
+    this.hideBossIntro();
     this.hideHint();
     this.showHUD();
   }

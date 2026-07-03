@@ -86,7 +86,7 @@ export interface GameEvents {
   podSpawned: { x: number; y: number };
   weaponFired: { weaponId: string };
   bombDetonate: { x: number; y: number };
-  bossSpawned: { name: string; title: string };
+  bossSpawned: { name: string; title: string; id: string; hue: number };
   bossDefeated: { x: number; y: number; id: string };
   /** Aegis perk fired: the Warden cheated death this run. */
   revived: { x: number; y: number };
@@ -1063,7 +1063,7 @@ export class World {
     this.boss = e;
     this.bossController = new BossController(def);
     this.bossEncounter++;
-    this.events.emit("bossSpawned", { name: def.name, title: def.title });
+    this.events.emit("bossSpawned", { name: def.name, title: def.title, id: def.id, hue: def.hue });
   }
 
   /** Spawn a normal enemy add at a position (used by boss summons). */

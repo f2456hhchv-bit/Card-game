@@ -14,6 +14,10 @@ export class Camera {
   viewWidth = 0;
   viewHeight = 0;
 
+  // Zoom-punch state: `zoomTarget` snaps to the punched value then relaxes back
+  // to 1, and `zoom` chases the target — a quick cinematic push-in on impacts.
+  private zoomTarget = 1;
+
   // Screen-shake state.
   private shakeTime = 0;
   private shakeDuration = 0;
@@ -44,6 +48,17 @@ export class Camera {
       this.shakeDuration = duration;
       this.shakeTime = duration;
     }
+  }
+
+  /** Kick a cinematic push-in; it eases in then relaxes back to 1× on its own. */
+  punchZoom(target: number): void {
+    if (target > this.zoomTarget) this.zoomTarget = target;
+  }
+
+  /** Advance the zoom spring (call once per rendered frame). */
+  updateZoom(dt: number): void {
+    this.zoom = damp(this.zoom, this.zoomTarget, 10, dt);
+    this.zoomTarget = damp(this.zoomTarget, 1, 2.6, dt);
   }
 
   updateShake(dt: number, rand: () => number, intensityScale: number): void {

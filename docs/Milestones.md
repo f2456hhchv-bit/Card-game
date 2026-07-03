@@ -298,6 +298,15 @@ artist; production-art seam via `ArtManifest`).
       stationary in a churning ring of foes went from ±π/frame to exactly 0.
       Plus earlier: frame interpolation for 120Hz displays, rAF delta snapping,
       boss prev-position capture, and a visible build stamp on the More page.
+- [x] **Boss encounter drama** (quality-loop, presentation): bosses now arrive
+      with a cinematic — a hue-tinted vignette wash, an alarm "⚠ WARNING ⚠"
+      strip, the boss's painted portrait haloed in its colour, and the name +
+      title sweeping in (`UIManager.showBossIntro`, auto-dismiss ~2s). Backed by
+      a reusable slow-motion system (`Game.slowmo` — the fixed sim runs on a
+      fractional carry, easing back to 1×; reduce-motion safe), a camera
+      push-in (`Camera.punchZoom`/`updateZoom`), and a generalised screen flash
+      (`UIManager.flashScreen`). Spawn = shake + push-in + held-breath slow-mo;
+      death = bigger shake + white blowout + savour slow-mo. Verified in-browser.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

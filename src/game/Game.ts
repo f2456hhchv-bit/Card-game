@@ -59,6 +59,13 @@ export class Game {
   private draftQueue = 0;
   private shakeRand = Math.random;
 
+  // Cinematic slow-motion (boss beats, big hits). While active, the fixed sim
+  // steps less often via a fractional carry, then eases back to full speed.
+  private slowmoTime = 0;
+  private slowmoDur = 0;
+  private slowmoScale = 1;
+  private simCarry = 0;
+
   /** True while the current run is a Daily Run (fixed seed, equal footing). */
   private isDailyRun = false;
   /** True while the current run is a Boss Rush (endless boss gauntlet). */
@@ -199,15 +206,21 @@ export class Game {
     });
     e.on("bossSpawned", (b) => {
       this.ui.showBossBar(b.name, b.title);
+      this.ui.showBossIntro(b.name, b.title, b.id, b.hue); // cinematic name card
       this.audio.bossWarn();
       this.audio.setBossMode(true); // darker, faster score for the duel
       this.camera.addShake(12, 0.6);
+      this.camera.punchZoom(1.16); // quick push-in on the reveal
+      this.slowmo(0.55, 0.4); // a held breath as it arrives
     });
     e.on("bossDefeated", (b) => {
       this.ui.hideBossBar();
       this.audio.bossDown();
       this.audio.setBossMode(false);
-      this.camera.addShake(20, 0.8);
+      this.camera.addShake(24, 0.9);
+      this.camera.punchZoom(1.12);
+      this.slowmo(0.8, 0.28); // savour the kill
+      this.ui.flashScreen(255, 255, 255, 0.5); // white blowout
       // Bosses are the headline reward moment — guarantee a gear salvage so they
       // meaningfully advance set completion, on top of the loot shower.
       this.salvageGear();
@@ -695,7 +708,15 @@ export class Game {
     }
 
     if (this.state === "playing") {
-      this.world.step(dt, this.input);
+      // Cinematic slow-mo: feed the fixed sim on a fractional carry so it steps
+      // less often (deterministic; the render loop keeps interpolating between
+      // ticks, so slow-mo looks smooth rather than choppy).
+      const scale = this.currentTimeScale(dt);
+      this.simCarry += scale;
+      if (this.simCarry >= 1) {
+        this.simCarry -= 1;
+        this.world.step(dt, this.input);
+      }
       // Camera follow/shake moved to render() so they advance at the display's
       // refresh rate (120Hz iPhones) against the interpolated ship position —
       // stepping them at the 60Hz sim rate made motion judder ("flicker").
@@ -703,6 +724,27 @@ export class Game {
       // Surface any pending level-up draft (pauses the sim).
       this.openDraftIfPending();
     }
+  }
+
+  /**
+   * Trigger a slow-motion beat: the sim runs at `scale` speed, easing back to
+   * 1× over `dur` seconds. No-op under reduce-motion. A stronger beat overrides
+   * a weaker one in progress.
+   */
+  private slowmo(dur: number, scale: number): void {
+    if (this.save.data.accessibility.reduceMotion) return;
+    if (this.slowmoTime > 0 && scale >= this.slowmoScale) return;
+    this.slowmoTime = dur;
+    this.slowmoDur = dur;
+    this.slowmoScale = scale;
+  }
+
+  /** Current sim time-scale (1 = normal), advancing any active slow-mo. */
+  private currentTimeScale(dt: number): number {
+    if (this.slowmoTime <= 0) return 1;
+    this.slowmoTime = Math.max(0, this.slowmoTime - dt);
+    const p = this.slowmoDur > 0 ? this.slowmoTime / this.slowmoDur : 0; // 1→0
+    return this.slowmoScale + (1 - this.slowmoScale) * (1 - p); // ease to 1×
   }
 
   /**
@@ -771,6 +813,7 @@ export class Game {
       this.camera.follow(px, py, frameDt);
       const acc = this.save.data.accessibility;
       this.camera.updateShake(frameDt, this.shakeRand, acc.screenShake ? 1 : 0);
+      this.camera.updateZoom(frameDt);
     }
 
     this.renderer.begin("#05060a");
