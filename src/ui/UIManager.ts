@@ -116,6 +116,7 @@ export class UIManager {
   private tabBar!: HTMLDivElement;
   private journeyPanel!: HTMLDivElement;
   private journeyBody!: HTMLDivElement;
+  private dailyCache!: HTMLDivElement;
   private playPanel!: HTMLDivElement;
   private morePanel!: HTMLDivElement;
   private activeMenuTab = "journey";
@@ -573,8 +574,9 @@ export class UIManager {
 
     // Journey — the vertical Galaxy pathway (the hero of the main screen).
     this.journeyPanel = this.el("div", "menu-panel");
+    this.dailyCache = this.el("div", "daily-cache");
     this.journeyBody = this.el("div", "journey");
-    this.journeyPanel.append(this.continueBtn, this.journeyBody);
+    this.journeyPanel.append(this.continueBtn, this.dailyCache, this.journeyBody);
 
     // Play — the game modes, with the Quick Play stage chooser.
     this.playPanel = this.el("div", "menu-panel hidden");
@@ -742,7 +744,71 @@ export class UIManager {
    * upward, scrolling up to preview Galaxies they've yet to conquer. Tapping an
    * unlocked Galaxy opens its Sector map.
    */
+  /**
+   * The Daily Cache banner on the home screen — a login-streak reward that grows
+   * each consecutive day, the game's core "come back tomorrow" hook. Claimable
+   * once per calendar day; the streak resets after a missed day.
+   */
+  private refreshDailyCache(): void {
+    const status = this.save.dailyCacheStatus();
+    this.dailyCache.replaceChildren();
+
+    const card = this.el("div", "daily-cache-card");
+    this.inkCard(card, "hsl(45 92% 60%)", 77, "rgba(30,22,10,0.92)");
+    if (status.available) card.classList.add("ready");
+
+    const flame = this.iconEl("div", "daily-flame", glyphIcon("flame", 40, 46));
+    const streakNum = this.el("div", "daily-streak-num", `${status.streak}`);
+    flame.appendChild(streakNum);
+
+    const body = this.el("div", "daily-body");
+    const rw = status.reward;
+    const rewardParts = [`+${rw.motes} Motes`];
+    if (rw.alloy) rewardParts.push(`+${rw.alloy} Alloy`);
+    if (rw.gear) rewardParts.push("+Gear");
+    body.append(
+      this.el("div", "daily-title", status.available ? "Daily Cache" : "Daily Cache — Claimed"),
+      this.el(
+        "div",
+        "daily-reward",
+        status.available
+          ? `Day ${status.streak} · ${rewardParts.join(" · ")}`
+          : `Day ${status.streak} streak · come back tomorrow`,
+      ),
+    );
+
+    const action = this.el("button", "btn buy pill daily-claim");
+    if (status.available) {
+      action.textContent = "Claim";
+      action.addEventListener("click", () => this.claimDailyCache());
+    } else {
+      action.textContent = "✓";
+      action.classList.add("maxed");
+      action.disabled = true;
+    }
+    card.append(flame, body, action);
+    this.dailyCache.appendChild(card);
+  }
+
+  private claimDailyCache(): void {
+    const r = this.save.claimDailyCache();
+    if (!r) return;
+    this.audio.levelUp();
+    const parts = [`+${r.motes} Light Motes`];
+    if (r.alloy) parts.push(`+${r.alloy} Alloy`);
+    if (r.gear) parts.push(r.gear.isNew ? "new gear!" : "gear core");
+    this.showToast(
+      glyphIcon("flame", 45),
+      `Day ${r.streak} Streak`,
+      parts.join(" · "),
+      "Daily Cache",
+    );
+    this.refreshDailyCache();
+    this.refreshMenuStats();
+  }
+
   private refreshJourney(): void {
+    this.refreshDailyCache();
     const progress = this.campaignProgress();
     // Clamp to the finite Galaxy 100 endgame (progress may reach "all cleared").
     const currentGalaxy = Math.min(galaxyOf(progress), GALAXY_COUNT - 1);

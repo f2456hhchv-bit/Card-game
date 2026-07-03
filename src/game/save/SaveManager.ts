@@ -101,6 +101,8 @@ export interface SaveData {
   selectedStage: string;
   /** Today's Daily Run best (resets when the date rolls over). */
   daily: { date: string; bestTime: number; bestKills: number };
+  /** Daily-cache login streak: consecutive days a cache was claimed. */
+  streak: { count: number; lastClaim: string };
   audio: AudioSettings;
   accessibility: AccessibilitySettings;
 }
@@ -132,6 +134,7 @@ function defaultSave(): SaveData {
     selectedChassis: "skiff",
     selectedStage: "fade",
     daily: { date: "", bestTime: 0, bestKills: 0 },
+    streak: { count: 0, lastClaim: "" },
     audio: { master: 0.8, sfx: 0.9, music: 0.5, muted: false },
     accessibility: {
       reduceMotion: false,
@@ -196,6 +199,7 @@ export class SaveManager {
       selectedChassis: parsed.selectedChassis ?? "skiff",
       selectedStage: parsed.selectedStage ?? "fade",
       daily: parsed.daily ?? { date: "", bestTime: 0, bestKills: 0 },
+      streak: parsed.streak ?? { count: 0, lastClaim: "" },
       audio: { ...base.audio, ...(parsed.audio ?? {}) },
       accessibility: { ...base.accessibility, ...(parsed.accessibility ?? {}) },
       achievements: parsed.achievements ?? [],
@@ -376,6 +380,68 @@ export class SaveManager {
     if (newBestKills) d.daily.bestKills = kills;
     this.save();
     return { newBestTime, newBestKills };
+  }
+
+  // ---- Daily cache (login streak) -----------------------------------------
+
+  /** Local calendar day as YYYY-MM-DD. */
+  private static ymd(d: Date): string {
+    const m = `${d.getMonth() + 1}`.padStart(2, "0");
+    const day = `${d.getDate()}`.padStart(2, "0");
+    return `${d.getFullYear()}-${m}-${day}`;
+  }
+
+  /** The reward for claiming the cache on the given (post-claim) streak day. */
+  static dailyCacheReward(streak: number): { motes: number; alloy: number; gear: boolean } {
+    const s = Math.max(1, streak);
+    return {
+      motes: 30 + Math.min(s, 10) * 15,
+      alloy: s >= 3 ? 10 + Math.min(s, 10) * 5 : 0,
+      gear: s % 5 === 0, // a gear drop every 5th consecutive day
+    };
+  }
+
+  /**
+   * Today's daily-cache state — whether it can be claimed, the streak it would
+   * become, and the reward. Pure (does not mutate); `now` is injectable for tests.
+   */
+  dailyCacheStatus(now: Date = new Date()): {
+    available: boolean;
+    streak: number;
+    reward: { motes: number; alloy: number; gear: boolean };
+  } {
+    const today = SaveManager.ymd(now);
+    const yst = SaveManager.ymd(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
+    const { count, lastClaim } = this.data.streak;
+    const available = lastClaim !== today;
+    let streak: number;
+    if (lastClaim === today) streak = count; // already claimed today
+    else if (lastClaim === yst) streak = count + 1; // streak continues
+    else streak = 1; // fresh, or the streak lapsed
+    return { available, streak, reward: SaveManager.dailyCacheReward(streak) };
+  }
+
+  /** Claim today's cache. Grants the reward and advances the streak, or returns
+   *  null if it was already claimed today. */
+  claimDailyCache(now: Date = new Date()): {
+    motes: number;
+    alloy: number;
+    gear: { id: string; isNew: boolean; rarity: number; rarityUp: boolean } | null;
+    streak: number;
+  } | null {
+    const status = this.dailyCacheStatus(now);
+    if (!status.available) return null;
+    this.data.streak = { count: status.streak, lastClaim: SaveManager.ymd(now) };
+    this.data.motes += status.reward.motes;
+    this.data.alloy += status.reward.alloy;
+    const gear = status.reward.gear ? this.grantItemDrop() : null;
+    this.save();
+    return {
+      motes: status.reward.motes,
+      alloy: status.reward.alloy,
+      gear,
+      streak: status.streak,
+    };
   }
 
   /**
