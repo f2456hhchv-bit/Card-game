@@ -14,7 +14,7 @@ import { WEAPON_DEFS } from "../game/data/weaponDefs";
 import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
 import { CHASSIS_SPRITES } from "../game/render/chassisSprites";
-import { nebulaBg, slabBg, lockSvg, tabIcon, inkFrame } from "./inkArt";
+import { nebulaBg, slabBg, lockSvg, tabIcon, inkSquiggle } from "./inkArt";
 import { weaponIcon, relicIcon, gearIcon, signatureIcon, glyphIcon } from "./iconArt";
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import { BOSS_RASTER } from "../game/render/bossRaster";
@@ -169,9 +169,10 @@ export class UIManager {
   }
 
   /**
-   * Give a card its glowing hand-inked neon border — the wobbly accent frame
-   * from the designed mock, applied uniformly across every page. Sets the
-   * `--card-accent` used by the `.ink-card` glow and paints the inkFrame SVG.
+   * Give a card a single hand-drawn neon outline — one organic squiggly line,
+   * NOT a nested box. The line is generated at the element's real pixel size (so
+   * it never stretches into a bulging rectangle) and re-painted by a shared
+   * ResizeObserver whenever the card is laid out or resized.
    */
   private inkCard(
     el: HTMLElement,
@@ -186,7 +187,36 @@ export class UIManager {
       /hsl\(\s*([\d.]+)\s+([\d.]+)%\s+([\d.]+)%\s*\)/,
       "hsl($1,$2%,$3%)",
     );
-    el.style.backgroundImage = inkFrame(seed, svgAccent, fill);
+    el.dataset.inkAccent = svgAccent;
+    el.dataset.inkSeed = String(seed);
+    el.dataset.inkFill = fill;
+    this.ensureInkObserver().observe(el);
+  }
+
+  private inkObserver?: ResizeObserver;
+  /** Repaints an ink card's outline to match its measured size (no distortion). */
+  private ensureInkObserver(): ResizeObserver {
+    if (!this.inkObserver) {
+      this.inkObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const el = entry.target as HTMLElement;
+          const w = el.offsetWidth;
+          const h = el.offsetHeight;
+          if (w < 4 || h < 4) continue;
+          if (el.dataset.inkW === `${w}` && el.dataset.inkH === `${h}`) continue;
+          el.dataset.inkW = `${w}`;
+          el.dataset.inkH = `${h}`;
+          el.style.backgroundImage = inkSquiggle(
+            w,
+            h,
+            el.dataset.inkAccent ?? "#8fb7ff",
+            Number(el.dataset.inkSeed ?? 1),
+            el.dataset.inkFill ?? "rgba(13,11,26,0.9)",
+          );
+        }
+      });
+    }
+    return this.inkObserver;
   }
 
   /** A wrapper element holding a baked icon <img> (illustrated, not emoji). */
@@ -954,9 +984,8 @@ export class UIManager {
     const d = this.save.data;
     const cost = UIManager.SUPPLY_DROP_COST;
     this.shopCrate.replaceChildren();
-    const card = this.el("div", "crate-card ink-card");
-    card.style.setProperty("--card-accent", "#ffb545");
-    card.style.backgroundImage = inkFrame(3, "#ffb545", "rgba(38,28,14,0.72)");
+    const card = this.el("div", "crate-card");
+    this.inkCard(card, "#ffb545", 3, "rgba(38,28,14,0.82)");
     const body = this.el("div", "crate-body");
     body.append(
       this.iconEl("div", "crate-icon", glyphIcon("pod", 42, 64)),
@@ -1016,9 +1045,8 @@ export class UIManager {
       const cost = maxed ? 0 : def.cost(level);
       const accent = `hsl(${def.hue} 85% 62%)`;
 
-      const card = this.el("div", "shop-card ink-card");
-      card.style.setProperty("--card-accent", accent);
-      card.style.backgroundImage = inkFrame(seed++, accent);
+      const card = this.el("div", "shop-card");
+      this.inkCard(card, accent, seed++, "rgba(15,12,28,0.9)");
       const head = this.el("div", "shop-card-head");
       head.append(
         this.el("div", "shop-name", def.name),

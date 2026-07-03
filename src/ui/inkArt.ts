@@ -78,39 +78,85 @@ export function slabBg(seed = 1, fill = "rgba(16,13,30,0.94)", h = 90): string {
   return uri(svg);
 }
 
+
 /**
- * A hand-inked neon frame: an irregular rounded rectangle drawn twice with a
- * wobbly accent-coloured stroke over a dark panel fill — the glowing card
- * border from the designed Shop mock. Stretches via preserveAspectRatio='none';
- * pair with a CSS box-shadow in the same accent for the outer glow.
+ * A single hand-drawn neon outline sized to the element's ACTUAL pixels, so it
+ * never stretches into a bulging rounded rectangle. One organic wavy loop — a
+ * rounded frame whose edge gently squiggles — filled with the dark panel colour
+ * and stroked once in the accent. No nested second line, no geometric box.
  */
-export function inkFrame(seed = 1, accent = "#ffd166", fill = "rgba(11,10,26,0.92)"): string {
-  const w = 340;
-  const h = 150;
-  // Two independently-jittered passes of the same loop read as hand-traced.
-  const loop = (s: number, inset: number) => {
-    const r = rng(s * 7919 + 13);
-    const jx = () => (r() - 0.5) * 6;
-    const jy = () => (r() - 0.5) * 5;
-    const i = inset;
-    const p = {
-      tl: [12 + i + jx(), 12 + i + jy()],
-      tm: [w / 2 + jx() * 2, 7 + i + jy()],
-      tr: [w - 12 - i + jx(), 12 + i + jy()],
-      rm: [w - 6 - i + jx(), h / 2 + jy()],
-      br: [w - 12 - i + jx(), h - 12 - i + jy()],
-      bm: [w / 2 + jx() * 2, h - 6 - i + jy()],
-      bl: [12 + i + jx(), h - 12 - i + jy()],
-      lm: [6 + i + jx(), h / 2 + jy()],
-    };
-    return `M${p.tl} Q${p.tm} ${p.tr} Q${p.rm} ${p.br} Q${p.bm} ${p.bl} Q${p.lm} ${p.tl[0]} ${p.tl[1]} Z`;
+export function inkSquiggle(
+  w: number,
+  h: number,
+  accent: string,
+  seed = 1,
+  fill = "rgba(13,11,26,0.9)",
+): string {
+  const r = rng(seed * 2654435 + 7);
+  const m = 7; // inset from the edge so the glow has room
+  const rc = Math.max(10, Math.min(30, w * 0.09, h * 0.09));
+  const x0 = m;
+  const y0 = m;
+  const x1 = w - m;
+  const y1 = h - m;
+  const amp = 2.1; // wave depth
+  const wl = 34; // wavelength in px
+  const pts: [number, number][] = [];
+  let len = 0;
+  // Walk the rounded-rect perimeter, sampling points and pushing each out along
+  // its normal by a gentle sine wave plus a little jitter — a drawn-by-hand line.
+  const add = (x: number, y: number, nx: number, ny: number, step: number): void => {
+    len += step;
+    const off = Math.sin(len / wl * Math.PI * 2) * amp + (r() - 0.5) * 1.6;
+    pts.push([x + nx * off, y + ny * off]);
   };
-  const d1 = loop(seed, 0);
-  const d2 = loop(seed + 101, 3);
+  const edge = (
+    ax: number,
+    ay: number,
+    bx: number,
+    by: number,
+    nx: number,
+    ny: number,
+  ): void => {
+    const segs = Math.max(3, Math.round(Math.hypot(bx - ax, by - ay) / 12));
+    for (let i = 0; i < segs; i++) {
+      const t = i / segs;
+      add(ax + (bx - ax) * t, ay + (by - ay) * t, nx, ny, Math.hypot(bx - ax, by - ay) / segs);
+    }
+  };
+  const corner = (cx: number, cy: number, a0: number): void => {
+    const segs = 4;
+    for (let i = 0; i <= segs; i++) {
+      const a = a0 + (i / segs) * (Math.PI / 2);
+      add(cx + Math.cos(a) * rc, cy + Math.sin(a) * rc, Math.cos(a), Math.sin(a), (rc * Math.PI) / 2 / segs);
+    }
+  };
+  edge(x0 + rc, y0, x1 - rc, y0, 0, -1);
+  corner(x1 - rc, y0 + rc, -Math.PI / 2);
+  edge(x1, y0 + rc, x1, y1 - rc, 1, 0);
+  corner(x1 - rc, y1 - rc, 0);
+  edge(x1 - rc, y1, x0 + rc, y1, 0, 1);
+  corner(x0 + rc, y1 - rc, Math.PI / 2);
+  edge(x0, y1 - rc, x0, y0 + rc, -1, 0);
+  corner(x0 + rc, y0 + rc, Math.PI);
+  // Smooth closed path: quadratics through segment midpoints.
+  const mid = (a: [number, number], b: [number, number]): [number, number] => [
+    (a[0] + b[0]) / 2,
+    (a[1] + b[1]) / 2,
+  ];
+  const n = pts.length;
+  let d = `M${mid(pts[n - 1], pts[0]).map((v) => v.toFixed(1)).join(",")}`;
+  for (let i = 0; i < n; i++) {
+    const cur = pts[i];
+    const nxt = pts[(i + 1) % n];
+    const mp = mid(cur, nxt);
+    d += ` Q${cur[0].toFixed(1)},${cur[1].toFixed(1)} ${mp[0].toFixed(1)},${mp[1].toFixed(1)}`;
+  }
+  d += " Z";
   const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}' preserveAspectRatio='none'>` +
-    `<path d='${d1}' fill='${fill}' stroke='${accent}' stroke-width='5' stroke-linejoin='round' opacity='0.95'/>` +
-    `<path d='${d2}' fill='none' stroke='${accent}' stroke-width='2' stroke-linejoin='round' opacity='0.55'/>` +
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>` +
+    `<path d='${d}' fill='${fill}' stroke='${accent}' stroke-width='2.4' ` +
+    `stroke-linejoin='round' stroke-linecap='round'/>` +
     `</svg>`;
   return uri(svg);
 }
