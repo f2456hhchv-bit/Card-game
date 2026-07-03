@@ -15,7 +15,7 @@ import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
 import { CHASSIS_SPRITES } from "../game/render/chassisSprites";
 import { nebulaBg, slabBg, lockSvg, tabIcon, inkFrame } from "./inkArt";
-import { weaponIcon, relicIcon, gearIcon, signatureIcon } from "./iconArt";
+import { weaponIcon, relicIcon, gearIcon, signatureIcon, glyphIcon } from "./iconArt";
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import { BOSS_RASTER } from "../game/render/bossRaster";
 import {
@@ -98,6 +98,7 @@ export class UIManager {
   private loadoutBar!: HTMLDivElement;
   private specialBtn!: HTMLButtonElement;
   private specialIcon!: HTMLSpanElement;
+  private specialIconKey = "";
   private specialCdEl!: HTMLDivElement;
   private perf!: HTMLDivElement;
   private flash!: HTMLDivElement;
@@ -165,6 +166,27 @@ export class UIManager {
     if (className) e.className = className;
     if (text !== undefined) e.textContent = text;
     return e;
+  }
+
+  /**
+   * Give a card its glowing hand-inked neon border — the wobbly accent frame
+   * from the designed mock, applied uniformly across every page. Sets the
+   * `--card-accent` used by the `.ink-card` glow and paints the inkFrame SVG.
+   */
+  private inkCard(
+    el: HTMLElement,
+    accent: string,
+    seed: number,
+    fill = "rgba(13,11,26,0.9)",
+  ): void {
+    el.classList.add("ink-card");
+    el.style.setProperty("--card-accent", accent);
+    // SVG strokes want comma-separated hsl(); the UI uses the space form.
+    const svgAccent = accent.replace(
+      /hsl\(\s*([\d.]+)\s+([\d.]+)%\s+([\d.]+)%\s*\)/,
+      "hsl($1,$2%,$3%)",
+    );
+    el.style.backgroundImage = inkFrame(seed, svgAccent, fill);
   }
 
   /** A wrapper element holding a baked icon <img> (illustrated, not emoji). */
@@ -390,7 +412,7 @@ export class UIManager {
     // Mode badge: campaign wave, Endless Ascension tier, or Gauntlet progress.
     if (world.campaign) {
       this.ascLabel.classList.remove("hidden");
-      const mod = world.modifier ? ` · ${world.modifier.icon} ${world.modifier.name}` : "";
+      const mod = world.modifier ? ` · ${world.modifier.name}` : "";
       this.ascLabel.textContent =
         world.waveNumber >= world.wavesTotal
           ? "☠ BOSS WAVE"
@@ -410,7 +432,15 @@ export class UIManager {
     this.updateLoadoutBar(world.loadout);
 
     // Commander special button: icon + radial cooldown sweep + ready glow.
-    this.specialIcon.textContent = world.special.icon;
+    // Rebuild the illustrated glyph only when the special changes (not per frame).
+    if (this.specialIconKey !== world.special.icon) {
+      this.specialIconKey = world.special.icon;
+      this.specialIcon.replaceChildren();
+      const img = document.createElement("img");
+      img.src = glyphIcon(world.special.icon, 48, 40);
+      img.alt = "";
+      this.specialIcon.appendChild(img);
+    }
     const cd = world.specialCooldownFraction;
     this.specialCdEl.style.height = `${cd * 100}%`;
     this.specialBtn.classList.toggle("ready", world.specialReady);
@@ -528,7 +558,7 @@ export class UIManager {
     this.bossRushBtn = this.el("button", "btn secondary", "Boss Rush");
     this.bossRushBtn.addEventListener("click", () => {
       if (this.bossRushBtn.classList.contains("locked")) {
-        this.showToast("☠", "Boss Rush locked", "Fell a boss in a normal run to unlock the gauntlet.", "Locked");
+        this.showToast(glyphIcon("skull", 6), "Boss Rush locked", "Fell a boss in a normal run to unlock the gauntlet.", "Locked");
         return;
       }
       this.cb.onStartBossRush();
@@ -713,8 +743,8 @@ export class UIManager {
       if (isCurrent) stop.classList.add("current");
       if (complete) stop.classList.add("complete");
       stop.style.setProperty("--accent", accent);
-      // Hand-cut stone-slab panel; a different wobble per Galaxy.
-      stop.style.backgroundImage = slabBg(i + 3);
+      // Glowing hand-inked frame per Galaxy (muted while still uncharted).
+      this.inkCard(stop, unlocked ? accent : "hsl(230 14% 42%)", i + 3, "rgba(15,12,28,0.92)");
 
       const emblem = this.el("div", "galaxy-emblem");
       emblem.style.background =
@@ -799,7 +829,7 @@ export class UIManager {
         this.el(
           "div",
           "stage-chip-sub",
-          unlocked ? stage.title : `🔒 Fell ${stage.unlockBosses} boss to unlock`,
+          unlocked ? stage.title : `Fell ${stage.unlockBosses} boss to unlock`,
         ),
       );
       if (unlocked) {
@@ -835,8 +865,11 @@ export class UIManager {
     let slabSeed = 60;
     const row = (icon: string, text: string) => {
       const r = this.el("div", "howto-row");
-      r.style.backgroundImage = slabBg(slabSeed++);
-      r.append(this.el("div", "howto-icon", icon), this.el("div", "howto-text", text));
+      this.inkCard(r, "hsl(210 55% 58%)", slabSeed++, "rgba(15,12,28,0.9)");
+      r.append(
+        this.iconEl("div", "howto-icon", glyphIcon(icon, 205)),
+        this.el("div", "howto-text", text),
+      );
       return r;
     };
     const touch = (navigator.maxTouchPoints ?? 0) > 0;
@@ -856,10 +889,10 @@ export class UIManager {
     const guide = this.el("div", "howto");
     const grow = (icon: string, name: string, text: string) => {
       const r = this.el("div", "howto-row");
-      r.style.backgroundImage = slabBg(slabSeed++);
+      this.inkCard(r, "hsl(268 55% 62%)", slabSeed++, "rgba(15,12,28,0.9)");
       const body = this.el("div", "howto-text");
       body.append(this.el("strong", undefined, name + " — "), document.createTextNode(text));
-      r.append(this.el("div", "howto-icon", icon), body);
+      r.append(this.iconEl("div", "howto-icon", glyphIcon(icon, 265)), body);
       return r;
     };
     guide.append(
@@ -926,7 +959,7 @@ export class UIManager {
     card.style.backgroundImage = inkFrame(3, "#ffb545", "rgba(38,28,14,0.72)");
     const body = this.el("div", "crate-body");
     body.append(
-      this.el("div", "crate-icon", "🎁"),
+      this.iconEl("div", "crate-icon", glyphIcon("pod", 42, 64)),
       (() => {
         const t = this.el("div", "crate-text");
         t.append(
@@ -1066,8 +1099,7 @@ export class UIManager {
       const starter = WEAPON_DEFS[def.starterWeapon]?.name ?? def.starterWeapon;
 
       const card = this.el("div", "shop-card warden-card");
-      card.style.backgroundImage = slabBg(slabSeed++, "rgba(15,12,28,0.93)", 320);
-      card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
+      this.inkCard(card, `hsl(${def.hue} 80% 65%)`, slabSeed++, "rgba(15,12,28,0.9)");
       if (selected) card.classList.add("selected");
 
       const head = this.el("div", "shop-card-head");
@@ -1080,8 +1112,13 @@ export class UIManager {
       const weap = this.el("div", "warden-weapon", `Starts with: ${starter}`);
       // Signature special power.
       const special = this.el("div", "warden-special");
+      const specialName = this.el("span", "warden-special-name");
+      specialName.append(
+        this.iconEl("span", "inline-glyph", glyphIcon(def.special.icon, def.hue)),
+        this.el("span", undefined, def.special.name),
+      );
       special.append(
-        this.el("span", "warden-special-name", `${def.special.icon} ${def.special.name}`),
+        specialName,
         this.el("span", "warden-special-desc", def.special.description),
       );
 
@@ -1192,8 +1229,7 @@ export class UIManager {
       const selected = d.selectedChassis === def.id;
 
       const card = this.el("div", "shop-card warden-card");
-      card.style.backgroundImage = slabBg(slabSeed++, "rgba(15,12,28,0.93)", 320);
-      card.style.setProperty("--card-accent", `hsl(${def.hue} 80% 65%)`);
+      this.inkCard(card, `hsl(${def.hue} 80% 65%)`, slabSeed++, "rgba(15,12,28,0.9)");
       if (selected) card.classList.add("selected");
 
       const head = this.el("div", "shop-card-head");
@@ -1334,7 +1370,7 @@ export class UIManager {
       const accent = `hsl(${def.hue} 80% 65%)`;
 
       const card = this.el("div", "item-card");
-      card.style.setProperty("--card-accent", accent);
+      this.inkCard(card, accent, 300 + SIGNATURE_LIST.indexOf(def), "rgba(15,12,28,0.9)");
       card.style.setProperty("--rarity", accent);
       if (!owned) card.classList.add("locked");
       if (equipped) card.classList.add("equipped");
@@ -1401,9 +1437,18 @@ export class UIManager {
       const item = equippedId ? GEAR_ITEMS[equippedId] : null;
       const st = equippedId ? g.inventory[equippedId] : null;
 
+      // Each slot carries its own signature colour (matches the mock).
+      const slotHue: Record<string, number> = {
+        hull: 96,
+        core: 300,
+        engines: 32,
+        wings: 190,
+        shield: 130,
+        targeting: 4,
+      };
       const tile = this.el("div", "equip-slot");
-      tile.style.backgroundImage = slabBg(180 + SLOTS.indexOf(slot));
-      if (item) tile.style.setProperty("--card-accent", `hsl(${item.hue} 80% 65%)`);
+      const accent = item ? `hsl(${item.hue} 80% 65%)` : `hsl(${slotHue[slot] ?? 210} 70% 60%)`;
+      this.inkCard(tile, accent, 180 + SLOTS.indexOf(slot), "rgba(15,12,28,0.9)");
       tile.append(this.iconEl("div", "equip-slot-icon", gearIcon(slot)));
       tile.append(this.el("div", "equip-slot-label", meta.label));
       const itemLine = this.el(
@@ -1482,7 +1527,7 @@ export class UIManager {
 
         const rarity = m.rarity ?? 0;
         const card = this.el("div", "item-card");
-        card.style.setProperty("--card-accent", accent);
+        this.inkCard(card, accent, 340 + SLOTS.indexOf(slot), "rgba(15,12,28,0.9)");
         if (isOwned) card.style.setProperty("--rarity", rarityColor(rarity));
         if (!isOwned) card.classList.add("locked");
         if (equipped) card.classList.add("equipped");
@@ -1741,8 +1786,13 @@ export class UIManager {
     for (const a of ACHIEVEMENT_DEFS) {
       const got = unlocked.has(a.id);
       const card = this.el("div", `ach-card${got ? " got" : ""}`);
-      card.style.backgroundImage = slabBg(slabSeed++, "rgba(15,12,28,0.9)");
-      const icon = this.el("div", "ach-icon", got ? a.icon : "🔒");
+      this.inkCard(
+        card,
+        got ? "hsl(45 90% 60%)" : "hsl(232 12% 42%)",
+        slabSeed++,
+        "rgba(15,12,28,0.9)",
+      );
+      const icon = this.iconEl("div", "ach-icon", glyphIcon(got ? a.icon : "lock", 45));
       const body = this.el("div", "ach-body");
       body.append(
         this.el("div", "ach-name", a.name),
@@ -1834,10 +1884,12 @@ export class UIManager {
       if (locked) node.classList.add("locked");
       if (boss) node.classList.add("boss");
 
-      node.append(
-        this.el("div", "sector-num", boss ? "☠" : `${s + 1}`),
-        this.el("div", "sector-tag", cleared ? "✓" : current ? "▶" : locked ? "🔒" : ""),
-      );
+      const numEl = boss
+        ? this.iconEl("div", "sector-num", glyphIcon("skull", 4, 34))
+        : this.el("div", "sector-num", `${s + 1}`);
+      const tagEl = this.el("div", "sector-tag", cleared ? "✓" : current ? "▶" : "");
+      if (locked) tagEl.innerHTML = lockSvg(16);
+      node.append(numEl, tagEl);
       node.title = `${levelLabel(level)} · ×${levelDifficulty(level).toFixed(2)} threat`;
       if (!locked) {
         node.addEventListener("click", () => {
@@ -1856,10 +1908,15 @@ export class UIManager {
       const mod = modifierForLevel(progress);
       if (mod) {
         const card = this.el("div", "modifier-card");
-        card.style.backgroundImage = slabBg(420, "rgba(26,18,12,0.9)");
+        this.inkCard(card, "hsl(32 85% 60%)", 420, "rgba(26,18,12,0.9)");
         const head = this.el("div", "modifier-head");
+        const modName = this.el("span", "modifier-name");
+        modName.append(
+          this.iconEl("span", "inline-glyph", glyphIcon(mod.icon, 32)),
+          this.el("span", undefined, mod.name),
+        );
         head.append(
-          this.el("span", "modifier-name", `${mod.icon} ${mod.name}`),
+          modName,
           this.el("span", "modifier-bonus", `Reward ×${mod.rewardMult}`),
         );
         card.append(head, this.el("div", "modifier-desc", mod.description));
@@ -1870,7 +1927,7 @@ export class UIManager {
     // Big "continue" launch button for the current sector (if in this galaxy).
     if (galaxyOf(progress) === this.viewedGalaxy) {
       const launch = this.el("button", "btn slab-btn", `Launch — ${levelLabel(progress)}`);
-      launch.style.backgroundImage = slabBg(410, "rgba(18,14,34,0.95)");
+      this.inkCard(launch, accent, 410, "rgba(18,14,34,0.95)");
       launch.addEventListener("click", () => {
         this.audio.select();
         this.cb.onStartCampaign(progress);
@@ -1971,7 +2028,7 @@ export class UIManager {
     // Boss Rush unlocks after the first boss kill.
     const rushUnlocked = d.lifetime.bosses >= 1;
     this.bossRushBtn.classList.toggle("locked", !rushUnlocked);
-    this.bossRushBtn.textContent = rushUnlocked ? "Boss Rush" : "Boss Rush 🔒";
+    this.bossRushBtn.textContent = rushUnlocked ? "Boss Rush" : "Boss Rush — Locked";
 
     const dailyLine = this.menu.querySelector("#daily-line");
     if (dailyLine) {

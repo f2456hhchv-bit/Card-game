@@ -2211,3 +2211,60 @@ select {
   color: rgba(139, 149, 196, 0.55);
   text-align: center;
 }
+
+/* ---- Illustrated glyph icons (replacing UI emoji) --------------------- */
+.howto-icon img,
+.ach-icon img {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+.special-icon img {
+  width: 34px;
+  height: 34px;
+  display: block;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.5));
+}
+.crate-icon img {
+  width: 54px;
+  height: 54px;
+  display: block;
+}
+/* An emoji-sized glyph sitting inline with a label (powers, modifiers). */
+.inline-glyph {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 0.35em;
+}
+.inline-glyph img {
+  width: 1.25em;
+  height: 1.25em;
+  display: block;
+}
+
+/* ---- Neon inked cards: keep text/icons clear of the wobbly border ----- */
+.ink-card.warden-card,
+.ink-card.item-card,
+.ink-card.ach-card,
+.ink-card.howto-row,
+.ink-card.equip-slot,
+.ink-card.modifier-card {
+  padding-left: max(18px, 5%);
+  padding-right: max(18px, 5%);
+}
+.ink-card.ach-card,
+.ink-card.equip-slot {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+/* Campaign sector node status glyphs. */
+.sector-num img {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+.sector-tag svg {
+  width: 16px;
+  height: 16px;
+}

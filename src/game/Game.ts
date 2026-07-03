@@ -7,6 +7,7 @@ import { GameRenderer } from "./render/GameRenderer";
 import { AudioManager } from "./audio/AudioManager";
 import { SaveManager } from "./save/SaveManager";
 import { UIManager } from "../ui/UIManager";
+import { glyphIcon, signatureIcon, gearIcon } from "../ui/iconArt";
 import { type RunSnapshot, SNAPSHOT_VERSION } from "./save/RunSnapshot";
 import type { DraftOption } from "./Loadout";
 import { metaMoteMultiplier } from "./data/metaDefs";
@@ -203,7 +204,7 @@ export class Game {
     });
     e.on("podSpawned", () => {
       this.audio.bossWarn();
-      this.ui.showToast("📦", "Supply Pod inbound", "Reach it before it self-destructs — 20 seconds.", "Run Event");
+      this.ui.showToast(glyphIcon("pod", 42), "Supply Pod inbound", "Reach it before it self-destructs — 20 seconds.", "Run Event");
     });
     e.on("bombDetonate", () => this.camera.addShake(16, 0.5));
     e.on("levelUp", () => {
@@ -234,7 +235,7 @@ export class Game {
       const sig = this.save.unlockSignature(b.id);
       if (sig?.isNew) {
         const def = SIGNATURE_DEFS[sig.id];
-        this.ui.showToast(def.icon, `${def.name} claimed`, def.description, "Boss Signature");
+        this.ui.showToast(signatureIcon(def.id, def.hue), `${def.name} claimed`, def.description, "Boss Signature");
       }
       this.checkAchievements(); // immediate boss-kill toasts
     });
@@ -345,7 +346,7 @@ export class Game {
     // Announce the Sector's Modifier so its rules never feel like a cheap shot.
     const mod = this.world.modifier;
     if (mod) {
-      this.ui.showToast(mod.icon, mod.name, `${mod.description} Reward ×${mod.rewardMult}.`, "Sector Modifier");
+      this.ui.showToast(glyphIcon(mod.icon, 32), mod.name, `${mod.description} Reward ×${mod.rewardMult}.`, "Sector Modifier");
     }
   }
 
@@ -388,7 +389,7 @@ export class Game {
     const id = this.updateReadyId;
     if (!id) return;
     this.updateReadyId = null;
-    this.ui.showToast("⬆", "Update ready", "Loading the newest build…", "Update");
+    this.ui.showToast(glyphIcon("chevronUp", 200), "Update ready", "Loading the newest build…", "Update");
     // Navigate with a cache-busting query so a stale cached index.html can't
     // be served back to us (GitHub Pages caches for ~10 minutes; iOS
     // home-screen apps cache harder still).
@@ -570,7 +571,7 @@ export class Game {
     this.checkAchievements();
     const final = isFinalLevel(level);
     if (final) {
-      this.ui.showToast("★", "Campaign Complete!", "You have conquered all 100 Galaxies. The dark is held.", "Victory");
+      this.ui.showToast(glyphIcon("star", 45), "Campaign Complete!", "You have conquered all 100 Galaxies. The dark is held.", "Victory");
     }
     this.ui.hideHUD();
     this.ui.showLevelCleared(level, motes, firstClear, !final);
@@ -616,7 +617,7 @@ export class Game {
       const res = this.save.grantWardenXp(wid, xp);
       if (res.gained > 0) {
         const w = WARDEN_LIST.find((x) => x.id === wid);
-        this.ui.showToast("⬆", `${w?.name ?? "Commander"} — Level ${res.level}`, "Commander mastery deepens.", "Mastery");
+        this.ui.showToast(glyphIcon("chevronUp", 130), `${w?.name ?? "Commander"} — Level ${res.level}`, "Commander mastery deepens.", "Mastery");
       }
     }
     this.checkAchievements();
@@ -650,7 +651,7 @@ export class Game {
       title = `${def.name} core`;
       body = "Duplicate core banked. Merge it in the Hangar to upgrade.";
     }
-    this.ui.showToast(def.icon, title, body, "Gear Salvaged");
+    this.ui.showToast(gearIcon(def.slot), title, body, "Gear Salvaged");
   }
 
   private achievementContext(): AchievementContext {
@@ -694,7 +695,7 @@ export class Game {
     for (const def of ACHIEVEMENT_DEFS) {
       if (!def.check(ctx)) continue;
       if (this.save.unlockAchievement(def.id)) {
-        this.ui.showToast(def.icon, def.name, def.description);
+        this.ui.showToast(glyphIcon(def.icon, 45), def.name, def.description);
       }
     }
   }
