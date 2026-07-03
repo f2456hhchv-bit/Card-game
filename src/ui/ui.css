@@ -1842,17 +1842,15 @@ select {
 .galaxy-emblem {
   position: relative;
   flex: 0 0 auto;
-  width: 66px;
-  height: 66px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.6), 0 0 20px -4px var(--accent);
-  overflow: hidden;
-}
-.galaxy-emblem-core {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 66% 74%, rgba(255, 255, 255, 0.28), transparent 42%);
+  width: 74px;
+  height: 74px;
+  /* Illustrated celestial body (baked per-Galaxy via galaxyArt); its own ink
+     outline and irregular silhouette are the shape — no circular mask. */
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 40%, transparent));
 }
 .galaxy-lock {
   position: absolute;
@@ -1860,7 +1858,8 @@ select {
   display: grid;
   place-items: center;
   font-size: 1.4rem;
-  background: rgba(4, 6, 12, 0.5);
+  /* A soft round darken centred on the body — never a boxy square overlay. */
+  background: radial-gradient(circle at 50% 50%, rgba(4, 6, 12, 0.62) 42%, transparent 66%);
 }
 .galaxy-info {
   display: flex;
@@ -2076,14 +2075,7 @@ select {
 .galaxy-stop .galaxy-sub {
   color: #cfc6ee;
 }
-/* Inked emblem ring. */
-.galaxy-emblem {
-  border: 2.5px solid #070410;
-  box-shadow:
-    inset 0 0 18px rgba(0, 0, 0, 0.75),
-    0 0 0 1.5px rgba(200, 190, 240, 0.22),
-    0 0 18px -2px var(--accent);
-}
+/* (The emblem is a baked illustration; no ring — its own ink outline frames it.) */
 /* Big sketchy padlock on locked slabs. */
 .galaxy-lock-right {
   margin-left: auto;

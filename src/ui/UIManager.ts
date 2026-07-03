@@ -15,6 +15,7 @@ import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
 import { CHASSIS_SPRITES } from "../game/render/chassisSprites";
 import { nebulaBg, slabSquiggle, lockSvg, tabIcon, inkSquiggle } from "./inkArt";
+import { galaxyArt } from "./galaxyArt";
 import { weaponIcon, relicIcon, gearIcon, signatureIcon, glyphIcon } from "./iconArt";
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import { BOSS_RASTER } from "../game/render/bossRaster";
@@ -777,10 +778,7 @@ export class UIManager {
       this.inkCard(stop, unlocked ? accent : "hsl(230 14% 42%)", i + 3, "rgba(15,12,28,0.92)");
 
       const emblem = this.el("div", "galaxy-emblem");
-      emblem.style.background =
-        `radial-gradient(circle at 34% 30%, hsl(${hues[0]} 78% 64%), ` +
-        `hsl(${hues[1] ?? hues[0]} 60% 34%) 52%, ${g.palette.baseBottom} 100%)`;
-      emblem.append(this.el("div", "galaxy-emblem-core"));
+      emblem.style.backgroundImage = `url("${galaxyArt(i, hues)}")`;
       if (!unlocked) {
         const emblemLock = this.el("div", "galaxy-lock");
         emblemLock.innerHTML = lockSvg(22); // inked padlock, not an emoji
