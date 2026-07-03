@@ -496,7 +496,7 @@ select {
 .card {
   pointer-events: auto;
   width: min(260px, 78vw);
-  /* Inked slab plaque (image set inline via slabBg); the option's accent
+  /* Inked slab plaque (image set inline via slabSquiggle); the option's accent
      colour lives in the icon, name and hover glow. */
   background-color: transparent;
   background-size: 100% 100%;
@@ -590,7 +590,7 @@ select {
   display: flex;
   align-items: center;
   gap: 14px;
-  /* Inked slab plaque (image set inline via slabBg with a per-row seed). */
+  /* Inked slab plaque (image set inline via slabSquiggle with a per-row seed). */
   background-size: 100% 100%;
   background-repeat: no-repeat;
   padding: 12px 16px;
@@ -774,7 +774,7 @@ select {
   cursor: default;
 }
 /* Commander/Ship roster cards are inked stone slabs (background set inline
-   via slabBg with a per-card seed), echoing the Journey's galaxy plaques. */
+   via slabSquiggle with a per-card seed), echoing the Journey's galaxy plaques. */
 .warden-card {
   background-color: transparent;
   background-size: 100% 100%;
@@ -873,7 +873,7 @@ select {
   gap: 10px;
   padding: 10px 16px;
   border-radius: 9px;
-  /* Inked slab plaque (image set inline via slabBg). */
+  /* Inked slab plaque (image set inline via slabSquiggle). */
   background-color: transparent;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -953,7 +953,7 @@ select {
   position: relative;
   aspect-ratio: 1;
   border-radius: 14px;
-  /* Inked slab tile (image set inline via slabBg). */
+  /* Inked slab tile (image set inline via slabSquiggle). */
   background-color: transparent;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -1082,7 +1082,7 @@ select {
   gap: 8px;
 }
 .equip-slot {
-  /* Inked slab tile (image set inline via slabBg); the equipped item's accent
+  /* Inked slab tile (image set inline via slabSquiggle); the equipped item's accent
      survives as a soft glow rather than the old coloured border. */
   background-color: transparent;
   background-size: 100% 100%;
@@ -1161,7 +1161,7 @@ select {
   border: none;
   border-radius: 14px;
   padding: 16px 18px;
-  /* Inked slab plaque (image set inline via slabBg). */
+  /* Inked slab plaque (image set inline via slabSquiggle). */
   background-color: transparent;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -1466,7 +1466,7 @@ select {
   gap: 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  /* Inked slab plaque (image set inline via slabBg). */
+  /* Inked slab plaque (image set inline via slabSquiggle). */
   background-color: transparent;
   background-size: 100% 100%;
   background-repeat: no-repeat;

@@ -14,7 +14,7 @@ import { WEAPON_DEFS } from "../game/data/weaponDefs";
 import { CHASSIS_LIST } from "../game/data/chassisDefs";
 import { chassisSvg } from "../game/render/chassisArt";
 import { CHASSIS_SPRITES } from "../game/render/chassisSprites";
-import { nebulaBg, slabBg, lockSvg, tabIcon, inkSquiggle } from "./inkArt";
+import { nebulaBg, slabSquiggle, lockSvg, tabIcon, inkSquiggle } from "./inkArt";
 import { weaponIcon, relicIcon, gearIcon, signatureIcon, glyphIcon } from "./iconArt";
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import { BOSS_RASTER } from "../game/render/bossRaster";
@@ -150,9 +150,9 @@ export class UIManager {
     // and three shared slab shapes back the generic buttons/chips/toasts so every
     // border in the UI is the same hand-inked stone as the start screen.
     this.root.style.setProperty("--nebula-bg", nebulaBg());
-    this.root.style.setProperty("--slab-a", slabBg(501, "rgba(24,20,44,0.94)", 70));
-    this.root.style.setProperty("--slab-b", slabBg(502, "rgba(16,13,30,0.92)", 70));
-    this.root.style.setProperty("--slab-c", slabBg(503, "rgba(15,12,28,0.94)", 110));
+    this.root.style.setProperty("--slab-a", slabSquiggle(501, "rgba(24,20,44,0.94)", 66));
+    this.root.style.setProperty("--slab-b", slabSquiggle(502, "rgba(16,13,30,0.92)", 62));
+    this.root.style.setProperty("--slab-c", slabSquiggle(503, "rgba(15,12,28,0.94)", 96));
     parent.appendChild(this.root);
     this.build();
   }
@@ -564,7 +564,7 @@ export class UIManager {
 
     // Continue — resume a run left mid-play. Only shown when one is stored.
     this.continueBtn = this.el("button", "btn continue-slab", "▶ Continue Run");
-    this.continueBtn.style.backgroundImage = slabBg(99, "rgba(18,14,34,0.95)");
+    this.continueBtn.style.backgroundImage = slabSquiggle(99, "rgba(18,14,34,0.95)");
     this.continueBtn.addEventListener("click", () => this.cb.onContinueRun());
 
     // ---- Inline panels (switched by the bottom tab bar) ----
@@ -1379,7 +1379,7 @@ export class UIManager {
     this.hangarSignatures.replaceChildren();
 
     const group = this.el("div", "set-group");
-    group.style.backgroundImage = slabBg(190, "rgba(15,12,28,0.93)", 260);
+    group.style.backgroundImage = slabSquiggle(190, "rgba(15,12,28,0.93)", 260);
     group.style.setProperty("--card-accent", "hsl(45 90% 62%)");
     const head = this.el("div", "set-head");
     head.append(
@@ -1529,7 +1529,7 @@ export class UIManager {
       const owned = SLOTS.filter((slot) => (g.inventory[itemId(set.id, slot)]?.grade ?? 0) > 0).length;
 
       const group = this.el("div", "set-group");
-      group.style.backgroundImage = slabBg(200 + setSlabSeed++, "rgba(15,12,28,0.93)", 260);
+      group.style.backgroundImage = slabSquiggle(200 + setSlabSeed++, "rgba(15,12,28,0.93)", 260);
       group.style.setProperty("--card-accent", accent);
 
       const head = this.el("div", "set-head");
@@ -1738,7 +1738,7 @@ export class UIManager {
     let slabSeed = 240;
     const stat = (label: string, value: string) => {
       const s = this.el("div", "stat stat-slab");
-      s.style.backgroundImage = slabBg(slabSeed++);
+      s.style.backgroundImage = slabSquiggle(slabSeed++);
       s.append(this.el("b", undefined, value), this.el("span", undefined, label));
       return s;
     };
@@ -1797,7 +1797,7 @@ export class UIManager {
       for (const s of played) {
         const best = d.stageBest[s.id];
         const row = this.el("div", "stage-best-row");
-        row.style.backgroundImage = slabBg(slabSeed++);
+        row.style.backgroundImage = slabSquiggle(slabSeed++);
         row.style.setProperty("--card-accent", `hsl(${s.accentHue} 80% 62%)`);
         row.append(
           this.el("span", "stage-best-name", s.name),
@@ -1905,7 +1905,7 @@ export class UIManager {
       const boss = isBossSector(level);
 
       const node = this.el("button", "sector-node");
-      node.style.backgroundImage = slabBg(400 + s, "rgba(15,12,28,0.92)", 150);
+      node.style.backgroundImage = slabSquiggle(400 + s, "rgba(15,12,28,0.92)", 150);
       node.style.setProperty("--card-accent", accent);
       if (cleared) node.classList.add("cleared");
       if (current) node.classList.add("current");
@@ -2011,7 +2011,7 @@ export class UIManager {
       let slabSeed = 320;
       const stat = (label: string, value: string) => {
         const s = this.el("div", "stat stat-slab");
-        s.style.backgroundImage = slabBg(slabSeed++);
+        s.style.backgroundImage = slabSquiggle(slabSeed++);
         s.append(this.el("b", undefined, value), this.el("span", undefined, label));
         return s;
       };
@@ -2036,7 +2036,7 @@ export class UIManager {
     let slabSeed = 0;
     const stat = (label: string, value: string) => {
       const s = this.el("div", "stat stat-slab");
-      s.style.backgroundImage = slabBg(40 + slabSeed++);
+      s.style.backgroundImage = slabSquiggle(40 + slabSeed++);
       const b = this.el("b", undefined, value);
       const l = this.el("span", undefined, label);
       s.append(b, l);
@@ -2113,7 +2113,7 @@ export class UIManager {
     let slabSeed = 360;
     for (const opt of options) {
       const card = this.el("div", "card");
-      card.style.backgroundImage = slabBg(slabSeed++, "rgba(15,12,28,0.95)", 240);
+      card.style.backgroundImage = slabSquiggle(slabSeed++, "rgba(15,12,28,0.95)", 240);
       card.style.setProperty("--card-accent", `hsl(${opt.hue} 80% 65%)`);
       // Evolutions get a distinct golden, glowing treatment.
       if (opt.kind === "weapon-evolve") card.classList.add("evolve");
@@ -2240,7 +2240,7 @@ export class UIManager {
       let slabSeed = 340;
       const stat = (label: string, value: string, highlight = false) => {
         const s = this.el("div", "stat stat-slab");
-        s.style.backgroundImage = slabBg(slabSeed++);
+        s.style.backgroundImage = slabSquiggle(slabSeed++);
         const b = this.el("b", undefined, value);
         if (highlight) b.style.color = "var(--ui-warn)";
         const l = this.el("span", undefined, label);
@@ -2282,7 +2282,7 @@ export class UIManager {
     const o = this.el("div", "overlay page hidden");
     const title = this.el("h2", undefined, "SETTINGS");
     const panel = this.el("div", "settings");
-    panel.style.backgroundImage = slabBg(300, "rgba(15,12,28,0.93)", 300);
+    panel.style.backgroundImage = slabSquiggle(300, "rgba(15,12,28,0.93)", 300);
 
     const sliderRow = (
       label: string,

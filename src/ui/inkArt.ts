@@ -47,81 +47,34 @@ function rng(seed: number): () => number {
   };
 }
 
-/**
- * A rough "stone slab" panel: an irregular rounded rectangle with a heavy dark
- * ink outline and a faint lighter inner edge, stretched to fit its element via
- * `preserveAspectRatio='none'` + `background-size: 100% 100%`.
- */
-export function slabBg(seed = 1, fill = "rgba(16,13,30,0.94)", h = 90): string {
-  const r = rng(seed * 7919 + 13);
-  const w = 300;
-  const jx = () => (r() - 0.5) * 7;
-  const jy = () => (r() - 0.5) * 6;
-  // Corner + midpoint wobble for the hand-cut edge.
-  const p = {
-    tl: [10 + jx(), 10 + jy()],
-    tm: [w / 2 + jx() * 2, 6 + jy()],
-    tr: [w - 10 + jx(), 10 + jy()],
-    rm: [w - 5 + jx(), h / 2 + jy()],
-    br: [w - 10 + jx(), h - 10 + jy()],
-    bm: [w / 2 + jx() * 2, h - 5 + jy()],
-    bl: [10 + jx(), h - 10 + jy()],
-    lm: [5 + jx(), h / 2 + jy()],
-  };
-  const d =
-    `M${p.tl} Q${p.tm} ${p.tr} Q${p.rm} ${p.br} Q${p.bm} ${p.bl} Q${p.lm} ${p.tl[0]} ${p.tl[1]} Z`;
-  const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}' preserveAspectRatio='none'>` +
-    `<path d='${d}' fill='${fill}' stroke='#050308' stroke-width='7' stroke-linejoin='round'/>` +
-    `<path d='${d}' fill='none' stroke='rgba(190,180,230,0.28)' stroke-width='1.6' stroke-linejoin='round'/>` +
-    `</svg>`;
-  return uri(svg);
-}
-
 
 /**
- * A single hand-drawn neon outline sized to the element's ACTUAL pixels, so it
- * never stretches into a bulging rounded rectangle. One organic wavy loop — a
- * rounded frame whose edge gently squiggles — filled with the dark panel colour
- * and stroked once in the accent. No nested second line, no geometric box.
+ * The shared hand-drawn wavy loop: walk a rounded-rect perimeter, pushing each
+ * sampled point out along its normal by a gentle sine wave plus a little jitter,
+ * then smooth it with quadratics through the segment midpoints. One organic
+ * squiggly outline — never a geometric box. Returns the SVG path `d`.
  */
-export function inkSquiggle(
-  w: number,
-  h: number,
-  accent: string,
-  seed = 1,
-  fill = "rgba(13,11,26,0.9)",
-): string {
+function wavyRectPath(w: number, h: number, seed: number, amp = 2.1, wl = 34): string {
   const r = rng(seed * 2654435 + 7);
-  const m = 7; // inset from the edge so the glow has room
-  const rc = Math.max(10, Math.min(30, w * 0.09, h * 0.09));
+  const m = Math.max(4, Math.min(7, w * 0.05, h * 0.14));
+  const rc = Math.max(8, Math.min(28, w * 0.09, h * 0.28));
   const x0 = m;
   const y0 = m;
   const x1 = w - m;
   const y1 = h - m;
-  const amp = 2.1; // wave depth
-  const wl = 34; // wavelength in px
   const pts: [number, number][] = [];
   let len = 0;
-  // Walk the rounded-rect perimeter, sampling points and pushing each out along
-  // its normal by a gentle sine wave plus a little jitter — a drawn-by-hand line.
   const add = (x: number, y: number, nx: number, ny: number, step: number): void => {
     len += step;
-    const off = Math.sin(len / wl * Math.PI * 2) * amp + (r() - 0.5) * 1.6;
+    const off = Math.sin((len / wl) * Math.PI * 2) * amp + (r() - 0.5) * 1.5;
     pts.push([x + nx * off, y + ny * off]);
   };
-  const edge = (
-    ax: number,
-    ay: number,
-    bx: number,
-    by: number,
-    nx: number,
-    ny: number,
-  ): void => {
-    const segs = Math.max(3, Math.round(Math.hypot(bx - ax, by - ay) / 12));
+  const edge = (ax: number, ay: number, bx: number, by: number, nx: number, ny: number): void => {
+    const d = Math.hypot(bx - ax, by - ay);
+    const segs = Math.max(3, Math.round(d / 12));
     for (let i = 0; i < segs; i++) {
       const t = i / segs;
-      add(ax + (bx - ax) * t, ay + (by - ay) * t, nx, ny, Math.hypot(bx - ax, by - ay) / segs);
+      add(ax + (bx - ax) * t, ay + (by - ay) * t, nx, ny, d / segs);
     }
   };
   const corner = (cx: number, cy: number, a0: number): void => {
@@ -139,7 +92,6 @@ export function inkSquiggle(
   corner(x0 + rc, y1 - rc, Math.PI / 2);
   edge(x0, y1 - rc, x0, y0 + rc, -1, 0);
   corner(x0 + rc, y0 + rc, Math.PI);
-  // Smooth closed path: quadratics through segment midpoints.
   const mid = (a: [number, number], b: [number, number]): [number, number] => [
     (a[0] + b[0]) / 2,
     (a[1] + b[1]) / 2,
@@ -148,15 +100,51 @@ export function inkSquiggle(
   let d = `M${mid(pts[n - 1], pts[0]).map((v) => v.toFixed(1)).join(",")}`;
   for (let i = 0; i < n; i++) {
     const cur = pts[i];
-    const nxt = pts[(i + 1) % n];
-    const mp = mid(cur, nxt);
+    const mp = mid(cur, pts[(i + 1) % n]);
     d += ` Q${cur[0].toFixed(1)},${cur[1].toFixed(1)} ${mp[0].toFixed(1)},${mp[1].toFixed(1)}`;
   }
-  d += " Z";
+  return d + " Z";
+}
+
+/**
+ * A single hand-drawn neon outline sized to the element's ACTUAL pixels, so it
+ * never stretches into a bulging rounded rectangle. Filled with the dark panel
+ * colour and stroked once in the accent — no nested line, no geometric box.
+ */
+export function inkSquiggle(
+  w: number,
+  h: number,
+  accent: string,
+  seed = 1,
+  fill = "rgba(13,11,26,0.9)",
+): string {
+  const d = wavyRectPath(w, h, seed);
   const svg =
     `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>` +
     `<path d='${d}' fill='${fill}' stroke='${accent}' stroke-width='2.4' ` +
     `stroke-linejoin='round' stroke-linecap='round'/>` +
+    `</svg>`;
+  return uri(svg);
+}
+
+/**
+ * A neutral squiggly "stone plaque" for buttons and small tiles — the same
+ * hand-drawn wavy edge as the cards (so the whole app is one squiggly language)
+ * but with a soft light stroke instead of a neon accent. Fixed viewBox, stretched
+ * to fit via background-size:100% 100%; kept wide-ish so buttons don't distort.
+ */
+export function slabSquiggle(
+  seed = 1,
+  fill = "rgba(16,13,30,0.94)",
+  h = 66,
+  stroke = "rgba(198,194,232,0.5)",
+): string {
+  const w = 300;
+  const d = wavyRectPath(w, h, seed, 1.7, 30);
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}' preserveAspectRatio='none'>` +
+    `<path d='${d}' fill='${fill}' stroke='#060409' stroke-width='4' stroke-linejoin='round'/>` +
+    `<path d='${d}' fill='none' stroke='${stroke}' stroke-width='1.4' stroke-linejoin='round'/>` +
     `</svg>`;
   return uri(svg);
 }
