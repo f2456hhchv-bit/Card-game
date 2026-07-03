@@ -288,6 +288,16 @@ artist; production-art seam via `ArtManifest`).
       from the top-down sheet via tools/shipSheet.mjs (border-median chroma
       flood, nose-up as authored, geometric-mean radii) — Skiff's green
       arrowhead through Dreadnought's armoured twin-hull.
+- [x] **Judder root cause fixed — aim/facing decoupled**: the real cause of
+      the reported "flicker" was the WeaponSystem slamming `player.facing` to
+      the nearest-enemy angle on every shot; in a swarm the nearest foe flips
+      many times a second, whipping the hull's rotation back and forth. Added
+      a separate `player.aim` (weapons snap it to the target; projectiles are
+      unchanged) so the hull's visual `facing` is driven purely by movement
+      (smoothly, holding still when stationary). Measured: hull rotation while
+      stationary in a churning ring of foes went from ±π/frame to exactly 0.
+      Plus earlier: frame interpolation for 120Hz displays, rAF delta snapping,
+      boss prev-position capture, and a visible build stamp on the More page.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
 - [ ] Statistics screen

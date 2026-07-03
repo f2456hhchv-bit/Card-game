@@ -132,9 +132,9 @@ export class WeaponSystem {
     let baseAngle: number;
     if (target) {
       baseAngle = Math.atan2(target.y - player.y, target.x - player.x);
-      player.facing = baseAngle;
+      player.aim = baseAngle; // aim only — never rotates the hull sprite
     } else {
-      baseAngle = player.facing;
+      baseAngle = player.aim;
     }
 
     // Slight fan when firing multiple bolts so they don't perfectly overlap.
@@ -162,7 +162,7 @@ export class WeaponSystem {
     const target = world.enemyGrid.findNearest(player.x, player.y, 700);
     const baseAngle = target
       ? Math.atan2(target.y - player.y, target.x - player.x)
-      : player.facing;
+      : player.aim;
     const arc = Math.min(TAU * 0.5, 0.18 * count);
     const seq = this.weaponSeq++;
     for (let i = 0; i < count; i++) {

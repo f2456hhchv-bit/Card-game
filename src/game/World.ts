@@ -546,6 +546,7 @@ export class World {
     p.xp = s.player.xp;
     p.xpToNext = s.player.xpToNext;
     p.facing = s.player.facing;
+    p.aim = s.player.facing; // re-snaps to the nearest foe on the first shot
     this.loadout.restore(s.loadout, p);
     p.hp = Math.min(s.player.hp, p.stats.maxHp);
     Object.assign(this.stats, s.stats);
@@ -862,7 +863,7 @@ export class World {
   private fireDroneVolley(): void {
     const p = this.player;
     const target = this.enemyGrid.findNearest(p.x, p.y, 720);
-    const base = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.facing;
+    const base = target ? Math.atan2(target.y - p.y, target.x - p.x) : p.aim;
     const dmg = Math.round(22 * p.stats.damageMult * this.damageBuff);
     const speed = 520 * p.stats.projectileSpeedMult;
     for (let i = 0; i < 3; i++) {

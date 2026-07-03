@@ -41,7 +41,11 @@ export class Player {
   x = 0;
   y = 0;
   radius = 16;
-  facing = 0; // radians, last movement / aim direction
+  /** Hull heading (radians) — driven by movement, smoothed. Purely visual. */
+  facing = -Math.PI / 2; // point "up" at spawn
+  /** Weapon aim (radians) — snaps to the nearest foe; decoupled from `facing`
+   *  so targeting never yanks the hull's visual rotation (that read as judder). */
+  aim = -Math.PI / 2;
   /** Position at the previous sim tick — the renderer interpolates. */
   prevX = 0;
   prevY = 0;
@@ -84,7 +88,8 @@ export class Player {
   reset(): void {
     this.x = 0;
     this.y = 0;
-    this.facing = 0;
+    this.facing = -Math.PI / 2;
+    this.aim = -Math.PI / 2;
     this.level = 1;
     this.xp = 0;
     this.xpToNext = 5;

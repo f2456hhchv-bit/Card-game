@@ -29,6 +29,49 @@ function addEnemyNear(world: World): void {
 }
 
 describe("World — combat integration", () => {
+  it("firing at enemies aims weapons without rotating the hull (no aim-judder)", () => {
+    const world = new World(42);
+    world.reset();
+    // Hull points 'up' at spawn and must stay put while stationary + not steering.
+    const startFacing = world.player.facing;
+    addEnemyNear(world);
+    let fired = false;
+    const off = world.events.on("weaponFired", () => (fired = true));
+    for (let i = 0; i < 240; i++) {
+      // Keep exactly one foe, pinned to the right (aim angle ≈ 0), immortal, so
+      // the aim target is deterministic across the firing window.
+      const e = world.enemies[0];
+      if (e) {
+        e.x = world.player.x + 120;
+        e.y = world.player.y;
+        e.hp = e.maxHp = 1e9;
+      }
+      world.step(1 / 60, STILL);
+    }
+    off();
+    expect(fired).toBe(true);
+    // Weapons aimed at the pinned foe (angle ≈ 0 = to the right)...
+    expect(Math.abs(world.player.aim)).toBeLessThan(0.3);
+    // ...but the hull's visual facing never moved (no stationary aim-judder).
+    expect(world.player.facing).toBe(startFacing);
+  });
+
+  it("the hull turns smoothly toward movement input, not instantly", () => {
+    const world = new World(7);
+    world.reset();
+    // Steer straight down (+y). Facing should ease toward +PI/2 over frames,
+    // never snapping in a single tick.
+    const first = world.player.facing;
+    world.step(1 / 60, { moveX: 0, moveY: 1 } as unknown as Parameters<World["step"]>[1]);
+    const afterOne = world.player.facing;
+    expect(afterOne).not.toBe(first); // it moved
+    expect(Math.abs(afterOne - Math.PI / 2)).toBeGreaterThan(0.05); // but not all the way
+    for (let i = 0; i < 60; i++) {
+      world.step(1 / 60, { moveX: 0, moveY: 1 } as unknown as Parameters<World["step"]>[1]);
+    }
+    expect(Math.abs(world.player.facing - Math.PI / 2)).toBeLessThan(0.05); // settles
+  });
+
   it("spawns enemies and fires the starter weapon over time", () => {
     const world = new World(42);
     world.reset();
