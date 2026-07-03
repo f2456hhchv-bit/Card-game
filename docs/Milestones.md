@@ -315,6 +315,16 @@ artist; production-art seam via `ArtManifest`).
       1500 dwarfs a 7), crits glow gold in the hand-print font, and a
       hold-then-fade so they stay readable. Verified in-browser across a spread
       of magnitudes + crits; 163 tests green, zero console errors.
+- [x] **Weapon visual identity pass** (quality-loop): projectiles had only
+      5 styles and only 'shard' had a real shape, so the 4 'nearest' weapons
+      all looked like the same glowing bolt and the 4 'spread' weapons like
+      the same diamond. Expanded `ProjectileStyle` to 11 distinct silhouettes
+      (bolt streak, dart, lance, spark, orb, shard, crystal, hex, star, arc,
+      beam), each with its own render (velocity-oriented where it reads),
+      and reassigned weapons so every firing family is visually unique —
+      Lumen Bolt=bolt, Seeker Swarm=dart, Sunlance=lance, Hornet Cloud=spark;
+      Prism Shards=shard, Frost Fan=crystal, Prismatic Storm=star,
+      Permafrost=hex. Verified in-browser; 163 tests, no console errors.
 - [ ] Stage modifiers / more Wardens & weapons
 - [x] **Visual variety pass** (quality-loop): each Galaxy's sky is now baked
       from a per-id seed (hashSeed), so star + nebula layouts are genuinely

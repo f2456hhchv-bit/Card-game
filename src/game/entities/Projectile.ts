@@ -1,7 +1,32 @@
 import type { SpatialEntity } from "../../core/SpatialHashGrid";
 
-/** Visual/behavioural style of a projectile, drives rendering. */
-export type ProjectileStyle = "bolt" | "orb" | "shard" | "beam" | "arc";
+/**
+ * Visual style of a projectile, drives rendering. Each reads as a distinct
+ * shape so weapons in the same firing family don't look identical:
+ *  bolt   — an energy capsule streak (oriented to travel)
+ *  dart   — a small sharp arrowhead (swarm shots)
+ *  lance  — a long thin piercing spear
+ *  spark  — a tiny buzzing fizz-dot
+ *  orb    — a round glowing sphere
+ *  shard  — a spinning diamond
+ *  crystal— an icy elongated crystal with a cold rim
+ *  hex    — a frosted hexagon
+ *  star   — a 4-point twinkle
+ *  arc    — a jagged energy bolt
+ *  beam   — (reserved) a bright lance
+ */
+export type ProjectileStyle =
+  | "bolt"
+  | "dart"
+  | "lance"
+  | "spark"
+  | "orb"
+  | "shard"
+  | "crystal"
+  | "hex"
+  | "star"
+  | "arc"
+  | "beam";
 
 /**
  * A light projectile fired by a weapon. Pooled. Carries enough state to be

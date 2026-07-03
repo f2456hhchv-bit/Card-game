@@ -435,37 +435,7 @@ export class GameRenderer {
 
       this.projectileTrail(ctx, x, y, p.vx, p.vy, r, p.hue, sat, lum, p.evolved, camera.zoom);
 
-      if (p.style === "shard") {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(p.rotation);
-        ctx.fillStyle = `hsl(${p.hue} ${sat}% ${lum}%)`;
-        ctx.beginPath();
-        ctx.moveTo(0, -r * 1.7);
-        ctx.lineTo(r * 0.7, 0);
-        ctx.lineTo(0, r * 1.7);
-        ctx.lineTo(-r * 0.7, 0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.4, 0, TAU);
-        ctx.fill();
-        ctx.restore();
-      } else {
-        // Soft glow + bright core.
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.9);
-        g.addColorStop(0, `hsl(${p.hue} ${sat}% ${lum}%)`);
-        g.addColorStop(1, `hsla(${p.hue} ${sat}% ${lum}% / 0)`);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(x, y, r * 1.9, 0, TAU);
-        ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.92)";
-        ctx.beginPath();
-        ctx.arc(x, y, r * (p.evolved ? 0.6 : 0.5), 0, TAU);
-        ctx.fill();
-      }
+      this.drawProjectileShape(ctx, p, x, y, r, sat, lum, world.stats.elapsed, i);
 
       // Evolved signature: a bright spinning glint ring on the head.
       if (p.evolved) {
@@ -653,6 +623,229 @@ export class GameRenderer {
         ctx.restore();
       }
       this.blitKey(ctx, artKey, fallback, x, y, r, spin, alpha);
+    }
+  }
+
+  /** Render one projectile in its per-weapon style (distinct silhouettes). */
+  private drawProjectileShape(
+    ctx: CanvasRenderingContext2D,
+    p: { style: string; hue: number; vx: number; vy: number; rotation: number; evolved: boolean },
+    x: number,
+    y: number,
+    r: number,
+    sat: number,
+    lum: number,
+    t: number,
+    i: number,
+  ): void {
+    const core = `hsl(${p.hue} ${sat}% ${lum}%)`;
+    const white = "rgba(255,255,255,0.95)";
+    const ang = Math.atan2(p.vy, p.vx);
+    // A soft round glow underlays most styles (drawn additively already).
+    const glow = (rad: number): void => {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+      g.addColorStop(0, `hsla(${p.hue} ${sat}% ${lum}% / 0.9)`);
+      g.addColorStop(1, `hsla(${p.hue} ${sat}% ${lum}% / 0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(x, y, rad, 0, TAU);
+      ctx.fill();
+    };
+
+    switch (p.style) {
+      case "bolt": {
+        // An energy capsule streaking along its travel direction.
+        glow(r * 1.7);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ang);
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * 1.9, r * 0.7, 0, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.ellipse(r * 0.3, 0, r * 0.9, r * 0.32, 0, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "lance": {
+        // A long thin piercing spear.
+        glow(r * 1.4);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ang);
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r * 3.1, r * 0.42, 0, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.ellipse(r * 0.8, 0, r * 1.6, r * 0.16, 0, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "dart": {
+        // A sharp little arrowhead pointing where it flies.
+        glow(r * 1.2);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ang);
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.moveTo(r * 1.7, 0);
+        ctx.lineTo(-r * 0.9, r * 1.0);
+        ctx.lineTo(-r * 0.3, 0);
+        ctx.lineTo(-r * 0.9, -r * 1.0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.moveTo(r * 1.2, 0);
+        ctx.lineTo(-r * 0.2, r * 0.4);
+        ctx.lineTo(-r * 0.2, -r * 0.4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "spark": {
+        // A tiny buzzing fizz-dot with jittering micro-sparks.
+        glow(r * 1.5);
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.5, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = core;
+        for (let s = 0; s < 3; s++) {
+          const a = t * 22 + i + s * 2.1;
+          const d = r * 1.1;
+          ctx.beginPath();
+          ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, r * 0.32, 0, TAU);
+          ctx.fill();
+        }
+        break;
+      }
+      case "shard": {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(p.rotation);
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 1.7);
+        ctx.lineTo(r * 0.7, 0);
+        ctx.lineTo(0, r * 1.7);
+        ctx.lineTo(-r * 0.7, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.4, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "crystal": {
+        // An icy elongated crystal along travel, with a cold white rim.
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ang);
+        ctx.fillStyle = `hsl(${p.hue} ${sat}% ${Math.min(88, lum + 12)}%)`;
+        ctx.beginPath();
+        ctx.moveTo(r * 1.9, 0);
+        ctx.lineTo(0, r * 0.85);
+        ctx.lineTo(-r * 1.5, 0);
+        ctx.lineTo(0, -r * 0.85);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.moveTo(r * 1.2, 0);
+        ctx.lineTo(0, r * 0.3);
+        ctx.lineTo(0, -r * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "hex": {
+        // A frosted spinning hexagon.
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(p.rotation * 0.6);
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        for (let s = 0; s < 6; s++) {
+          const a = (s / 6) * TAU;
+          const px = Math.cos(a) * r * 1.4;
+          const py = Math.sin(a) * r * 1.4;
+          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = white;
+        ctx.lineWidth = r * 0.28;
+        ctx.stroke();
+        ctx.restore();
+        break;
+      }
+      case "star": {
+        // A 4-point twinkle (two crossed slivers), slowly rotating.
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(t * 3 + i);
+        ctx.fillStyle = core;
+        const spike = (rot: number): void => {
+          ctx.save();
+          ctx.rotate(rot);
+          ctx.beginPath();
+          ctx.moveTo(0, -r * 2.1);
+          ctx.lineTo(r * 0.42, 0);
+          ctx.lineTo(0, r * 2.1);
+          ctx.lineTo(-r * 0.42, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        };
+        spike(0);
+        spike(Math.PI / 2);
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.5, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "arc": {
+        // A jagged energy bolt: glow + a short crackling zigzag along travel.
+        glow(r * 1.8);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ang);
+        ctx.strokeStyle = white;
+        ctx.lineWidth = Math.max(1.5, r * 0.3);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        const n = 4;
+        for (let s = 0; s <= n; s++) {
+          const px = (s / n - 0.5) * r * 3.2;
+          const py = s === 0 || s === n ? 0 : (((s + i) % 2) - 0.5) * r * 1.1;
+          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.restore();
+        break;
+      }
+      default: {
+        // orb / beam — a round glowing sphere with a bright core.
+        glow(r * 1.9);
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(x, y, r * (p.evolved ? 0.6 : 0.5), 0, TAU);
+        ctx.fill();
+      }
     }
   }
 
