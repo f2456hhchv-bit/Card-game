@@ -316,6 +316,12 @@ artist; production-art seam via `ArtManifest`).
       hold-then-fade so they stay readable. Verified in-browser across a spread
       of magnitudes + crits; 163 tests green, zero console errors.
 - [ ] Stage modifiers / more Wardens & weapons
+- [x] **Visual variety pass** (quality-loop): each Galaxy's sky is now baked
+      from a per-id seed (hashSeed), so star + nebula layouts are genuinely
+      distinct galaxy-to-galaxy instead of the same sky recoloured; plus a new
+      distant-planet parallax layer (`Background.bakeLandmarks`) — 1–3 soft
+      gradient planets with a directional rim light and occasional rings, per
+      Galaxy, tiled at a slower parallax (0.12 vs stars' 0.25) for real depth.
 - [ ] Second stage with distinct enemy pool & palette
 - [x] **Statistics screen** (quality-loop): the Records page is now a proper
       stats hub — three titled groups (Lifetime: runs, time played, total/elite
