@@ -3,7 +3,7 @@ import type { Loadout } from "../game/Loadout";
 import type { DraftOption } from "../game/Loadout";
 import type { SaveManager } from "../game/save/SaveManager";
 import type { AudioManager } from "../game/audio/AudioManager";
-import { META_LIST } from "../game/data/metaDefs";
+import { META_LIST, META_DEFS, ASCENDANT_ID } from "../game/data/metaDefs";
 import {
   WARDEN_LIST,
   WARDEN_LEVEL_CAP,
@@ -1102,8 +1102,10 @@ export class UIManager {
     this.setCurrency(this.shopBalance, "mote", d.motes, "Light Motes");
     this.refreshShopCrate();
     this.shopGrid.replaceChildren();
+    this.refreshAscendancy();
     let seed = 11;
     for (const def of META_LIST) {
+      if (def.id === ASCENDANT_ID) continue; // rendered as a special prestige card
       const level = d.meta[def.id] ?? 0;
       const maxed = level >= def.maxLevel;
       const cost = maxed ? 0 : def.cost(level);
@@ -1138,6 +1140,49 @@ export class UIManager {
       card.append(head, desc, next, buy);
       this.shopGrid.appendChild(card);
     }
+  }
+
+  /**
+   * The endless prestige card. Hidden until the player has bought a good chunk
+   * of the shop (so it never confuses newcomers), then always available as a
+   * Light-Mote sink that grants a small permanent edge per tier.
+   */
+  private refreshAscendancy(): void {
+    const d = this.save.data;
+    const def = META_DEFS[ASCENDANT_ID];
+    const tier = d.meta[ASCENDANT_ID] ?? 0;
+    const invested = Object.entries(d.meta).reduce(
+      (n, [id, lvl]) => n + (id === ASCENDANT_ID ? 0 : lvl),
+      0,
+    );
+    if (tier === 0 && invested < 20) return; // revealed once the shop is well-invested
+    const cost = def.cost(tier);
+    const accent = `hsl(${def.hue} 85% 66%)`;
+
+    const card = this.el("div", "shop-card ascendancy");
+    this.inkCard(card, accent, 9, "rgba(24,14,40,0.92)");
+    const head = this.el("div", "shop-card-head");
+    head.append(
+      this.el("div", "shop-name", `✦ ${def.name}`),
+      this.el("div", "shop-level", `Tier ${tier}`),
+    );
+    const desc = this.el("div", "shop-desc", def.description);
+    const cur = this.el(
+      "div",
+      "shop-next",
+      tier > 0 ? `Current: ${def.note(tier)}` : "Endless prestige — a lasting edge per tier.",
+    );
+    const next = this.el("div", "shop-next", `Next: ${def.note(tier + 1)}`);
+
+    const buy = this.el("button", "btn buy wide");
+    this.setCurrency(buy, "mote", cost);
+    const affordable = d.motes >= cost;
+    buy.disabled = !affordable;
+    if (!affordable) buy.classList.add("cant-afford");
+    buy.addEventListener("click", () => this.purchase(ASCENDANT_ID));
+
+    card.append(head, desc, cur, next, buy);
+    this.shopGrid.appendChild(card);
   }
 
   private purchase(id: string): void {

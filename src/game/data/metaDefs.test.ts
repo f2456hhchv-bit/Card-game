@@ -29,4 +29,18 @@ describe("metaDefs", () => {
     expect(def.cost(0)).toBeLessThan(def.cost(1));
     expect(def.cost(1)).toBeLessThan(def.cost(4));
   });
+
+  it("Ascendancy is an endless, ever-rising prestige sink", () => {
+    const def = META_DEFS.ascendant;
+    expect(def.maxLevel).toBeGreaterThan(100); // effectively infinite
+    expect(def.cost(0)).toBeLessThan(def.cost(20));
+    expect(def.cost(20)).toBeLessThan(def.cost(50));
+    // Each tier grants a small permanent edge that stacks.
+    const s = { ...new Player().base };
+    const d0 = s.damageMult;
+    const h0 = s.maxHp;
+    applyMeta(s, { ascendant: 10 });
+    expect(s.damageMult).toBeCloseTo(d0 * 1.05); // +0.5%/tier × 10
+    expect(s.maxHp).toBe(h0 + 30); // +3/tier × 10
+  });
 });

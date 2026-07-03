@@ -168,7 +168,25 @@ export const META_DEFS: Record<string, MetaDef> = {
     apply: (s, lvl) => (s.extraProjectiles += lvl),
     note: (lvl) => `+${lvl} projectile${lvl > 1 ? "s" : ""} on every weapon`,
   },
+  // ---- Prestige: an endless Light-Mote sink for maxed-out Wardens ----------
+  ascendant: {
+    id: "ascendant",
+    name: "Ascendancy",
+    description:
+      "An endless prestige — each tier permanently strengthens the Warden a little. A place to pour Light Motes once everything else is bought.",
+    hue: 275,
+    maxLevel: 999,
+    cost: (lvl) => 250 + lvl * 140,
+    apply: (s, lvl) => {
+      s.damageMult *= 1 + 0.005 * lvl;
+      s.maxHp += 3 * lvl;
+    },
+    note: (lvl) => `Tier ${lvl}: +${(0.5 * lvl).toFixed(1)}% damage · +${3 * lvl} Max HP`,
+  },
 };
+
+/** The prestige upgrade id — rendered specially and excluded from the normal grid. */
+export const ASCENDANT_ID = "ascendant";
 
 export const META_LIST: MetaDef[] = Object.values(META_DEFS);
 
