@@ -325,6 +325,13 @@ artist; production-art seam via `ArtManifest`).
       Lumen Bolt=bolt, Seeker Swarm=dart, Sunlance=lance, Hornet Cloud=spark;
       Prism Shards=shard, Frost Fan=crystal, Prismatic Storm=star,
       Permafrost=hex. Verified in-browser; 163 tests, no console errors.
+- [x] **Orbit-weapon shape identity**: the four orbit weapons all rendered
+      as identical glowing balls. Orbit orbs now carry a per-weapon style +
+      travel tangent, rendered through the same shared shape language: Glaive
+      Ring = a curved crescent **glaive** cutting along the orbit, Sawstorm =
+      a spinning toothed **saw** disc, Warden's Halo & Aegis Corona keep the
+      **orb** sphere. Two new shapes (glaive, saw) added to the projectile
+      style set. Verified in-browser; 163 tests, no console errors.
 - [ ] Stage modifiers / more Wardens & weapons
 - [x] **Visual variety pass** (quality-loop): each Galaxy's sky is now baked
       from a per-id seed (hashSeed), so star + nebula layouts are genuinely

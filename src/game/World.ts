@@ -110,6 +110,10 @@ export interface OrbitOrb {
   y: number;
   radius: number;
   hue: number;
+  /** Per-weapon shape (matches ProjectileStyle), so orbit weapons look distinct. */
+  style: string;
+  /** Tangent angle of orbit travel (radians) — orients bladed shapes. */
+  angle: number;
 }
 
 const ARENA_RADIUS = 1600; // Soft circular boundary the Warden cannot leave.
@@ -275,7 +279,8 @@ export class World {
 
   constructor(seed?: number) {
     this.rng = new Rng(seed);
-    for (let i = 0; i < 8; i++) this.orbitOrbs.push({ x: 0, y: 0, radius: 0, hue: 50 });
+    for (let i = 0; i < 8; i++)
+      this.orbitOrbs.push({ x: 0, y: 0, radius: 0, hue: 50, style: "orb", angle: 0 });
   }
 
   get arenaRadius(): number {
@@ -330,13 +335,23 @@ export class World {
     return this.orbitOrbs;
   }
 
-  setOrbitOrb(i: number, x: number, y: number, radius: number, hue: number): void {
+  setOrbitOrb(
+    i: number,
+    x: number,
+    y: number,
+    radius: number,
+    hue: number,
+    style = "orb",
+    angle = 0,
+  ): void {
     const o = this.orbitOrbs[i];
     if (!o) return;
     o.x = x;
     o.y = y;
     o.radius = radius;
     o.hue = hue;
+    o.style = style;
+    o.angle = angle;
   }
 
   reset(): void {

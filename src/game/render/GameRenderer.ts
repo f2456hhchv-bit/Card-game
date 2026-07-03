@@ -528,6 +528,7 @@ export class GameRenderer {
   private drawOrbitOrbs(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
     if (world.orbitOrbCount <= 0) return;
     const orbs = world.getOrbitOrbs();
+    const t = world.stats.elapsed;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     for (let i = 0; i < world.orbitOrbCount; i++) {
@@ -535,13 +536,26 @@ export class GameRenderer {
       const x = camera.worldToScreenX(o.x);
       const y = camera.worldToScreenY(o.y);
       const r = o.radius * camera.zoom;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.6);
-      g.addColorStop(0, `hsl(${o.hue} 100% 80%)`);
-      g.addColorStop(1, `hsla(${o.hue} 100% 60% / 0)`);
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(x, y, r * 1.6, 0, TAU);
-      ctx.fill();
+      // Render in the same shape language as projectiles, oriented along the
+      // orbit tangent (bladed shapes cut forward; the saw spins on its own).
+      this.drawProjectileShape(
+        ctx,
+        {
+          style: o.style,
+          hue: o.hue,
+          vx: Math.cos(o.angle),
+          vy: Math.sin(o.angle),
+          rotation: t * 9 + i,
+          evolved: false,
+        },
+        x,
+        y,
+        r,
+        95,
+        70,
+        t,
+        i,
+      );
     }
     ctx.restore();
   }
@@ -814,6 +828,57 @@ export class GameRenderer {
         ctx.fillStyle = white;
         ctx.beginPath();
         ctx.arc(0, 0, r * 0.5, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case "glaive": {
+        // A curved crescent blade, cutting edge forward along the orbit.
+        glow(r * 1.5);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(ang);
+        ctx.fillStyle = core;
+        // Crescent = big disc minus an offset disc.
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.5, -1.15, 1.15);
+        ctx.arc(r * 0.7, 0, r * 1.35, 0.95, -0.95, true);
+        ctx.closePath();
+        ctx.fill();
+        // Bright cutting edge.
+        ctx.strokeStyle = white;
+        ctx.lineWidth = r * 0.28;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 1.5, -1.05, 1.05);
+        ctx.stroke();
+        ctx.restore();
+        break;
+      }
+      case "saw": {
+        // A spinning circular saw disc with triangular teeth.
+        glow(r * 1.4);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(p.rotation);
+        const teeth = 9;
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        for (let s = 0; s < teeth; s++) {
+          const a0 = (s / teeth) * TAU;
+          const a1 = ((s + 0.5) / teeth) * TAU;
+          ctx.lineTo(Math.cos(a0) * r * 1.7, Math.sin(a0) * r * 1.7); // tooth tip
+          ctx.lineTo(Math.cos(a1) * r * 1.05, Math.sin(a1) * r * 1.05); // valley
+        }
+        ctx.closePath();
+        ctx.fill();
+        // Hub.
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.5, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.22, 0, TAU);
         ctx.fill();
         ctx.restore();
         break;

@@ -264,7 +264,8 @@ export class WeaponSystem {
       const a = world.orbitAngle + (i / count) * TAU;
       const ox = world.player.x + Math.cos(a) * orbitRadius;
       const oy = world.player.y + Math.sin(a) * orbitRadius;
-      world.setOrbitOrb(i, ox, oy, orbRadius, w.def.hue);
+      // Tangent of travel (a + 90°) orients bladed shapes along the orbit.
+      world.setOrbitOrb(i, ox, oy, orbRadius, w.def.hue, w.def.style, a + Math.PI / 2);
       if (!canHit) continue;
       const near = world.enemyGrid.query(ox, oy, orbRadius + 20);
       const hitR = orbRadius + 14;

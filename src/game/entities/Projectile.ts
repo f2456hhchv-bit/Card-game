@@ -26,6 +26,8 @@ export type ProjectileStyle =
   | "hex"
   | "star"
   | "arc"
+  | "glaive"
+  | "saw"
   | "beam";
 
 /**
