@@ -1373,11 +1373,44 @@ select {
 /* Records screen. */
 .records-stats {
   display: flex;
-  gap: 22px;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(560px, 100%);
   color: var(--ui-text-dim);
   margin-top: -8px;
+}
+/* A row of stat-slab tiles within a titled group. */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+.stat-grid .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 6px 13px;
+  min-width: 0;
+}
+.stat-grid .stat b {
+  color: var(--ui-text);
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.stat-grid .stat span {
+  font-size: 0.72rem;
+  text-align: center;
+}
+.records-stats .records-sub-head {
+  align-self: flex-start;
+  margin: 8px 0 2px;
 }
 .records-stats .stat {
   display: flex;

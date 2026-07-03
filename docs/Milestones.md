@@ -317,7 +317,13 @@ artist; production-art seam via `ArtManifest`).
       of magnitudes + crits; 163 tests green, zero console errors.
 - [ ] Stage modifiers / more Wardens & weapons
 - [ ] Second stage with distinct enemy pool & palette
-- [ ] Statistics screen
+- [x] **Statistics screen** (quality-loop): the Records page is now a proper
+      stats hub — three titled groups (Lifetime: runs, time played, total/elite
+      felled, bosses, damage; Personal Bests: best time, most felled, Galaxy
+      reached, Boss Rush/Endless/Gauntlet; Collection: Commanders, Ships, Gear
+      Sets, Signatures, Achievements, Light Motes) rendered as inked slab
+      tiles with compact number formatting (18.7k / 4.8M), above the existing
+      per-stage bests and achievement grid.
 - [ ] Expanded achievement set
 
 (See `docs/Roadmap.md` for the longer horizon.)

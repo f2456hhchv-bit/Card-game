@@ -1649,16 +1649,49 @@ export class UIManager {
     };
     const hrs = Math.floor(d.lifetime.time / 3600);
     const mins = Math.floor((d.lifetime.time % 3600) / 60);
-    this.recordsStats.replaceChildren(
+    const timePlayed = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+    // Compact big numbers so lifetime totals stay tidy (1.2M / 34.5k).
+    const compact = (n: number): string =>
+      n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `${(n / 1e3).toFixed(1)}k` : `${Math.round(n)}`;
+    const galaxyReached = Math.min(galaxyOf(d.campaignProgress), GALAXY_COUNT - 1) + 1;
+    const setsComplete = SET_LIST.filter((set) =>
+      SLOTS.every((slot) => (d.gear.inventory[itemId(set.id, slot)]?.grade ?? 0) > 0),
+    ).length;
+
+    // Grouped statistics hub: Lifetime · Personal Bests · Collection.
+    this.recordsStats.replaceChildren();
+    const group = (title: string, tiles: HTMLElement[]): void => {
+      this.recordsStats.appendChild(this.el("div", "records-sub-head", title));
+      const g = this.el("div", "stat-grid");
+      for (const t of tiles) g.appendChild(t);
+      this.recordsStats.appendChild(g);
+    };
+    const moteTile = stat("Light Motes", compact(d.motes));
+    moteTile.querySelector("b")?.prepend(this.curIcon("mote"), " ");
+    group("Lifetime", [
+      stat("Runs", `${d.runsPlayed}`),
+      stat("Time Played", timePlayed),
+      stat("Total Felled", compact(d.totalKills)),
+      stat("Elites Felled", compact(d.lifetime.elites)),
+      stat("Bosses Slain", `${d.lifetime.bosses}`),
+      stat("Damage Dealt", compact(d.lifetime.damage)),
+    ]);
+    group("Personal Bests", [
       stat("Best Time", formatTime(d.bestTime)),
       stat("Most Felled", `${d.bestKills}`),
+      stat("Galaxy", `${galaxyReached}/${GALAXY_COUNT}`),
       stat("Boss Rush", d.bossRushBest > 0 ? `${d.bossRushBest} bosses` : "—"),
       stat("Endless", d.endlessBest > 0 ? `Asc ${d.endlessBest}` : "—"),
-      stat("Gauntlet", d.gauntletBest > 0 ? `${d.gauntletBest}/3 stages` : "—"),
-      stat("Runs", `${d.runsPlayed}`),
-      stat("Bosses Slain", `${d.lifetime.bosses}`),
-      stat("Time Played", hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`),
-    );
+      stat("Gauntlet", d.gauntletBest > 0 ? `${d.gauntletBest}/3` : "—"),
+    ]);
+    group("Collection", [
+      stat("Commanders", `${d.wardens.length}/${WARDEN_LIST.length}`),
+      stat("Ships", `${d.chassis.length}/${CHASSIS_LIST.length}`),
+      stat("Gear Sets", `${setsComplete}/${SET_LIST.length}`),
+      stat("Signatures", `${d.signatures.owned.length}/${SIGNATURE_LIST.length}`),
+      stat("Achievements", `${d.achievements.length}/${ACHIEVEMENT_DEFS.length}`),
+      moteTile,
+    ]);
 
     // Per-stage best times (only stages the player has recorded a run on).
     this.recordsStages.replaceChildren();
