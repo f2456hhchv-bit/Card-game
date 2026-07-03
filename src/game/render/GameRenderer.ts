@@ -909,8 +909,11 @@ export class GameRenderer {
     const core = `hsl(${p.hue} ${sat}% ${lum}%)`;
     const white = "rgba(255,255,255,0.95)";
     const ang = Math.atan2(p.vy, p.vx);
-    // A soft round glow underlays most styles (drawn additively already).
+    // A soft round glow underlays most styles — drawn additively for bloom, even
+    // though the solid body below is painted source-over so its ink rim shows.
     const glow = (rad: number): void => {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
       const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
       g.addColorStop(0, `hsla(${p.hue} ${sat}% ${lum}% / 0.9)`);
       g.addColorStop(1, `hsla(${p.hue} ${sat}% ${lum}% / 0)`);
@@ -918,39 +921,90 @@ export class GameRenderer {
       ctx.beginPath();
       ctx.arc(x, y, rad, 0, TAU);
       ctx.fill();
+      ctx.restore();
+    };
+    // Paint the solid body + ink rim over the additive glow, so the dark rim is
+    // visible (a purely additive dark stroke would vanish).
+    ctx.save();
+    ctx.globalCompositeOperation = "source-over";
+
+    // Hand-inked treatment (matches the enemy bullets, ships and glyphs): a thin
+    // dark rim around each bright shape, and organic silhouettes traced with a
+    // baked-in wobble. The bright core + additive glow are kept so the Warden's
+    // light stays visibly "the light" — distinct from the dark-hearted foe fire.
+    const INK = "rgba(7,5,13,0.8)";
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    const rim = (w = 0.13): void => {
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = r * w;
+      ctx.stroke();
+    };
+    // A closed, gently-irregular path smoothed through segment midpoints (the
+    // per-vertex wobble is deterministic per shape, so it reads hand-drawn but
+    // never jitters frame to frame).
+    const rough = (verts: [number, number][]): void => {
+      const n = verts.length;
+      const mid = (a: [number, number], b: [number, number]): [number, number] => [
+        (a[0] + b[0]) / 2,
+        (a[1] + b[1]) / 2,
+      ];
+      const w: [number, number][] = verts.map((v, k) => {
+        const j = 1 + 0.07 * Math.sin(k * 3.3 + 1.1);
+        return [v[0] * j, v[1] * j];
+      });
+      ctx.beginPath();
+      const m0 = mid(w[n - 1], w[0]);
+      ctx.moveTo(m0[0], m0[1]);
+      for (let k = 0; k < n; k++) {
+        const mp = mid(w[k], w[(k + 1) % n]);
+        ctx.quadraticCurveTo(w[k][0], w[k][1], mp[0], mp[1]);
+      }
+      ctx.closePath();
+    };
+    // A lumpy near-ellipse (for the capsule/lance bodies).
+    const lozenge = (rx: number, ry: number): [number, number][] => {
+      const pts: [number, number][] = [];
+      const N = 10;
+      for (let k = 0; k < N; k++) {
+        const a = (k / N) * TAU;
+        const wob = 1 + 0.06 * Math.sin(a * 3 + 0.7);
+        pts.push([Math.cos(a) * rx * wob, Math.sin(a) * ry * wob]);
+      }
+      return pts;
     };
 
     switch (p.style) {
       case "bolt": {
-        // An energy capsule streaking along its travel direction.
+        // A lumpy energy capsule streaking along its travel direction.
         glow(r * 1.7);
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(ang);
         ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, r * 1.9, r * 0.7, 0, 0, TAU);
+        rough(lozenge(r * 1.9, r * 0.72));
         ctx.fill();
+        rim();
         ctx.fillStyle = white;
         ctx.beginPath();
-        ctx.ellipse(r * 0.3, 0, r * 0.9, r * 0.32, 0, 0, TAU);
+        ctx.ellipse(r * 0.3, 0, r * 0.85, r * 0.3, 0, 0, TAU);
         ctx.fill();
         ctx.restore();
         break;
       }
       case "lance": {
-        // A long thin piercing spear.
+        // A long thin piercing spear, inked.
         glow(r * 1.4);
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(ang);
         ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, r * 3.1, r * 0.42, 0, 0, TAU);
+        rough(lozenge(r * 3.1, r * 0.44));
         ctx.fill();
+        rim(0.1);
         ctx.fillStyle = white;
         ctx.beginPath();
-        ctx.ellipse(r * 0.8, 0, r * 1.6, r * 0.16, 0, 0, TAU);
+        ctx.ellipse(r * 0.8, 0, r * 1.5, r * 0.14, 0, 0, TAU);
         ctx.fill();
         ctx.restore();
         break;
@@ -962,18 +1016,19 @@ export class GameRenderer {
         ctx.translate(x, y);
         ctx.rotate(ang);
         ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.moveTo(r * 1.7, 0);
-        ctx.lineTo(-r * 0.9, r * 1.0);
-        ctx.lineTo(-r * 0.3, 0);
-        ctx.lineTo(-r * 0.9, -r * 1.0);
-        ctx.closePath();
+        rough([
+          [r * 1.7, 0],
+          [-r * 0.9, r * 1.0],
+          [-r * 0.3, 0],
+          [-r * 0.9, -r * 1.0],
+        ]);
         ctx.fill();
+        rim();
         ctx.fillStyle = white;
         ctx.beginPath();
-        ctx.moveTo(r * 1.2, 0);
-        ctx.lineTo(-r * 0.2, r * 0.4);
-        ctx.lineTo(-r * 0.2, -r * 0.4);
+        ctx.moveTo(r * 1.1, 0);
+        ctx.lineTo(-r * 0.2, r * 0.36);
+        ctx.lineTo(-r * 0.2, -r * 0.36);
         ctx.closePath();
         ctx.fill();
         ctx.restore();
@@ -982,18 +1037,19 @@ export class GameRenderer {
       case "spark": {
         // A tiny buzzing fizz-dot with jittering micro-sparks.
         glow(r * 1.5);
-        ctx.fillStyle = white;
-        ctx.beginPath();
-        ctx.arc(x, y, r * 0.5, 0, TAU);
-        ctx.fill();
         ctx.fillStyle = core;
         for (let s = 0; s < 3; s++) {
           const a = t * 22 + i + s * 2.1;
           const d = r * 1.1;
           ctx.beginPath();
-          ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, r * 0.32, 0, TAU);
+          ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, r * 0.34, 0, TAU);
           ctx.fill();
+          rim(0.16);
         }
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.5, 0, TAU);
+        ctx.fill();
         break;
       }
       case "shard": {
@@ -1001,13 +1057,14 @@ export class GameRenderer {
         ctx.translate(x, y);
         ctx.rotate(p.rotation);
         ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.moveTo(0, -r * 1.7);
-        ctx.lineTo(r * 0.7, 0);
-        ctx.lineTo(0, r * 1.7);
-        ctx.lineTo(-r * 0.7, 0);
-        ctx.closePath();
+        rough([
+          [0, -r * 1.7],
+          [r * 0.7, 0],
+          [0, r * 1.7],
+          [-r * 0.7, 0],
+        ]);
         ctx.fill();
+        rim();
         ctx.fillStyle = white;
         ctx.beginPath();
         ctx.arc(0, 0, r * 0.4, 0, TAU);
@@ -1016,72 +1073,68 @@ export class GameRenderer {
         break;
       }
       case "crystal": {
-        // An icy elongated crystal along travel, with a cold white rim.
+        // An icy elongated crystal along travel, with a cold white facet.
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(ang);
         ctx.fillStyle = `hsl(${p.hue} ${sat}% ${Math.min(88, lum + 12)}%)`;
-        ctx.beginPath();
-        ctx.moveTo(r * 1.9, 0);
-        ctx.lineTo(0, r * 0.85);
-        ctx.lineTo(-r * 1.5, 0);
-        ctx.lineTo(0, -r * 0.85);
-        ctx.closePath();
+        rough([
+          [r * 1.9, 0],
+          [0, r * 0.85],
+          [-r * 1.5, 0],
+          [0, -r * 0.85],
+        ]);
         ctx.fill();
+        rim();
         ctx.fillStyle = white;
         ctx.beginPath();
-        ctx.moveTo(r * 1.2, 0);
-        ctx.lineTo(0, r * 0.3);
-        ctx.lineTo(0, -r * 0.3);
+        ctx.moveTo(r * 1.1, 0);
+        ctx.lineTo(0, r * 0.28);
+        ctx.lineTo(0, -r * 0.28);
         ctx.closePath();
         ctx.fill();
         ctx.restore();
         break;
       }
       case "hex": {
-        // A frosted spinning hexagon.
+        // A frosted spinning hex chunk, rough-edged.
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(p.rotation * 0.6);
         ctx.fillStyle = core;
-        ctx.beginPath();
+        const pts: [number, number][] = [];
         for (let s = 0; s < 6; s++) {
           const a = (s / 6) * TAU;
-          const px = Math.cos(a) * r * 1.4;
-          const py = Math.sin(a) * r * 1.4;
-          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+          pts.push([Math.cos(a) * r * 1.4, Math.sin(a) * r * 1.4]);
         }
-        ctx.closePath();
+        rough(pts);
         ctx.fill();
-        ctx.strokeStyle = white;
-        ctx.lineWidth = r * 0.28;
-        ctx.stroke();
+        rim();
+        ctx.fillStyle = white;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.42, 0, TAU);
+        ctx.fill();
         ctx.restore();
         break;
       }
       case "star": {
-        // A 4-point twinkle (two crossed slivers), slowly rotating.
+        // A four-point twinkle with slightly bent, organic arms.
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(t * 3 + i);
         ctx.fillStyle = core;
-        const spike = (rot: number): void => {
-          ctx.save();
-          ctx.rotate(rot);
-          ctx.beginPath();
-          ctx.moveTo(0, -r * 2.1);
-          ctx.lineTo(r * 0.42, 0);
-          ctx.lineTo(0, r * 2.1);
-          ctx.lineTo(-r * 0.42, 0);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        };
-        spike(0);
-        spike(Math.PI / 2);
+        const pts: [number, number][] = [];
+        for (let s = 0; s < 8; s++) {
+          const a = (s / 8) * TAU - Math.PI / 2;
+          const rad = s % 2 ? r * 0.5 : r * 2.0;
+          pts.push([Math.cos(a) * rad, Math.sin(a) * rad]);
+        }
+        rough(pts);
+        ctx.fill();
+        rim(0.11);
         ctx.fillStyle = white;
         ctx.beginPath();
-        ctx.arc(0, 0, r * 0.5, 0, TAU);
+        ctx.arc(0, 0, r * 0.46, 0, TAU);
         ctx.fill();
         ctx.restore();
         break;
@@ -1093,39 +1146,38 @@ export class GameRenderer {
         ctx.translate(x, y);
         ctx.rotate(ang);
         ctx.fillStyle = core;
-        // Crescent = big disc minus an offset disc.
         ctx.beginPath();
         ctx.arc(0, 0, r * 1.5, -1.15, 1.15);
         ctx.arc(r * 0.7, 0, r * 1.35, 0.95, -0.95, true);
         ctx.closePath();
         ctx.fill();
-        // Bright cutting edge.
+        rim();
         ctx.strokeStyle = white;
-        ctx.lineWidth = r * 0.28;
+        ctx.lineWidth = r * 0.26;
         ctx.beginPath();
-        ctx.arc(0, 0, r * 1.5, -1.05, 1.05);
+        ctx.arc(0, 0, r * 1.5, -1.02, 1.02);
         ctx.stroke();
         ctx.restore();
         break;
       }
       case "saw": {
-        // A spinning circular saw disc with triangular teeth.
+        // A spinning saw disc with rough, hand-cut teeth.
         glow(r * 1.4);
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(p.rotation);
         const teeth = 9;
         ctx.fillStyle = core;
-        ctx.beginPath();
+        const pts: [number, number][] = [];
         for (let s = 0; s < teeth; s++) {
           const a0 = (s / teeth) * TAU;
           const a1 = ((s + 0.5) / teeth) * TAU;
-          ctx.lineTo(Math.cos(a0) * r * 1.7, Math.sin(a0) * r * 1.7); // tooth tip
-          ctx.lineTo(Math.cos(a1) * r * 1.05, Math.sin(a1) * r * 1.05); // valley
+          pts.push([Math.cos(a0) * r * 1.7, Math.sin(a0) * r * 1.7]);
+          pts.push([Math.cos(a1) * r * 1.05, Math.sin(a1) * r * 1.05]);
         }
-        ctx.closePath();
+        rough(pts);
         ctx.fill();
-        // Hub.
+        rim(0.1);
         ctx.fillStyle = white;
         ctx.beginPath();
         ctx.arc(0, 0, r * 0.5, 0, TAU);
@@ -1138,34 +1190,46 @@ export class GameRenderer {
         break;
       }
       case "arc": {
-        // A jagged energy bolt: glow + a short crackling zigzag along travel.
+        // A jagged energy bolt: glow + a short crackling zigzag along travel,
+        // backed by a dark under-stroke so it reads inked.
         glow(r * 1.8);
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(ang);
+        const zig = (): void => {
+          ctx.beginPath();
+          const n = 4;
+          for (let s = 0; s <= n; s++) {
+            const px = (s / n - 0.5) * r * 3.2;
+            const py = s === 0 || s === n ? 0 : (((s + i) % 2) - 0.5) * r * 1.1;
+            s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        };
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = Math.max(2.4, r * 0.5);
+        zig();
         ctx.strokeStyle = white;
         ctx.lineWidth = Math.max(1.5, r * 0.3);
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        const n = 4;
-        for (let s = 0; s <= n; s++) {
-          const px = (s / n - 0.5) * r * 3.2;
-          const py = s === 0 || s === n ? 0 : (((s + i) % 2) - 0.5) * r * 1.1;
-          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-        }
-        ctx.stroke();
+        zig();
         ctx.restore();
         break;
       }
       default: {
-        // orb / beam — a round glowing sphere with a bright core.
+        // orb / beam — a bright light-mote with a thin inked rim.
         glow(r * 1.9);
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(x, y, r * (p.evolved ? 0.85 : 0.72), 0, TAU);
+        ctx.fill();
+        rim(0.12);
         ctx.fillStyle = white;
         ctx.beginPath();
-        ctx.arc(x, y, r * (p.evolved ? 0.6 : 0.5), 0, TAU);
+        ctx.arc(x - r * 0.12, y - r * 0.12, r * (p.evolved ? 0.5 : 0.42), 0, TAU);
         ctx.fill();
       }
     }
+    ctx.restore();
   }
 
   private drawParticles(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
