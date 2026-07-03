@@ -117,6 +117,7 @@ export class UIManager {
   private journeyPanel!: HTMLDivElement;
   private journeyBody!: HTMLDivElement;
   private dailyCache!: HTMLDivElement;
+  private directivesPanel!: HTMLDivElement;
   private playPanel!: HTMLDivElement;
   private morePanel!: HTMLDivElement;
   private activeMenuTab = "journey";
@@ -575,8 +576,14 @@ export class UIManager {
     // Journey — the vertical Galaxy pathway (the hero of the main screen).
     this.journeyPanel = this.el("div", "menu-panel");
     this.dailyCache = this.el("div", "daily-cache");
+    this.directivesPanel = this.el("div", "directives");
     this.journeyBody = this.el("div", "journey");
-    this.journeyPanel.append(this.continueBtn, this.dailyCache, this.journeyBody);
+    this.journeyPanel.append(
+      this.continueBtn,
+      this.dailyCache,
+      this.directivesPanel,
+      this.journeyBody,
+    );
 
     // Play — the game modes, with the Quick Play stage chooser.
     this.playPanel = this.el("div", "menu-panel hidden");
@@ -807,8 +814,89 @@ export class UIManager {
     this.refreshMenuStats();
   }
 
+  /**
+   * Directives — rotating daily/weekly objectives on the home screen. Each shows
+   * live progress and a Claim button when complete; the board refreshes with the
+   * date, giving every session a fresh, concrete goal.
+   */
+  private refreshDirectives(): void {
+    const list = this.save.activeDirectives();
+    this.directivesPanel.replaceChildren();
+
+    const head = this.el("div", "directives-head");
+    const claimable = list.filter((d) => d.completed && !d.claimed).length;
+    head.append(
+      this.el("span", "directives-title", "Directives"),
+      this.el(
+        "span",
+        "directives-sub",
+        claimable > 0 ? `${claimable} ready to claim` : "Objectives refresh daily",
+      ),
+    );
+    this.directivesPanel.appendChild(head);
+
+    for (const d of list) {
+      const { def, progress, completed, claimed } = d;
+      const accent = `hsl(${def.hue} 82% 62%)`;
+      const row = this.el("div", "directive-row");
+      row.style.setProperty("--card-accent", accent);
+      if (def.period === "weekly") row.classList.add("weekly");
+      if (completed) row.classList.add("done");
+
+      row.append(this.iconEl("div", "directive-icon", glyphIcon(def.icon, def.hue)));
+
+      const body = this.el("div", "directive-body");
+      const rewardText = def.reward.alloy
+        ? `+${def.reward.motes} Motes · +${def.reward.alloy} Alloy`
+        : `+${def.reward.motes} Motes`;
+      body.append(
+        this.el("div", "directive-text", def.text),
+        this.el(
+          "div",
+          "directive-meta",
+          `${def.period === "weekly" ? "Weekly · " : ""}${Math.min(progress, def.target)}/${def.target} · ${rewardText}`,
+        ),
+      );
+      const bar = this.el("div", "directive-bar");
+      const fill = this.el("div", "directive-fill");
+      fill.style.width = `${Math.min(100, (progress / def.target) * 100)}%`;
+      fill.style.background = accent;
+      bar.appendChild(fill);
+      body.appendChild(bar);
+      row.appendChild(body);
+
+      const action = this.el("button", "btn buy pill directive-claim");
+      if (claimed) {
+        action.textContent = "✓";
+        action.classList.add("maxed");
+        action.disabled = true;
+      } else if (completed) {
+        action.textContent = "Claim";
+        action.addEventListener("click", () => this.claimDirective(def.id));
+      } else {
+        action.textContent = `${Math.floor((progress / def.target) * 100)}%`;
+        action.disabled = true;
+        action.classList.add("cant-afford");
+      }
+      row.appendChild(action);
+      this.directivesPanel.appendChild(row);
+    }
+  }
+
+  private claimDirective(id: string): void {
+    const r = this.save.claimDirective(id);
+    if (!r) return;
+    this.audio.levelUp();
+    const parts = [`+${r.motes} Light Motes`];
+    if (r.alloy) parts.push(`+${r.alloy} Alloy`);
+    this.showToast(glyphIcon("star", 45), "Directive Complete", parts.join(" · "), "Directive");
+    this.refreshDirectives();
+    this.refreshMenuStats();
+  }
+
   private refreshJourney(): void {
     this.refreshDailyCache();
+    this.refreshDirectives();
     const progress = this.campaignProgress();
     // Clamp to the finite Galaxy 100 endgame (progress may reach "all cleared").
     const currentGalaxy = Math.min(galaxyOf(progress), GALAXY_COUNT - 1);

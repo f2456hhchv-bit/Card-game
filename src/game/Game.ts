@@ -602,6 +602,8 @@ export class Game {
     if (this.isDailyRun) {
       this.save.recordDaily(dailyDateString(), stats.elapsed, stats.kills);
     }
+    // Feed the run into every active Directive (rotating objectives).
+    this.save.recordDirectiveProgress(stats);
     // Salvage a gear item from the wreck — every run advances the Hangar.
     this.salvageGear();
     // Warden mastery: the played Warden earns XP from the run (not the Daily,

@@ -4,6 +4,14 @@ import { type RunSnapshot, SNAPSHOT_VERSION } from "./RunSnapshot";
 import { signatureForBoss } from "../data/signatureDefs";
 import { wardenXpToNext } from "../data/wardenDefs";
 import {
+  DIRECTIVE_DEFS,
+  DAILY_DIRECTIVES,
+  WEEKLY_DIRECTIVES,
+  metricValue,
+  pickDirectives,
+  type DirectiveDef,
+} from "../data/directiveDefs";
+import {
   GEAR_ITEMS,
   ITEM_LIST,
   SLOTS,
@@ -103,6 +111,15 @@ export interface SaveData {
   daily: { date: string; bestTime: number; bestKills: number };
   /** Daily-cache login streak: consecutive days a cache was claimed. */
   streak: { count: number; lastClaim: string };
+  /** Rotating objectives (3 daily + 1 weekly) with progress + claim state. */
+  directives: {
+    day: string;
+    week: string;
+    daily: string[];
+    weekly: string[];
+    progress: Record<string, number>;
+    claimed: string[];
+  };
   audio: AudioSettings;
   accessibility: AccessibilitySettings;
 }
@@ -135,6 +152,7 @@ function defaultSave(): SaveData {
     selectedStage: "fade",
     daily: { date: "", bestTime: 0, bestKills: 0 },
     streak: { count: 0, lastClaim: "" },
+    directives: { day: "", week: "", daily: [], weekly: [], progress: {}, claimed: [] },
     audio: { master: 0.8, sfx: 0.9, music: 0.5, muted: false },
     accessibility: {
       reduceMotion: false,
@@ -200,6 +218,8 @@ export class SaveManager {
       selectedStage: parsed.selectedStage ?? "fade",
       daily: parsed.daily ?? { date: "", bestTime: 0, bestKills: 0 },
       streak: parsed.streak ?? { count: 0, lastClaim: "" },
+      directives:
+        parsed.directives ?? { day: "", week: "", daily: [], weekly: [], progress: {}, claimed: [] },
       audio: { ...base.audio, ...(parsed.audio ?? {}) },
       accessibility: { ...base.accessibility, ...(parsed.accessibility ?? {}) },
       achievements: parsed.achievements ?? [],
@@ -442,6 +462,92 @@ export class SaveManager {
       gear,
       streak: status.streak,
     };
+  }
+
+  // ---- Directives (rotating objectives) -----------------------------------
+
+  /** Local ISO-ish week key (integer week bucket), stable across a calendar week. */
+  private static weekKey(now: Date): string {
+    const dayNum = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+    // Anchor weeks to Monday (epoch day 0 = Thursday → offset by 4).
+    return `W${Math.floor((dayNum + 4) / 7)}`;
+  }
+
+  /** Roll the daily/weekly boards over when their period has elapsed, clearing
+   *  progress + claims for objectives that leave the active set. Idempotent. */
+  refreshDirectives(now: Date = new Date()): void {
+    const dir = this.data.directives;
+    const dayKey = SaveManager.ymd(now);
+    const weekKey = SaveManager.weekKey(now);
+    let dirty = false;
+    if (dir.day !== dayKey) {
+      for (const id of dir.daily) delete dir.progress[id];
+      dir.claimed = dir.claimed.filter((id) => !dir.daily.includes(id));
+      dir.daily = pickDirectives(DAILY_DIRECTIVES, dayKey, 3);
+      dir.day = dayKey;
+      dirty = true;
+    }
+    if (dir.week !== weekKey) {
+      for (const id of dir.weekly) delete dir.progress[id];
+      dir.claimed = dir.claimed.filter((id) => !dir.weekly.includes(id));
+      dir.weekly = pickDirectives(WEEKLY_DIRECTIVES, weekKey, 1);
+      dir.week = weekKey;
+      dirty = true;
+    }
+    if (dirty) this.save();
+  }
+
+  /** The active board: daily objectives then the weekly, with live progress. */
+  activeDirectives(now: Date = new Date()): {
+    def: DirectiveDef;
+    progress: number;
+    completed: boolean;
+    claimed: boolean;
+  }[] {
+    this.refreshDirectives(now);
+    const dir = this.data.directives;
+    return [...dir.daily, ...dir.weekly]
+      .map((id) => DIRECTIVE_DEFS[id])
+      .filter((def): def is DirectiveDef => !!def)
+      .map((def) => {
+        const progress = Math.min(dir.progress[def.id] ?? 0, def.target);
+        return {
+          def,
+          progress,
+          completed: progress >= def.target,
+          claimed: dir.claimed.includes(def.id),
+        };
+      });
+  }
+
+  /** Feed a finished run's stats into every active directive's progress. */
+  recordDirectiveProgress(stats: RunStats, now: Date = new Date()): void {
+    this.refreshDirectives(now);
+    const dir = this.data.directives;
+    for (const id of [...dir.daily, ...dir.weekly]) {
+      const def = DIRECTIVE_DEFS[id];
+      if (!def || dir.claimed.includes(id)) continue;
+      const v = metricValue(def.metric, stats);
+      const cur = dir.progress[id] ?? 0;
+      dir.progress[id] = def.mode === "run" ? Math.max(cur, v) : cur + v;
+    }
+    this.save();
+  }
+
+  /** Claim a completed directive's reward. Returns the reward, or null. */
+  claimDirective(id: string, now: Date = new Date()): { motes: number; alloy: number } | null {
+    this.refreshDirectives(now);
+    const dir = this.data.directives;
+    const def = DIRECTIVE_DEFS[id];
+    if (!def) return null;
+    const active = dir.daily.includes(id) || dir.weekly.includes(id);
+    if (!active || dir.claimed.includes(id)) return null;
+    if ((dir.progress[id] ?? 0) < def.target) return null;
+    dir.claimed.push(id);
+    this.data.motes += def.reward.motes;
+    this.data.alloy += def.reward.alloy;
+    this.save();
+    return { ...def.reward };
   }
 
   /**

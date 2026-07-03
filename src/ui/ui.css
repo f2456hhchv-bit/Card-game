@@ -2379,3 +2379,93 @@ select {
   color: #d7b6ff;
   text-shadow: 0 0 12px rgba(180, 120, 255, 0.5);
 }
+
+/* ---- Directives (rotating objectives) --------------------------------- */
+.directives {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.directives-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 6px;
+}
+.directives-title {
+  font-weight: 900;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #cdd6ff;
+}
+.directives-sub {
+  font-size: 0.7rem;
+  color: var(--ui-text-dim);
+}
+.directive-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(16, 13, 30, 0.72);
+  border: 1px solid color-mix(in srgb, var(--card-accent) 34%, transparent);
+}
+.directive-row.done {
+  border-color: color-mix(in srgb, var(--card-accent) 75%, transparent);
+  box-shadow: 0 0 12px -5px var(--card-accent);
+}
+.directive-row.weekly {
+  background: rgba(24, 16, 34, 0.8);
+}
+.directive-icon {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+}
+.directive-icon img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+.directive-body {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.directive-text {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--ui-text);
+  line-height: 1.2;
+}
+.directive-meta {
+  font-size: 0.7rem;
+  color: var(--ui-text-dim);
+}
+.directive-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.directive-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.btn.directive-claim {
+  flex: 0 0 auto;
+  min-width: 62px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+}
