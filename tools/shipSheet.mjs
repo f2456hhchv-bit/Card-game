@@ -10,7 +10,7 @@ import { chromium } from "playwright";
 import { readFileSync, writeFileSync } from "fs";
 
 const SHEET =
-  "/root/.claude/uploads/6fe53591-d27f-58c8-a1aa-d825a9c564ae/f1ad0485-a_stunninghull_s.png";
+  "/root/.claude/uploads/6fe53591-d27f-58c8-a1aa-d825a9c564ae/2744e023-a_stunninghull_s.png";
 
 /** chassis id → [col, row] in the 5×3 sheet (cell 0,0 is a stray gem — unused). */
 const SHIPS = {
@@ -107,20 +107,64 @@ const out = await p.evaluate(
         pushIf(x, y + 1);
         pushIf(x, y - 1);
       }
-      // `bg` now marks ONLY the exterior backdrop (border-connected). Because
-      // the flood starts at the borders and stops at the hull's edge, the
-      // ship's darker interior panels are never reached — so the hull stays
-      // solid with no holes, and separate-but-attached parts keep their shape.
-      // (An earlier "glow-eating" second pass floated dim interior pixels into
-      //  the background, punching holes through dark ships — removed.)
+      // `bg` marks ONLY the exterior backdrop (border-connected). Everything
+      // else — including any negative-space pockets between parts — is hull.
+      // "Solid fill": treat !bg as the ship, so interior holes are already
+      // filled solid.
+      let ship = new Uint8Array(n);
+      for (let i = 0; i < n; i++) ship[i] = bg[i] ? 0 : 1;
 
-      // Speck cull: drop tiny disconnected foreground fragments (JPEG/bloom
-      // crumbs) so nothing floats beside the hull, but keep every sizeable part
-      // (wings, pods) that belongs to the ship.
+      // Bridge gaps: a morphological CLOSE (dilate then erode by a disc of
+      // radius R) fuses parts separated by a gap up to ~2R — so pods, wings and
+      // fins that read as detached floaty pieces attach into one solid hull —
+      // while the erode restores the overall silhouette so nothing bloats.
+      const R = Math.max(2, Math.round(sw * 0.03));
+      const disc = [];
+      for (let dy = -R; dy <= R; dy++)
+        for (let dx = -R; dx <= R; dx++)
+          if (dx * dx + dy * dy <= R * R) disc.push([dx, dy]);
+      const dilate = (mask) => {
+        const o = new Uint8Array(n);
+        for (let y = 0; y < sh; y++)
+          for (let x = 0; x < sw; x++) {
+            let v = 0;
+            for (const [dx, dy] of disc) {
+              const nx = x + dx;
+              const ny = y + dy;
+              if (nx >= 0 && ny >= 0 && nx < sw && ny < sh && mask[ny * sw + nx]) {
+                v = 1;
+                break;
+              }
+            }
+            o[y * sw + x] = v;
+          }
+        return o;
+      };
+      const erode = (mask) => {
+        const o = new Uint8Array(n);
+        for (let y = 0; y < sh; y++)
+          for (let x = 0; x < sw; x++) {
+            let v = 1;
+            for (const [dx, dy] of disc) {
+              const nx = x + dx;
+              const ny = y + dy;
+              if (nx < 0 || ny < 0 || nx >= sw || ny >= sh || !mask[ny * sw + nx]) {
+                v = 0;
+                break;
+              }
+            }
+            o[y * sw + x] = v;
+          }
+        return o;
+      };
+      ship = erode(dilate(ship));
+
+      // Keep only the largest connected component — with the gaps now bridged
+      // the whole ship is one blob, so this drops any leftover far specks.
       const label = new Int32Array(n).fill(-1);
       const areas = [];
       for (let i = 0; i < n; i++) {
-        if (bg[i] || label[i] !== -1) continue;
+        if (!ship[i] || label[i] !== -1) continue;
         const L = areas.length;
         let area = 0;
         const q = [i];
@@ -135,7 +179,7 @@ const out = await p.evaluate(
             const ny = y + dy;
             if (nx < 0 || ny < 0 || nx >= sw || ny >= sh) continue;
             const k = ny * sw + nx;
-            if (!bg[k] && label[k] === -1) {
+            if (ship[k] && label[k] === -1) {
               label[k] = L;
               q.push(k);
             }
@@ -143,11 +187,77 @@ const out = await p.evaluate(
         }
         areas.push(area);
       }
-      const maxArea = Math.max(...areas, 1);
-      for (let i = 0; i < n; i++) {
-        if (bg[i]) px[i * 4 + 3] = 0;
-        else if (areas[label[i]] < maxArea * 0.02) px[i * 4 + 3] = 0; // speck
+      let best = 0;
+      for (let L = 1; L < areas.length; L++) if (areas[L] > areas[best]) best = L;
+      const keep = new Uint8Array(n);
+      for (let i = 0; i < n; i++) keep[i] = ship[i] && label[i] === best ? 1 : 0;
+
+      // Fill fully-enclosed interior holes (dark vents the chroma key reached
+      // through a hairline seam): flood the exterior from the border across the
+      // complement of `keep`; anything the flood can't reach is an interior
+      // hole and becomes solid hull, so no backdrop shows through the ship.
+      const outside = new Uint8Array(n);
+      const qh = [];
+      const seed = (i) => {
+        if (!keep[i] && !outside[i]) {
+          outside[i] = 1;
+          qh.push(i);
+        }
+      };
+      for (let x = 0; x < sw; x++) {
+        seed(x);
+        seed((sh - 1) * sw + x);
       }
+      for (let y = 0; y < sh; y++) {
+        seed(y * sw);
+        seed(y * sw + sw - 1);
+      }
+      for (let head = 0; head < qh.length; head++) {
+        const i = qh[head];
+        const x = i % sw;
+        const y = (i / sw) | 0;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= sw || ny >= sh) continue;
+          const k = ny * sw + nx;
+          if (!keep[k] && !outside[k]) {
+            outside[k] = 1;
+            qh.push(k);
+          }
+        }
+      }
+      for (let i = 0; i < n; i++) if (!keep[i] && !outside[i]) keep[i] = 1;
+
+      // Inpaint the bridged pixels (kept, but originally backdrop) with the
+      // colour of the nearest real hull pixel via a multi-source BFS, so the
+      // fused gaps read as solid hull rather than a dark backdrop scar.
+      const need = new Uint8Array(n);
+      const q2 = [];
+      for (let i = 0; i < n; i++) {
+        if (!keep[i]) continue;
+        if (bg[i]) need[i] = 1;
+        else q2.push(i); // real hull colour — a fill source
+      }
+      for (let head = 0; head < q2.length; head++) {
+        const i = q2[head];
+        const x = i % sw;
+        const y = (i / sw) | 0;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= sw || ny >= sh) continue;
+          const k = ny * sw + nx;
+          if (need[k]) {
+            need[k] = 0;
+            px[k * 4] = px[i * 4];
+            px[k * 4 + 1] = px[i * 4 + 1];
+            px[k * 4 + 2] = px[i * 4 + 2];
+            q2.push(k);
+          }
+        }
+      }
+      for (let i = 0; i < n; i++) px[i * 4 + 3] = keep[i] ? 255 : 0;
       ctx.putImageData(d, 0, 0);
 
       // Trim, centre on 192px with the hull filling ~90%.
