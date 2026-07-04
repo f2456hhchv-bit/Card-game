@@ -24,9 +24,10 @@ canonical.
 | 00  | The Studio Constitution / Flash Sheet — Visual Language Reference | `vol00-constitution.png` | ✅ canonical |
 | 01  | Universe Bible — The World of Afterlight / Flash Sheet — Universe Visual Language | `vol01-universe-bible.png` | ✅ canonical |
 | 02  | Art Bible — Visual Style & Asset Guidelines / Flash Sheet — Art Style & Asset Language | `vol02-art-bible.png` | ✅ canonical |
+| 03  | Galaxy Bible — Structure & Design Framework / Flash Sheet — Galaxy Visual Language | `vol03-galaxy-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
-01 Universe ✅ · 02 Art ✅ · 03 Galaxy · 04 Enemy · 05 Boss · 06 Equipment ·
+01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy · 05 Boss · 06 Equipment ·
 07 Flash Sheet · 08 Gameplay · 09 System · 10 Technical · 11 Claude Code Manual.
 
 ---
@@ -265,3 +266,90 @@ collect."* Built for speed, clarity and fun.
 The Vol 02 right page repeats the same icon families (A–M) as the reference set,
 with **K. Colour Palette (MAIN)** = the locked swatches. No changes to the
 families; this volume governs *how* each is rendered, not *which* exist.
+
+---
+
+## Volume 03 — Galaxy Bible: Structure & Design Framework (v1.0, 17/05/2025)
+
+The campaign spine. **A galaxy is the unit of the campaign** — each is a self-
+contained world (biome + faction + hazard + resource + boss) the Lightbearer
+cleanses. This is the template the whole campaign redesign is built on.
+
+### §3.1 Purpose
+Galaxies are the worlds of Afterlight. Each galaxy has a story, a biome,
+inhabitants, enemies and treasures. You bring Light. You cleanse the Dark. You
+restore what was lost.
+
+### §3.2 Galaxy Elements (every galaxy = a unique combination)
+**Biome · Faction · Hazard · Resource · Boss.**
+
+### §3.3 Galaxy Design Rules
+Unique theme & visual identity · readable at a glance · distinct enemy ecosystem ·
+clear biome hazards · signature resource (light-mote type) · memorable boss ·
+restoration objective · fun, fast, replayable.
+
+### §3.4 Galaxy Difficulty Tiers (named)
+1. **Awakening** — Easy (green)
+2. **Rising** — Normal (blue)
+3. **Ascended** — Hard (purple)
+4. **Corrupted** — Very Hard (orange)
+5. **Forgotten** — Extreme (red)
+
+Difficulty affects enemy strength, density, elite chance and reward quality.
+
+### §3.5 Galaxy Flow
+**Arrive** (enter the galaxy) → **Survive** (waves attack from all sides) →
+**Collect** (gather Light Motes) → **Level Up** (choose upgrades, grow stronger) →
+**Boss** (defeat the boss) → **Restore** (bring Light back). Repeat. Improve.
+Survive longer. Cleanse the darkness.
+
+### §3.6 Light Restoration
+As the boss falls, the galaxy is cleansed and Light returns. Restoration stages:
+**0% → 25% → 50% → 75% → 100%** (dark crystal brightening to a blazing star).
+
+### §3.7 Galaxy Template — worked example: **VOIDUST WASTES** (Corrupted Mining World)
+- **Biome:** Abyssal Asteroid Field
+- **Faction:** The Voidborn Scourge
+- **Hazards:** Void Storms
+- **Resource:** Void Shard
+- **Boss:** The Core Devourer
+- **Signature mechanic:** Void Rifts spawn enemies continuously.
+- **Restoration goal:** Stabilise the Core and seal the Void.
+- **Description:** A once-prosperous mining world consumed by the Void.
+
+*This is the shape every galaxy definition must take: name + one-line world type +
+the five elements + a signature mechanic + a restoration goal.*
+
+### §3.8 Galaxy Naming Rules
+Short & impactful (2–4 words) · sci-fi / fantasy / cosmic themes · should feel
+alien & unique · avoid real-world names. Examples: *"Xylaris Reach", "The Obsidian
+Drift", "Nyx Cradle".*
+
+---
+
+## Flash Sheet — Galaxy Visual Language (Vol 03 right page, all assets 64×64)
+
+New icon families this volume introduces (extract exactly as dedicated bibles land):
+
+- **A. Biome icons:** Asteroid · Ice · Volcanic · Toxic · Void · Ancient ·
+  Mechanical/Biogenic.
+- **B. Faction crests:** Voidborn · Ashen · Crystalline · Swarm · Machine · Feral ·
+  Celestial · Exiled. *(Crest visual language — a superset of Vol 01's five named
+  factions; Voidborn & Crystalline/Crystal-Choir carry over.)*
+- **C. Environment hazards:** Void Rift · Fire Storm · Ice Shards · Acid Pool ·
+  Lightning · Meteor · Gravity Well · Laser Grid.
+- **D. Signature resources:** Light Mote · Void Shard · Star Core · Crystal · Bio
+  Sphere · Nano Core · Sol Ember · Dark Ether.
+- **E/F. Enemy silhouettes** (common ★★★ / elite ★★★★) and **G. Boss silhouettes**
+  (★★★★★) — faction-tinted variants.
+- **H. Galaxy crests** — per-galaxy emblem shields.
+- **I. Light restoration stages** — 0/25/50/75/100% crystal→star.
+- **M. Asset complexity scale:** Bosses ★★★★★ · Elite ★★★★ · Common ★★★ ·
+  Items/Pickups ★★ · Resources ★.
+
+> **Campaign mapping.** Our three live stages (The Fade, Ember Wastes, Hollow Deep)
+> become **galaxies** under this framework. The redesign will express each as a
+> full §3.7 template (biome + faction + hazard + resource + boss + signature
+> mechanic + restoration goal) and slot new galaxies along the §3.4 tier ladder
+> (Awakening → Forgotten). Hazard set expands from the current 2 (lava/ice) toward
+> the §C set (Void Rift, Gravity Well, Laser Grid, …).
