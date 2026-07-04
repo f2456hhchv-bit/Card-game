@@ -2391,9 +2391,34 @@ select {
 }
 .directives-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  padding: 0 6px;
+  gap: 10px;
+  padding: 6px 8px;
+  width: 100%;
+  background: rgba(16, 13, 30, 0.55);
+  border: 1px solid rgba(150, 160, 210, 0.14);
+  border-radius: 10px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  appearance: none;
+}
+.directives-head:hover {
+  background: rgba(22, 18, 40, 0.7);
+}
+.directives-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.directives-chevron {
+  font-size: 0.8rem;
+  color: var(--ui-text-dim);
+  transition: transform 0.2s ease;
+}
+.directives-chevron.open {
+  transform: rotate(90deg);
 }
 .directives-title {
   font-weight: 900;
@@ -2403,8 +2428,26 @@ select {
   color: #cdd6ff;
 }
 .directives-sub {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: var(--ui-text-dim);
+}
+.directives-sub.ready {
+  color: #ffd873;
+  font-weight: 800;
+}
+.directives-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  max-height: 640px;
+  opacity: 1;
+  transition: max-height 0.28s ease, opacity 0.2s ease, margin 0.2s ease;
+}
+.directives.collapsed .directives-list {
+  max-height: 0;
+  opacity: 0;
+  margin-top: -6px;
 }
 .directive-row {
   display: flex;

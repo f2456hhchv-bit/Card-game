@@ -118,6 +118,13 @@ export class UIManager {
   private journeyBody!: HTMLDivElement;
   private dailyCache!: HTMLDivElement;
   private directivesPanel!: HTMLDivElement;
+  private directivesCollapsed = (() => {
+    try {
+      return localStorage.getItem("afterlight.ui.directives") === "1";
+    } catch {
+      return false;
+    }
+  })();
   private playPanel!: HTMLDivElement;
   private morePanel!: HTMLDivElement;
   private activeMenuTab = "journey";
@@ -823,17 +830,40 @@ export class UIManager {
     const list = this.save.activeDirectives();
     this.directivesPanel.replaceChildren();
 
-    const head = this.el("div", "directives-head");
     const claimable = list.filter((d) => d.completed && !d.claimed).length;
-    head.append(
+    // Collapse to save home-screen space, but always expand when a reward is
+    // waiting so it can never be missed.
+    const collapsed = this.directivesCollapsed && claimable === 0;
+    this.directivesPanel.classList.toggle("collapsed", collapsed);
+
+    const head = this.el("button", "directives-head");
+    const left = this.el("span", "directives-head-left");
+    left.append(
+      this.el("span", `directives-chevron${collapsed ? "" : " open"}`, "▸"),
       this.el("span", "directives-title", "Directives"),
-      this.el(
-        "span",
-        "directives-sub",
-        claimable > 0 ? `${claimable} ready to claim` : "Objectives refresh daily",
-      ),
     );
+    const subText =
+      claimable > 0
+        ? `${claimable} ready to claim`
+        : collapsed
+          ? `${list.length} active`
+          : "Objectives refresh daily";
+    const sub = this.el("span", "directives-sub", subText);
+    if (claimable > 0) sub.classList.add("ready");
+    head.append(left, sub);
+    head.addEventListener("click", () => {
+      this.directivesCollapsed = !this.directivesCollapsed;
+      try {
+        localStorage.setItem("afterlight.ui.directives", this.directivesCollapsed ? "1" : "0");
+      } catch {
+        /* ignore storage errors */
+      }
+      this.refreshDirectives();
+    });
     this.directivesPanel.appendChild(head);
+
+    const listEl = this.el("div", "directives-list");
+    this.directivesPanel.appendChild(listEl);
 
     for (const d of list) {
       const { def, progress, completed, claimed } = d;
@@ -879,7 +909,7 @@ export class UIManager {
         action.classList.add("cant-afford");
       }
       row.appendChild(action);
-      this.directivesPanel.appendChild(row);
+      listEl.appendChild(row);
     }
   }
 
