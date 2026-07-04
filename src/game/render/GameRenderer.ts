@@ -56,6 +56,7 @@ export class GameRenderer {
     this.background.draw(ctx, camera.x, camera.y, w, h, world.stats.elapsed, this.reduceMotion);
 
     this.drawArenaBoundary(ctx, camera, world);
+    this.drawHazards(ctx, camera, world);
     this.drawPickups(ctx, camera, world);
     this.drawAura(ctx, camera, world);
     this.drawPulse(ctx, camera, world);
@@ -152,6 +153,74 @@ export class GameRenderer {
     ctx.arc(cx, cy, r, 0, TAU);
     ctx.stroke();
     ctx.restore();
+  }
+
+  /**
+   * Biome hazards on the floor: a pulsing warning ring while telegraphing, then
+   * a bright rough-edged eruption during the dangerous beat, cooling on fade —
+   * in the game's inked/neon language.
+   */
+  private drawHazards(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {
+    const t = world.stats.elapsed;
+    for (let i = 0; i < world.hazards.length; i++) {
+      const h = world.hazards[i];
+      const x = camera.worldToScreenX(h.x);
+      const y = camera.worldToScreenY(h.y);
+      const r = h.radius * camera.zoom;
+      const hue = h.hue;
+      ctx.save();
+      ctx.translate(x, y);
+
+      if (h.phase === 0) {
+        // Telegraph — a fair, growing warning the player can read and dodge.
+        const p = h.phaseProgress;
+        ctx.globalCompositeOperation = "lighter";
+        // Filling floor glow ramps up as the eruption nears.
+        const fg = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+        fg.addColorStop(0, `hsla(${hue} 100% 60% / ${0.05 + 0.22 * p})`);
+        fg.addColorStop(1, `hsla(${hue} 100% 55% / 0)`);
+        ctx.fillStyle = fg;
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, TAU);
+        ctx.fill();
+        // Pulsing dashed rim.
+        ctx.strokeStyle = `hsla(${hue} 100% 68% / ${0.5 + 0.4 * Math.sin(t * 14)})`;
+        ctx.lineWidth = 3 + 2 * p;
+        ctx.setLineDash([12, 9]);
+        ctx.lineDashOffset = -t * 40;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * (0.55 + 0.45 * p), 0, TAU);
+        ctx.stroke();
+      } else {
+        // Active / fade — the eruption itself: a bright rough-edged molten pool.
+        const fading = h.phase === 2;
+        const a = fading ? 1 - h.phaseProgress : 1;
+        ctx.globalCompositeOperation = "lighter";
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.05);
+        g.addColorStop(0, `hsla(${hue} 100% 75% / ${0.85 * a})`);
+        g.addColorStop(0.6, `hsla(${(hue + 12) % 360} 100% 55% / ${0.55 * a})`);
+        g.addColorStop(1, `hsla(${hue} 100% 45% / 0)`);
+        ctx.fillStyle = g;
+        // Rough organic rim (baked wobble) instead of a clean circle.
+        ctx.beginPath();
+        const N = 22;
+        for (let s = 0; s <= N; s++) {
+          const ang = (s / N) * TAU;
+          const wob = 1 + 0.08 * Math.sin(ang * 3 + i) + 0.05 * Math.sin(ang * 6 + t * 3);
+          const px = Math.cos(ang) * r * wob;
+          const py = Math.sin(ang) * r * wob;
+          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        // Hot inner core.
+        ctx.fillStyle = `hsla(${(hue + 18) % 360} 100% 88% / ${0.5 * a})`;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.42, 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
   }
 
   private drawPlayer(ctx: CanvasRenderingContext2D, camera: Camera, world: World): void {

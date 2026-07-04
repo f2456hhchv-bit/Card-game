@@ -17,6 +17,24 @@ export interface StagePalette {
   starTint: string;
 }
 
+/**
+ * A biome's environmental identity — the hazards + rule that make it *play*
+ * differently, layered on top of the palette and roster it already has. Optional
+ * so calm stages (The Fade) can stay hazard-free.
+ */
+export interface BiomeDef {
+  /** Which hazard the field spawns (see Hazard). */
+  hazard: "lavaVent" | "iceRift" | "voidWell";
+  /** Seconds between hazard spawns [min, max]. */
+  hazardEvery: [number, number];
+  /** Damage each hazard deals when active. */
+  hazardDamage: number;
+  /** Hazard footprint radius (world units). */
+  hazardRadius: number;
+  /** Hue for the hazard's glow (defaults to the palette fog hue). */
+  hazardHue: number;
+}
+
 export interface StageDef {
   id: string;
   name: string;
@@ -25,6 +43,8 @@ export interface StageDef {
   /** Accent hue for menu chips / UI. */
   accentHue: number;
   palette: StagePalette;
+  /** Environmental biome layer (hazards). Absent = a calm field. */
+  biome?: BiomeDef;
   /** Enemy ids eligible to spawn here (summon-only types excluded as usual). */
   enemyPool: string[];
   /** Boss ids that headline this stage (cycled by encounter index). */
@@ -78,6 +98,8 @@ export const STAGE_DEFS: Record<string, StageDef> = {
     bossPool: ["thePyre", "theForge"],
     unlockBosses: 1,
     difficulty: 1.35,
+    // The scorched field erupts: lava vents telegraph, then burst — dodge the ring.
+    biome: { hazard: "lavaVent", hazardEvery: [3.5, 6], hazardDamage: 16, hazardRadius: 96, hazardHue: 20 },
   },
   deep: {
     id: "deep",

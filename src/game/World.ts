@@ -6,6 +6,7 @@ import { Particle } from "./entities/Particle";
 import { DamageNumber } from "./entities/DamageNumber";
 import { EnemyProjectile, type EnemyProjectileStyle } from "./entities/EnemyProjectile";
 import { ArcEffect } from "./entities/ArcEffect";
+import { Hazard } from "./entities/Hazard";
 import { ObjectPool } from "../core/ObjectPool";
 import { SpatialHashGrid } from "../core/SpatialHashGrid";
 import { EventBus } from "../core/EventBus";
@@ -210,6 +211,7 @@ export class World {
   readonly particles: Particle[] = [];
   readonly damageNumbers: DamageNumber[] = [];
   readonly arcs: ArcEffect[] = [];
+  readonly hazards: Hazard[] = [];
 
   private readonly enemyPool = new ObjectPool<Enemy>(() => new Enemy(), (e) => e.reset(), 256);
   private readonly projectilePool = new ObjectPool<Projectile>(
@@ -238,6 +240,8 @@ export class World {
     (a) => a.reset(),
     64,
   );
+  private readonly hazardPool = new ObjectPool<Hazard>(() => new Hazard(), (h) => h.reset(), 32);
+  private hazardTimer = 3;
 
   readonly enemyGrid = new SpatialHashGrid<Enemy>(96);
   private readonly spawnDirector = new SpawnDirector();
@@ -368,6 +372,7 @@ export class World {
     for (const p of this.particles) this.particlePool.release(p);
     for (const d of this.damageNumbers) this.damageNumberPool.release(d);
     for (const a of this.arcs) this.arcPool.release(a);
+    for (const h of this.hazards) this.hazardPool.release(h);
     this.enemies.length = 0;
     this.projectiles.length = 0;
     this.enemyProjectiles.length = 0;
@@ -375,6 +380,8 @@ export class World {
     this.particles.length = 0;
     this.damageNumbers.length = 0;
     this.arcs.length = 0;
+    this.hazards.length = 0;
+    this.hazardTimer = this.rng.range(3, 5);
 
     this.player.reset();
     this.loadout.metaLevels = this.metaLevels;
@@ -718,6 +725,7 @@ export class World {
     this.updateEnemies(dt);
     this.updateEnemyProjectiles(dt);
     this.updatePickups(dt);
+    this.updateHazards(dt);
     this.updateSupplyPods(dt);
     this.updateOverdrive(dt);
     this.updateChassisPassive(dt);
@@ -738,6 +746,85 @@ export class World {
    * healing, Motes and light. It never homes to the ship (the trek IS the
    * event) and holds off while a boss commands the field.
    */
+  /**
+   * Biome hazards — the field's environmental threat. On a cadence set by the
+   * stage's biome, a hazard telegraphs (a growing warning ring), erupts for a
+   * brief dangerous beat, then fades. Damage lands only during the active beat,
+   * so a hazard is always dodgeable if read. Absent biome = a calm field.
+   */
+  private updateHazards(dt: number): void {
+    const biome = getStage(this.stageId).biome;
+    if (biome && !this.bossActive) {
+      this.hazardTimer -= dt;
+      if (this.hazardTimer <= 0) {
+        const [lo, hi] = biome.hazardEvery;
+        this.hazardTimer = this.rng.range(lo, hi);
+        this.spawnHazard(biome);
+      }
+    }
+    const arr = this.hazards;
+    for (let i = arr.length - 1; i >= 0; i--) {
+      const h = arr[i];
+      h.timer += dt;
+      if (h.phase === 0) {
+        if (h.timer >= h.telegraphTime) {
+          h.phase = 1;
+          h.timer = 0;
+        }
+      } else if (h.phase === 1) {
+        const r2 = h.radius * h.radius;
+        // Continuous player damage (naturally throttled by i-frames).
+        const pdx = this.player.x - h.x;
+        const pdy = this.player.y - h.y;
+        if (pdx * pdx + pdy * pdy < r2) this.damagePlayer(h.damage);
+        // A one-time burst to any Hollow caught in the eruption (the field burns
+        // friend and foe) — fired once as the active beat opens.
+        if (!h.burst) {
+          h.burst = true;
+          for (const e of this.enemies) {
+            if (!e.active) continue;
+            const dx = e.x - h.x;
+            const dy = e.y - h.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < r2) {
+              const inv = 1 / (Math.sqrt(d2) || 1);
+              this.damageEnemy(e, h.damage * 1.6, false, dx * inv * 120, dy * inv * 120);
+            }
+          }
+        }
+        if (h.timer >= h.activeTime) {
+          h.phase = 2;
+          h.timer = 0;
+        }
+      } else if (h.timer >= h.fadeTime) {
+        this.hazardPool.release(h);
+        arr[i] = arr[arr.length - 1];
+        arr.pop();
+      }
+    }
+  }
+
+  private spawnHazard(biome: NonNullable<ReturnType<typeof getStage>["biome"]>): void {
+    const a = this.rng.angle();
+    const dist = this.rng.range(150, 360);
+    const lim = ARENA_RADIUS - biome.hazardRadius;
+    const h = this.hazardPool.obtain();
+    h.x = clamp(this.player.x + Math.cos(a) * dist, -lim, lim);
+    h.y = clamp(this.player.y + Math.sin(a) * dist, -lim, lim);
+    h.kind = biome.hazard;
+    h.radius = biome.hazardRadius;
+    h.damage = biome.hazardDamage;
+    h.hue = biome.hazardHue;
+    h.phase = 0;
+    h.timer = 0;
+    h.burst = false;
+    h.telegraphTime = 1.1;
+    h.activeTime = 1.0;
+    h.fadeTime = 0.5;
+    h.active = true;
+    this.hazards.push(h);
+  }
+
   private updateSupplyPods(dt: number): void {
     if (this.bossRush) return; // boss-only mode has no fodder lulls to fill
     if (this.bossActive) return;
