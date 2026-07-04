@@ -29,11 +29,12 @@ canonical.
 | 05  | Boss Bible — Boss Design Language & Silhouette Guide / Flash Sheet — Boss Visual Language | `vol05-boss-bible.png` | ✅ canonical |
 | 06  | Environment & Obstacles Bible — Hazards, Terrain & Interactive Objects / Flash Sheet — Environment & Obstacle Visual | `vol06-environment-obstacles-bible.png` | ✅ canonical |
 | 07  | Items & Powerups Bible — Pickups, Upgrades & Gameplay Resources / Flash Sheet — Enemy & Boss Silhouettes | `vol07-items-powerups-bible.png` | ✅ canonical |
+| 08  | Weapons & Projectiles Bible — Weapons, Projectiles & Combat FX Guide / Flash Sheet — Weapons, Projectiles & Combat FX | `vol08-weapons-projectiles-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
 01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ ·
-06 Environment & Obstacles ✅ · 07 Items & Powerups ✅ · 08 Gameplay · 09 System ·
-10 Technical · 11 Claude Code Manual.
+06 Environment & Obstacles ✅ · 07 Items & Powerups ✅ · 08 Weapons & Projectiles ✅ ·
+09 System · 10 Technical · 11 Claude Code Manual.
 
 > **Numbering note:** the delivered Vol 06 is the **Environment & Obstacles Bible**;
 > Vol 01's §1.12 index had listed slot 06 as "Equipment Bible". Sheets are the
@@ -633,3 +634,69 @@ Permanent passive effects **that stack**.
 > and follow §7.9 icons. The mote rarity ladder (§7.2) formalises XP/currency tiers
 > and pairs with §7.6 evolution tokens for a weapon-evolution path. Named bosses in
 > §G give canonical archetype names per colour class to align our boss roster to.
+
+---
+
+## Volume 08 — Weapons & Projectiles Bible: Weapons, Projectiles & Combat FX (v1.0)
+
+The law for **the player's arsenal and every bullet/FX on screen**. Directly governs
+`drawProjectileShape` / `drawEnemyBulletShape`, weapon defs, and impact FX (answers
+the earlier "rough-organic bullet iconography per boss/class" direction with a full
+element+behaviour system).
+
+### §8.1 Purpose
+Weapons are extensions of the Light. Projectiles carry intent. FX communicate
+impact. Clarity sells power. **Readability wins.**
+
+### §8.2 Weapon Rarities (defines power, complexity, glow intensity)
+Common (grey) · Uncommon (green) · Rare (blue) · Epic (purple) · Legendary (orange) ·
+Mythic (pink).
+
+### §8.3 Weapon Types
+**Sidearm · Shotgun · Rifle · Launcher · Staff · Melee.**
+
+### §8.4 Projectile Elements (8)
+**Physical · Fire · Ice · Electric · Toxic · Void · Light · Gravity.** *(Element =
+the projectile's colour + FX language; see §J palette.)*
+
+### §8.5 Projectile Behaviours
+**Straight · Homing · Bounce · Piercing · Split · Chain · Explode · Orbit.** (Aligns
+with §7.5 weapon upgrades.)
+
+### §8.6 Weapon Modifiers
+Fire Rate+ · Damage+ · Crit Chance · Piercing+ · Life Steal · Knockback · Split
+Shot · Bounce+.
+
+### §8.7 Status Effects (applied by weapons)
+**Burn · Freeze · Shock · Poison · Slow · Bleed · Weaken.**
+
+### §8.8 Impact FX Intensity Guide
+**Match FX to weapon rarity/power** — Common (small spark) → Mythic (huge burst).
+Bigger rarity = bigger, brighter impact.
+
+### §8.10 Contrast & Readability
+High contrast between weapon and background · clear projectile silhouette at all
+sizes · strong glow without obscuring gameplay · distinct colours per element ·
+readable at 64×64 and below.
+
+---
+
+## Flash Sheet — Weapons, Projectiles & Combat FX (Vol 08 right page, 64×64)
+
+- **A. Bullets & beams** · **B. Explosions (on impact)** · **C. Lasers & continuous**
+  (beams, spiral/helix, ring) · **D. Area effects (on ground)** — fire ring, ice
+  burst, toxic pool, void spiral, etc.
+- **E. Melee weapons** · **F. Upgrade path example** (★→★★★★★ same weapon
+  escalating) · **G. Projectile size guide** (XS·S·M·L·XXL — ensure visibility
+  across devices) · **H. Stacking & combo examples** (weapon + element = synergy →
+  bigger effect).
+- **I. Weapon hold & shoot poses** · **J. Element colour palette (guide)** — the
+  per-element swatch ramps (Physical/Fire/Ice/Electric/Toxic/Void/Light/Gravity) ·
+  **K. Design rules quick view.**
+
+> **Arsenal mapping.** Projectile rendering keys off **§8.4 element** (colour + FX)
+> × **§8.5 behaviour** (shape/motion) — this is the system behind per-class bullet
+> identity. Weapon rarity (§8.2) scales glow + impact FX (§8.8). §8.7 weapon status
+> effects unify with Vol 04 enemy states and Vol 01 damage types. The §J element
+> palette is the authoritative bullet-colour source; §G size guide keeps bullets
+> visible on iPhone. Combos (§H) formalise the element-stacking synergies.
