@@ -23,9 +23,10 @@ canonical.
 |-----|-------|------|--------|
 | 00  | The Studio Constitution / Flash Sheet — Visual Language Reference | `vol00-constitution.png` | ✅ canonical |
 | 01  | Universe Bible — The World of Afterlight / Flash Sheet — Universe Visual Language | `vol01-universe-bible.png` | ✅ canonical |
+| 02  | Art Bible — Visual Style & Asset Guidelines / Flash Sheet — Art Style & Asset Language | `vol02-art-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
-01 Universe ✅ · 02 Art · 03 Galaxy · 04 Enemy · 05 Boss · 06 Equipment ·
+01 Universe ✅ · 02 Art ✅ · 03 Galaxy · 04 Enemy · 05 Boss · 06 Equipment ·
 07 Flash Sheet · 08 Gameplay · 09 System · 10 Technical · 11 Claude Code Manual.
 
 ---
@@ -198,3 +199,69 @@ from these.
 01 Universe Bible · 02 Art Bible · 03 Galaxy Bible · 04 Enemy Bible · 05 Boss
 Bible · 06 Equipment Bible · 07 Flash Sheet Bible · 08 Gameplay Bible · 09 System
 Bible · 10 Technical Bible · 11 Claude Code Manual.
+
+---
+
+## Volume 02 — Art Bible: Visual Style & Asset Guidelines (v1.0, 17/05/2025)
+
+The **how-to-draw** law. Every asset we produce or extract is checked against this.
+
+### §2.1 Art Style Overview
+Afterlight uses a bold, hand-drawn rogue-lite style. Simple shapes, strong
+silhouettes, and neon glow over dark backgrounds for maximum clarity in chaotic
+gameplay.
+
+### §2.2 Style Pillars
+- **SIMPLE** — clear shapes, no clutter.
+- **BOLD** — strong silhouettes, instant clarity.
+- **NEON** — vibrant glow, life in the dark.
+- **READABLE** — 64×64 first, always clear.
+- **FUN** — expressive, not serious.
+
+### §2.3 Do's & Don'ts
+**DO:** simple shapes · strong silhouette language · high contrast & neon glow ·
+readable at 64×64 · consistent line weight · stylised, not realistic · exaggerated
+forms · clear visual hierarchy.
+
+**DON'T:** overly detailed designs · thin lines or tiny parts · muted/washed-out
+colours · complex textures or realism · symmetrical & sterile designs · hard to
+read at small size · visual noise & clutter · copy other games directly.
+
+> **Note on "shapes".** The sheet's DO list reads "use simple shapes" and §2.7
+> resolves what *kind*: **broken/organic shapes over rigid geometry**, rounded
+> corners over sharp. This matches the Studio Lead's standing direction — squiggly,
+> organic silhouettes, avoid perfect spheres/rectangles. "Simple" = few clean
+> forms, **not** sterile primitives.
+
+### §2.4 Readability Scale (64×64 test)
+If it's not clear at 64×64, simplify it. GOOD (clean spiked orb) → OKAY (busier)
+→ TOO COMPLEX (simplify). Always test at target size.
+
+### §2.5 Core Colour Philosophy
+Neon colours represent energy, life and power. Dark backgrounds represent the void
+and danger. Every colour has purpose and contrast. **Limit main colours per asset
+to 2–4** for clarity. Palette ramps: **Energy** (violet→pink), **Tech**
+(blue→cyan), **Nature** (green→lime), **Fire** (red→amber), **Void** (outlined
+purples).
+
+### §2.6 Glow Guide
+Soft glow · Medium glow · Hard glow · Pulse glow. Use glow to separate layers and
+add life — **don't overdo it.**
+
+### §2.7 Line & Shape Language
+Thick outer line for readability · minimal inner detail · rounded corners over
+sharp · **broken shapes = more interesting.** (Broken/organic silhouettes preferred
+over clean circle/square/triangle.)
+
+### §2.8 Asset Complexity Scale
+Detail budget rises with importance: **Resources ★ · Pickups ★★ · Projectiles ★★ ·
+Enemies (common) ★★★ · Elite enemies ★★★★ · Bosses ★★★★★.** Keep to the scale —
+simplest assets stay simplest.
+
+### §2.10 Guiding line
+*"Every asset must feel good to see, instantly understood, and exciting to
+collect."* Built for speed, clarity and fun.
+
+The Vol 02 right page repeats the same icon families (A–M) as the reference set,
+with **K. Colour Palette (MAIN)** = the locked swatches. No changes to the
+families; this volume governs *how* each is rendered, not *which* exist.
