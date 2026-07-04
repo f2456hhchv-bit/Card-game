@@ -33,17 +33,20 @@ canonical.
 | 09  | Enemies & Hazards Bible — Advanced Foes, Traps & World Threats / Flash Sheet — Enemies, Hazards & Threats | `vol09-enemies-hazards-bible.png` | ✅ canonical |
 | 10  | Dungeons & Biomes Bible — Environments, Rooms & Visual Themes / Flash Sheet — Dungeons, Rooms & Environments | `vol10-dungeons-biomes-bible.png` | ✅ canonical |
 | 11  | Traps & Mechanics Bible — Hazards, Triggers & Environmental Mechanics / Flash Sheet — Traps, Mechanics & Interactables | `vol11-traps-mechanics-bible.png` | ✅ canonical |
+| 12  | Artifacts & Specials Bible — Unique Relics, Active Skills & Ultimate Powers / Flash Sheet — Artifacts, Actives & Specials | `vol12-artifacts-specials-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
 01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ ·
 06 Environment & Obstacles ✅ · 07 Items & Powerups ✅ · 08 Weapons & Projectiles ✅ ·
-09 Enemies & Hazards ✅ · 10 Dungeons & Biomes ✅ · 11 Traps & Mechanics ✅.
+09 Enemies & Hazards ✅ · 10 Dungeons & Biomes ✅ · 11 Traps & Mechanics ✅ ·
+12 Artifacts & Specials ✅ (beyond the original index).
 
-> **Delivered set complete (00–11).** All twelve volumes named in the Vol 01 §1.12
-> index have landed and are catalogued below. Delivered titles superseded two index
-> labels (06 = Environment & Obstacles, 11 = Traps & Mechanics) — sheets are the
-> source of truth. Equipment content (indexed at 06) has not arrived as its own
-> sheet; equipment-slot iconography lives on the Vol 00/01 flash sheets (family I).
+> **Delivered set (00–12).** All twelve volumes named in the Vol 01 §1.12 index have
+> landed, **plus Volume 12 (Artifacts & Specials) which extends past the original
+> index.** Delivered titles superseded two index labels (06 = Environment &
+> Obstacles, 11 = Traps & Mechanics) — sheets are the source of truth. Equipment
+> content (indexed at 06) has not arrived as its own sheet; equipment-slot
+> iconography lives on the Vol 00/01 flash sheets (family I).
 
 > **Numbering note:** the delivered Vol 06 is the **Environment & Obstacles Bible**;
 > Vol 01's §1.12 index had listed slot 06 as "Equipment Bible". Sheets are the
@@ -930,3 +933,75 @@ Collapsing Floor · Toxic Gas · High Voltage · Water Rise · Ice Crack.
 > hazard rooms in the optional dungeon mode (Vol 10). §J colour meanings are the
 > project-wide semantic colour key — unify UI/VFX to it. §A/§B interactables extend
 > Vol 06 §6.4 and Vol 10 §D doors.
+
+---
+
+## Volume 12 — Artifacts & Specials Bible: Unique Relics, Active Skills & Ultimate Powers (v1.0)
+
+The law for **the power ceiling** — named artifacts (relics), player-activated
+skills, and screen-clearing ultimate specials. This is the "build-defining loot +
+active ability" layer that turns a run into a legend. Extends Vol 07 §7.8 relics
+into named, socketed, evolving artifacts and adds two brand-new systems (active
+skills, ultimates).
+
+### §12.1 Purpose
+Artifacts grant incredible power. Actives turn the tide. Specials change everything.
+Find them. Master them. Become legend.
+
+### §12.2 Artifact Rarities (6 — same ladder as weapons)
+Common · Uncommon · Rare · Epic · Legendary · **Mythic** (relics of limitless
+potential).
+
+### §12.3 Artifact Categories (6, socket-coded)
+- **Offense** (red) — deal more damage
+- **Defense** (green) — survive longer
+- **Utility** (blue) — improve mobility
+- **Magic** (purple) — enhance spells
+- **Summon** — call allies to fight
+- **Chaotic** — wild power, risk & reward
+
+### §12.4 Example Artifacts (named — effect)
+Blood Lantern (heal on kill) · Rune Band (+spell dmg) · Time Shard (slows time on
+hit) · Bone Crown (+minion dmg) · Guardian Coin (+armor stacking) · Void Heart
+(chance to fear) · Storm Core (chain lightning) · Demon Seal (+crit) · Spirit
+Feather (+move speed) · Ember Core (burn aura) · Frost Heart (chance to freeze) ·
+Plague Vial (poison clouds on death) · Light Orb (holy blasts) · Shadow Cloak (go
+invisible briefly) · War Horn (rally allies) · Chaos Dice (random effects).
+
+### §12.5 Active Skills (player-activated)
+Dash · Blade Spin · Frost Nova · Shadow Step · Healing Wave · Summon Golem · Arrow
+Rain · Gravity Well. *(New system: a manually-triggered ability slot with cooldown.)*
+
+### §12.6 Active Skill Upgrades
+Longer Duration · Bigger Area · More Damage · Shorter Cooldown · Additional Charge ·
+Status Effect · Resource Refund · Chain Effect.
+
+---
+
+## Flash Sheet — Artifacts, Actives & Specials (Vol 12 right page, 64×64)
+
+- **A. Ultimate Specials (devastating powers):** **Meteor Strike** (call meteors) ·
+  **Soul Eruption** (massive dmg + heal) · **Void Rupture** (tear reality, huge void
+  dmg) · **Avatar Ascend** (transform & devastate) · **Time Stop** (freeze all
+  enemies). *(New system: a charged ultimate.)*
+- **B. Special upgrade paths (5 levels):** e.g. Meteor Strike → Burning Meteors →
+  More Meteors → Larger Impact → **Apocalypse** (devastates entire screen).
+- **D. Statue & Altar effects:** Damage Up · Defense Up · Speed Up · Life Steal ·
+  Crit Chance · Resource Gain (shrine buffs — ties to Vol 10 §10.4 / Vol 09 §G).
+- **E. Artifact sockets:** Offense (red) · Defense (green) · Utility (blue) · Magic
+  (purple) gems slot into an artifact frame.
+- **F. Combining artifacts** (two compatible → something greater) · **G. Relic
+  evolution** (Common→…→Mythic upgrade chain) · **H. Special-effect icon legend**
+  (Burn·Poison·Frost·Shock·Bleed·Stun·Fear·Silence·Curse·Invulnerable).
+- Right-column interactables: **Chest · Shrine · Altar · Lever · Portal · Vendor ·
+  Bonfire · Teleporter** (reinforces Vol 09/10/11 world objects).
+
+> **Power-ceiling mapping.** §12.4 artifacts = our relics (Vol 07 §7.8), now with
+> named identities, §12.3 socket categories, §F combining and §G Common→Mythic
+> evolution. **§12.5 active skills** and **§A ultimate specials** are two NEW player
+> systems to introduce: an active ability slot (cooldown-based) and a charged
+> ultimate (built up over a run), each with §12.6/§B upgrade paths. §H effect icons
+> reconcile with Vol 09 §D debuff icons and Vol 08 §8.7 weapon states as the single
+> canonical status set. §D shrine buffs wire into Vol 10 altars/shrines. Together
+> these deliver the Vol 05 "power through choice" tone and the veteran endgame
+> ceiling.
