@@ -22,10 +22,11 @@ canonical.
 | Vol | Title | File | Status |
 |-----|-------|------|--------|
 | 00  | The Studio Constitution / Flash Sheet — Visual Language Reference | `vol00-constitution.png` | ✅ canonical |
+| 01  | Universe Bible — The World of Afterlight / Flash Sheet — Universe Visual Language | `vol01-universe-bible.png` | ✅ canonical |
 
-Connected volumes named on Vol 00 (awaiting delivery): 01 Universe · 02 Art ·
-03 Galaxy · 04 Enemy · 05 Boss · 06 Equipment · 07 Flash Sheet · 08 UI ·
-09 Gameplay · 10 Technical.
+Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
+01 Universe ✅ · 02 Art · 03 Galaxy · 04 Enemy · 05 Boss · 06 Equipment ·
+07 Flash Sheet · 08 Gameplay · 09 System · 10 Technical · 11 Claude Code Manual.
 
 ---
 
@@ -110,3 +111,90 @@ must be brought into line with the sheet as dedicated bibles arrive:
 
 > As each dedicated sheet lands, extract its exact assets, drop them here, and
 > wire them into the mapped system without altering the designs.
+
+---
+
+## Volume 01 — Universe Bible: The World of Afterlight (v1.0, 17/05/2025)
+
+The lore + world canon. Everything the campaign redesign draws from lives here.
+Names below are **exact** — the game's copy, factions, resources and celestial
+bodies must use these words.
+
+### §1.1 Origin
+Long ago, the universe was full of Light. The First Light created all things.
+Then came The Darkness. It consumed galaxies. It twisted life. **You are the last
+Lightbearer. You fly. You fight. You restore. You are Afterlight.**
+
+### §1.2 The Hundred Galaxies
+100 galaxies remain in the dark. Each galaxy holds: **Ancient civilisations ·
+Corrupted lifeforms · Lost technology · Light Motes.** Restore the Light. Save
+the universe.
+
+### §1.3 The Darkness
+The Darkness corrupts and transforms. It creates **twisted enemies, deadly
+hazards and void storms.** It feeds on Light. **It fears you.**
+
+### §1.4 The Light
+Light is life. Light is power. Collect **Light Motes** from enemies, destroyed
+objects and chests. Use Light to level up during a run. Become stronger. Push
+further.
+
+### §1.5 Core Gameplay Loop
+1. **FIGHT** — Enemies come from all directions. Survive.
+2. **DESTROY** — Shoot. Dodge. Stay alive.
+3. **COLLECT** — Collect Light Motes and resources.
+4. **LEVEL UP** — Choose upgrades. Expand your arsenal.
+5. **SURVIVE** — Defeat elites and bosses. Last longer.
+6. **PROGRESS** — Restore Light. Unlock more.
+
+*Every run is a new battle. Every choice changes your build.*
+
+### §1.6 Key Tones
+Hope in darkness · Desperation · Power through choice · Fast, intense, addictive ·
+Simple to learn, hard to master.
+
+### §1.7 Factions (canonical five)
+- **The Voidborn** — born of the dark itself (purple).
+- **The Rotwalkers** — decay and corruption (toxic green).
+- **The Ember Host** — burning fury (red/orange).
+- **The Crystal Choir** — cold crystalline order (cyan/ice-blue).
+- **The Iron Shroud** — armoured husks / lost machine-kin (steel/grey).
+
+### §1.8 Ancient Technologies
+Lost Weapons · Star Engines · Void Relics · Light Reactors · Ancient Drones.
+
+### §1.9 Resources
+- **Light Mote** — the core XP/currency (blue diamond).
+- **Dark Shard** — dark-aligned crafting resource (violet crystal).
+- **Scrap** — common salvage (grey ingot).
+- **Nanite Cluster** — tech resource (teal cluster).
+- **Void Core** — rare power source (purple orb).
+- **Ancient Part** — relic component (bronze cog/part).
+
+### §1.10 Celestial Bodies
+Planets · Asteroids · Nebulae · Rift Zones · Void Storms.
+
+### §1.13 Quote
+> *"Even one mote of Light can defy the dark."*
+
+---
+
+## Flash Sheet — Universe Visual Language (Vol 01 right page, all assets 64×64)
+
+Same icon families as Vol 00, now shown in-universe. The colour palette (K) is the
+**locked swatch set**: violet, indigo, blue, cyan, teal, green (top row); yellow,
+amber, orange, red, pink, white (bottom row). Damage-type and faction colours draw
+from these.
+
+**Icon families confirmed on Vol 01 (extract exactly as dedicated bibles land):**
+- **Equipment slots (I):** Hull · Core · Engine · Wings · Shield · Targeting ·
+  Reactor · Drone · Aux · Module.
+- **Damage types (J):** Physical · Fire · Ice · Poison · Plasma · Light · Dark ·
+  Electric · Explosive · Void.
+- **Pickups & resources (H):** Light Mote · Scrap crate · Nanite gear · Heart ·
+  Void Core · Battery · Star · Magnet (matches §1.9 resource set).
+
+**§1.12 Connected Volumes index (canonical numbering):** 00 Studio Constitution ·
+01 Universe Bible · 02 Art Bible · 03 Galaxy Bible · 04 Enemy Bible · 05 Boss
+Bible · 06 Equipment Bible · 07 Flash Sheet Bible · 08 Gameplay Bible · 09 System
+Bible · 10 Technical Bible · 11 Claude Code Manual.
