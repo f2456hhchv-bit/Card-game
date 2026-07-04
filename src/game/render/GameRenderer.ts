@@ -192,32 +192,59 @@ export class GameRenderer {
         ctx.arc(0, 0, r * (0.55 + 0.45 * p), 0, TAU);
         ctx.stroke();
       } else {
-        // Active / fade — the eruption itself: a bright rough-edged molten pool.
+        // Active / fade — the eruption itself, rough-edged in the inked style.
         const fading = h.phase === 2;
         const a = fading ? 1 - h.phaseProgress : 1;
-        ctx.globalCompositeOperation = "lighter";
-        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.05);
-        g.addColorStop(0, `hsla(${hue} 100% 75% / ${0.85 * a})`);
-        g.addColorStop(0.6, `hsla(${(hue + 12) % 360} 100% 55% / ${0.55 * a})`);
-        g.addColorStop(1, `hsla(${hue} 100% 45% / 0)`);
-        ctx.fillStyle = g;
-        // Rough organic rim (baked wobble) instead of a clean circle.
-        ctx.beginPath();
-        const N = 22;
-        for (let s = 0; s <= N; s++) {
-          const ang = (s / N) * TAU;
-          const wob = 1 + 0.08 * Math.sin(ang * 3 + i) + 0.05 * Math.sin(ang * 6 + t * 3);
-          const px = Math.cos(ang) * r * wob;
-          const py = Math.sin(ang) * r * wob;
-          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        // Rough organic rim path (shared by both hazard looks).
+        const rim = (scale: number): void => {
+          ctx.beginPath();
+          const N = 22;
+          for (let s = 0; s <= N; s++) {
+            const ang = (s / N) * TAU;
+            const wob = 1 + 0.08 * Math.sin(ang * 3 + i) + 0.05 * Math.sin(ang * 6 + t * 3);
+            const px = Math.cos(ang) * r * scale * wob;
+            const py = Math.sin(ang) * r * scale * wob;
+            s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+        };
+        if (h.kind === "iceRift") {
+          // A frosted rift: a cool translucent field with a crackled rim.
+          ctx.globalCompositeOperation = "source-over";
+          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.05);
+          g.addColorStop(0, `hsla(${hue} 80% 85% / ${0.3 * a})`);
+          g.addColorStop(0.7, `hsla(${hue} 75% 70% / ${0.16 * a})`);
+          g.addColorStop(1, `hsla(${hue} 70% 60% / 0)`);
+          ctx.fillStyle = g;
+          rim(1);
+          ctx.fill();
+          // Ice-crackle spokes.
+          ctx.globalCompositeOperation = "lighter";
+          ctx.strokeStyle = `hsla(${hue} 90% 85% / ${0.5 * a})`;
+          ctx.lineWidth = 2;
+          ctx.lineCap = "round";
+          for (let s = 0; s < 7; s++) {
+            const ang = (s / 7) * TAU + i;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(ang) * r * 0.2, Math.sin(ang) * r * 0.2);
+            ctx.lineTo(Math.cos(ang) * r * 0.95, Math.sin(ang) * r * 0.95);
+            ctx.stroke();
+          }
+        } else {
+          // A molten lava pool: bright, additive, hot-cored.
+          ctx.globalCompositeOperation = "lighter";
+          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.05);
+          g.addColorStop(0, `hsla(${hue} 100% 75% / ${0.85 * a})`);
+          g.addColorStop(0.6, `hsla(${(hue + 12) % 360} 100% 55% / ${0.55 * a})`);
+          g.addColorStop(1, `hsla(${hue} 100% 45% / 0)`);
+          ctx.fillStyle = g;
+          rim(1);
+          ctx.fill();
+          ctx.fillStyle = `hsla(${(hue + 18) % 360} 100% 88% / ${0.5 * a})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, r * 0.42, 0, TAU);
+          ctx.fill();
         }
-        ctx.closePath();
-        ctx.fill();
-        // Hot inner core.
-        ctx.fillStyle = `hsla(${(hue + 18) % 360} 100% 88% / ${0.5 * a})`;
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.42, 0, TAU);
-        ctx.fill();
       }
       ctx.restore();
     }

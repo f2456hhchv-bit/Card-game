@@ -773,22 +773,31 @@ export class World {
         }
       } else if (h.phase === 1) {
         const r2 = h.radius * h.radius;
-        // Continuous player damage (naturally throttled by i-frames).
         const pdx = this.player.x - h.x;
         const pdy = this.player.y - h.y;
-        if (pdx * pdx + pdy * pdy < r2) this.damagePlayer(h.damage);
-        // A one-time burst to any Hollow caught in the eruption (the field burns
-        // friend and foe) — fired once as the active beat opens.
-        if (!h.burst) {
-          h.burst = true;
-          for (const e of this.enemies) {
-            if (!e.active) continue;
-            const dx = e.x - h.x;
-            const dy = e.y - h.y;
-            const d2 = dx * dx + dy * dy;
-            if (d2 < r2) {
-              const inv = 1 / (Math.sqrt(d2) || 1);
-              this.damageEnemy(e, h.damage * 1.6, false, dx * inv * 120, dy * inv * 120);
+        const playerInside = pdx * pdx + pdy * pdy < r2;
+        if (h.kind === "iceRift") {
+          // A frozen field: it barely burns, but it chills the Warden to a
+          // crawl — deadly when the swarm closes while you're mired.
+          if (playerInside) {
+            this.player.chill = Math.min(this.player.chill, 0.42);
+            this.damagePlayer(h.damage);
+          }
+        } else {
+          // lavaVent (and default): continuous burn while inside (i-frame
+          // throttled), plus a one-time blast to Hollow caught in the eruption.
+          if (playerInside) this.damagePlayer(h.damage);
+          if (!h.burst) {
+            h.burst = true;
+            for (const e of this.enemies) {
+              if (!e.active) continue;
+              const dx = e.x - h.x;
+              const dy = e.y - h.y;
+              const d2 = dx * dx + dy * dy;
+              if (d2 < r2) {
+                const inv = 1 / (Math.sqrt(d2) || 1);
+                this.damageEnemy(e, h.damage * 1.6, false, dx * inv * 120, dy * inv * 120);
+              }
             }
           }
         }
@@ -821,6 +830,25 @@ export class World {
     h.telegraphTime = 1.1;
     h.activeTime = 1.0;
     h.fadeTime = 0.5;
+    h.active = true;
+    this.hazards.push(h);
+  }
+
+  /** A small, short-lived ember patch dropped by a felled Hollow (Ember rule). */
+  private spawnScorch(x: number, y: number): void {
+    const h = this.hazardPool.obtain();
+    h.x = x;
+    h.y = y;
+    h.kind = "lavaVent";
+    h.radius = 46;
+    h.damage = 7;
+    h.hue = 24;
+    h.phase = 0;
+    h.timer = 0;
+    h.burst = false;
+    h.telegraphTime = 0.35;
+    h.activeTime = 0.7;
+    h.fadeTime = 0.4;
     h.active = true;
     this.hazards.push(h);
   }
@@ -1205,8 +1233,9 @@ export class World {
     p.invuln = Math.max(0, p.invuln - dt);
     p.hitFlash = Math.max(0, p.hitFlash - dt);
 
-    p.x += input.moveX * s.moveSpeed * dt;
-    p.y += input.moveY * s.moveSpeed * dt;
+    p.x += input.moveX * s.moveSpeed * p.chill * dt;
+    p.y += input.moveY * s.moveSpeed * p.chill * dt;
+    p.chill = 1; // consumed each frame; ice hazards re-apply it below
     if (input.moveX !== 0 || input.moveY !== 0) {
       // Turn toward the stick smoothly — an instant snap made the sprite
       // jitter with every thumb wobble (the reported movement flicker).
@@ -1703,6 +1732,11 @@ export class World {
           const d = e.radius + 6;
           this.spawnAdd(def.splitInto, e.x + Math.cos(a) * d, e.y + Math.sin(a) * d);
         }
+      }
+      // Ember biome rule ("scorch"): a felled Hollow may leave a brief burning
+      // patch, seeding chain-burns through the swarm.
+      if (getStage(this.stageId).biome?.rule === "scorch" && this.hazards.length < 24) {
+        if (this.rng.chance(0.08)) this.spawnScorch(e.x, e.y);
       }
     }
 

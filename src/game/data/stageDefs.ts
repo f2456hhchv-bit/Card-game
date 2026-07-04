@@ -33,6 +33,8 @@ export interface BiomeDef {
   hazardRadius: number;
   /** Hue for the hazard's glow (defaults to the palette fog hue). */
   hazardHue: number;
+  /** Optional passive twist that gives the biome its own feel (see World). */
+  rule?: "scorch";
 }
 
 export interface StageDef {
@@ -98,8 +100,16 @@ export const STAGE_DEFS: Record<string, StageDef> = {
     bossPool: ["thePyre", "theForge"],
     unlockBosses: 1,
     difficulty: 1.35,
-    // The scorched field erupts: lava vents telegraph, then burst — dodge the ring.
-    biome: { hazard: "lavaVent", hazardEvery: [3.5, 6], hazardDamage: 16, hazardRadius: 96, hazardHue: 20 },
+    // The scorched field erupts (lava vents) AND smoulders: felled Hollow leave
+    // a brief ember patch that can chain-burn the swarm — the biome's rule.
+    biome: {
+      hazard: "lavaVent",
+      hazardEvery: [3.5, 6],
+      hazardDamage: 16,
+      hazardRadius: 96,
+      hazardHue: 20,
+      rule: "scorch",
+    },
   },
   deep: {
     id: "deep",
@@ -120,6 +130,8 @@ export const STAGE_DEFS: Record<string, StageDef> = {
     bossPool: ["theRime", "theNadir"],
     unlockBosses: 4,
     difficulty: 1.8,
+    // The glacial abyss freezes over: ice rifts chill the Warden to a crawl.
+    biome: { hazard: "iceRift", hazardEvery: [4, 6.5], hazardDamage: 5, hazardRadius: 120, hazardHue: 195 },
   },
 };
 

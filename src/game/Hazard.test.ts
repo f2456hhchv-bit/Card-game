@@ -51,6 +51,32 @@ describe("Biome hazards", () => {
     expect(w.player.hp).toBeLessThan(hpBeforeActive);
   });
 
+  it("chills the Warden to a crawl inside an active ice rift (Frozen Deep)", () => {
+    const w = new World();
+    w.reset();
+    w.stageId = "deep"; // deep biome spawns ice rifts
+    w.player.stats.maxHp = 100000;
+    w.player.hp = 100000;
+
+    let guard = 0;
+    while (w.hazards.length === 0 && guard++ < 60) run(w, 0.2);
+    expect(w.hazards.length).toBeGreaterThan(0);
+    const h = w.hazards[0];
+    expect(h.kind).toBe("iceRift");
+    // Drive it into the active beat, pinned on the Warden.
+    for (let i = 0; i < 80 && h.phase < 1; i++) {
+      w.step(1 / 60, STILL);
+      h.x = w.player.x;
+      h.y = w.player.y;
+    }
+    // One more step in the active beat sets the chill for the *next* move.
+    h.x = w.player.x;
+    h.y = w.player.y;
+    w.step(1 / 60, STILL);
+    expect(h.phase).toBe(1);
+    expect(w.player.chill).toBeLessThan(0.6);
+  });
+
   it("leaves calm stages (The Fade) hazard-free", () => {
     const w = new World();
     w.reset();

@@ -61,6 +61,10 @@ export class Player {
   /** Visual hit-flash timer. */
   hitFlash = 0;
 
+  /** Per-frame movement multiplier from environmental chill (1 = normal). Set by
+   *  ice hazards each step and consumed (reset to 1) after the Warden moves. */
+  chill = 1;
+
   // Base stats — the floor before upgrades. Tuned in BalancingNotes.md.
   base: DerivedStats = {
     maxHp: 100,
@@ -95,6 +99,7 @@ export class Player {
     this.xpToNext = 5;
     this.invuln = 0;
     this.hitFlash = 0;
+    this.chill = 1;
     this.stats = { ...this.base };
     this.hp = this.stats.maxHp;
   }
