@@ -32,11 +32,18 @@ canonical.
 | 08  | Weapons & Projectiles Bible — Weapons, Projectiles & Combat FX Guide / Flash Sheet — Weapons, Projectiles & Combat FX | `vol08-weapons-projectiles-bible.png` | ✅ canonical |
 | 09  | Enemies & Hazards Bible — Advanced Foes, Traps & World Threats / Flash Sheet — Enemies, Hazards & Threats | `vol09-enemies-hazards-bible.png` | ✅ canonical |
 | 10  | Dungeons & Biomes Bible — Environments, Rooms & Visual Themes / Flash Sheet — Dungeons, Rooms & Environments | `vol10-dungeons-biomes-bible.png` | ✅ canonical |
+| 11  | Traps & Mechanics Bible — Hazards, Triggers & Environmental Mechanics / Flash Sheet — Traps, Mechanics & Interactables | `vol11-traps-mechanics-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
 01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ ·
 06 Environment & Obstacles ✅ · 07 Items & Powerups ✅ · 08 Weapons & Projectiles ✅ ·
-09 Enemies & Hazards ✅ · 10 Dungeons & Biomes ✅ · 11 Claude Code Manual.
+09 Enemies & Hazards ✅ · 10 Dungeons & Biomes ✅ · 11 Traps & Mechanics ✅.
+
+> **Delivered set complete (00–11).** All twelve volumes named in the Vol 01 §1.12
+> index have landed and are catalogued below. Delivered titles superseded two index
+> labels (06 = Environment & Obstacles, 11 = Traps & Mechanics) — sheets are the
+> source of truth. Equipment content (indexed at 06) has not arrived as its own
+> sheet; equipment-slot iconography lives on the Vol 00/01 flash sheets (family I).
 
 > **Numbering note:** the delivered Vol 06 is the **Environment & Obstacles Bible**;
 > Vol 01's §1.12 index had listed slot 06 as "Equipment Bible". Sheets are the
@@ -849,3 +856,77 @@ Ancient.** Use colour and contrast to guide the player and build atmosphere.
 > are per-room rule twists that echo our Directives/biome rules. §H depth ladder
 > pairs with Vol 03 §3.4 difficulty tiers + Vol 09 §9.5 boss tiers for a unified
 > progression curve.
+
+---
+
+## Volume 11 — Traps & Mechanics Bible: Hazards, Triggers & Environmental Mechanics (v1.0)
+
+The law for **traps and interactive mechanics** — the deepest cut of the
+environment system. Categorises every trap by purpose, trigger and difficulty, and
+sets the **fairness contract** (always telegraph, always give a reaction window).
+
+### §11.1 Purpose
+Traps protect, punish and challenge. Mechanics create movement, choices and
+consequences. Learn the pattern. Survive the dungeon.
+
+### §11.2 Trap Categories (6)
+- **Damage** — hurt/kill instantly or over time (red)
+- **Control** — slow, stun, root or displace (purple)
+- **Area Denial** — block paths or zones temporarily (orange)
+- **Utility** — create effects, open paths, change state (green)
+- **Puzzle** — require action, timing or sequence (blue)
+- **Environmental** — passive hazards based on the environment (grey)
+
+### §11.3 Trigger Types (6)
+**Pressure Plate · Proximity · Line of Sight · Timer · Ranged · Manual.**
+
+### §11.4 Damage Traps
+Spike Pit · Dart Shooter · Flame Jet · Falling Rocks · Lightning Strike · Blade Wall.
+
+### §11.5 Control Traps
+Poison Dart · Freeze Burst · Knockback Pad · Root Vines · Slow Field · Teleport Pad.
+
+### §11.6 Area Denial Traps
+Fire Floor · Acid Pool · Void Zone · Sand Storm · Magma Stream · Shock Field.
+
+### §11.7 Utility & Puzzle Mechanics
+Pressure Gate · Weight Plate · Beam Reflector · Colour Switch · Statue Activator ·
+Sequence Rune.
+
+### §11.8 Environmental Hazards
+Collapsing Floor · Toxic Gas · High Voltage · Water Rise · Ice Crack.
+
+---
+
+## Flash Sheet — Traps, Mechanics & Interactables (Vol 11 right page, 64×64)
+
+- **A. Mechanical devices (interactables):** Lever · Crank · Pressure Pad · Button ·
+  Gear Box · Valve.
+- **B. Gates & barriers:** Portcullis · Stone Gate · Magic Seal · Energy Barrier ·
+  Locked Door · One-Way Gate.
+- **C. Trap warning signs:** Danger · Spikes · Fire · Poison · Shock · Crush.
+- **D. Floor & wall markers:** Trap Mark · Safe Zone · Trigger Area · Directional ·
+  Secret Wall · Puzzle Clue.
+- **E. Movement hazards:** Rolling Spike · Swinging Blade · Crushing Wall · Wall Saw ·
+  Pursuit Boulder · Floor Spikes.
+- **F. Elemental traps (6 = boss colour classes):** Infernal · Frost · Toxic ·
+  Arcane · Void · Holy.
+- **G. Trap combinations** (trap + trap = escalated hazard) · **H. Trap chain
+  example (room flow):** Entry → Trigger → Challenge → Escalate → Reward.
+- **I. Trap difficulty guide:** Easy · Normal · Hard · Extreme · Nightmare (mirrors
+  Vol 09 threat levels) · **J. Colour coding (meaning):** Red = Damage/Danger ·
+  Purple = Control/Curse · Green = Poison/Nature · Blue = Ice/Water/Tech · Orange =
+  Fire/Heat · Yellow = Holy/Light · Grey = Physical/Neutral.
+- **K. Design rules quick view:** always telegraph before activation · give a fair
+  reaction window · mix trap types for variety · combine mechanics for depth · use
+  colour & sound for clarity · difficulty should feel earned · **traps are puzzles,
+  not annoyances.**
+
+> **Trap-system mapping.** §11.2 categories + §11.3 triggers formalise a trap layer
+> atop our `Hazard` lifecycle (telegraph→active→fade already encodes §K's "always
+> telegraph, fair reaction window"). §F elemental traps reuse the boss/damage colour
+> classes so a Frost/Infernal/Void trap reads the same as its element everywhere.
+> §H trap-chain flow (Entry→Trigger→Challenge→Escalate→Reward) is the template for
+> hazard rooms in the optional dungeon mode (Vol 10). §J colour meanings are the
+> project-wide semantic colour key — unify UI/VFX to it. §A/§B interactables extend
+> Vol 06 §6.4 and Vol 10 §D doors.
