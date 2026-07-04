@@ -28,10 +28,11 @@ canonical.
 | 04  | Enemy Bible — Enemy Design Language & Silhouette Guide / Flash Sheet — Enemy Visual Language | `vol04-enemy-bible.png` | ✅ canonical |
 | 05  | Boss Bible — Boss Design Language & Silhouette Guide / Flash Sheet — Boss Visual Language | `vol05-boss-bible.png` | ✅ canonical |
 | 06  | Environment & Obstacles Bible — Hazards, Terrain & Interactive Objects / Flash Sheet — Environment & Obstacle Visual | `vol06-environment-obstacles-bible.png` | ✅ canonical |
+| 07  | Items & Powerups Bible — Pickups, Upgrades & Gameplay Resources / Flash Sheet — Enemy & Boss Silhouettes | `vol07-items-powerups-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
 01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ ·
-06 Environment & Obstacles ✅ · 07 Flash Sheet · 08 Gameplay · 09 System ·
+06 Environment & Obstacles ✅ · 07 Items & Powerups ✅ · 08 Gameplay · 09 System ·
 10 Technical · 11 Claude Code Manual.
 
 > **Numbering note:** the delivered Vol 06 is the **Environment & Obstacles Bible**;
@@ -560,3 +561,75 @@ glow for all critical elements · avoid mid-tone clutter · readable at 64×64.
 > (telegraph→active→fade) is the backbone for the full §6.2 hazard set; §6.4
 > interactables (crates, power nodes, health stations) and §6.6 destructibles are
 > **new arena layers** to add — each drops pickups/resources per the Universe Bible.
+
+---
+
+## Volume 07 — Items & Powerups Bible: Pickups, Upgrades & Gameplay Resources (v1.0)
+
+The law for **the reward economy** — every pickup, upgrade, powerup, relic, chest,
+mote tier and shop icon. Maps onto our in-run upgrade draft, relics, meta shop and
+pickup roster.
+
+### §7.1 Purpose
+Collect, adapt, grow. Items and powerups fuel temporary strength and build unique
+runs. Every choice matters. Risk. Reward. Evolve.
+
+### §7.2 Currency & Motes (rarity ladder — used to level up & upgrade weapons)
+- **Light Mote** — Common (blue diamond)
+- **Nova Mote** — Uncommon (green)
+- **Star Mote** — Rare (cyan)
+- **Void Mote** — Epic (purple)
+- **Chaos Mote** — Legendary (orange)
+- **Boss Mote** — Boss Only (ringed/saturn)
+
+### §7.3 Hearts & Shields
+**Health** (restores HP) · **Shield** (adds barrier) · **Max HP** (increase max) ·
+**Armor** (reduces dmg).
+
+### §7.4 Powerups (temporary)
+Attack Up (+damage) · Fire Rate Up · Speed Up (+movement) · Crit Chance (+crit%) ·
+Damage Aura (area) · XP Boost · Magnet (pulls motes) · Revive Chance (one extra
+life) · Dodge (+evade) · Invulnerable (brief immunity).
+
+### §7.5 Weapon Upgrades (in-run)
+**Piercing** (bullets pass through) · **Bounce** (projectiles bounce) · **Split**
+(shots split in two) · **Chain** (jumps between enemies) · **Explosive** (on-hit
+explode).
+
+### §7.6 Evolution Tokens (evolve weapons into stronger forms — rarity)
+Common · Uncommon · Rare · Epic · Legendary.
+
+### §7.7 Chests & Rewards
+**Common · Rare · Epic · Legendary · Cursed** chest (Cursed = high risk/reward).
+
+### §7.8 Relics (passive bonuses)
+Permanent passive effects **that stack**.
+
+### §7.9 Reroll & Banish
+**Reroll** (new choices) · **Banish** (remove an option permanently).
+
+### §7.10 Shop Icons
+**Weapon · Upgrade · Powerup · Relic.**
+
+---
+
+## Flash Sheet — Enemy & Boss Silhouettes (Vol 07 right page, 64×64)
+
+*(The Vol 07 flash sheet doubles as an expanded enemy/boss silhouette reference.)*
+
+- **A. Swarm enemies (common)** · **B. Ranged enemies** · **C. Charger enemies** ·
+  **D. Elite enemies** · **E. Summoners & Support** · **F. Hazard creatures
+  (environmental)**.
+- **G. Boss silhouettes (named examples):** **Void Behemoth · Lava Colossus ·
+  Toxic Harvester · Storm Wraith · Star Devourer** — one flagship boss per §5.5
+  colour class (Void/Infernal/Toxic/Storm/Celestial).
+- **H. Size comparison:** Player 1× · Swarm 1.5× · Elite 2.5× · Mini Boss 4× ·
+  Boss 8×+.
+- **I. Threat colours (at a glance):** Low (teal, Easy) · Moderate (green, Normal) ·
+  High (purple, Hard) · Extreme (orange, Very Hard) · Lethal (red, Boss).
+
+> **Economy mapping.** Our in-run upgrade draft = §7.4 powerups + §7.5 weapon
+> upgrades; relics = §7.8; chests/reward tiers = §7.7; reroll/banish already exist
+> and follow §7.9 icons. The mote rarity ladder (§7.2) formalises XP/currency tiers
+> and pairs with §7.6 evolution tokens for a weapon-evolution path. Named bosses in
+> §G give canonical archetype names per colour class to align our boss roster to.
