@@ -25,9 +25,10 @@ canonical.
 | 01  | Universe Bible — The World of Afterlight / Flash Sheet — Universe Visual Language | `vol01-universe-bible.png` | ✅ canonical |
 | 02  | Art Bible — Visual Style & Asset Guidelines / Flash Sheet — Art Style & Asset Language | `vol02-art-bible.png` | ✅ canonical |
 | 03  | Galaxy Bible — Structure & Design Framework / Flash Sheet — Galaxy Visual Language | `vol03-galaxy-bible.png` | ✅ canonical |
+| 04  | Enemy Bible — Enemy Design Language & Silhouette Guide / Flash Sheet — Enemy Visual Language | `vol04-enemy-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
-01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy · 05 Boss · 06 Equipment ·
+01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss · 06 Equipment ·
 07 Flash Sheet · 08 Gameplay · 09 System · 10 Technical · 11 Claude Code Manual.
 
 ---
@@ -353,3 +354,73 @@ New icon families this volume introduces (extract exactly as dedicated bibles la
 > mechanic + restoration goal) and slot new galaxies along the §3.4 tier ladder
 > (Awakening → Forgotten). Hazard set expands from the current 2 (lava/ice) toward
 > the §C set (Void Rift, Gravity Well, Laser Grid, …).
+
+---
+
+## Volume 04 — Enemy Bible: Enemy Design Language & Silhouette Guide (v1.0, 17/05/2025)
+
+The law for **how enemies read**. Governs our `enemyRaster` roster, elite variants,
+spawners and special enemies.
+
+### §4.1 Purpose
+Enemies come in waves. You survive, you adapt, you grow. **Clarity at a glance is
+everything.** Strong silhouette. Simple shape. Instant threat read.
+
+### §4.2 Design Pillars
+**CLEAR** (instantly recognisable) · **FAST READ** (readable at 64×64) · **SIMPLE**
+(bold shapes) · **THREAT** (communicates danger) · **VARIETY** (many types, few
+rules).
+
+### §4.3 Silhouette Rules
+Big shapes over detail · no thin limbs or tiny parts · **outer shape = identity,
+inner shape = flavour** · readable at small size · strong contrast · distinct from
+other enemies. *Bad examples: skeletal spiders, thin winged wisps, tentacled
+horrors — too fine/limby to read.*
+
+### §4.4 Threat Readability
+Colour, shape and animation communicate threat. **Higher tier = bigger shape,
+brighter accents, stronger silhouette.** Low → high threat: Common → Elite → Rare →
+Boss.
+
+### §4.5 Size Language
+Size communicates importance — Common (small) → Elite → Rare → Boss (largest).
+
+### §4.6 Movement Language
+**Straight · Swoop · Zig-Zag · Homing · Spawner · Orbiter.**
+
+### §4.7 Attack Language
+**Shoot · Burst · Beam · Explode · Charge · Split.**
+
+### §4.8 Colour Coding Guide
+- **Neutral/Common** — teal
+- **Elite** — purple
+- **Rare** — orange
+- **Boss** — red
+- **Hazard/Spawner** — deep red/orange
+
+### §4.9 Animation Guidelines
+Snappy, not floaty · anticipate before attack · impact on hit/death · no long
+wind-ups · keep it readable.
+
+### §4.10 Complexity Scale (M, guide for all future enemy design)
+**Common ★ · Elite ★★ · Rare ★★★ · Boss (red, top) · Spawner ★★★.**
+
+---
+
+## Flash Sheet — Enemy Visual Language (Vol 04 right page, all assets 64×64)
+
+Enemy taxonomy (each a family of faction-tinted variants — extract exactly as the
+roster is rebuilt):
+
+- **A. Common enemies** · **B. Elite enemies** · **C. Rare enemies** ·
+  **D. Boss enemies** · **E. Spawners & Summoners** · **F. Special enemies**
+  (gravity/lightning/triangle-sentry/orbital/dasher forms).
+- **G. Projectiles (shot types)** · **H. Death / Impact FX** · **I. Size comparison**
+  (Player · Common · Elite · Rare · Boss).
+- **L. Colour palette (enemy families)** — the per-family tint set behind §4.8.
+
+> **Roster mapping.** Our Hollow bestiary (drifter, mote, husk, lunger, wisp,
+> caster, spore, seer, lancer, cinder, revenant, shard, colossus …) re-sorts into
+> Common/Elite/Rare/Boss tiers by §4.5 size + §4.8 colour, with movement/attack
+> tagged from §4.6/§4.7. Silhouettes must satisfy §4.3 (outer=identity, no thin
+> limbs) — the "bad examples" (thin spiders/wisps) are exactly the reads to avoid.
