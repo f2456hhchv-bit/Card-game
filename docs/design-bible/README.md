@@ -27,10 +27,17 @@ canonical.
 | 03  | Galaxy Bible — Structure & Design Framework / Flash Sheet — Galaxy Visual Language | `vol03-galaxy-bible.png` | ✅ canonical |
 | 04  | Enemy Bible — Enemy Design Language & Silhouette Guide / Flash Sheet — Enemy Visual Language | `vol04-enemy-bible.png` | ✅ canonical |
 | 05  | Boss Bible — Boss Design Language & Silhouette Guide / Flash Sheet — Boss Visual Language | `vol05-boss-bible.png` | ✅ canonical |
+| 06  | Environment & Obstacles Bible — Hazards, Terrain & Interactive Objects / Flash Sheet — Environment & Obstacle Visual | `vol06-environment-obstacles-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
-01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ · 06 Equipment ·
-07 Flash Sheet · 08 Gameplay · 09 System · 10 Technical · 11 Claude Code Manual.
+01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ ·
+06 Environment & Obstacles ✅ · 07 Flash Sheet · 08 Gameplay · 09 System ·
+10 Technical · 11 Claude Code Manual.
+
+> **Numbering note:** the delivered Vol 06 is the **Environment & Obstacles Bible**;
+> Vol 01's §1.12 index had listed slot 06 as "Equipment Bible". Sheets are the
+> source of truth, so we follow the delivered title. Equipment content may arrive
+> under a later/renumbered volume.
 
 ---
 
@@ -492,3 +499,64 @@ Survive. (The recovery Gap is the player's window.)
 > rough-organic bullet direction already applied — every class visually distinct via
 > §J energy signature + §L palette. Tell→Attack→Gap (§5.8) is the readability
 > contract for every telegraph.
+
+---
+
+## Volume 06 — Environment & Obstacles Bible: Hazards, Terrain & Interactive Objects (v1.0)
+
+The law for **the arena itself**. Governs the biome/`Hazard` system, plus terrain,
+destructibles and interactive objects (much of this is *new* systems to build).
+
+### §6.1 Purpose
+The environment shapes the battle. Hazards create tension, terrain adds variation,
+and interactables reward risk and exploration.
+
+### §6.2 Hazard Types (12)
+**Spikes · Lava · Acid · Electric · Fire · Ice · Void · Meteor · Laser · Gravity ·
+Toxic · Explosive.** *(Live today: Lava = lavaVent, Ice = iceRift. The rest are the
+expansion set — Void well already stubbed in `Hazard.ts`.)*
+
+### §6.3 Terrain Types (8)
+**Rock · Metal · Crystal · Organic · Ice · Volcanic · Toxic · Void.** Terrain tiles
+theme the floor per biome.
+
+### §6.4 Interactive Objects (6)
+**Barrel · Crate · Power Node · Health Station · Teleporter · Safe Zone.** Risk/
+reward interactables — new interactable layer.
+
+### §6.5 Obstacle Silhouettes
+Large blocking forms — crystal clusters, skull rocks, dead trees, pillars, boulders
+— bold silhouettes, no thin parts (per Art Bible).
+
+### §6.6 Destructible Objects
+Barrels, crates, power nodes, crystal/rock/organic clusters that **break on hit**
+and drop pickups (see §6.6/§F destructible variants: intact → hit → shattered).
+
+### §6.7 Environment Theme Colours (5 themes)
+- **Void Realm** — purple
+- **Volcanic Wastes** — red/orange
+- **Toxic Depths** — green
+- **Frozen Wastes** — ice-blue
+- **Mechanical Core** — steel/cyan
+
+### §6.8 Visual Readability Guidelines
+High contrast between hazards and safe areas · strong silhouette language · clear
+glow for all critical elements · avoid mid-tone clutter · readable at 64×64.
+
+---
+
+## Flash Sheet — Environment & Obstacle Visual Language (Vol 06 right page, 64×64)
+
+- **A. Hazards** (the §6.2 set, animated states) · **B. Terrain tiles** (§6.3
+  themed floors) · **C. Interactive objects** (§6.4) · **D. Environment props** ·
+  **E. Obstacles (large)** · **F. Destructible variants** (intact→break→shatter).
+- **G. Environment theme preview:** Void Realm · Volcanic Wastes · Toxic Depths ·
+  Frozen Wastes · Mechanical Core — the five biome looks.
+- **H. Depth & layering guide:** background → foreground (parallax read).
+
+> **Environment mapping.** The §6.7 five themes align with the galaxy biomes
+> (Vol 03 §A). Ember Wastes = Volcanic Wastes, Hollow Deep = Frozen Wastes, plus
+> new Void Realm / Toxic Depths / Mechanical Core galaxies. Our `Hazard` lifecycle
+> (telegraph→active→fade) is the backbone for the full §6.2 hazard set; §6.4
+> interactables (crates, power nodes, health stations) and §6.6 destructibles are
+> **new arena layers** to add — each drops pickups/resources per the Universe Bible.
