@@ -30,11 +30,12 @@ canonical.
 | 06  | Environment & Obstacles Bible — Hazards, Terrain & Interactive Objects / Flash Sheet — Environment & Obstacle Visual | `vol06-environment-obstacles-bible.png` | ✅ canonical |
 | 07  | Items & Powerups Bible — Pickups, Upgrades & Gameplay Resources / Flash Sheet — Enemy & Boss Silhouettes | `vol07-items-powerups-bible.png` | ✅ canonical |
 | 08  | Weapons & Projectiles Bible — Weapons, Projectiles & Combat FX Guide / Flash Sheet — Weapons, Projectiles & Combat FX | `vol08-weapons-projectiles-bible.png` | ✅ canonical |
+| 09  | Enemies & Hazards Bible — Advanced Foes, Traps & World Threats / Flash Sheet — Enemies, Hazards & Threats | `vol09-enemies-hazards-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
 01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ ·
 06 Environment & Obstacles ✅ · 07 Items & Powerups ✅ · 08 Weapons & Projectiles ✅ ·
-09 System · 10 Technical · 11 Claude Code Manual.
+09 Enemies & Hazards ✅ · 10 Technical · 11 Claude Code Manual.
 
 > **Numbering note:** the delivered Vol 06 is the **Environment & Obstacles Bible**;
 > Vol 01's §1.12 index had listed slot 06 as "Equipment Bible". Sheets are the
@@ -700,3 +701,82 @@ readable at 64×64 and below.
 > effects unify with Vol 04 enemy states and Vol 01 damage types. The §J element
 > palette is the authoritative bullet-colour source; §G size guide keeps bullets
 > visible on iPhone. Combos (§H) formalise the element-stacking synergies.
+
+---
+
+## Volume 09 — Enemies & Hazards Bible: Advanced Foes, Traps & World Threats (v1.0)
+
+The **advanced-content** law — named advanced enemies, mini-bosses, boss tiers,
+enemy attack patterns, hazard traps, elite affixes and threat zones. Extends Vol 04
+(enemy language) and Vol 06 (hazards) into concrete named content + the elite-affix
+system already live in-game.
+
+### §9.1 Purpose
+Not all threats come with a sword. Some stalk. Some explode. Some corrupt. Know your
+enemy. Survive the lightless.
+
+### §9.2 Enemy Factions (5 — matches the boss colour classes)
+**Void · Infernal · Toxic · Mechanical · Ancient.**
+
+### §9.3 Advanced Enemies (named archetypes — name · role · behaviour)
+- **Shadow Lurker** — Stealthy · Melee
+- **Light Eater** — Ranged · Drain
+- **Blazeforge** — Elite · AoE
+- **Toxic Orb Walker** — Tank · Aura
+- **Void Stalker** — Dash · Burst
+- **Rune Sentinel** — Shield · Support
+
+### §9.4 Mini Bosses (elite threats — name · trait)
+- **Scourge Beast** — Heavy · Charge
+- **Crystal Colossus** — Tank · Reflect
+- **Soul Harvester** — Ranged · Drain
+- **Molten Tyrant** — AoE · Burn
+- **Storm Revenant** — Chain · Teleport
+
+### §9.5 Boss Tiers (scaled difficulty by level band)
+**Normal** (Lv 1–20) · **Elite** (Lv 20–40) · **Champion** (Lv 40–60) ·
+**Mythic** (Lv 60–80) · **Ancient** (Lv 80+).
+
+### §9.6 Enemy Attack Patterns
+**Cone** (front burst) · **Ring** (surround AoE) · **Spiral** (expanding) ·
+**Tracking** (follows player) · **Telegraph** (warns impact).
+
+### §9.7 Hazard Traps (placed)
+**Spike Trap** (physical) · **Fire Trap** (burn) · **Acid Pool** (toxic) ·
+**Ice Trap** (slow) · **Void Rift** (pull + damage).
+
+### §9.8 Environmental Hazards (zone)
+**Lava Flood** (damage over time) · **Poison Cloud** (disables regen) · **Electric
+Field** (periodic damage) · **Collapsing Floor** (unstable ground) · **Darkness
+Zone** (reduces vision).
+
+### §9.9 Elite Modifiers (random affixes)
+**Fast** (increased movement) · **Frenzied** (more attacks) · **Thick Skin** (damage
+reduction) · **Vampiric** (heals on hit) · **Explosive** (on death) · **Shielded**
+(immune to first hit) · **Enraged** (lower HP → more dmg) · **Corrupted** (spreads
+status).
+
+### §9.10 Threat Level Guide (zone indicator)
+**Low** (Safe, green) · **Moderate** (Caution, yellow) · **High** (Danger, orange) ·
+**Extreme** (Very Dangerous, red) · **Nightmare** (Prepare to die, purple).
+
+---
+
+## Flash Sheet — Enemies, Hazards & Threats (Vol 09 right page, 64×64)
+
+- **A. Common enemies (by faction)** · **B. Elite & champion variants** ·
+  **C. Projectile examples** · **D. Debuff / status icons** (Burn·Poison·Shock·
+  Slow·Bleed·Curse·Silence·Stun·Weaken·Blind) · **E. Summons & minions**.
+- **F. Boss attack telegraphs** (cone/ring/target/spiral/eruption red warnings) ·
+  **G. World objects & interactables** (Chest·Altar·Seal·Gate·Lever·Shrine·Obelisk) ·
+  **H. Death & revive FX** · **I. Size comparison** (Minion 1× · Common 1.5× · Elite
+  2× · Mini Boss 3× · Ancient Boss 8×+).
+
+> **Advanced-content mapping.** §9.9 elite modifiers formalise our live elite-affix
+> rings — align names/effects to this list. §9.3/§9.4 give a named archetype +
+> mini-boss roster to grow the bestiary into; §9.5 boss tiers pair with Vol 05 size
+> tiers for level-banded scaling. §9.6 attack patterns + §F telegraphs extend the
+> boss/enemy attack vocabulary (Vol 05 §5.6) with the Tell→React contract. §9.7/§9.8
+> traps & zone hazards extend the Vol 06 hazard set; §D debuff icons are the
+> canonical status-effect set to unify Vol 04/08 states against. §G interactables
+> reinforce Vol 06 §6.4 (Chest/Altar/Seal/Gate/Lever/Shrine/Obelisk).
