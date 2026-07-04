@@ -26,9 +26,10 @@ canonical.
 | 02  | Art Bible — Visual Style & Asset Guidelines / Flash Sheet — Art Style & Asset Language | `vol02-art-bible.png` | ✅ canonical |
 | 03  | Galaxy Bible — Structure & Design Framework / Flash Sheet — Galaxy Visual Language | `vol03-galaxy-bible.png` | ✅ canonical |
 | 04  | Enemy Bible — Enemy Design Language & Silhouette Guide / Flash Sheet — Enemy Visual Language | `vol04-enemy-bible.png` | ✅ canonical |
+| 05  | Boss Bible — Boss Design Language & Silhouette Guide / Flash Sheet — Boss Visual Language | `vol05-boss-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
-01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss · 06 Equipment ·
+01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ · 06 Equipment ·
 07 Flash Sheet · 08 Gameplay · 09 System · 10 Technical · 11 Claude Code Manual.
 
 ---
@@ -424,3 +425,70 @@ roster is rebuilt):
 > Common/Elite/Rare/Boss tiers by §4.5 size + §4.8 colour, with movement/attack
 > tagged from §4.6/§4.7. Silhouettes must satisfy §4.3 (outer=identity, no thin
 > limbs) — the "bad examples" (thin spiders/wisps) are exactly the reads to avoid.
+
+---
+
+## Volume 05 — Boss Bible: Boss Design Language & Silhouette Guide (v1.0, 17/05/2025)
+
+The law for **apex threats**. Directly governs the boss roster + the attack-pattern
+rework (the Studio Lead's earlier "bosses too samey, bullets all the same" note is
+answered here — bosses differentiate by **colour class**, **size tier**,
+**attack-pattern vocabulary** and **phase evolution**).
+
+### §5.1 Purpose
+Bosses are apex threats. They test your build, movement and mastery. Each boss has
+a clear silhouette, behaviour identity and attack pattern. Survive. Adapt. Overcome.
+
+### §5.2 Boss Design Pillars
+**SILHOUETTE** (instantly recognisable) · **READABILITY** (clear attacks & states) ·
+**THREAT** (feels dangerous) · **VARIETY** (unique mechanics) · **MEMORABLE**
+(stands out and sticks).
+
+### §5.3 Boss Silhouette Rules
+Large, bold, clear shape · distinct from enemy silhouettes · strong centre of focus ·
+readable at small size · uses exaggerated features · avoid clutter and thin parts ·
+**make it feel powerful.**
+
+### §5.4 Boss Size Language (relative to player)
+**Mini Boss → Mid Boss → Major Boss → Ancient Boss → Mythic Boss** (each markedly
+larger than the last; all dwarf the player).
+
+### §5.5 Colour Language (dominant colour = identity, six classes)
+- **VOID** — purple
+- **INFERNAL** — red
+- **TOXIC** — green
+- **CRYSTAL** — ice-blue
+- **STORM** — cyan
+- **CELESTIAL** — gold
+
+### §5.6 Attack Pattern Language
+**Spread · Spin · Beam · Dash · Summon · Ring · Barrage · Wave.** (Each boss owns a
+signature subset — this is the vocabulary that fixes "all attacks feel the same".)
+
+### §5.7 Phase System
+Bosses escalate over time: **Phase 1 → Phase 2 → Phase 3**, gaining new attacks,
+speed and difficulty as they go.
+
+### §5.8 Tell & React
+Every boss **telegraphs before it attacks**: **Tell → Attack → Gap.** Learn. React.
+Survive. (The recovery Gap is the player's window.)
+
+---
+
+## Flash Sheet — Boss Visual Language (Vol 05 right page, all assets 64×64)
+
+- **Boss classes (A–F):** Void · Infernal · Toxic · Crystal · Storm · Celestial —
+  each a family of five silhouettes.
+- **G. Attack examples (top-down):** Spread · Beam · Spin · Dash · Summon · Wave.
+- **H. Phase evolution:** the same boss visibly upgraded across Phase 1→2→3.
+- **J. Energy signatures** (boss auras / tells) · **K. Scale guide** (boss aura /
+  projectile glow scaling by size tier) · **L. Colour palette (boss themes)** — the
+  per-class swatch ramps.
+
+> **Boss mapping.** Existing bosses sort into §5.5 colour classes and adopt a §5.6
+> signature attack subset + §5.7 three-phase escalation: e.g. **The Pyre/The Forge**
+> = Infernal; **The Rime/The Nadir** = Crystal/Void; **The Maw/The Choir/The
+> Sovereign** = Void/Celestial. Projectile shapes follow §5.6 patterns and the
+> rough-organic bullet direction already applied — every class visually distinct via
+> §J energy signature + §L palette. Tell→Attack→Gap (§5.8) is the readability
+> contract for every telegraph.
