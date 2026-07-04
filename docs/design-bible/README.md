@@ -31,11 +31,12 @@ canonical.
 | 07  | Items & Powerups Bible — Pickups, Upgrades & Gameplay Resources / Flash Sheet — Enemy & Boss Silhouettes | `vol07-items-powerups-bible.png` | ✅ canonical |
 | 08  | Weapons & Projectiles Bible — Weapons, Projectiles & Combat FX Guide / Flash Sheet — Weapons, Projectiles & Combat FX | `vol08-weapons-projectiles-bible.png` | ✅ canonical |
 | 09  | Enemies & Hazards Bible — Advanced Foes, Traps & World Threats / Flash Sheet — Enemies, Hazards & Threats | `vol09-enemies-hazards-bible.png` | ✅ canonical |
+| 10  | Dungeons & Biomes Bible — Environments, Rooms & Visual Themes / Flash Sheet — Dungeons, Rooms & Environments | `vol10-dungeons-biomes-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
 01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ ·
 06 Environment & Obstacles ✅ · 07 Items & Powerups ✅ · 08 Weapons & Projectiles ✅ ·
-09 Enemies & Hazards ✅ · 10 Technical · 11 Claude Code Manual.
+09 Enemies & Hazards ✅ · 10 Dungeons & Biomes ✅ · 11 Claude Code Manual.
 
 > **Numbering note:** the delivered Vol 06 is the **Environment & Obstacles Bible**;
 > Vol 01's §1.12 index had listed slot 06 as "Equipment Bible". Sheets are the
@@ -780,3 +781,71 @@ status).
 > traps & zone hazards extend the Vol 06 hazard set; §D debuff icons are the
 > canonical status-effect set to unify Vol 04/08 states against. §G interactables
 > reinforce Vol 06 §6.4 (Chest/Altar/Seal/Gate/Lever/Shrine/Obelisk).
+
+---
+
+## Volume 10 — Dungeons & Biomes Bible: Environments, Rooms & Visual Themes (v1.0)
+
+The law for **level structure** — biome themes, room shapes, room flow, doors,
+special rooms and depth progression. Introduces an **optional room/dungeon layer**
+(a structural alternative/companion to the current open-arena survival mode).
+
+### §10.1 Purpose
+The world is your enemy. Every biome hides its own dangers, treasures and secrets.
+Learn the land. Adapt. Survive.
+
+### §10.2 Biome Themes (6 — with emotional keywords)
+- **Void Depths** — Mystery · Shadow · Madness (purple)
+- **Infernal Wastes** — Fire · Brutality · Ash (red/orange)
+- **Toxic Marshes** — Poison · Decay · Corruption (green)
+- **Frozen Wastes** — Cold · Isolation · Endurance (ice-blue)
+- **Mechanical Core** — Steel · Order · Precision (steel/cyan)
+- **Ancient Ruins** — History · Mystery · Forgotten (gold)
+
+*(These are the campaign's biome/galaxy set — aligns with Vol 03 §A biome icons and
+Vol 06 §6.7 theme colours.)*
+
+### §10.3 Room Shapes
+**Start Room · Corridor · Crossroads · Arena · Loop Room · Trap Room · Treasure
+Room · Boss Room** (each with a legend glyph).
+
+### §10.4 Room Features (placement ideas)
+**Entrance · Exit · Chest · Altar · Fountain · Shop · Trap · Switch.**
+
+### §10.5 Environmental Hazards (room-scale)
+**Lava Pits · Spike Floors · Poison Clouds · Ice Slide · Darkness · Laser Grid ·
+Collapsing Floor · Cursed Ground.**
+
+### §10.6 Lighting Moods
+Per-theme light colour sets tone: **Void · Infernal · Toxic · Frozen · Tech ·
+Ancient.** Use colour and contrast to guide the player and build atmosphere.
+
+### §10.7 Decoration Examples
+**Crystal · Bone Pile · Statue · Banner · Pipes · Rune Stone.**
+
+---
+
+## Flash Sheet — Dungeons, Rooms & Environments (Vol 10 right page, 64×64)
+
+- **A. Biome tile sets (floor)** · **B. Wall styles** · **C. Floor decor
+  variations** · **D. Door & gate types** (Wooden Door · Iron Gate · Arcane Seal ·
+  Portal Gate · Boss Door) · **E. Room modifiers** (Monster · Damage · Trap ·
+  Darkness · Curse · Berserk · Time Limit · No Heal).
+- **F. Special room types:** Treasure · Event · Mini Boss · Shop · Puzzle.
+- **G. Biome ambient details** (per-theme prop rows) · **H. Depth / progression
+  themes:** Depth 1–2 (Surface/Entry) · 3–5 (Deeper/Stronger Foes) · 6–8 (Darkest/
+  Deadliest) · 9–10+ (Endgame/Mythic).
+- **I. Room flow examples** (node graphs Start→…→Boss/Exit) · **J. Legend** (room
+  node types) · **K. Quick design checklist** (clear purpose · distinct identity ·
+  readable 64×64 · strong contrast/lighting · hazards feel fair · rewards match risk ·
+  flow encourages exploration).
+
+> **Structure mapping.** §10.2's six biome themes are the definitive campaign biome
+> set (Void Depths / Infernal Wastes / Toxic Marshes / Frozen Wastes / Mechanical
+> Core / Ancient Ruins) — our Ember Wastes = Infernal, Hollow Deep = Frozen, The
+> Fade = Void Depths, with Toxic/Mechanical/Ancient as new galaxies. §10.3 room
+> shapes + §10.4 features + §F special rooms + §I flow describe an **optional
+> room-based dungeon mode**; §E room modifiers (No Heal, Time Limit, Curse, Berserk)
+> are per-room rule twists that echo our Directives/biome rules. §H depth ladder
+> pairs with Vol 03 §3.4 difficulty tiers + Vol 09 §9.5 boss tiers for a unified
+> progression curve.
