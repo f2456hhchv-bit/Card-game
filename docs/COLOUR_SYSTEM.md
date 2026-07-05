@@ -102,7 +102,7 @@ The AF-007 §4 nine-tier ladder, unchanged and now double-locked ("never change 
 | Freeze | Light blue | `ice.blue` | Shield | Blue | `shield.blue` |
 | Shock | Electric cyan | `plasma.cyan` | Regeneration | Bright green | `vitality.green` |
 | Poison | Green | `toxin.green` | Overload | Yellow | `overload.yellow` |
-| Stasis | White | `energy.white` | **Slow** | *(not listed in AF-008)* | `neutral.grey` — **provisional, owner may rule** |
+| Stasis | White | `energy.white` | **Slow** | Grey *(omitted in AF-008)* | `neutral.grey` — **ratified by Project Owner, 2026-07-05** |
 
 Poison vs Regeneration share a family but never a read: toxin is murky and paired with its droplet symbol; vitality is bright and paired with the regen tick (AF-004/AF-007 shape law). Every status colour is constant across HUD icons, world tints, and tooltips.
 
