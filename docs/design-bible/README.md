@@ -34,12 +34,14 @@ canonical.
 | 10  | Dungeons & Biomes Bible — Environments, Rooms & Visual Themes / Flash Sheet — Dungeons, Rooms & Environments | `vol10-dungeons-biomes-bible.png` | ✅ canonical |
 | 11  | Traps & Mechanics Bible — Hazards, Triggers & Environmental Mechanics / Flash Sheet — Traps, Mechanics & Interactables | `vol11-traps-mechanics-bible.png` | ✅ canonical |
 | 12  | Artifacts & Specials Bible — Unique Relics, Active Skills & Ultimate Powers / Flash Sheet — Artifacts, Actives & Specials | `vol12-artifacts-specials-bible.png` | ✅ canonical |
+| 13  | Power-ups & Consumables Bible — Buffs, Potions & Utility Items / Flash Sheet — Power-ups, Consumables & Progression | `vol13-powerups-consumables-bible.png` | ✅ canonical |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
 01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ ·
 06 Environment & Obstacles ✅ · 07 Items & Powerups ✅ · 08 Weapons & Projectiles ✅ ·
 09 Enemies & Hazards ✅ · 10 Dungeons & Biomes ✅ · 11 Traps & Mechanics ✅ ·
-12 Artifacts & Specials ✅ (beyond the original index).
+12 Artifacts & Specials ✅ · 13 Power-ups & Consumables ✅ (12–13 beyond the
+original index).
 
 > **Delivered set (00–12).** All twelve volumes named in the Vol 01 §1.12 index have
 > landed, **plus Volume 12 (Artifacts & Specials) which extends past the original
@@ -1005,3 +1007,80 @@ Status Effect · Resource Refund · Chain Effect.
 > canonical status set. §D shrine buffs wire into Vol 10 altars/shrines. Together
 > these deliver the Vol 05 "power through choice" tone and the veteran endgame
 > ceiling.
+
+---
+
+## Volume 13 — Power-ups & Consumables Bible: Buffs, Potions & Utility Items (v1.0)
+
+The law for **temporary boons and consumables** — the moment-to-moment buff layer
+(power-ups, potions, scrolls/tomes) that sits between permanent relics (Vol 12) and
+the reward economy (Vol 07). *(Sheet note: the left page is titled Volume 13; the
+right flash-sheet header reads "Volume 14" — an internal label mismatch on the
+sheet. Catalogued as Vol 13 per the bible title.)*
+
+### §13.1 Power-up Types (8)
+**Offense · Defense · Speed · Crit · Magic · Utility · Summon · Hybrid.**
+
+### §13.2 Offensive Power-ups
+Rage (+50% dmg) · Sharpshooter (+crit chance) · Fire Infusion (adds fire dmg) ·
+Arcane Might (+spell dmg) · Bleeding Edge (+bleed dmg) · Frenzy (+attack speed) ·
+Executioner (bonus vs low HP) · **Demonic Pact** (greatly increases dmg, drains HP).
+
+### §13.3 Defensive Power-ups
+Iron Skin (+armor) · Stoneskin (+dmg reduction) · Regeneration (heal over time) ·
+Life Leech (heal on hit) · Spell Shield (blocks dmg) · Thorns (reflect dmg) ·
+Barrier (absorb dmg) · Second Wind (revive once).
+
+### §13.4 Utility Power-ups
+Move Faster (+move speed) · Swiftness (+dodge chance) · Pickup Radius (attract
+orbs) · Lucky (better rewards) · Extra Orb (more orbs drop) · Cooldown Cut (−skill
+cooldowns) · Detect (reveal secrets) · Teleport (short-range blink).
+
+### §13.5 Potions (instant use)
+Health (restore HP) · Mana (restore MP) · Rage (full rage) · Antidote (cure
+poison) · Elixir (all stats up) · Stoneform (invulnerable briefly) · Invisibility
+(avoid enemies) · Purge (remove debuffs).
+
+### §13.6 Scrolls & Tomes (activation use)
+Scroll of Fireball · Scroll of Ice Storm · Scroll of Light · Scroll of Chaos ·
+Tome of Power (+all dmg for a time) · Tome of Defense (+all resistances) · Tome of
+Mastery (+skill levels for a time) · Scroll of Escape (teleport to safe room).
+
+### §13.7 Rarity & Quality (applies to all power-ups — EXPANDED 8-tier ladder)
+Common (Grey) · Uncommon (Green) · Rare (Blue) · Epic (Purple) · Legendary
+(Orange) · Mythic (Red) · **Ancient (Gold)** · **Primal (White/Pink)**. Higher
+rarity = stronger effect, longer duration, lower drop rate.
+
+> *(This extends the 6-tier rarity used elsewhere with two apex tiers — Ancient &
+> Primal — for consumables. When a unified rarity scale is needed, this is the
+> longest ladder.)*
+
+---
+
+## Flash Sheet — Power-ups, Consumables & Progression (Vol 13 right page, 64×64)
+
+- **A. Status effects (from power-ups/enemies):** Burn · Frost · Poison · Shock ·
+  Bleed · Curse · Stun.
+- **B. Stacking & duration icons:** Stack ×3 · Stack ×10 · Duration Short/Medium/
+  Long · Permanent (∞).
+- **C. Power-up combos:** Fire Infusion + Sharpshooter = **Incinerating Arrows** ·
+  Lightning Strike + Chain Effect = **Thunderlord** · Life Leech + Thorns = **Blood
+  Mirror**.
+- **D. Consumable drop rarity (rates):** Common 60–70% · Uncommon 20–30% · Rare
+  7–12% · Epic 2–5% · Legendary 0.5–1.5% · Mythic <0.5%.
+- **E. Chests & rewards:** Basic · Elite · Magic · Legendary · Mythic · Cursed
+  (risk vs reward).
+- **F. Progression meters (UI):** Player Level · XP Progress · Battle Pass ·
+  Reputation · Resource.
+- **G. Power-up selection UI:** rarity-framed choice cards (name · effect ·
+  duration · TAKE) — the in-run draft card layout.
+- **H. Quick design checklist** · **I. Consumable hotbar** (6 numbered slots with
+  counts) · **J. Player buff bar** (row of active buffs with countdown timers).
+
+> **Buff-layer mapping.** §13.1–13.4 power-ups slot straight into our in-run upgrade
+> draft (Vol 07 §7.4) with named identities and §13.1 type tags; §13.5 potions +
+> §13.6 scrolls/tomes are a NEW active-consumable layer (see §I hotbar + §J buff
+> bar for the UI). §C combos formalise the element-stacking synergies (with Vol 08
+> §H). §D drop rates + §13.7 rarity give the loot tables concrete numbers. §G card
+> layout is the canonical reference for our level-up choice UI; §F meters inform the
+> HUD/progression screens.
