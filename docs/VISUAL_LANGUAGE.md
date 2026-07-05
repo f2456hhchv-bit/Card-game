@@ -21,6 +21,8 @@ Every screenshot should show that sentence: oppressive dark field, readable lumi
 
 Colours are **design tokens** stored as data (`src/data/visual/palette` when code lands) per AF-001's no-magic-numbers rule. Code and assets reference token names, never raw hex.
 
+> **Extension (AF-008, 2026-07-05):** this section defines the core identity palette. The complete master colour registry — including background/light additions, all eight faction triads, status colours, and contrast standards — is `docs/COLOUR_SYSTEM.md`, which extends these tables and is the registry of record for every colour in the game.
+
 ### Primary (the identity)
 
 | Token | Hex | Role |
