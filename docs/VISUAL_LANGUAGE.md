@@ -34,11 +34,15 @@ Colours are **design tokens** stored as data (`src/data/visual/palette` when cod
 
 | Token | Hex | Role |
 |---|---|---|
-| `plasma.cyan` | `#3FD4F5` | Player technology: player shots, shields, friendly systems |
+| `plasma.cyan` | `#3FD4F5` | Player technology: player shots, friendly systems |
+| `shield.blue` | `#4D7CFF` | Shields — all shield states and displays (always paired with arc/ring grammar) |
+| `vitality.green` | `#4DE868` | Healing and regeneration (always paired with cross/regen-tick motif) |
 | `solar.gold` | `#FFC652` | Reward, XP, ancient technology warmth |
-| `crystal.teal` | `#3FE0C0` | Crystal faction, restoration, healing |
+| `crystal.teal` | `#3FE0C0` | Crystal faction, restoration themes |
 | `warning.orange` | `#FF8A3D` | Warning states, telegraph pre-phase, machine heat |
 | `danger.red` | `#FF4054` | Damage, enemy threat, critical states |
+
+> **Palette extension — Project Owner ruling, 2026-07-05 (via AF-004 review):** `shield.blue` and `vitality.green` added as dedicated pure hues; the shield role moved from `plasma.cyan` and the healing role from `crystal.teal`. Authorised modification of this locked output under the Constitution's Implementation Principles. `shield.blue` sits clearly apart from both `plasma.cyan` and `energy.violet`; shape-pairing cues are retained so no meaning rests on hue alone.
 
 ### Non-negotiable colour roles (readability law)
 
@@ -84,7 +88,7 @@ These are constraints on the VFX/render systems, not suggestions:
 
 - **Panel style:** near-black translucent panels (`space.black` at ~85%), 1px `space.blue`-tinted borders, thin `energy.violet` accent line on the active element. Generous spacing on an 8px grid. No skeuomorphism, no texture noise.
 - **HUD answers questions, never decorates.** Fixed set (extended only by future modules): Health, Shield, Abilities, Ultimate, XP, Loot notifications, Objectives, Minimap. Anything else must displace nothing and justify itself through the Design Decision Matrix.
-- Health = `danger.red`-to-white bar; Shield = `plasma.cyan`; XP = `solar.gold`; Ultimate = `energy.violet` (the signature colour marks the most exciting button).
+- Health = `danger.red`-to-white bar; Shield = `shield.blue`; XP = `solar.gold`; Ultimate = `energy.violet` (the signature colour marks the most exciting button).
 - Desktop and mobile share one layout system: anchored corner clusters that scale (HUD scaling setting), touch-safe hit targets ≥ 44px on mobile.
 
 ## 8. Icon language

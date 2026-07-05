@@ -34,10 +34,10 @@ Every gameplay object class ships with all six, or it does not ship:
 
 AF-004 defines meaning by colour **family**; locked AF-002 defines the exact token within each family. The binding table:
 
-| Meaning | Family (AF-004) | Canonical token (AF-002) | Disambiguation cue |
+| Meaning | Family (AF-004) | Canonical token (AF-002, as extended) | Disambiguation cue |
 |---|---|---|---|
-| Healing | Green | `crystal.teal` `#3FE0C0` | + cross/regen tick motif |
-| Shield | Blue | `plasma.cyan` `#3FD4F5` | Arc/ring shapes only |
+| Healing | Green | `vitality.green` `#4DE868` | + cross/regen tick motif |
+| Shield | Blue | `shield.blue` `#4D7CFF` | Arc/ring shapes only |
 | Immediate danger | Red | `danger.red` `#FF4054` | Reserved — red always means "can hurt you" |
 | Warning | Orange | `warning.orange` `#FF8A3D` | Outline phase of telegraphs |
 | Loot | Yellow | `solar.gold` `#FFC652` | Beacon pulse + rarity ramp |
@@ -45,7 +45,7 @@ AF-004 defines meaning by colour **family**; locked AF-002 defines the exact tok
 | Technology | Cyan | `plasma.cyan` → `energy.white` | Weapon/tool shapes; shield uses arcs |
 | Neutral information | White | `energy.white` `#F4F7FF` | Text and markers only |
 
-Shield and technology share the cyan family by AF-002's locked player-tech law; they are never confused because shields are exclusively arc/ring grammar (colour-blind pairing law). *Project Owner may overrule this reconciliation if pure green and pure blue were intended as separate hues — until then, this table is canon.* Colours never change meaning anywhere in the game, including menus, map, and codex.
+**Project Owner ruling, 2026-07-05:** the palette was extended with dedicated pure hues — `vitality.green` for healing and `shield.blue` for shields — replacing the earlier family-reconciliation to teal/cyan. Shape-pairing cues (arcs for shields, regen ticks for healing) are retained so no meaning rests on hue alone. Colours never change meaning anywhere in the game, including menus, map, and codex.
 
 ## 4. Shape semantics
 
