@@ -19,6 +19,7 @@ Phase note: AF-000 → AF-012 are specification/framework modules — their buil
 | AF-010 | World Building & Canon | v1 | Complete (spec) | Aligned | Canon ledger begins → first content module | Approved 9.5/10 | **LOCKED** |
 | AF-011 | Design Pillars | v1 | Complete (spec) | Aligned | Unified Feature Gate binds all future modules | Approved 9.5/10 | **LOCKED** |
 | AF-012 | Production Governance | v1 | Complete (spec) | Aligned | Lifecycle binds all future modules | Approved 9.5/10 | **LOCKED** |
+| AF-013 | Content Governance | v1 *(adds compact ID-set save rule; anti-FOMO live-content guarantee)* | Complete (spec) | Aligned | Validation binds all future additions | Approved 9.5/10 | **LOCKED** |
 
 **Authorised amendments log:**
 - 2026-07-05 — AF-002 output: palette extended with `vitality.green`, `shield.blue` (owner ruling via AF-004 review).
