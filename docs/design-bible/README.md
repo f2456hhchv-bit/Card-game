@@ -35,6 +35,19 @@ canonical.
 | 11  | Traps & Mechanics Bible — Hazards, Triggers & Environmental Mechanics / Flash Sheet — Traps, Mechanics & Interactables | `vol11-traps-mechanics-bible.png` | ✅ canonical |
 | 12  | Artifacts & Specials Bible — Unique Relics, Active Skills & Ultimate Powers / Flash Sheet — Artifacts, Actives & Specials | `vol12-artifacts-specials-bible.png` | ✅ canonical |
 | 13  | Power-ups & Consumables Bible — Buffs, Potions & Utility Items / Flash Sheet — Power-ups, Consumables & Progression | `vol13-powerups-consumables-bible.png` | ✅ canonical |
+| 13* | Power-ups & Consumables Bible (revised standalone — Global/Combat/Support power-ups) | `vol13-powerups-consumables-rev.png` | ✅ canonical (v2 series) |
+| 13–15 | Power-ups / Status Effects / Factions (3-in-1 composite) | `vol13-15-powerups-status-factions.png` | ✅ canonical (v2 series) |
+| 16  | Ships & Ship Classes Bible — Playable Ships, Classes & Design Language | `vol16-ships-classes-bible.png` | ✅ canonical (v2 series) |
+| 17  | Weapon Bible — All Weapons, Upgrades & Signature Archetypes | `vol17-weapon-bible.png` | ✅ canonical (v2 series) |
+| 18  | Equipment Bible — Hulls · Engines · Wings · Shields · Cores · Systems | `vol18-equipment-bible.png` | ✅ canonical (v2 series) |
+| 19  | Projectile & VFX Bible — All Weapon Projectiles, Impacts & Visual Effects | `vol19-projectile-vfx-bible.png` | ✅ canonical (v2 series) |
+| 20  | UI & HUD Bible — User Interface · HUD · Menus · Feedback | `vol20-ui-hud-bible.png` | ✅ canonical (v2 series) |
+| 20* | Hazards & Environment Bible — Environmental Hazards, Traps & Level Elements (number collision on sheet) | `vol20-hazards-environment-bible.png` | ✅ canonical (v2 series) |
+| 21  | Galaxy Bible — One Hundred Galaxies, Endless Discovery (campaign map) | `vol21-galaxy-bible.png` | ✅ canonical (v2 series) |
+| 22  | Enemy Production Bible — Types · Roles · Parts · Variations · Factions | `vol22-enemy-production-bible.png` | ✅ canonical (v2 series) |
+| 23  | Boss Production Bible — Types · Stages · Attack Patterns · Rewards | `vol23-boss-production-bible.png` | ✅ canonical (v2 series) |
+| 24  | Power & Progression Bible — Systems · Resources · Upgrades · Mastery | `vol24-power-progression-bible.png` | ✅ canonical (v2 series) |
+| 25  | Items Bible — Gear · Modules · Rarity · Affixes · Crafting | `vol25-items-bible.png` | ✅ canonical (v2 series) |
 
 Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
 01 Universe ✅ · 02 Art ✅ · 03 Galaxy ✅ · 04 Enemy ✅ · 05 Boss ✅ ·
@@ -42,6 +55,14 @@ Connected volumes (per Vol 01 §1.12 index): 00 Studio Constitution ✅ ·
 09 Enemies & Hazards ✅ · 10 Dungeons & Biomes ✅ · 11 Traps & Mechanics ✅ ·
 12 Artifacts & Specials ✅ · 13 Power-ups & Consumables ✅ (12–13 beyond the
 original index).
+
+> **Two series.** Volumes 00–13 are the **original one-per-sheet series**. Volumes
+> **13–25 are a later, higher-production "v2" series** (richer, production-oriented,
+> some sheets composite multiple volumes). The v2 series **renumbers over 13** and
+> even collides internally (two Volume 20s: UI & HUD, and Hazards & Environment).
+> Both are kept as canon; where they overlap, the **v2 production sheets are the
+> more detailed reference** and the campaign redesign should follow them. Sheets are
+> always the source of truth over any index label.
 
 > **Delivered set (00–12).** All twelve volumes named in the Vol 01 §1.12 index have
 > landed, **plus Volume 12 (Artifacts & Specials) which extends past the original
@@ -1084,3 +1105,283 @@ rarity = stronger effect, longer duration, lower drop rate.
 > §H). §D drop rates + §13.7 rarity give the loot tables concrete numbers. §G card
 > layout is the canonical reference for our level-up choice UI; §F meters inform the
 > HUD/progression screens.
+
+---
+---
+
+# THE v2 PRODUCTION SERIES (Volumes 13–25)
+
+A later, higher-fidelity set of production sheets. These are the **definitive
+reference for the campaign redesign**. Where they overlap the original series,
+follow these. Recorded verbatim below; extract exact assets as we wire each system.
+
+## Volume 13 (v2) — Power-ups Bible: Temporary In-Run Upgrades
+
+Two v2 forms exist (a standalone sheet and a composite). Canonical content:
+
+- **Rarity (5):** Common (White) · Rare (Blue) · Epic (Purple) · Legendary (Gold) ·
+  Mythic (Red). *(Power-ups do not persist between runs.)*
+- **§13.2 Categories (6):** Offense · Defense · Utility · Summon · Special · Evolution.
+- **§13.3 Example power-ups by rarity:** Common (Rapid Shot, Vitality, Focus, Reflex,
+  Magnet, Thick Skin) · Rare (Triple Shot, Energy Shield, Explosive Bullets, Swift
+  Strike, Life Leech, Lucky Strike) · Epic (Chain Lightning, Orbital Drones, Void
+  Rift, Phantom Blade, Time Dilation, Bloodlust) · Legendary (Death Blossom, Divine
+  Barrier, Nuke Beam, Black Hole, Seraphim, Infinity Core) · Mythic (Reality Break,
+  Chrono Shift, Galactic Rain, Omnivamp, Starfall, Ascension).
+- **§13.4 Evolution combinations:** Rapid Shot + Triple Shot = **Hailstorm** ·
+  Lightning + Chain Lightning = **Storm Core** · Drones + Phantom Blade = **Sentinel
+  Swarm** · Fire Infusion + Explosive Bullets = **Inferno Core**.
+- **Build archetypes:** Bullet Hell · Critical Strike · Summoner · Elementalist ·
+  Tank (each lists its key power-ups) — these are the **build-craft archetypes** the
+  earlier design thread wanted.
+- *(Standalone-sheet variant also names Global/Combat/Support power-up groups —
+  Bloodlust, Iron Will, Haste, Arcane Surge, Death's Touch, Berserker, Vampiric
+  Aura, Elemental Fury, etc. — and an expanded 8-tier rarity Common→Primal.)*
+
+## Volume 14 (v2) — Status Effects Bible: Buffs, Debuffs & Damage Types
+
+- **§14.1 Damage types (10):** **Fire** (burns over time) · **Frost** (slows/chills) ·
+  **Poison** (damage over time) · **Plasma** (bypasses shields) · **Arcane** (magic
+  resonance) · **Void** (ignores armor) · **Light** (purifies/blinds) · **Dark**
+  (corrupts/drains) · **Radiation** (spreads contamination) · **Shock** (stuns/chains).
+- **§14.2 Buffs (positive):** Berserk (dmg↑) · Barrier (absorb before HP) · Precision
+  (crit↑) · Rapid Fire (fire rate↑) · Vampiric (heal % of dmg) · Overcharged (all dmg
+  + speed↑) · Regeneration (heal over time) · Phase Shift (avoid next hit) · Lucky
+  (drop-rarity↑). Each row lists **stacking rule + duration + example sources**.
+- **§14.3 Debuffs (negative):** Burn · Frozen · Slow · Blind · Fear · Curse · Silence ·
+  Corrupted · EMP · Cripple — each with stacking rule, duration, sources.
+- **§14.4/14.5:** buff/debuff FX visual language, damage-type projectiles, icon set.
+
+> **Canonical status set.** §14.1 damage types are the authoritative 10-type list
+> (reconciles Vol 01/08/09/12). §14.2/14.3 buffs+debuffs with stacking+duration are
+> the master status table the whole game unifies to.
+
+## Volume 15 (v2) — Factions Bible: Civilisations of the Hundred Lights
+
+Five core factions (each defines visual language, palette, enemies/elites, bosses,
+projectiles, hazards, environment, architecture, mechanics, lore):
+- **The Hollow Swarm** — living insectoid hordes that consume & adapt. *Keywords:
+  Swarm · Adapt · Consume · Toxic · Organic.*
+- **The Crystal Choir** — crystalline beings attuned to resonance. *Resonance ·
+  Harmony · Crystal · Choir.*
+- **The Iron Dominion** — ancient machines programmed to expand & dominate. *Machine ·
+  Order · Forge · Construct · Empire.*
+- **The Ember Covenant** — fanatics who worship the flame & seek transcendence. *Fire ·
+  Ritual · Devotion · Magma · Cult.*
+- **The Verdant Hive** — the living forest that spreads, roots & rebirths. *Growth ·
+  Spore · Root · Nature · Hive.*
+- Sub-names on sheet: The Voidborn · Choir of Light · Eclipse Cult · Ash Forged ·
+  Abyss Watchers (per-faction cells). Each faction has a flash-sheet sample layout
+  (Common enemies · Elites · Bosses · Projectiles · Hazards).
+
+> **Faction mapping.** These supersede the looser faction lists in Vol 01/03/09 as
+> the definitive five, each with a full asset language. The campaign's galaxies pick
+> a primary + secondary faction (see Vol 21 §21.4 template).
+
+## Volume 16 (v2) — Ships & Ship Classes Bible
+
+- **§16.1 Philosophy:** identifiable by silhouette alone; bold readable shapes; no
+  geometry placeholders; hand-painted sci-fi with neon accents; 6–8 major silhouette
+  features max; distinct engine glow, cockpit shape, wing profile.
+- **§16.2 Ship families (12):** Scout · Skiff · Interceptor · Gunship · Corsair ·
+  Monolith · Bulwark · Carrier · Warpstrike · Dreadnought · Experimental · Ancient
+  Light · Corrupted Void (each with a role line, e.g. Scout = fast/fragile recon).
+- **§16.3 Class identity** (example Interceptor: role, passive ability, 5-step upgrade
+  path Defender→Vanguard→Paragon→Ascendant→Apex, signature synergy).
+- **§16.4 Hull components:** Cockpits · Wings · Engine Pods · Armour Plates ·
+  Thrusters · Weapon Mounts · Energy Cores · Fins/Stabilisers · Antennae · Void
+  Crystals.
+- **§16.5 Stat archetypes** (Firepower/Mobility/Durability/Shield/Energy/Utility bars
+  per family) · **§16.6 Size guide** (Scout ~12m → Dreadnought ~100m+).
+- **Flash sheet §16.7:** 50 ship silhouettes · 20 cockpits · 20 wing sets · 20 engine
+  types · 20 thruster FX · 30 hull-panel motifs · **15 faction paint schemes** ·
+  25 damage decals · 20 class icons · 15 engine-glow styles · UI portraits.
+
+## Volume 17 (v2) — Weapon Bible: All Weapons, Upgrades & Signature Archetypes
+
+- **§17.2 Six weapon archetypes (foundation):** **Kinetic** (fast physical baseline
+  DPS) · **Energy** (beams/bolts/charged) · **Explosive** (area/splash/impact) ·
+  **Tech** (deployable/drone-assist) · **Void** (…) · **Ancient** (lost/light-based/
+  sentient).
+- **§17.3 Rarity (7):** Common · Uncommon · Rare · Epic · Legendary · Mythic · **Exotic**
+  (one of a kind).
+- **§17.4 Weapon stats:** Damage · Fire Rate · Projectiles · Crit Chance · Crit Damage ·
+  Range · Piercing · Cooldown · Status Chance · Spread · Ammo/Energy · Reload.
+- **§17.5 Upgrade path:** Base → Lv1 → Lv2 → Lv3 → **Evolution**.
+- **§17.7 Evolution examples (named per archetype):** Kinetic *Rapid Cannon* · Energy
+  *Arc Lance* · Explosive *Shard Launcher* · Tech *Sentry Drone* · Void *Gravity Rift* ·
+  Ancient *Solar Prism*.
+- **§17.9 Modifiers:** Homing · Bouncing · Piercing · Chain · Split · Ricochet ·
+  Expanding · Penetrating.
+- **§17.10 Synergies:** Arc Lance + Chain = Lightning further · Shard Launcher + Split =
+  more shards · Sentry Drone + Homing = auto-track · Rapid Cannon + Overclock = fire
+  rate · Gravity Rift + (…) = bigger pull · Solar Prism = beams ignore shields.
+
+## Volume 18 (v2) — Equipment Bible (fills the earlier "Equipment" gap)
+
+- **§18.2 Categories (6):** **Hulls** (base structure/core stats) · **Engines**
+  (speed/accel/manoeuvre) · **Wings** (weapons/handling/specials) · **Shields**
+  (capacity/recharge) · **Cores** (power/enable systems) · **Systems** (utility/
+  defense/offense/unique).
+- **§18.3 Rarity (7):** Common · Uncommon · Rare · Epic · Legendary · Mythic · **Exotic**.
+- **§18.4 Equipment stats:** Damage · Fire Rate · Crit Chance · Crit Damage · Range ·
+  Projectile Speed · Speed · Acceleration · Handling · Shield Capacity · Shield Regen ·
+  Damage Reduction · Energy Capacity · Energy Regen · Cooldown Reduction · Luck · XP
+  Bonus · Weight.
+- **§18.5 Upgrade path:** Base → MK I → MK II → MK III → MK IV → **Ascended**.
+- **§18.6 Library (12 each):** named Hulls, Engines (Ion/Plasma/Pulse/Arc/Grav/Warp/
+  Nova/Sabre/Storm/Void/Hyper/Aeon), Wings, Shields (Basic→Singularity), Cores
+  (Power/Reactor/Crystal/Void/Fusion/Star/Gravity/Warp/Nanite/Aeon/Dragon/Omega),
+  Systems (Targeting AI, Auto Repair, Drone Bay, Missile Rack, EMP Field, Cloaking,
+  Beam Focus, Energy Drain, Shield Amp, Hacking Suite, Mining Laser, Support Matrix).
+- **§18.7 Set bonuses (5, 3/5 & 5/5 tiers):** Voidforged · Starforged · Swarmtech ·
+  Ancient Light · Corrupted.
+- **§18.8 Mod slots & socket types:** Slot types (Weapon/Utility/Core/Defense/
+  Universal) · socket shapes (Round/Triangle/Square/Diamond = balanced/offense/
+  defense/utility) · **polarity** (matching polarity grants bonus).
+
+## Volume 19 (v2) — Projectile & VFX Bible
+
+- **§19.2 Damage-type projectiles (8, player & enemy):** Kinetic · Energy · Explosive ·
+  Tech · Void · Ancient · Light · Dark — each a distinct silhouette.
+- **§19.4 Impact effects · §19.5 status-effect visuals** (Burn/Frozen/Poison/Shock/
+  Corrupted/Slow/EMP/Bleed) · **§19.6 beam weapons** (per damage type).
+- **§19.7 Large weapons/area effects:** Rail Shot · Missile Salvo · Orb Strike · Laser
+  Barrage · Void Lance · Meteor Strike · Gravity Well · Nebula Bomb.
+- **§19.8 AoE shapes:** Circle · Ring · Cone · Line · Cross · Wave · Spiral · Field.
+- **§19.9 Enemy attack patterns:** Spread · Twin · Shotgun · Spiral · Wave · Homing ·
+  Orb Swarm · Laser Sweep. **§19.13 Environment VFX:** Fire/Ice/Acid Storm · Void Rift ·
+  Sand Storm · Electric Storm.
+- **§19.15 Size guide:** Tiny→Massive. **§19.16 Colour-language guide** per damage type.
+  **§19.12 Screen-space FX:** motion blur, bloom, shake, chromatic aberration, flash,
+  distortion, vignette, **hit-stop**.
+
+## Volume 20 (v2 — UI & HUD) — User Interface · HUD · Menus · Feedback
+
+- **§20.1/20.2 principles:** Clarity · Hierarchy · Consistency · Feedback · Immersion ·
+  Accessibility (colour + shape).
+- **§20.3 HUD layouts:** Standard · Compact · Minimal · Boss Fight. **§20.4 HUD zones**
+  (top-left health/shields/energy/relics; top-right score/currency/timer/objectives;
+  bottom-left movement/status/build; bottom-right weapons/skills/cooldowns).
+- **§20.5 Core UI:** bars (Health/Shields/Energy/Overheat), toggles, sliders,
+  scrollbars, frame styles, panels, buttons (normal/hover/pressed/disabled).
+- **§20.7 Feedback:** damage numbers (12 / 348! / 1.2K / 9.8K!), CRIT/ELITE/IMMUNE,
+  +120 / LEVEL UP, WARNING, OBJECTIVE UPDATED / COMPLETE, status popups.
+- **§20.8 Menus:** Main (Play/Hangar/Upgrades/Relics/Codex/Settings/Exit), Pause,
+  Victory (Stage Clear/Fate Lost screens with rewards).
+- **§20.14 Palette** (Primary Neon / Secondary / Neutrals / gradients) · **§20.15
+  Typography — CANONICAL FONTS: Headings = Orbitron Bold; Body = Rajdhani Medium;
+  Title = "Afterlight" display. Clean, futuristic, highly legible.**
+
+## Volume 20 (v2 — Hazards & Environment) — *number collision on sheet*
+
+- **§20.2 Hazard categories (8):** Energy · Projectile · Physical · Elemental · Gravity ·
+  Environment · Trap · Boss-Env.
+- **§20.4 Trap device library:** Turret · Laser Turret · Mine · Shock Mine · Plasma
+  Mine · Drone Spawner · Flame Jet · Spike Floor · Rotating Saw · Crusher · Magnet
+  Field · Portal Gate · Barrier Generator · Death Ray · Chain Anchor · Acid Vent ·
+  Gravity Node · Time Bomb.
+- **§20.5 Telegraph styles:** Ring · Cone · Line · Area Grid · Pulse · Trackers ·
+  Countdown. **§20.6 Env hazards:** Space · Planet · Structural · Weather.
+- **§20.8 Arena hazard layouts:** Circle · Linear · Multi-level · Boss · Survival.
+- **§20.12 Level geometry kit** (platforms/walls/corners/pillars) · **§20.9 intensity**
+  (Safe→Lethal) · **§20.15 colour language** per hazard category.
+
+## Volume 21 (v2) — Galaxy Bible: One Hundred Galaxies (the campaign map)
+
+- **§21.1:** 100 unique galaxies, grouped into **10 sectors of 10**; each galaxy has a
+  distinct biome, faction, hazard profile, 3–5 star systems w/ zones.
+- **§21.2 Sectors (10):** 01 The Crystal Edge · 02 The Hollow Reach · 03 The Iron
+  Expanse · 04 The Ember Wastes · 05 The Verdant Depths · 06 The Void Frontier · 07
+  The Ancient Rim · 08 The Storm Seas · 09 The Shattered Core · 10 The Beyond.
+- **§21.3 Biome types (10):** Crystalline · Volcanic · Frozen · Toxic · Desert ·
+  Nebula · Jungle · Mechanical · Corrupted · Abyssal.
+- **§21.4 Galaxy data template** (worked example G-042 **Vorath Prime**, Sector 04, biome
+  Volcanic/Ash Seas, primary faction Ember Covenant, secondary Iron Dominion, hazard
+  level, difficulty tier, recommended power, unique mechanic *Lava Surge*, boss *Magma
+  Colossus*, visual + music theme). **This is the galaxy definition schema.**
+- **§21.6 Star-system icons:** Safe · Standard · Dangerous · Hazardous · Extreme ·
+  Forbidden · Anomaly. **§21.7 Node types:** Start · Combat · Elite · Boss · Event ·
+  Shop · Treasure · Rest · Portal.
+- **§21.8 Progression tiers (6):** 1–10 · 11–20 · 21–40 · 41–60 · 61–80 · 81–100.
+- **§21.9 Galaxy modifiers:** Gravity Shift · Meteor Storms · Ion Storms · Void Rifts ·
+  Lava Surge · Solar Flare · EMP Pulse · Debris Field · Time Dilation · Resource Rich ·
+  Corruption Spread · Frostbite Winds · Acid Rain · Arcane Surge · Peaceful Zone.
+- **§21.12 Rewards by tier** (T1–2 Common → T9–10 Mythic/Relic/Light Cores) ·
+  **§21.13 difficulty curve** (enemy power scales ~linearly across galaxies 1→100).
+
+## Volume 22 (v2) — Enemy Production Bible
+
+- **§22.2 Enemy factions (6):** Void Corrupt · Dread Legion · Xenith Prime · Crystal
+  Conclave · Machine Cult · Ancient Wardens (each with primary/secondary/FX/energy
+  colours in §22.11).
+- **§22.3 Roles (8):** Swarmer · Rusher · Sniper · Artillery · Tank · Support · Boss ·
+  Objective. **§22.4 Core archetypes:** Void Leech · Legion Fighter · Xenith Drone ·
+  Crystal Sharder · Mech Hunter · Warden Sentinel · Collapse Behemoth.
+- **§22.5 Modular parts library:** Heads/Cockpits (40) · Torsos (50) · Arms/Wings (60) ·
+  Engines (40) · Weapons/Mounts (60) · Shields/Generators (30) — combine for infinite
+  variation. **§22.6 Size (7):** Tiny <2m → Titan 300m+.
+- **§22.7 Behaviours:** Linear · Swoop · Circle · Spiral · Zig-Zag · Hold · Flank ·
+  Retreat. **§22.9 Attack telegraphs:** Charge · Laser · Missile · Area Blast · Swarm
+  Spawn · Shield Up. **§22.12 Difficulty modifiers (stackable):** Armoured · Shielded ·
+  Regen · Enraged · Swarm · EMP Aura · Plagued · Boss.
+
+## Volume 23 (v2) — Boss Production Bible
+
+- **§23.2 Archetypes:** Void Entity · Machine Colossus · Ancient Guardian · Corrupted
+  Beast · Celestial Being · Swarm Queen · Dimensional Horror.
+- **§23.3 Scale (5):** Minor 15–30m · Major 30–80m · Colossal 80–200m · Titan
+  200–500m · **World Eater 500m+**.
+- **§23.4 Boss stages (5):** Initiation → Escalate → Overdrive → Desperation → **Final
+  Form** (each with key changes). **§23.5 Element themes:** Void · Machine · Celestial ·
+  Corrupted · Natural · Ancient · Dimensional.
+- **§23.6 Attack pattern categories:** Projectile Spam · Beam · AoE · Swarm Summon ·
+  Charge/Dash · Rotating/Spin · Pulsing Waves · Homing · Gravity/Pull · Phase/Teleport.
+- **§23.8 Reward tiers (T1–T5 Standard→Mythic)** + **§23.9 boss loot table** (credits,
+  core fragment %, equipment drop %, unique component %, cosmetic %, mythic %, void
+  crystals — scaling T1→T5). **§23.11 Phase transitions:** Shield Break → Core Overload
+  → Arena Collapse → Final Evolution.
+
+## Volume 24 (v2) — Power & Progression Bible
+
+- **§24.4 Progression:** Play → Earn → Upgrade → Evolve → **Mastery**.
+- **§24.5 Resources & currencies (6):** Credits (universal) · Core Fragments (upgrade/
+  craft) · Void Crystals (premium) · Relic Essence (enhance relics) · Data Shards
+  (research/codex) · Faction Tokens (faction shop).
+- **§24.7 Mastery tiers:** Novice · Adept · Expert · Master · Grandmaster · **Legend**
+  (XP bands to 600k+). **§24.8 Ascension system** (prestige: +stats/resource-find/relic
+  slot per level; matches our live Ascendancy). **§24.9 Relic enhancement** (rank
+  0–20, enhancement materials, success chance).
+- **§24.6 Upgrade paths (5 trees):** Weapons · Armor · Core Systems · Abilities ·
+  Support (5/5 nodes each). **§24.10 Talent masteries (5 classes):** Ranger · Berserker ·
+  Techmancer · Voidwalker · Guardian. **§24.12 Endgame goals:** Endless Mode · Galactic
+  Raids · Leaderboards · Mythic Gear · Faction War. **§24.3 Player stats** = the core
+  stat list (Health, Shields, Armor, Damage, Crit%, Crit Dmg, Attack Speed, Ability
+  Power, Energy Regen, Cooldown Reduction, Move Speed, Lifesteal, Resource Find, XP Gain).
+
+## Volume 25 (v2) — Items Bible: Gear · Modules · Rarity · Affixes · Crafting
+
+- **§25.2 Rarity (7):** Common · Uncommon · Rare · Epic · Legendary · Mythic · **Ancient**.
+- **§25.3 Item slots (16):** Weapons · Armor · Helmet · Chest · Gloves · Boots · Shield ·
+  Accessory · Amulet · Ring · Belt · Tech · Core · Reactor · Drone · Vehicle.
+- **§25.4 Affix tiers & rolls:** T1 Low (50%) → T5 Perfect (1%), with roll ranges.
+  **§25.5 Affix types (6):** Offensive · Defensive · Utility · Survival · Technical ·
+  Conditional. **§25.7 Modifiers:** prefixes (+dmg/crit/elemental/atk-speed/all-skills/
+  move) & suffixes (+armor/shield/health/dmg-resist/regen/pickup).
+- **§25.8 Item sets** (e.g. **Voidforged Armament** 2/4/6-piece bonuses; sets stack) ·
+  **§25.9 augments & sockets** (Square utility / Diamond offensive / Triangle defensive /
+  Circle special; named augments Overclock Core, Vampiric Node, Phase Stabilizer,
+  Singularity Lens, Fortress Matrix).
+- **§25.10 Crafting flow:** Salvage → Craft → Enhance → Reforge → **Ascend**. **§25.11
+  materials:** Common Alloy · Rare Crystal · Void Shard · Ancient Core · Legendary
+  Essence · Mythic Fragment. **§25.13 Item Power Score (IPS)** Poor→Perfect bands ·
+  **§25.15 item evolution** (Rare Lv20 → … → Ancient Lv120+).
+
+> **v2 system mapping (headline).** Vol 21 is the **campaign spine** (100 galaxies /
+> 10 sectors, galaxy = biome+faction+hazard+boss+modifier via the §21.4 schema).
+> Vols 15/22/23 give the faction + enemy + boss production language; Vols 16/17/18/25
+> the ship/weapon/equipment/item build systems; Vol 24 the meta-progression (resources,
+> mastery, ascension, talent trees) that our meta-upgrades/Ascendancy already seed;
+> Vol 20-UI fixes the **fonts (Orbitron/Rajdhani)** and HUD; Vol 19 + Vol 20-Hazards
+> the VFX + arena hazards. Vol 14 is the **master status/damage-type table** (10 types)
+> everything unifies to.
