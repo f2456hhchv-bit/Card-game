@@ -101,9 +101,9 @@ These are constraints on the VFX/render systems, not suggestions:
 
 ## 9. Typography
 
-- **One sans-serif family** with tabular (fixed-width) numerals for damage numbers, stats, and timers — number readability is a combat feature. Font must cover all supported languages; licensed for embedding (final family chosen at UI implementation module; recorded then in the asset sheet).
-- Hierarchy (fixed scale): Title 32 · Header 24 · Body 16 · Numbers 16 tabular · Tooltip 14. All sizes respond to the font-scaling setting.
-- Letterspacing is the premium cue: titles wide-tracked uppercase, body normal case. No decorative fonts anywhere, including the logo lockup.
+- **One sans-serif family for all body/UI text** with tabular (fixed-width) numerals for damage numbers, stats, and timers — number readability is a combat feature. Font must cover all supported languages; licensed for embedding (final family chosen at UI implementation module; recorded then in the asset sheet).
+- Hierarchy: extended by AF-009 to a ten-level scale (`docs/TYPOGRAPHY_WRITING.md` §2); the sizes fixed here keep their values (Main Heading 32, Section Heading 24, Body 16, Numbers 16 tabular, Tooltip 14). All sizes respond to the font-scaling setting.
+- Letterspacing is the premium cue: titles wide-tracked uppercase, body normal case. **Amended by AF-009 (Project Owner authority, 2026-07-05):** a secondary display face is permitted for Display Title level and brand lockups only — it must remain a modern sans in character (distinct weight/width, not decorative) and never appears in body text. Decorative fonts remain banned.
 
 ## 10. Animation & motion
 
