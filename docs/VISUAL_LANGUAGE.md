@@ -48,7 +48,7 @@ Colours are **design tokens** stored as data (`src/data/visual/palette` when cod
 
 - **Player-owned effects are cool light** (`plasma.cyan` → `energy.white`). **Hostile effects are hot** (`danger.red` / `warning.orange`) or **void-violet-magenta**. A player must know whose projectile it is from colour alone, peripherally, in one frame.
 - `danger.red` is *reserved*: it may never be used decoratively. If it's red, it can hurt you.
-- Rarity ramp (loot, future modules must reuse): common `#B8C2D9` → uncommon `crystal.teal` → rare `plasma.cyan` → epic `energy.violet` → legendary `solar.gold`.
+- Rarity ladder — **superseded by AF-007 (Project Owner authority, 2026-07-05):** the canonical nine-tier ladder (Damaged → Common → Improved → Rare → Epic → Legendary → Ancient → Mythic → Singularity) with token bindings is defined in `docs/ICONOGRAPHY.md` §4. The provisional five-tier ramp formerly recorded here is void.
 - Faction colours are constant everywhere (world, UI, map, lore): **Human** cyan/white · **Crystal** teal/prismatic · **Void** violet-magenta on black · **Ancient** gold/white · **Machine** orange/industrial grey `#6E7687`.
 - Colour never carries meaning alone (colour-blind law): every colour role is paired with a shape or brightness cue (§5, §11).
 
