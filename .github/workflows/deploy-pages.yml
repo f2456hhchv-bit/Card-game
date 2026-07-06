@@ -14,7 +14,7 @@ name: Deploy AFTERLIGHT to GitHub Pages
 on:
   workflow_dispatch:
   push:
-    branches: ["claude/survivor-game-development-bdruqt"]
+    branches: ["claude/afterlight-master-constitution-aelnnj"]
 
 # Permissions the Pages deployment needs.
 permissions:

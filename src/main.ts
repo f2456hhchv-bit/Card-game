@@ -1,115 +1,267 @@
-import "./ui/fonts.css";
-import "./ui/ui.css";
-import { Game } from "./game/Game";
-
 /**
- * Resolve the top safe-area inset (camera cutout / status bar) into the
- * `--safe-top` CSS variable that the menu overlays pad against.
- *
- * We measure `env(safe-area-inset-top)` via a probe element rather than trusting
- * CSS alone, because iOS home-screen web apps sometimes resolve `env()` to 0
- * (a long-standing standalone-mode quirk). When that happens on an iOS
- * standalone app we fall back to the device's known status-bar height by screen
- * class — Dynamic Island phones need ~59px, notched phones ~47px, older ~20px.
+ * Composition root (AF-001 §4). Builds the Event Bus, state machine, game
+ * loop, and debug overlay, then walks the AF-016 primary loop with
+ * placeholder screens. Rendering, input, and combat arrive with
+ * AF-017 → AF-021; this skeleton proves the state flow they attach to.
  */
-function applySafeTop(): void {
-  const probe = document.createElement("div");
-  probe.style.cssText =
-    "position:fixed;left:0;width:0;height:0;visibility:hidden;" +
-    "top:env(safe-area-inset-top,0px)";
-  document.documentElement.appendChild(probe);
-  let top = probe.offsetTop;
-  probe.remove();
+import { EventBus } from "./core/events/EventBus";
+import type { GameEvents } from "./core/events/GameEvents";
+import { GameLoop } from "./core/time/GameLoop";
+import { Log } from "./core/log/Log";
+import { Rng } from "./core/rng/Rng";
+import { StateMachine } from "./core/state/StateMachine";
+import {
+  GAME_TRANSITIONS,
+  OVERLAY_HOSTS,
+  type GameStateId,
+} from "./game/states/GameStates";
+import {
+  advancePhase,
+  createRunSession,
+  type RunSessionRecord,
+} from "./game/session/RunSession";
+import { DebugOverlay } from "./debug/DebugOverlay";
 
-  const standalone =
-    (navigator as unknown as { standalone?: boolean }).standalone === true;
-  if (top === 0 && standalone) {
-    // env() came back empty in fullscreen app mode — use the device class.
-    const h = Math.max(screen.height, screen.width);
-    top = h >= 852 ? 59 : h >= 812 ? 47 : 20;
-  }
-  document.documentElement.style.setProperty("--safe-top", `${top}px`);
-}
+const app = document.getElementById("app");
+if (!app) throw new Error("Missing #app root element");
 
-/**
- * Entry point. Boots the game, hides the splash, and surfaces any fatal error
- * to the player rather than failing silently to a black screen.
- */
-function boot(): void {
-  applySafeTop();
-  window.addEventListener("resize", applySafeTop);
-  window.addEventListener("orientationchange", applySafeTop);
-  const canvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
-  const app = document.getElementById("app");
-  const splash = document.getElementById("boot");
-  if (!canvas || !app) {
-    throw new Error("AFTERLIGHT: required DOM elements are missing.");
-  }
+const log = new Log({
+  sink: import.meta.env.DEV
+    ? (entry) => console[entry.level === "debug" ? "log" : entry.level](
+        `[${entry.system}] ${entry.message}`,
+        entry.data ?? "",
+      )
+    : undefined,
+});
 
-  const game = new Game(canvas, app);
-  game.start();
+const bus = new EventBus<GameEvents>();
 
-  // ---- Self-update check ---------------------------------------------------
-  // GitHub Pages caches for ~10 minutes and iOS home-screen apps cache far
-  // longer, so "refresh" often serves a stale build. The app instead polls a
-  // tiny cache-bypassed version.json and reloads itself (at a safe moment)
-  // when a newer build is live. No-ops offline and in the single-file build.
-  const checkForUpdate = async (): Promise<void> => {
-    try {
-      const res = await fetch(`./version.json?t=${Date.now()}`, { cache: "no-store" });
-      if (!res.ok) return;
-      const v = (await res.json()) as { id?: string };
-      if (!v.id || v.id === __BUILD_ID__) return;
-      // Guard against reload loops if the server keeps serving a mismatch.
-      if (sessionStorage.getItem("afterlight.updatedTo") === v.id) return;
-      sessionStorage.setItem("afterlight.updatedTo", v.id);
-      game.markUpdateReady(v.id);
-    } catch {
-      // Offline / file:// — self-update simply doesn't apply.
+let session: RunSessionRecord | null = null;
+let sessionMs = 0;
+
+const machine = new StateMachine<GameStateId>({
+  initial: "Boot",
+  transitions: GAME_TRANSITIONS,
+  overlayHosts: OVERLAY_HOSTS,
+  strict: import.meta.env.DEV,
+  onTransition: (info) => {
+    if (info.kind === "transition") {
+      bus.emit("GameStateChanged", { from: info.from, to: info.to, durationMs: info.durationMs });
+    } else if (info.kind === "overlay-push") {
+      bus.emit("OverlayPushed", { overlay: info.to, base: machine.base });
+    } else {
+      bus.emit("OverlayPopped", { overlay: info.from, base: machine.base });
     }
-  };
-  void checkForUpdate();
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) void checkForUpdate();
-  });
-  window.setInterval(() => void checkForUpdate(), 5 * 60 * 1000);
+    render();
+  },
+  onRejected: (from, to, reason) =>
+    log.warn("state", `refused transition ${from} → ${to}`, { reason }),
+});
 
-  // Optional debug console hook: open with `#dev` to expose `window.afterlight`.
-  if (location.hash === "#dev") {
-    (window as unknown as { afterlight: unknown }).afterlight = game.getDebugApi();
-    // eslint-disable-next-line no-console
-    console.info("AFTERLIGHT debug API ready: window.afterlight");
+/** Placeholder screens — one per state, replaced as AF-017+ modules land. */
+function screen(title: string, subtitle: string, actions: Array<[string, () => void]>): void {
+  if (!app) return;
+  app.innerHTML = "";
+  const box = document.createElement("div");
+  box.style.cssText = "text-align:center;max-width:32rem";
+  const h1 = document.createElement("h1");
+  h1.textContent = title;
+  h1.style.cssText =
+    "font-size:2rem;letter-spacing:0.35em;text-transform:uppercase;color:var(--energy-white);margin-bottom:0.5rem";
+  const p = document.createElement("p");
+  p.textContent = subtitle;
+  p.style.cssText = "color:var(--neutral-grey);margin-bottom:1.5rem";
+  box.append(h1, p);
+  for (const [label, onClick] of actions) {
+    const button = document.createElement("button");
+    button.textContent = label;
+    button.style.cssText = [
+      "display:block",
+      "margin:0.5rem auto",
+      "min-width:16rem",
+      "padding:0.6rem 1.2rem",
+      "background:rgba(16,26,56,0.6)",
+      "border:1px solid var(--space-blue)",
+      "border-bottom:2px solid var(--energy-violet)",
+      "color:var(--energy-white)",
+      "font:inherit",
+      "letter-spacing:0.08em",
+      "cursor:pointer",
+    ].join(";");
+    button.addEventListener("click", onClick);
+    box.appendChild(button);
   }
-
-  // Fade out the boot splash now that the first frame is up.
-  requestAnimationFrame(() => {
-    if (splash) {
-      splash.classList.add("hidden");
-      setTimeout(() => splash.remove(), 500);
-    }
-  });
+  app.appendChild(box);
 }
 
-function safeBoot(): void {
-  try {
-    boot();
-  } catch (err) {
-    console.error(err);
-    const splash = document.getElementById("boot");
-    if (splash) {
-      splash.innerHTML =
-        '<h1 style="font-size:1.4rem;letter-spacing:0.1em">Failed to start</h1>' +
-        `<p style="max-width:80vw;text-align:center">${String(err)}</p>`;
-    }
+function startRun(): void {
+  const seed = new Rng(`${Date.now()}`).int(1, 2 ** 31);
+  session = createRunSession(
+    {
+      missionId: "placeholder-mission",
+      commanderId: "placeholder-commander",
+      shipId: "placeholder-ship",
+      weaponIds: [],
+      equipmentIds: [],
+      difficulty: "standard",
+      ascension: 0,
+      biomeId: "placeholder-biome",
+    },
+    seed,
+    Date.now(),
+  );
+  sessionMs = 0;
+  log.info("run", "run started", { seed });
+}
+
+function endRun(result: "victory" | "defeat"): void {
+  if (!session) return;
+  session.result = result;
+  session.playTimeMs = sessionMs;
+  bus.emit("RunEnded", { result, seed: session.seed, playTimeMs: sessionMs });
+  machine.transitionTo(result === "victory" ? "MissionComplete" : "Defeat");
+}
+
+function render(): void {
+  const state = machine.current;
+  switch (state) {
+    case "Boot":
+      screen("Afterlight", "Initialising…", []);
+      break;
+    case "Splash":
+      screen("Afterlight", "The galaxy is dark. You carry the light.", [
+        ["Continue", () => machine.transitionTo("MainMenu")],
+      ]);
+      break;
+    case "MainMenu":
+      screen("Afterlight", "Main Menu (placeholder)", [
+        ["Enter Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
+        ["Statistics", () => machine.transitionTo("Statistics")],
+      ]);
+      break;
+    case "GalaxyCommand":
+      screen("Galaxy Command", "Prepare your build. Choose your mission.", [
+        ["Select Mission", () => machine.transitionTo("MissionSelect")],
+        ["Statistics", () => machine.transitionTo("Statistics")],
+        ["Main Menu", () => machine.transitionTo("MainMenu")],
+      ]);
+      break;
+    case "MissionSelect":
+      screen("Mission Selection", "One placeholder expedition is available.", [
+        [
+          "Launch Expedition",
+          () => {
+            startRun();
+            machine.transitionTo("Loading");
+          },
+        ],
+        ["Back", () => machine.transitionTo("GalaxyCommand")],
+      ]);
+      break;
+    case "Loading":
+      screen("Loading", "Streaming expedition data…", []);
+      // Async loading pattern: heavy work happens here, never inside a transition.
+      setTimeout(() => {
+        if (machine.base === "Loading") machine.transitionTo("Gameplay");
+      }, 250);
+      break;
+    case "Gameplay":
+      screen(
+        "Expedition",
+        `Run phase: ${session?.phase ?? "—"} · seed ${session?.seed ?? "—"} (combat arrives with AF-017 → AF-021)`,
+        [
+          [
+            "Advance Run Phase",
+            () => {
+              if (session) {
+                const previous = session.phase;
+                const next = advancePhase(session);
+                if (next) bus.emit("RunPhaseChanged", { from: previous, to: next });
+                if (next === "Results") endRun("victory");
+                else render();
+              }
+            },
+          ],
+          ["Pause", () => machine.pushOverlay("Pause")],
+          ["Simulate Defeat", () => endRun("defeat")],
+        ],
+      );
+      break;
+    case "Pause":
+      screen("Paused", "The run is preserved beneath this overlay.", [
+        ["Resume", () => machine.popOverlay()],
+        ["Abandon Run", () => machine.transitionTo("GalaxyCommand")],
+      ]);
+      break;
+    case "LevelUp":
+    case "InventoryOverlay":
+      screen(state, "Overlay placeholder.", [["Close", () => machine.popOverlay()]]);
+      break;
+    case "MissionComplete":
+      screen("Mission Complete", "Rewards banked. The galaxy grows brighter.", [
+        ["Return to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
+        ["Statistics", () => machine.transitionTo("Statistics")],
+      ]);
+      break;
+    case "Defeat":
+      screen("Run Lost", "Knowledge, research, and statistics retained.", [
+        ["Return to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
+        ["Statistics", () => machine.transitionTo("Statistics")],
+      ]);
+      break;
+    case "Statistics":
+      screen("Statistics", "Lifetime records (placeholder).", [
+        ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
+        ["Back to Main Menu", () => machine.transitionTo("MainMenu")],
+      ]);
+      break;
+    case "Multiplayer":
+    case "CommunityHub":
+      screen(state, "Reserved for a future module.", []);
+      break;
   }
 }
 
-// Wait for the DOM before booting. The single-file build runs as a classic
-// (non-deferred) script for file:// compatibility, so it can execute before the
-// document body is parsed — guard against that here rather than relying on
-// script placement or `defer` (which inline scripts ignore).
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", safeBoot, { once: true });
-} else {
-  safeBoot();
-}
+// Frame loop: fixed-timestep sim (session timing for now; systems attach via
+// GameManager as AF-017+ land) with an FPS estimate for the debug overlay.
+let fps = 0;
+let framesThisSecond = 0;
+let fpsWindowStart = performance.now();
+
+const loop = new GameLoop({
+  update: (fixedDtMs) => {
+    if (machine.base === "Gameplay" && machine.overlays.length === 0) {
+      sessionMs += fixedDtMs;
+    }
+  },
+  render: () => {
+    framesThisSecond += 1;
+    const now = performance.now();
+    if (now - fpsWindowStart >= 1000) {
+      fps = (framesThisSecond * 1000) / (now - fpsWindowStart);
+      framesThisSecond = 0;
+      fpsWindowStart = now;
+    }
+    if (debugOverlay) {
+      debugOverlay.update({
+        gameState: machine.base,
+        overlays: machine.overlays,
+        runPhase: session?.phase ?? null,
+        missionSeed: session?.seed ?? null,
+        difficulty: session ? `${session.difficulty} / A${session.ascension}` : null,
+        build: session ? session.shipId : null,
+        sessionSeconds: sessionMs / 1000,
+        fps,
+        lastTransitionMs: machine.lastTransitionMs,
+        droppedTimeMs: loop.droppedTimeMs,
+      });
+    }
+  },
+});
+
+const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
+
+render();
+loop.start();
+machine.transitionTo("Splash");
+log.info("boot", "Afterlight core gameplay skeleton started");

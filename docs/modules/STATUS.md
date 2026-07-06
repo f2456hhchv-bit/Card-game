@@ -23,7 +23,13 @@ Phase note: AF-000 → AF-012 are specification/framework modules — their buil
 | AF-014 | Master Design Constitution | v1 *(authority chain recorded; priority-order floor rule; ADR practice instituted)* | Complete (spec) | Aligned | Governs all future modules beneath AF-000 | Approved 9.5/10 | **LOCKED** |
 | AF-015 | Master Foundation Lock | v1 *(full AF-000→015 review executed; scheduled debts assigned)* | Complete — **Foundation Phase locked 2026-07-06** | Aligned | Production contract binds AF-016+ | Approved 9.5/10 | **LOCKED** |
 
-**PHASE STATUS: Foundation Phase (AF-000 → AF-015) COMPLETE AND LOCKED. Core Gameplay phase begins at AF-016.**
+**PHASE STATUS: Foundation Phase (AF-000 → AF-015) COMPLETE AND LOCKED. Core Gameplay phase in progress (AF-016 →).**
+
+## Core Gameplay phase
+
+| Module | Title | Version | Stage | Review | QA | Approval | Lock |
+|---|---|---|---|---|---|---|---|
+| AF-016 | Core Gameplay Framework | v1 | Complete — spec + first implementation increment (state machine, core runtime, tests, CI; old iteration archived) | Aligned | Typecheck + 26 tests green; full-session playtests bind as AF-017→026 land | Approved 9.5/10 | **LOCKED** |
 
 **Authorised amendments log:**
 - 2026-07-05 — AF-002 output: palette extended with `vitality.green`, `shield.blue` (owner ruling via AF-004 review).
