@@ -26,6 +26,8 @@ export interface DebugSnapshot {
   xp: string | null;
   /** Loot summary: ground count vs cap, collected, banked (AF-023 §8). */
   loot: string | null;
+  /** Research summary: points, unlocked, live bonuses (AF-024 §7). */
+  research: string | null;
 }
 
 export class DebugOverlay {
@@ -72,6 +74,7 @@ export class DebugOverlay {
       `combat     ${snapshot.combat ?? "—"}`,
       `xp         ${snapshot.xp ?? "—"}`,
       `loot       ${snapshot.loot ?? "—"}`,
+      `research   ${snapshot.research ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

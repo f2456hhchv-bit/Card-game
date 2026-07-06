@@ -44,4 +44,8 @@ export interface GameEvents extends Record<string, unknown> {
   LootDropped: { itemId: string; rarity: string; category: string; seed: number };
   /** A ground drop was collected (AF-023 §5). */
   LootCollected: { itemId: string; rarity: string; category: string };
+  /** A research node was unlocked (AF-024 §3) — permanent progression. */
+  ResearchUnlocked: { nodeId: string; category: string };
+  /** Research points were banked (AF-024 §1). */
+  ResearchPointsGained: { amount: number };
 }

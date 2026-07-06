@@ -42,7 +42,11 @@ import { UpgradePool } from "./game/progression/UpgradePool";
 import { DEFAULT_XP_TUNING, type UpgradeDefinition } from "./game/progression/xpTuning";
 import { generateDrop, type DropTableEntry, type LootDrop } from "./game/loot/LootGenerator";
 import { GroundLoot } from "./game/loot/GroundLoot";
-import { DEFAULT_LOOT_TUNING, RARITY_TABLE } from "./game/loot/lootTuning";
+import { DEFAULT_LOOT_TUNING, RARITY_LADDER, RARITY_TABLE } from "./game/loot/lootTuning";
+import { SaveSlice } from "./core/save/SaveSlice";
+import { LocalStorageAdapter } from "./core/save/SaveStorage";
+import { ResearchTree, type ResearchSaveData } from "./game/research/ResearchTree";
+import { SANDBOX_RESEARCH_TREE } from "./game/research/researchData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -142,6 +146,8 @@ const sandboxBuild = {
   fireIntervalScale: 1,
   speedStacks: 0,
   magnetBonus: 0,
+  researchWeaponBonus: 0, // AF-024 → AF-021 pipeline research stage
+  researchLootBonus: 0, // AF-024 → AF-023 ladder shift
 };
 
 const SANDBOX_UPGRADES: UpgradeDefinition[] = [
@@ -220,6 +226,52 @@ let lootNotices: LootNotice[] = [];
 let lootBankedCount = 0;
 let lootCollectedCount = 0;
 
+// ── Research (AF-024): permanent progression through a real save slice.
+const researchSlice = new SaveSlice<ResearchSaveData>({
+  key: "research",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({ points: 0, unlocked: [], revealed: [], totalPointsEarned: 0 }),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+
+const researchTree = new ResearchTree(SANDBOX_RESEARCH_TREE, (node) =>
+  bus.emit("ResearchUnlocked", { nodeId: node.id, category: node.category }),
+);
+
+function persistResearch(): void {
+  void researchSlice.save(researchTree.toSave());
+}
+
+/** Research is never lost: points bank immediately on sample collection. */
+function bankResearchSample(drop: LootDrop): void {
+  const tierBonus = RARITY_LADDER.indexOf(drop.rarity);
+  const amount = 3 + tierBonus;
+  researchTree.addPoints(amount);
+  bus.emit("ResearchPointsGained", { amount });
+  if (tierBonus >= RARITY_LADDER.indexOf("epic")) {
+    if (researchTree.reveal("ancient-conduit")) {
+      lootNotices.push({ text: "HIDDEN DISCOVERY · ANCIENT CONDUIT", colour: "#9b5cff", ttlMs: 2400 });
+    }
+  }
+  persistResearch();
+}
+
+/** Unlocked research feeds live systems at run start (AF-024 §4). */
+function researchEffects(): { weaponBonus: number; lootBonus: number; magnetBonus: number } {
+  let weaponBonus = 0;
+  let lootBonus = 0;
+  let magnetBonus = 0;
+  for (const node of researchTree.unlockedNodes) {
+    if (!node.effect) continue;
+    if (node.effect.kind === "weaponResearchBonus") weaponBonus += node.effect.value;
+    else if (node.effect.kind === "lootResearchBonus") lootBonus += node.effect.value;
+    else if (node.effect.kind === "magnetRadiusBonus") magnetBonus += node.effect.value;
+  }
+  return { weaponBonus, lootBonus, magnetBonus };
+}
+
 function dropLoot(x: number, y: number): void {
   if (!lootRng || !groundLoot || !xpSystem || !session) return;
   const drop = generateDrop(
@@ -229,7 +281,7 @@ function dropLoot(x: number, y: number): void {
       difficulty: 1,
       ascension: session.ascension,
       mutatorBonus: 0,
-      researchBonus: 0,
+      researchBonus: sandboxBuild.researchLootBonus,
     },
     DEFAULT_LOOT_TUNING,
     lootRng,
@@ -358,7 +410,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
       if (Math.hypot(drone.x - projectile.x, drone.y - projectile.y) < 0.6) {
         const result = resolveDamage(
           playerPacket(),
-          { ...NEUTRAL_MODIFIERS, weapon: sandboxBuild.weaponBonus },
+          { ...NEUTRAL_MODIFIERS, weapon: sandboxBuild.weaponBonus, research: sandboxBuild.researchWeaponBonus },
           { values: {} },
           DEFAULT_COMBAT_TUNING,
           combatRng,
@@ -512,7 +564,10 @@ function startRun(): void {
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
   sandboxBuild.speedStacks = 0;
-  sandboxBuild.magnetBonus = 0;
+  const research = researchEffects();
+  sandboxBuild.magnetBonus = research.magnetBonus;
+  sandboxBuild.researchWeaponBonus = research.weaponBonus;
+  sandboxBuild.researchLootBonus = research.lootBonus;
   currentOffer = [];
   xpSystem = new XpSystem(DEFAULT_XP_TUNING, null, (level) =>
     bus.emit("CommanderLevelUp", { level }),
@@ -536,6 +591,7 @@ function startRun(): void {
         ttlMs: 1600,
       });
       bus.emit("LootCollected", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category });
+      if (drop.category === "researchSample") bankResearchSample(drop);
     },
     () => {
       lootBankedCount += 1; // banked to Results — value preserved (AF-023 §6)
@@ -819,13 +875,37 @@ function render(): void {
         ["Statistics", () => machine.transitionTo("Statistics")],
       ]);
       break;
-    case "GalaxyCommand":
-      screen("Galaxy Command", "Prepare your build. Choose your mission.", [
-        ["Select Mission", () => machine.transitionTo("MissionSelect")],
-        ["Statistics", () => machine.transitionTo("Statistics")],
-        ["Main Menu", () => machine.transitionTo("MainMenu")],
-      ]);
+    case "GalaxyCommand": {
+      // Research panel (AF-024): spend banked points; unlocks persist forever.
+      const snapshot = researchTree.snapshot;
+      const nodeButtons: Array<[string, () => void]> = researchTree.visibleNodes
+        .filter((n) => !researchTree.isUnlocked(n.id))
+        .slice(0, 4)
+        .map((n) => {
+          const state = researchTree.stateOf(n.id);
+          const tag = state === "available" ? `${n.cost} pts` : "locked";
+          return [
+            `Research: ${n.name} (${tag})`,
+            () => {
+              if (researchTree.unlock(n.id)) {
+                persistResearch();
+                render();
+              }
+            },
+          ];
+        });
+      screen(
+        "Galaxy Command",
+        `Research points: ${snapshot.points} · unlocked ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} technologies`,
+        [
+          ["Select Mission", () => machine.transitionTo("MissionSelect")],
+          ...nodeButtons,
+          ["Statistics", () => machine.transitionTo("Statistics")],
+          ["Main Menu", () => machine.transitionTo("MainMenu")],
+        ],
+      );
       break;
+    }
     case "MissionSelect":
       screen("Mission Selection", "One placeholder expedition is available.", [
         [
@@ -970,6 +1050,7 @@ const loop = new GameLoop({
         loot: groundLoot
           ? `ground ${groundLoot.live.length}/${DEFAULT_LOOT_TUNING.maxGroundLoot} · collected ${lootCollectedCount} · banked ${lootBankedCount}`
           : null,
+        research: `pts ${researchTree.snapshot.points} · unlocked ${researchTree.snapshot.unlockedCount} · wpn +${(sandboxBuild.researchWeaponBonus * 100).toFixed(0)}% · loot +${(sandboxBuild.researchLootBonus * 100).toFixed(0)}%`,
       });
     }
   },
@@ -979,5 +1060,11 @@ const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : nul
 
 render();
 loop.start();
-machine.transitionTo("Splash");
-log.info("boot", "Afterlight core gameplay skeleton started");
+// Boot state loads persistent slices, then hands over (AF-016 Boot's job).
+void (async () => {
+  researchTree.loadSave(await researchSlice.load());
+  machine.transitionTo("Splash");
+  log.info("boot", "Afterlight core gameplay skeleton started", {
+    researchUnlocked: researchTree.snapshot.unlockedCount,
+  });
+})();
