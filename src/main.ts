@@ -22,6 +22,10 @@ import {
 } from "./game/session/RunSession";
 import { EnemyDirector } from "./game/director/EnemyDirector";
 import { DEFAULT_DIRECTOR_TUNING } from "./game/director/directorTuning";
+import { ActionInput } from "./engine/input/ActionInput";
+import { KeyboardMouseAdapter } from "./engine/input/KeyboardMouseAdapter";
+import { GamepadAdapter } from "./engine/input/GamepadAdapter";
+import { DEFAULT_BINDINGS, DEFAULT_INPUT_TUNING } from "./engine/input/inputTuning";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -42,6 +46,10 @@ let session: RunSessionRecord | null = null;
 let sessionMs = 0;
 let director: EnemyDirector | null = null;
 
+const input = new ActionInput(DEFAULT_INPUT_TUNING, DEFAULT_BINDINGS);
+new KeyboardMouseAdapter(input).attach();
+const gamepad = new GamepadAdapter(input);
+
 const machine = new StateMachine<GameStateId>({
   initial: "Boot",
   transitions: GAME_TRANSITIONS,
@@ -55,11 +63,19 @@ const machine = new StateMachine<GameStateId>({
     } else {
       bus.emit("OverlayPopped", { overlay: info.from, base: machine.base });
     }
+    syncInputContext();
     render();
   },
   onRejected: (from, to, reason) =>
     log.warn("state", `refused transition ${from} → ${to}`, { reason }),
 });
+
+/** Input context follows the state machine (AF-019 §2). */
+function syncInputContext(): void {
+  if (machine.overlays.length > 0) input.setContext("overlay");
+  else if (machine.base === "Gameplay") input.setContext("gameplay");
+  else input.setContext("menu");
+}
 
 /** Placeholder screens — one per state, replaced as AF-017+ modules land. */
 function screen(title: string, subtitle: string, actions: Array<[string, () => void]>): void {
@@ -261,12 +277,18 @@ let fpsWindowStart = performance.now();
 
 const loop = new GameLoop({
   update: (fixedDtMs) => {
+    input.update(fixedDtMs);
+    if (input.wasPressed("Pause") && machine.base === "Gameplay") {
+      if (machine.overlays.at(-1) === "Pause") machine.popOverlay();
+      else if (machine.overlays.length === 0) machine.pushOverlay("Pause");
+    }
     if (machine.base === "Gameplay" && machine.overlays.length === 0) {
       sessionMs += fixedDtMs;
       director?.update(fixedDtMs);
     }
   },
   render: () => {
+    gamepad.poll();
     framesThisSecond += 1;
     const now = performance.now();
     if (now - fpsWindowStart >= 1000) {
@@ -289,6 +311,7 @@ const loop = new GameLoop({
         director: director
           ? `${director.snapshot.phase} · threat ${director.snapshot.threat.toFixed(2)} · budget ${director.snapshot.budget.toFixed(0)} · enemies ${director.snapshot.activeEnemies} (${director.snapshot.activeElites}E)`
           : null,
+        input: `${input.currentContext} · move (${input.movement.x.toFixed(2)}, ${input.movement.y.toFixed(2)}) · last ${input.lastAction ?? "—"}`,
       });
     }
   },
