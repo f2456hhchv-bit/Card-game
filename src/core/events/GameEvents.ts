@@ -20,4 +20,10 @@ export interface GameEvents extends Record<string, unknown> {
   RunEnded: { result: "victory" | "defeat"; seed: number; playTimeMs: number };
   /** A registered system threw during update and was isolated (AF-001 §9). */
   SystemErrored: { system: string; message: string };
+  /** The Enemy Director changed pacing phase (AF-017 §2). */
+  DirectorPhaseChanged: { from: string; to: string };
+  /** The Enemy Director issued a spawn directive for the Enemy System. */
+  SpawnDirectiveIssued: { waveType: string; budgetCost: number; eliteCount: number };
+  /** The Enemy Director triggered an environmental event (AF-017 §5). */
+  EnvironmentalEventTriggered: { eventType: string };
 }

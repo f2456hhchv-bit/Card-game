@@ -14,6 +14,8 @@ export interface DebugSnapshot {
   fps: number;
   lastTransitionMs: number;
   droppedTimeMs: number;
+  /** Enemy Director summary: phase, threat, budget, enemy/elite counts (AF-017 §10). */
+  director: string | null;
 }
 
 export class DebugOverlay {
@@ -54,6 +56,7 @@ export class DebugOverlay {
       `seed       ${snapshot.missionSeed ?? "—"}`,
       `difficulty ${snapshot.difficulty ?? "—"}`,
       `build      ${snapshot.build ?? "—"}`,
+      `director   ${snapshot.director ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

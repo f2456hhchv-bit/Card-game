@@ -20,6 +20,8 @@ import {
   createRunSession,
   type RunSessionRecord,
 } from "./game/session/RunSession";
+import { EnemyDirector } from "./game/director/EnemyDirector";
+import { DEFAULT_DIRECTOR_TUNING } from "./game/director/directorTuning";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -38,6 +40,7 @@ const bus = new EventBus<GameEvents>();
 
 let session: RunSessionRecord | null = null;
 let sessionMs = 0;
+let director: EnemyDirector | null = null;
 
 const machine = new StateMachine<GameStateId>({
   initial: "Boot",
@@ -111,6 +114,27 @@ function startRun(): void {
     Date.now(),
   );
   sessionMs = 0;
+  director = new EnemyDirector({
+    tuning: DEFAULT_DIRECTOR_TUNING,
+    rng: new Rng(seed).fork("director"),
+    threatInputs: {
+      missionDifficulty: 1,
+      biomeModifier: 1,
+      mutatorModifier: 1,
+      ascension: session.ascension,
+      playerLevel: 1,
+      equipmentQuality: 1,
+    },
+    onDirective: (directive) =>
+      bus.emit("SpawnDirectiveIssued", {
+        waveType: directive.waveType,
+        budgetCost: directive.budgetCost,
+        eliteCount: directive.eliteCount,
+      }),
+    onPhaseChanged: (from, to) => bus.emit("DirectorPhaseChanged", { from, to }),
+    onEnvironmentalEvent: (eventType) =>
+      bus.emit("EnvironmentalEventTriggered", { eventType }),
+  });
   log.info("run", "run started", { seed });
 }
 
@@ -118,6 +142,7 @@ function endRun(result: "victory" | "defeat"): void {
   if (!session) return;
   session.result = result;
   session.playTimeMs = sessionMs;
+  director = null;
   bus.emit("RunEnded", { result, seed: session.seed, playTimeMs: sessionMs });
   machine.transitionTo(result === "victory" ? "MissionComplete" : "Defeat");
 }
@@ -190,7 +215,13 @@ function render(): void {
     case "Pause":
       screen("Paused", "The run is preserved beneath this overlay.", [
         ["Resume", () => machine.popOverlay()],
-        ["Abandon Run", () => machine.transitionTo("GalaxyCommand")],
+        [
+          "Abandon Run",
+          () => {
+            director = null;
+            machine.transitionTo("GalaxyCommand");
+          },
+        ],
       ]);
       break;
     case "LevelUp":
@@ -232,6 +263,7 @@ const loop = new GameLoop({
   update: (fixedDtMs) => {
     if (machine.base === "Gameplay" && machine.overlays.length === 0) {
       sessionMs += fixedDtMs;
+      director?.update(fixedDtMs);
     }
   },
   render: () => {
@@ -254,6 +286,9 @@ const loop = new GameLoop({
         fps,
         lastTransitionMs: machine.lastTransitionMs,
         droppedTimeMs: loop.droppedTimeMs,
+        director: director
+          ? `${director.snapshot.phase} · threat ${director.snapshot.threat.toFixed(2)} · budget ${director.snapshot.budget.toFixed(0)} · enemies ${director.snapshot.activeEnemies} (${director.snapshot.activeElites}E)`
+          : null,
       });
     }
   },
