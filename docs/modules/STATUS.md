@@ -31,6 +31,7 @@ Phase note: AF-000 → AF-012 are specification/framework modules — their buil
 |---|---|---|---|---|---|---|---|
 | AF-016 | Core Gameplay Framework | v1 | Complete — spec + first implementation increment (state machine, core runtime, tests, CI; old iteration archived) | Aligned | Typecheck + 26 tests green; full-session playtests bind as AF-017→026 land | Approved 9.5/10 | **LOCKED** |
 | AF-017 | Adaptive Enemy Director | v1 *(canon: 7 environmental events, 9 wave identities, Mutators registered)* | Complete — spec + implementation (`src/game/director/`), 300-run headless simulation in CI | Aligned | 42 tests green incl. simulation invariants; live-feel tuning binds AF-021+ | Approved 9.5/10 | **LOCKED** |
+| AF-018 | Camera Framework | v1 *(Photo Mode registered as future flag)* | Complete — spec + implementation (`src/engine/camera/`), deterministic headless tests | Aligned | 54 tests green; on-screen feel review binds AF-020+ | Approved 9.5/10 | **LOCKED** |
 
 **Authorised amendments log:**
 - 2026-07-05 — AF-002 output: palette extended with `vitality.green`, `shield.blue` (owner ruling via AF-004 review).
