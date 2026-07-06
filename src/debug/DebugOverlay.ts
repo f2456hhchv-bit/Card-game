@@ -22,6 +22,8 @@ export interface DebugSnapshot {
   movement: string | null;
   /** Combat summary: entities, projectiles, crit rate, defence (AF-021 §10). */
   combat: string | null;
+  /** XP summary: level, progress, gems, build bonuses (AF-022 §8). */
+  xp: string | null;
 }
 
 export class DebugOverlay {
@@ -66,6 +68,7 @@ export class DebugOverlay {
       `input      ${snapshot.input ?? "—"}`,
       `movement   ${snapshot.movement ?? "—"}`,
       `combat     ${snapshot.combat ?? "—"}`,
+      `xp         ${snapshot.xp ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

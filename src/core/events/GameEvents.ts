@@ -36,4 +36,8 @@ export interface GameEvents extends Record<string, unknown> {
   StatusApplied: { status: string; targetId: string };
   /** A shield collapsed to zero — distinct learned-instantly feedback (AF-003 §4). */
   ShieldBroken: { targetId: string };
+  /** The Commander gained a level (AF-022 §4) — the signature moment. */
+  CommanderLevelUp: { level: number };
+  /** An XP pickup was collected (AF-022 §2). */
+  XpCollected: { amount: number; tier: string };
 }

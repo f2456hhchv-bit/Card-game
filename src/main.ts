@@ -36,6 +36,10 @@ import { TARGET_SELECTORS, type TargetCandidate } from "./game/combat/targetPrio
 import { DEFAULT_COMBAT_TUNING } from "./game/combat/combatTuning";
 import type { SpawnDirective } from "./game/director/EnemyDirector";
 import { Pool } from "./core/pool/Pool";
+import { XpSystem } from "./game/progression/XpSystem";
+import { XpPickups } from "./game/progression/XpPickups";
+import { UpgradePool } from "./game/progression/UpgradePool";
+import { DEFAULT_XP_TUNING, type UpgradeDefinition } from "./game/progression/xpTuning";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -124,8 +128,71 @@ let hitCount = 0;
 let critCount = 0;
 
 const CANNON = { intervalMs: 320, range: 14, projectileSpeed: 28, ttlMs: 900 };
-const PLAYER_PACKET = { baseDamage: 9, kind: "direct", school: "energy", critChance: 0.15, critMultiplier: 2 } as const;
 const DRONE_PACKET = { baseDamage: 6, kind: "direct", school: "physical", critChance: 0, critMultiplier: 1 } as const;
+
+// ── Sandbox XP & upgrades (AF-022): kills drop gems, gems level you up,
+// levels present real build choices. Placeholder upgrade content — the
+// pool/curve/pickup framework underneath is the deliverable.
+const sandboxBuild = {
+  weaponBonus: 0,
+  critBonus: 0,
+  fireIntervalScale: 1,
+  speedStacks: 0,
+  magnetBonus: 0,
+};
+
+const SANDBOX_UPGRADES: UpgradeDefinition[] = [
+  { id: "damage", category: "weaponUpgrade", name: "Focused Coils", description: "+15% weapon damage", weight: 10, maxStacks: 5 },
+  { id: "firerate", category: "weaponUpgrade", name: "Rapid Cycler", description: "+14% fire rate", weight: 10, maxStacks: 5 },
+  { id: "crit", category: "critical", name: "Precision Optics", description: "+5% critical chance", weight: 6, maxStacks: 4 },
+  { id: "speed", category: "movement", name: "Tuned Thrusters", description: "+8% movement speed", weight: 6, maxStacks: 5 },
+  { id: "barrier", category: "shield", name: "Emergency Barrier", description: "+20 barrier now", weight: 5, maxStacks: null },
+  { id: "magnet", category: "resource", name: "Collection Field", description: "+1.5 magnet radius", weight: 4, maxStacks: 3 },
+];
+
+function playerPacket() {
+  return {
+    baseDamage: 9,
+    kind: "direct",
+    school: "energy",
+    critChance: 0.15 + sandboxBuild.critBonus,
+    critMultiplier: 2,
+  } as const;
+}
+
+function applyUpgrade(id: string): void {
+  switch (id) {
+    case "damage":
+      sandboxBuild.weaponBonus += 0.15;
+      break;
+    case "firerate":
+      sandboxBuild.fireIntervalScale *= 0.86;
+      break;
+    case "crit":
+      sandboxBuild.critBonus += 0.05;
+      break;
+    case "speed":
+      sandboxBuild.speedStacks += 1;
+      movement?.addModifier({
+        id: "upgrade-speed",
+        kind: "speedMultiplier",
+        multiplier: 1 + 0.08 * sandboxBuild.speedStacks,
+        durationMs: Number.MAX_SAFE_INTEGER,
+      });
+      break;
+    case "barrier":
+      playerDefence?.addBarrier(20);
+      break;
+    case "magnet":
+      sandboxBuild.magnetBonus += 1.5;
+      break;
+  }
+}
+
+let xpSystem: XpSystem | null = null;
+let xpPickups: XpPickups | null = null;
+let upgradePool: UpgradePool | null = null;
+let currentOffer: readonly UpgradeDefinition[] = [];
 
 function spawnWave(directive: SpawnDirective): void {
   if (!movement || !combatRng || !director) return;
@@ -192,6 +259,20 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
+  // XP gems: magnetism + collection (AF-022).
+  xpPickups?.update(fixedDtMs, player.x, player.y, {
+    pickupRadius: DEFAULT_XP_TUNING.basePickupRadius,
+    magnetRadius: DEFAULT_XP_TUNING.baseMagnetRadius + sandboxBuild.magnetBonus,
+  });
+
+  // Level-up: consume one queued level, present an offer (AF-022 §4).
+  if (xpSystem && upgradePool && xpSystem.snapshot.pendingLevels > 0 && machine.overlays.length === 0) {
+    xpSystem.consumePendingLevel();
+    currentOffer = upgradePool.offer(DEFAULT_XP_TUNING.choicesPerLevel).choices;
+    machine.pushOverlay("LevelUp");
+    return;
+  }
+
   // Test cannon: nearest-priority, pooled projectiles, real pipeline.
   fireCooldownMs = Math.max(0, fireCooldownMs - fixedDtMs);
   if (fireCooldownMs === 0) {
@@ -209,7 +290,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
       projectile.ttlMs = CANNON.ttlMs;
       projectile.live = true;
       projectiles.push(projectile);
-      fireCooldownMs = CANNON.intervalMs;
+      fireCooldownMs = CANNON.intervalMs * sandboxBuild.fireIntervalScale;
     }
   }
 
@@ -226,7 +307,13 @@ function updateSandboxCombat(fixedDtMs: number): void {
     for (const drone of drones) {
       if (!drone.alive) continue;
       if (Math.hypot(drone.x - projectile.x, drone.y - projectile.y) < 0.6) {
-        const result = resolveDamage(PLAYER_PACKET, NEUTRAL_MODIFIERS, { values: {} }, DEFAULT_COMBAT_TUNING, combatRng);
+        const result = resolveDamage(
+          playerPacket(),
+          { ...NEUTRAL_MODIFIERS, weapon: sandboxBuild.weaponBonus },
+          { values: {} },
+          DEFAULT_COMBAT_TUNING,
+          combatRng,
+        );
         drone.hull -= result.finalDamage;
         hitCount += 1;
         if (result.critical) critCount += 1;
@@ -243,6 +330,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
           drone.alive = false;
           bus.emit("EnemyKilled", { enemyId: drone.id, elite: drone.elite, boss: false });
           director.notifyEnemiesRemoved(1, drone.elite ? 1 : 0);
+          xpPickups?.spawn(drone.elite ? "elite" : "medium", drone.x, drone.y);
         }
         projectile.live = false;
         break;
@@ -370,6 +458,20 @@ function startRun(): void {
   fireCooldownMs = 0;
   hitCount = 0;
   critCount = 0;
+  sandboxBuild.weaponBonus = 0;
+  sandboxBuild.critBonus = 0;
+  sandboxBuild.fireIntervalScale = 1;
+  sandboxBuild.speedStacks = 0;
+  sandboxBuild.magnetBonus = 0;
+  currentOffer = [];
+  xpSystem = new XpSystem(DEFAULT_XP_TUNING, null, (level) =>
+    bus.emit("CommanderLevelUp", { level }),
+  );
+  xpPickups = new XpPickups(DEFAULT_XP_TUNING, (amount, tier) => {
+    xpSystem?.addXp(amount);
+    bus.emit("XpCollected", { amount, tier });
+  });
+  upgradePool = new UpgradePool(SANDBOX_UPGRADES, new Rng(seed).fork("upgrades"));
   director = new EnemyDirector({
     tuning: DEFAULT_DIRECTOR_TUNING,
     rng: new Rng(seed).fork("director"),
@@ -503,6 +605,20 @@ function drawSandbox(): void {
     }
   }
 
+  // XP gems: solar gold, size = significance (AF-002 §7, AF-022 §2).
+  if (xpPickups) {
+    ctx.fillStyle = "#ffc652";
+    ctx.shadowColor = "#ffc652";
+    ctx.shadowBlur = 6;
+    for (const gem of xpPickups.live) {
+      const gemSize = (gem.tier === "small" ? 0.12 : gem.tier === "elite" ? 0.22 : 0.17) * scale;
+      ctx.beginPath();
+      ctx.arc(toX(gem.x), toY(gem.y), gemSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  }
+
   // Player projectiles: cool light — ownership readable in one frame (AF-002 §3).
   ctx.fillStyle = "#3fd4f5";
   ctx.shadowColor = "#3fd4f5";
@@ -545,6 +661,23 @@ function drawSandbox(): void {
     ctx.globalAlpha = Math.min(1, popup.ttlMs / 300);
     ctx.fillText(popup.text, toX(popup.x), toY(popup.y));
     ctx.globalAlpha = 1;
+  }
+
+  // XP bar: solar gold, bottom centre (AF-003 §3 layout).
+  if (xpSystem) {
+    const xp = xpSystem.snapshot;
+    const barWidth = sandboxCanvas.width * 0.6;
+    const barX = (sandboxCanvas.width - barWidth) / 2;
+    const barY = sandboxCanvas.height - 18;
+    ctx.fillStyle = "rgba(5,6,10,0.7)";
+    ctx.fillRect(barX - 2, barY - 2, barWidth + 4, 12);
+    ctx.fillStyle = "#101a38";
+    ctx.fillRect(barX, barY, barWidth, 8);
+    ctx.fillStyle = "#ffc652";
+    ctx.fillRect(barX, barY, barWidth * Math.min(1, xp.xp / xp.nextThreshold), 8);
+    ctx.font = "11px monospace";
+    ctx.fillStyle = "#f4f7ff";
+    ctx.fillText(`Lv ${xp.level}`, barX + barWidth + 8, barY + 8);
   }
 
   // Player status bars: Shield = shield.blue, Health = danger.red (AF-002 §7).
@@ -622,7 +755,24 @@ function render(): void {
         ],
       ]);
       break;
-    case "LevelUp":
+    case "LevelUp": {
+      // AF-003 §7 / AF-022 §4: three cards, immediate selection, instant resume.
+      const level = xpSystem?.snapshot.level ?? 0;
+      screen(
+        `Level ${level}`,
+        "Choose an upgrade — the run resumes instantly.",
+        currentOffer.map((choice): [string, () => void] => [
+          `${choice.name} — ${choice.description}`,
+          () => {
+            applyUpgrade(choice.id);
+            upgradePool?.recordTaken(choice.id);
+            currentOffer = [];
+            machine.popOverlay();
+          },
+        ]),
+      );
+      break;
+    }
     case "InventoryOverlay":
       screen(state, "Overlay placeholder.", [["Close", () => machine.popOverlay()]]);
       break;
@@ -708,6 +858,9 @@ const loop = new GameLoop({
           : null,
         combat: playerDefence
           ? `drones ${drones.length} · proj ${projectiles.length} · crit ${hitCount > 0 ? ((critCount / hitCount) * 100).toFixed(0) : 0}% (${critCount}/${hitCount}) · shield ${playerDefence.snapshot.shield.toFixed(0)}/${playerDefence.snapshot.maxShield} · hull ${playerDefence.snapshot.hull.toFixed(0)}/${playerDefence.snapshot.maxHull}`
+          : null,
+        xp: xpSystem
+          ? `Lv ${xpSystem.snapshot.level} · ${xpSystem.snapshot.xp.toFixed(0)}/${xpSystem.snapshot.nextThreshold.toFixed(0)} · gems ${xpPickups?.live.length ?? 0} · dmg +${(sandboxBuild.weaponBonus * 100).toFixed(0)}% · rate ×${(1 / sandboxBuild.fireIntervalScale).toFixed(2)}`
           : null,
       });
     }
