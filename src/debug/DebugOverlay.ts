@@ -18,6 +18,8 @@ export interface DebugSnapshot {
   director: string | null;
   /** Input summary: context, movement vector, last action (AF-019 §10). */
   input: string | null;
+  /** Movement summary: state, speed, boost, contacts (AF-020 §10). */
+  movement: string | null;
 }
 
 export class DebugOverlay {
@@ -60,6 +62,7 @@ export class DebugOverlay {
       `build      ${snapshot.build ?? "—"}`,
       `director   ${snapshot.director ?? "—"}`,
       `input      ${snapshot.input ?? "—"}`,
+      `movement   ${snapshot.movement ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
