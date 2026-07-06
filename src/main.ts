@@ -47,6 +47,12 @@ import { SaveSlice } from "./core/save/SaveSlice";
 import { LocalStorageAdapter } from "./core/save/SaveStorage";
 import { ResearchTree, type ResearchSaveData } from "./game/research/ResearchTree";
 import { SANDBOX_RESEARCH_TREE } from "./game/research/researchData";
+import { CraftingSystem, type CraftingSaveData } from "./game/crafting/CraftingSystem";
+import {
+  DEFAULT_CRAFTING_TUNING,
+  SANDBOX_RECIPES,
+  STARTING_BLUEPRINTS,
+} from "./game/crafting/craftingData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -256,6 +262,35 @@ function bankResearchSample(drop: LootDrop): void {
     }
   }
   persistResearch();
+}
+
+// ── Crafting / Lightforge (AF-025): persistent materials, blueprints, hangar.
+const craftingSlice = new SaveSlice<CraftingSaveData>({
+  key: "crafting",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({ materials: {}, blueprints: [...STARTING_BLUEPRINTS], hangar: [] }),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+
+const crafting = new CraftingSystem(
+  SANDBOX_RECIPES,
+  DEFAULT_CRAFTING_TUNING,
+  (nodeId) => researchTree.isUnlocked(nodeId),
+  (blueprintId) => bus.emit("BlueprintUnlocked", { blueprintId }),
+);
+
+function persistCrafting(): void {
+  void craftingSlice.save(crafting.toSave());
+}
+
+/** Crafting materials bank immediately on collection (nothing is wasted). */
+function bankCraftingMaterial(drop: LootDrop): void {
+  const tierIndex = RARITY_LADDER.indexOf(drop.rarity);
+  crafting.addMaterial("commonMaterials", 2 + tierIndex);
+  if (tierIndex >= RARITY_LADDER.indexOf("rare")) crafting.addMaterial("rareAlloys", 1);
+  persistCrafting();
 }
 
 /** Unlocked research feeds live systems at run start (AF-024 §4). */
@@ -592,6 +627,7 @@ function startRun(): void {
       });
       bus.emit("LootCollected", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category });
       if (drop.category === "researchSample") bankResearchSample(drop);
+      if (drop.category === "craftingMaterial") bankCraftingMaterial(drop);
     },
     () => {
       lootBankedCount += 1; // banked to Results — value preserved (AF-023 §6)
@@ -894,12 +930,51 @@ function render(): void {
             },
           ];
         });
+      // Lightforge panel (AF-025): craft from known recipes, salvage the hangar.
+      const forgeButtons: Array<[string, () => void]> = crafting.knownRecipes.map((recipe) => {
+        const check = crafting.canCraft(recipe.id);
+        const cost = Object.entries(recipe.materials)
+          .map(([type, amount]) => `${amount} ${type.replace("Materials", "")}`)
+          .join(", ");
+        const tag = check.ok ? cost : check.reason === "insufficientMaterials" ? `needs ${cost}` : check.reason;
+        return [
+          `Lightforge: ${recipe.outputBaseItemId.replaceAll("_", " ")} (${tag})`,
+          () => {
+            const result = crafting.craft(recipe.id, xpSystem?.snapshot.level ?? 1, new Rng(Date.now()).fork("craft"));
+            if (result.ok && result.item) {
+              bus.emit("ItemCrafted", {
+                recipeId: recipe.id,
+                itemId: result.item.baseItemId,
+                rarity: result.item.rarity,
+                quality: result.item.quality,
+              });
+              persistCrafting();
+              render();
+            }
+          },
+        ];
+      });
+      const hangarItem = crafting.hangarItems[0];
+      if (hangarItem) {
+        forgeButtons.push([
+          `Salvage: ${hangarItem.baseItemId.replaceAll("_", " ")} (${hangarItem.rarity}, q${hangarItem.quality})`,
+          () => {
+            const returned = crafting.salvageFromHangar(0);
+            if (returned) {
+              bus.emit("ItemSalvaged", { itemId: hangarItem.baseItemId, rarity: hangarItem.rarity });
+              persistCrafting();
+              render();
+            }
+          },
+        ]);
+      }
       screen(
         "Galaxy Command",
-        `Research points: ${snapshot.points} · unlocked ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} technologies`,
+        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}`,
         [
           ["Select Mission", () => machine.transitionTo("MissionSelect")],
           ...nodeButtons,
+          ...forgeButtons,
           ["Statistics", () => machine.transitionTo("Statistics")],
           ["Main Menu", () => machine.transitionTo("MainMenu")],
         ],
@@ -1063,8 +1138,10 @@ loop.start();
 // Boot state loads persistent slices, then hands over (AF-016 Boot's job).
 void (async () => {
   researchTree.loadSave(await researchSlice.load());
+  crafting.loadSave(await craftingSlice.load());
   machine.transitionTo("Splash");
   log.info("boot", "Afterlight core gameplay skeleton started", {
     researchUnlocked: researchTree.snapshot.unlockedCount,
+    hangar: crafting.hangarItems.length,
   });
 })();

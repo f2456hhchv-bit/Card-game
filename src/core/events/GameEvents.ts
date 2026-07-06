@@ -48,4 +48,10 @@ export interface GameEvents extends Record<string, unknown> {
   ResearchUnlocked: { nodeId: string; category: string };
   /** Research points were banked (AF-024 §1). */
   ResearchPointsGained: { amount: number };
+  /** A blueprint permanently joined the archive (AF-025 §2). */
+  BlueprintUnlocked: { blueprintId: string };
+  /** The Lightforge produced an item (AF-025 §3). */
+  ItemCrafted: { recipeId: string; itemId: string; rarity: string; quality: number };
+  /** An item was salvaged into materials (AF-025 §4). */
+  ItemSalvaged: { itemId: string; rarity: string };
 }

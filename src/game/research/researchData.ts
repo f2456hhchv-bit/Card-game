@@ -53,7 +53,8 @@ export interface ResearchNodeDef {
   category: ResearchCategory;
   tier: number;
   cost: number;
-  /** Reserved: timed research (instant unless a module argues otherwise). */
+  /** Always 0 — unlocks are instant, permanently (DR-005, owner-ratified).
+   * Field retained for data-format stability only. */
   completionTimeMs: number;
   prerequisites: readonly string[];
   nodeType: ResearchNodeType;
