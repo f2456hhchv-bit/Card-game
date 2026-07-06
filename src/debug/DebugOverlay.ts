@@ -28,6 +28,8 @@ export interface DebugSnapshot {
   loot: string | null;
   /** Research summary: points, unlocked, live bonuses (AF-024 §7). */
   research: string | null;
+  /** Meta ledger: account level, runs, kills, challenges (AF-026 §9). */
+  meta: string | null;
 }
 
 export class DebugOverlay {
@@ -75,6 +77,7 @@ export class DebugOverlay {
       `xp         ${snapshot.xp ?? "—"}`,
       `loot       ${snapshot.loot ?? "—"}`,
       `research   ${snapshot.research ?? "—"}`,
+      `meta       ${snapshot.meta ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -54,4 +54,8 @@ export interface GameEvents extends Record<string, unknown> {
   ItemCrafted: { recipeId: string; itemId: string; rarity: string; quality: number };
   /** An item was salvaged into materials (AF-025 §4). */
   ItemSalvaged: { itemId: string; rarity: string };
+  /** A challenge completed — cosmetic/knowledge reward granted (AF-026 §6). */
+  ChallengeCompleted: { challengeId: string; rewardKind: string; rewardId: string };
+  /** The account gained a level — permanent, never resets (AF-026 §2). */
+  AccountLevelUp: { level: number };
 }

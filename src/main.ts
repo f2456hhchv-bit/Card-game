@@ -53,6 +53,8 @@ import {
   SANDBOX_RECIPES,
   STARTING_BLUEPRINTS,
 } from "./game/crafting/craftingData";
+import { MetaProgression, type MetaSaveData } from "./game/meta/MetaProgression";
+import { ACCOUNT_XP_AWARDS, SANDBOX_CHALLENGES } from "./game/meta/metaData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -292,6 +294,78 @@ function bankCraftingMaterial(drop: LootDrop): void {
   if (tierIndex >= RARITY_LADDER.indexOf("rare")) crafting.addMaterial("rareAlloys", 1);
   persistCrafting();
 }
+
+// ── Meta progression (AF-026): the permanent ledger, third save slice.
+const metaSlice = new SaveSlice<MetaSaveData>({
+  key: "meta",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({
+    accountXp: 0,
+    mastery: {},
+    collections: {},
+    statistics: {},
+    completedChallenges: [],
+    unlockedCosmetics: [],
+  }),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+
+const meta = new MetaProgression(
+  SANDBOX_CHALLENGES,
+  (challenge) => {
+    bus.emit("ChallengeCompleted", {
+      challengeId: challenge.id,
+      rewardKind: challenge.reward.kind,
+      rewardId: challenge.reward.id,
+    });
+    lootNotices.push({ text: `CHALLENGE · ${challenge.name.toUpperCase()}`, colour: "#ffc652", ttlMs: 2400 });
+  },
+  (level) => bus.emit("AccountLevelUp", { level }),
+);
+
+function persistMeta(): void {
+  void metaSlice.save(meta.toSave());
+}
+
+// The ledger listens; gameplay systems never know meta exists (AF-001 §7).
+bus.on("EnemyKilled", ({ enemyId, elite }) => {
+  meta.recordStat("enemiesDestroyed");
+  meta.addMasteryCounter("weapon:test-cannon", "kills");
+  meta.addMasteryXp("weapon:test-cannon", elite ? 5 : 1);
+  if (elite) meta.addAccountXp(ACCOUNT_XP_AWARDS.eliteDefeated);
+  meta.discover("enemies", elite ? "ENEMY_ELITE_DRONE" : "ENEMY_DRONE");
+  void enemyId;
+});
+bus.on("DamageDealt", ({ amount, critical }) => {
+  meta.recordStat("damageDealt", amount);
+  if (critical) meta.addMasteryCounter("weapon:test-cannon", "criticalHits");
+});
+bus.on("PlayerDamaged", ({ amount }) => meta.recordStat("damageTaken", amount));
+bus.on("LootCollected", ({ itemId, rarity }) => {
+  meta.recordStat("itemsCollected");
+  meta.discover("equipment", itemId);
+  if (rarity === "legendary" || rarity === "ancient" || rarity === "mythic" || rarity === "singularity") {
+    meta.recordStat("rareItemsFound");
+  }
+});
+bus.on("ResearchUnlocked", ({ nodeId }) => {
+  meta.addAccountXp(ACCOUNT_XP_AWARDS.researchUnlocked);
+  meta.discover("research", nodeId);
+  persistMeta();
+});
+bus.on("RunEnded", ({ result, playTimeMs }) => {
+  meta.recordStat("runs");
+  meta.recordStat(result === "victory" ? "victories" : "defeats");
+  meta.recordStat("playTimeMs", playTimeMs);
+  meta.addMasteryXp("commander:placeholder", result === "victory" ? 20 : 8);
+  meta.addMasteryXp("ship:placeholder", result === "victory" ? 20 : 8);
+  meta.addAccountXp(
+    result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
+  );
+  persistMeta();
+});
 
 /** Unlocked research feeds live systems at run start (AF-024 §4). */
 function researchEffects(): { weaponBonus: number; lootBonus: number; magnetBonus: number } {
@@ -540,7 +614,7 @@ function screen(title: string, subtitle: string, actions: Array<[string, () => v
     "font-size:2rem;letter-spacing:0.35em;text-transform:uppercase;color:var(--energy-white);margin-bottom:0.5rem";
   const p = document.createElement("p");
   p.textContent = subtitle;
-  p.style.cssText = "color:var(--neutral-grey);margin-bottom:1.5rem";
+  p.style.cssText = "color:var(--neutral-grey);margin-bottom:1.5rem;white-space:pre-line";
   box.append(h1, p);
   for (const [label, onClick] of actions) {
     const button = document.createElement("button");
@@ -1048,12 +1122,31 @@ function render(): void {
         ["Statistics", () => machine.transitionTo("Statistics")],
       ]);
       break;
-    case "Statistics":
-      screen("Statistics", "Lifetime records (placeholder).", [
-        ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
-        ["Back to Main Menu", () => machine.transitionTo("MainMenu")],
-      ]);
+    case "Statistics": {
+      // The account profile (AF-026 §7): the permanent ledger, readable.
+      const profile = meta.snapshot;
+      const stats = profile.statistics;
+      const hours = ((stats["playTimeMs"] ?? 0) / 3_600_000).toFixed(2);
+      const challengeLines = SANDBOX_CHALLENGES.map((c) => {
+        const progress = meta.challengeProgress(c.id);
+        const done = meta.isChallengeCompleted(c.id);
+        return `${done ? "★" : "☆"} ${c.name} ${progress ? `${progress.current}/${progress.target}` : ""}`;
+      }).join("   ");
+      screen(
+        `Account Level ${profile.accountLevel}`,
+        [
+          `Runs ${stats["runs"] ?? 0} · Victories ${stats["victories"] ?? 0} · Defeats ${stats["defeats"] ?? 0} · ${hours}h in expeditions`,
+          `Enemies ${Math.round(stats["enemiesDestroyed"] ?? 0)} · Damage dealt ${Math.round(stats["damageDealt"] ?? 0)} · taken ${Math.round(stats["damageTaken"] ?? 0)}`,
+          `Items ${stats["itemsCollected"] ?? 0} (rare ${stats["rareItemsFound"] ?? 0}) · Discovered: ${Object.entries(profile.collectionCounts).map(([k, v]) => `${k} ${v}`).join(", ") || "nothing yet"}`,
+          `Challenges ${profile.completedChallenges}/${profile.totalChallenges}:   ${challengeLines}`,
+        ].join("\n"),
+        [
+          ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
+          ["Back to Main Menu", () => machine.transitionTo("MainMenu")],
+        ],
+      );
       break;
+    }
     case "Multiplayer":
     case "CommunityHub":
       screen(state, "Reserved for a future module.", []);
@@ -1126,6 +1219,7 @@ const loop = new GameLoop({
           ? `ground ${groundLoot.live.length}/${DEFAULT_LOOT_TUNING.maxGroundLoot} · collected ${lootCollectedCount} · banked ${lootBankedCount}`
           : null,
         research: `pts ${researchTree.snapshot.points} · unlocked ${researchTree.snapshot.unlockedCount} · wpn +${(sandboxBuild.researchWeaponBonus * 100).toFixed(0)}% · loot +${(sandboxBuild.researchLootBonus * 100).toFixed(0)}%`,
+        meta: `acct Lv ${meta.snapshot.accountLevel} · runs ${meta.stat("runs")} · kills ${Math.round(meta.stat("enemiesDestroyed"))} · challenges ${meta.snapshot.completedChallenges}/${meta.snapshot.totalChallenges}`,
       });
     }
   },
@@ -1139,9 +1233,11 @@ loop.start();
 void (async () => {
   researchTree.loadSave(await researchSlice.load());
   crafting.loadSave(await craftingSlice.load());
+  meta.loadSave(await metaSlice.load());
   machine.transitionTo("Splash");
   log.info("boot", "Afterlight core gameplay skeleton started", {
     researchUnlocked: researchTree.snapshot.unlockedCount,
     hangar: crafting.hangarItems.length,
+    accountLevel: meta.snapshot.accountLevel,
   });
 })();
