@@ -33,6 +33,7 @@ Phase note: AF-000 → AF-012 are specification/framework modules — their buil
 | AF-017 | Adaptive Enemy Director | v1 *(canon: 7 environmental events, 9 wave identities, Mutators registered)* | Complete — spec + implementation (`src/game/director/`), 300-run headless simulation in CI | Aligned | 42 tests green incl. simulation invariants; live-feel tuning binds AF-021+ | Approved 9.5/10 | **LOCKED** |
 | AF-018 | Camera Framework | v1 *(Photo Mode registered as future flag)* | Complete — spec + implementation (`src/engine/camera/`), deterministic headless tests | Aligned | 54 tests green; on-screen feel review binds AF-020+ | Approved 9.5/10 | **LOCKED** |
 | AF-019 | Input Framework | v1 *(targeting law binds AF-021; QuickPing/PhotoMode/one-handed registered)* | Complete — spec + implementation (`src/engine/input/`): action core, kb/mouse + gamepad adapters, touch joystick; pause wired via actions | Aligned | 74 tests green; per-device hardware passes bind at platform QA | Approved 9.5/10 | **LOCKED** |
+| AF-020 | Player Movement | v1 *(reserved handling attributes for ship profiles; broad-phase slot registered)* | Complete — spec + implementation (`src/game/movement/`) + playable canvas sandbox (input→movement→camera), browser-verified via Playwright | Aligned | 88 tests green; per-ship/biome feel passes bind at content QA | Approved 9.5/10 | **LOCKED** |
 
 **Authorised amendments log:**
 - 2026-07-05 — AF-002 output: palette extended with `vitality.green`, `shield.blue` (owner ruling via AF-004 review).
