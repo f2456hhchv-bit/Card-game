@@ -40,6 +40,9 @@ import { XpSystem } from "./game/progression/XpSystem";
 import { XpPickups } from "./game/progression/XpPickups";
 import { UpgradePool } from "./game/progression/UpgradePool";
 import { DEFAULT_XP_TUNING, type UpgradeDefinition } from "./game/progression/xpTuning";
+import { generateDrop, type DropTableEntry, type LootDrop } from "./game/loot/LootGenerator";
+import { GroundLoot } from "./game/loot/GroundLoot";
+import { DEFAULT_LOOT_TUNING, RARITY_TABLE } from "./game/loot/lootTuning";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -194,6 +197,47 @@ let xpPickups: XpPickups | null = null;
 let upgradePool: UpgradePool | null = null;
 let currentOffer: readonly UpgradeDefinition[] = [];
 
+// ── Sandbox loot (AF-023): elites always drop, drones sometimes; beams on
+// the field, pickups announced. Placeholder drop table — the generator,
+// rarity ladder, and ground-loot policy underneath are the deliverable.
+const SANDBOX_DROP_TABLE: DropTableEntry[] = [
+  { baseItemId: "PROTO_CANNON", category: "weapon", weight: 10 },
+  { baseItemId: "HULL_PLATING", category: "equipment", weight: 10 },
+  { baseItemId: "STRANGE_RELIC", category: "relic", weight: 4 },
+  { baseItemId: "SALVAGED_ALLOY", category: "craftingMaterial", weight: 10 },
+  { baseItemId: "RESEARCH_CORE", category: "researchSample", weight: 6 },
+];
+
+interface LootNotice {
+  text: string;
+  colour: string;
+  ttlMs: number;
+}
+
+let groundLoot: GroundLoot | null = null;
+let lootRng: Rng | null = null;
+let lootNotices: LootNotice[] = [];
+let lootBankedCount = 0;
+let lootCollectedCount = 0;
+
+function dropLoot(x: number, y: number): void {
+  if (!lootRng || !groundLoot || !xpSystem || !session) return;
+  const drop = generateDrop(
+    SANDBOX_DROP_TABLE,
+    {
+      itemLevel: xpSystem.snapshot.level,
+      difficulty: 1,
+      ascension: session.ascension,
+      mutatorBonus: 0,
+      researchBonus: 0,
+    },
+    DEFAULT_LOOT_TUNING,
+    lootRng,
+  );
+  groundLoot.place(drop, x, y);
+  bus.emit("LootDropped", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category, seed: drop.seed });
+}
+
 function spawnWave(directive: SpawnDirective): void {
   if (!movement || !combatRng || !director) return;
   const player = movement.snapshot;
@@ -265,6 +309,11 @@ function updateSandboxCombat(fixedDtMs: number): void {
     magnetRadius: DEFAULT_XP_TUNING.baseMagnetRadius + sandboxBuild.magnetBonus,
   });
 
+  // Ground loot collection + notice lifetimes (AF-023).
+  groundLoot?.update(player.x, player.y, DEFAULT_XP_TUNING.basePickupRadius + 0.4);
+  for (const notice of lootNotices) notice.ttlMs -= fixedDtMs;
+  lootNotices = lootNotices.filter((n) => n.ttlMs > 0);
+
   // Level-up: consume one queued level, present an offer (AF-022 §4).
   if (xpSystem && upgradePool && xpSystem.snapshot.pendingLevels > 0 && machine.overlays.length === 0) {
     xpSystem.consumePendingLevel();
@@ -331,6 +380,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
           bus.emit("EnemyKilled", { enemyId: drone.id, elite: drone.elite, boss: false });
           director.notifyEnemiesRemoved(1, drone.elite ? 1 : 0);
           xpPickups?.spawn(drone.elite ? "elite" : "medium", drone.x, drone.y);
+          if (drone.elite || (lootRng && lootRng.next() < 0.08)) dropLoot(drone.x, drone.y);
         }
         projectile.live = false;
         break;
@@ -472,6 +522,25 @@ function startRun(): void {
     bus.emit("XpCollected", { amount, tier });
   });
   upgradePool = new UpgradePool(SANDBOX_UPGRADES, new Rng(seed).fork("upgrades"));
+  lootRng = new Rng(seed).fork("loot");
+  lootNotices = [];
+  lootBankedCount = 0;
+  lootCollectedCount = 0;
+  groundLoot = new GroundLoot(
+    DEFAULT_LOOT_TUNING,
+    (drop: LootDrop) => {
+      lootCollectedCount += 1;
+      lootNotices.push({
+        text: `${drop.rarity.toUpperCase()} · ${drop.baseItemId.replaceAll("_", " ")}`,
+        colour: RARITY_TABLE[drop.rarity].colour,
+        ttlMs: 1600,
+      });
+      bus.emit("LootCollected", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category });
+    },
+    () => {
+      lootBankedCount += 1; // banked to Results — value preserved (AF-023 §6)
+    },
+  );
   director = new EnemyDirector({
     tuning: DEFAULT_DIRECTOR_TUNING,
     rng: new Rng(seed).fork("director"),
@@ -605,6 +674,29 @@ function drawSandbox(): void {
     }
   }
 
+  // Loot beams: vertical, rarity-coloured — the unique shape read (AF-023 §5).
+  if (groundLoot) {
+    for (const ground of groundLoot.live) {
+      if (!ground.drop) continue;
+      const row = RARITY_TABLE[ground.drop.rarity];
+      const bx = toX(ground.x);
+      const by = toY(ground.y);
+      const beamHeight = 46 * row.presentation + 14;
+      const gradient = ctx.createLinearGradient(bx, by - beamHeight, bx, by);
+      gradient.addColorStop(0, "transparent");
+      gradient.addColorStop(1, row.colour);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(bx - 2, by - beamHeight, 4, beamHeight);
+      ctx.fillStyle = row.colour;
+      ctx.shadowColor = row.colour;
+      ctx.shadowBlur = 10 * row.presentation;
+      ctx.beginPath();
+      ctx.ellipse(bx, by, 0.28 * scale, 0.12 * scale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
   // XP gems: solar gold, size = significance (AF-002 §7, AF-022 §2).
   if (xpPickups) {
     ctx.fillStyle = "#ffc652";
@@ -662,6 +754,19 @@ function drawSandbox(): void {
     ctx.fillText(popup.text, toX(popup.x), toY(popup.y));
     ctx.globalAlpha = 1;
   }
+
+  // Loot pickup notices: rarity-coloured, top centre, brief (AF-003 §5).
+  ctx.textAlign = "center";
+  let noticeY = 30;
+  for (const notice of lootNotices.slice(-3)) {
+    ctx.font = "bold 13px monospace";
+    ctx.fillStyle = notice.colour;
+    ctx.globalAlpha = Math.min(1, notice.ttlMs / 400);
+    ctx.fillText(notice.text, sandboxCanvas.width / 2, noticeY);
+    ctx.globalAlpha = 1;
+    noticeY += 18;
+  }
+  ctx.textAlign = "left";
 
   // XP bar: solar gold, bottom centre (AF-003 §3 layout).
   if (xpSystem) {
@@ -861,6 +966,9 @@ const loop = new GameLoop({
           : null,
         xp: xpSystem
           ? `Lv ${xpSystem.snapshot.level} · ${xpSystem.snapshot.xp.toFixed(0)}/${xpSystem.snapshot.nextThreshold.toFixed(0)} · gems ${xpPickups?.live.length ?? 0} · dmg +${(sandboxBuild.weaponBonus * 100).toFixed(0)}% · rate ×${(1 / sandboxBuild.fireIntervalScale).toFixed(2)}`
+          : null,
+        loot: groundLoot
+          ? `ground ${groundLoot.live.length}/${DEFAULT_LOOT_TUNING.maxGroundLoot} · collected ${lootCollectedCount} · banked ${lootBankedCount}`
           : null,
       });
     }

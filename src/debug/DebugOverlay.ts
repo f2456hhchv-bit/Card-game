@@ -24,6 +24,8 @@ export interface DebugSnapshot {
   combat: string | null;
   /** XP summary: level, progress, gems, build bonuses (AF-022 §8). */
   xp: string | null;
+  /** Loot summary: ground count vs cap, collected, banked (AF-023 §8). */
+  loot: string | null;
 }
 
 export class DebugOverlay {
@@ -69,6 +71,7 @@ export class DebugOverlay {
       `movement   ${snapshot.movement ?? "—"}`,
       `combat     ${snapshot.combat ?? "—"}`,
       `xp         ${snapshot.xp ?? "—"}`,
+      `loot       ${snapshot.loot ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

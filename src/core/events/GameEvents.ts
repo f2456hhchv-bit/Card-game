@@ -40,4 +40,8 @@ export interface GameEvents extends Record<string, unknown> {
   CommanderLevelUp: { level: number };
   /** An XP pickup was collected (AF-022 §2). */
   XpCollected: { amount: number; tier: string };
+  /** A loot drop hit the ground (AF-023 §3). */
+  LootDropped: { itemId: string; rarity: string; category: string; seed: number };
+  /** A ground drop was collected (AF-023 §5). */
+  LootCollected: { itemId: string; rarity: string; category: string };
 }
