@@ -20,6 +20,8 @@ export interface DebugSnapshot {
   input: string | null;
   /** Movement summary: state, speed, boost, contacts (AF-020 §10). */
   movement: string | null;
+  /** Combat summary: entities, projectiles, crit rate, defence (AF-021 §10). */
+  combat: string | null;
 }
 
 export class DebugOverlay {
@@ -63,6 +65,7 @@ export class DebugOverlay {
       `director   ${snapshot.director ?? "—"}`,
       `input      ${snapshot.input ?? "—"}`,
       `movement   ${snapshot.movement ?? "—"}`,
+      `combat     ${snapshot.combat ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -26,4 +26,14 @@ export interface GameEvents extends Record<string, unknown> {
   SpawnDirectiveIssued: { waveType: string; budgetCost: number; eliteCount: number };
   /** The Enemy Director triggered an environmental event (AF-017 §5). */
   EnvironmentalEventTriggered: { eventType: string };
+  /** An enemy was defeated (AF-021 §7) — XP/loot/research/achievements subscribe. */
+  EnemyKilled: { enemyId: string; elite: boolean; boss: boolean };
+  /** The player took hull/shield damage (AF-021 §4). */
+  PlayerDamaged: { amount: number; source: string };
+  /** A damage resolution landed on a target (AF-021 §1). */
+  DamageDealt: { amount: number; critical: boolean; kind: string; targetId: string };
+  /** A status effect was applied (AF-021 §2). */
+  StatusApplied: { status: string; targetId: string };
+  /** A shield collapsed to zero — distinct learned-instantly feedback (AF-003 §4). */
+  ShieldBroken: { targetId: string };
 }

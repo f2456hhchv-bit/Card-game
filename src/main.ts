@@ -30,6 +30,12 @@ import { Camera } from "./engine/camera/Camera";
 import { DEFAULT_CAMERA_TUNING, type CameraMode } from "./engine/camera/cameraTuning";
 import { PlayerMovement, type Obstacle } from "./game/movement/PlayerMovement";
 import { DEFAULT_MOVEMENT_PROFILE } from "./game/movement/movementTuning";
+import { resolveDamage, NEUTRAL_MODIFIERS } from "./game/combat/DamagePipeline";
+import { DefenceState } from "./game/combat/DefenceState";
+import { TARGET_SELECTORS, type TargetCandidate } from "./game/combat/targetPriority";
+import { DEFAULT_COMBAT_TUNING } from "./game/combat/combatTuning";
+import type { SpawnDirective } from "./game/director/EnemyDirector";
+import { Pool } from "./core/pool/Pool";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -65,6 +71,198 @@ const ARENA_OBSTACLES: readonly Obstacle[] = [
 const camera = new Camera(DEFAULT_CAMERA_TUNING, 32, 18);
 let movement: PlayerMovement | null = null;
 let sandboxCanvas: HTMLCanvasElement | null = null;
+
+// ── Sandbox combat (AF-021): director directives materialise as drones,
+// a test cannon fires back through the real pipeline. Replaced by proper
+// enemy/weapon modules later; the framework underneath is the deliverable.
+interface Drone {
+  id: string;
+  x: number;
+  y: number;
+  hull: number;
+  maxHull: number;
+  elite: boolean;
+  alive: boolean;
+  contactCooldownMs: number;
+}
+
+interface TestProjectile {
+  x: number;
+  y: number;
+  velocityX: number;
+  velocityY: number;
+  ttlMs: number;
+  live: boolean;
+}
+
+interface DamagePopup {
+  x: number;
+  y: number;
+  text: string;
+  critical: boolean;
+  ttlMs: number;
+  live: boolean;
+}
+
+const projectilePool = new Pool<TestProjectile>({
+  create: () => ({ x: 0, y: 0, velocityX: 0, velocityY: 0, ttlMs: 0, live: false }),
+  reset: (p) => (p.live = false),
+});
+const popupPool = new Pool<DamagePopup>({
+  create: () => ({ x: 0, y: 0, text: "", critical: false, ttlMs: 0, live: false }),
+  reset: (p) => (p.live = false),
+});
+
+let drones: Drone[] = [];
+let projectiles: TestProjectile[] = [];
+let popups: DamagePopup[] = [];
+let playerDefence: DefenceState | null = null;
+let combatRng: Rng | null = null;
+let fireCooldownMs = 0;
+let droneCounter = 0;
+let hitCount = 0;
+let critCount = 0;
+
+const CANNON = { intervalMs: 320, range: 14, projectileSpeed: 28, ttlMs: 900 };
+const PLAYER_PACKET = { baseDamage: 9, kind: "direct", school: "energy", critChance: 0.15, critMultiplier: 2 } as const;
+const DRONE_PACKET = { baseDamage: 6, kind: "direct", school: "physical", critChance: 0, critMultiplier: 1 } as const;
+
+function spawnWave(directive: SpawnDirective): void {
+  if (!movement || !combatRng || !director) return;
+  const player = movement.snapshot;
+  const count = directive.waveType === "EliteSquad"
+    ? directive.eliteCount
+    : Math.max(1, Math.round(directive.budgetCost / 4));
+  for (let i = 0; i < count; i += 1) {
+    const elite = directive.waveType === "EliteSquad";
+    const angle = combatRng.float(0, Math.PI * 2);
+    const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
+    const x = Math.min(ARENA.maxX - 1, Math.max(ARENA.minX + 1, player.x + Math.cos(angle) * distance));
+    const y = Math.min(ARENA.maxY - 1, Math.max(ARENA.minY + 1, player.y + Math.sin(angle) * distance));
+    droneCounter += 1;
+    drones.push({
+      id: `drone-${droneCounter}`,
+      x,
+      y,
+      hull: elite ? 90 : 24,
+      maxHull: elite ? 90 : 24,
+      elite,
+      alive: true,
+      contactCooldownMs: 0,
+    });
+  }
+  director.notifyEnemiesSpawned(count, directive.waveType === "EliteSquad" ? count : 0);
+}
+
+function updateSandboxCombat(fixedDtMs: number): void {
+  if (!movement || !playerDefence || !combatRng || !director) return;
+  const dt = fixedDtMs / 1000;
+  const player = movement.snapshot;
+
+  // Drones seek the player; contact damage through the real pipeline.
+  for (const drone of drones) {
+    if (!drone.alive) continue;
+    const dx = player.x - drone.x;
+    const dy = player.y - drone.y;
+    const distance = Math.hypot(dx, dy);
+    if (distance > 0.01) {
+      const speed = drone.elite ? 1.8 : 2.4;
+      drone.x += (dx / distance) * speed * dt;
+      drone.y += (dy / distance) * speed * dt;
+    }
+    drone.contactCooldownMs = Math.max(0, drone.contactCooldownMs - fixedDtMs);
+    if (distance < 1.0 && drone.contactCooldownMs === 0) {
+      drone.contactCooldownMs = 700;
+      if (!player.invulnerable) {
+        const result = resolveDamage(DRONE_PACKET, NEUTRAL_MODIFIERS, { values: {} }, DEFAULT_COMBAT_TUNING, combatRng);
+        const intake = playerDefence.takeDamage(result.finalDamage);
+        bus.emit("PlayerDamaged", { amount: result.finalDamage, source: drone.id });
+        movement.applyImpulse((-dx / distance) * 5, (-dy / distance) * 5, 100);
+        if (intake.shieldBroken) {
+          bus.emit("ShieldBroken", { targetId: "player" });
+          camera.shake("ShieldBreak");
+        } else {
+          camera.shake("WeaponImpact");
+        }
+        if (intake.defeated) {
+          endRun("defeat");
+          return;
+        }
+      }
+    }
+  }
+
+  // Test cannon: nearest-priority, pooled projectiles, real pipeline.
+  fireCooldownMs = Math.max(0, fireCooldownMs - fixedDtMs);
+  if (fireCooldownMs === 0) {
+    const candidates: TargetCandidate[] = drones
+      .filter((d) => d.alive)
+      .map((d) => ({ id: d.id, x: d.x, y: d.y, health: d.hull, maxHealth: d.maxHull, isBoss: false, isElite: d.elite }));
+    const target = TARGET_SELECTORS.nearest(candidates, player.x, player.y);
+    if (target && Math.hypot(target.x - player.x, target.y - player.y) <= CANNON.range) {
+      const angle = Math.atan2(target.y - player.y, target.x - player.x);
+      const projectile = projectilePool.acquire();
+      projectile.x = player.x;
+      projectile.y = player.y;
+      projectile.velocityX = Math.cos(angle) * CANNON.projectileSpeed;
+      projectile.velocityY = Math.sin(angle) * CANNON.projectileSpeed;
+      projectile.ttlMs = CANNON.ttlMs;
+      projectile.live = true;
+      projectiles.push(projectile);
+      fireCooldownMs = CANNON.intervalMs;
+    }
+  }
+
+  // Projectiles advance and resolve hits.
+  for (const projectile of projectiles) {
+    if (!projectile.live) continue;
+    projectile.x += projectile.velocityX * dt;
+    projectile.y += projectile.velocityY * dt;
+    projectile.ttlMs -= fixedDtMs;
+    if (projectile.ttlMs <= 0) {
+      projectile.live = false;
+      continue;
+    }
+    for (const drone of drones) {
+      if (!drone.alive) continue;
+      if (Math.hypot(drone.x - projectile.x, drone.y - projectile.y) < 0.6) {
+        const result = resolveDamage(PLAYER_PACKET, NEUTRAL_MODIFIERS, { values: {} }, DEFAULT_COMBAT_TUNING, combatRng);
+        drone.hull -= result.finalDamage;
+        hitCount += 1;
+        if (result.critical) critCount += 1;
+        bus.emit("DamageDealt", { amount: result.finalDamage, critical: result.critical, kind: result.kind, targetId: drone.id });
+        const popup = popupPool.acquire();
+        popup.x = drone.x;
+        popup.y = drone.y;
+        popup.text = `${Math.round(result.finalDamage)}`;
+        popup.critical = result.critical;
+        popup.ttlMs = 600;
+        popup.live = true;
+        popups.push(popup);
+        if (drone.hull <= 0) {
+          drone.alive = false;
+          bus.emit("EnemyKilled", { enemyId: drone.id, elite: drone.elite, boss: false });
+          director.notifyEnemiesRemoved(1, drone.elite ? 1 : 0);
+        }
+        projectile.live = false;
+        break;
+      }
+    }
+  }
+
+  // Popup lifetimes + list compaction back into pools.
+  for (const popup of popups) {
+    if (!popup.live) continue;
+    popup.ttlMs -= fixedDtMs;
+    popup.y -= 1.5 * dt;
+    if (popup.ttlMs <= 0) popup.live = false;
+  }
+  projectiles = projectiles.filter((p) => (p.live ? true : (projectilePool.release(p), false)));
+  popups = popups.filter((p) => (p.live ? true : (popupPool.release(p), false)));
+  drones = drones.filter((d) => d.alive);
+
+  playerDefence.update(fixedDtMs);
+}
 
 const CAMERA_MODE_BY_STATE: Partial<Record<GameStateId, CameraMode>> = {
   MainMenu: "Menu",
@@ -164,6 +362,14 @@ function startRun(): void {
   movement.setObstacles(ARENA_OBSTACLES);
   camera.setBounds(ARENA);
   camera.snapTo(30, 17);
+  playerDefence = new DefenceState(40, 100, DEFAULT_COMBAT_TUNING);
+  combatRng = new Rng(seed).fork("combat");
+  drones = [];
+  projectiles = [];
+  popups = [];
+  fireCooldownMs = 0;
+  hitCount = 0;
+  critCount = 0;
   director = new EnemyDirector({
     tuning: DEFAULT_DIRECTOR_TUNING,
     rng: new Rng(seed).fork("director"),
@@ -175,12 +381,14 @@ function startRun(): void {
       playerLevel: 1,
       equipmentQuality: 1,
     },
-    onDirective: (directive) =>
+    onDirective: (directive) => {
       bus.emit("SpawnDirectiveIssued", {
         waveType: directive.waveType,
         budgetCost: directive.budgetCost,
         eliteCount: directive.eliteCount,
-      }),
+      });
+      spawnWave(directive);
+    },
     onPhaseChanged: (from, to) => bus.emit("DirectorPhaseChanged", { from, to }),
     onEnvironmentalEvent: (eventType) =>
       bus.emit("EnvironmentalEventTriggered", { eventType }),
@@ -213,7 +421,7 @@ function renderGameplaySandbox(): void {
 
   const hint = document.createElement("p");
   hint.textContent =
-    "WASD / stick — fly · Space — boost · Esc — pause · combat arrives with AF-021";
+    "WASD / stick — fly · Space — boost (i-frames) · Esc — pause · cannon fires itself — survive";
   hint.style.cssText = "color:var(--neutral-grey);font-size:0.85rem;margin:0.5rem 0 0.75rem";
   box.appendChild(hint);
 
@@ -267,6 +475,46 @@ function drawSandbox(): void {
     ctx.fillRect(toX(box.minX), toY(box.minY), (box.maxX - box.minX) * scale, (box.maxY - box.minY) * scale);
   }
 
+  // Drones: hostile = hot hues (AF-004 §3); elites read as diamonds (AF-007).
+  for (const drone of drones) {
+    const dx = toX(drone.x);
+    const dy = toY(drone.y);
+    const droneSize = (drone.elite ? 0.55 : 0.35) * scale;
+    ctx.save();
+    ctx.translate(dx, dy);
+    ctx.fillStyle = drone.elite ? "#c8323c" : "#ff4054";
+    ctx.shadowColor = "#ff4054";
+    ctx.shadowBlur = 6;
+    if (drone.elite) {
+      ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-droneSize, -droneSize, droneSize * 2, droneSize * 2);
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, droneSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    // Hull sliver under damaged drones.
+    if (drone.hull < drone.maxHull) {
+      ctx.fillStyle = "#101a38";
+      ctx.fillRect(dx - droneSize, dy + droneSize + 3, droneSize * 2, 3);
+      ctx.fillStyle = "#ff4054";
+      ctx.fillRect(dx - droneSize, dy + droneSize + 3, (droneSize * 2 * drone.hull) / drone.maxHull, 3);
+    }
+  }
+
+  // Player projectiles: cool light — ownership readable in one frame (AF-002 §3).
+  ctx.fillStyle = "#3fd4f5";
+  ctx.shadowColor = "#3fd4f5";
+  ctx.shadowBlur = 8;
+  for (const projectile of projectiles) {
+    if (!projectile.live) continue;
+    ctx.beginPath();
+    ctx.arc(toX(projectile.x), toY(projectile.y), 0.12 * scale, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
   const snap = movement.snapshot;
   const speed = Math.hypot(snap.velocityX, snap.velocityY);
   const dirX = speed > 0.1 ? snap.velocityX / speed : 0;
@@ -288,6 +536,32 @@ function drawSandbox(): void {
   ctx.closePath();
   ctx.fill();
   ctx.restore();
+
+  // Damage numbers: tabular feel, crits gold and larger (AF-002 §9 / AF-003 §4).
+  for (const popup of popups) {
+    if (!popup.live) continue;
+    ctx.font = popup.critical ? "bold 16px monospace" : "12px monospace";
+    ctx.fillStyle = popup.critical ? "#ffc652" : "#f4f7ff";
+    ctx.globalAlpha = Math.min(1, popup.ttlMs / 300);
+    ctx.fillText(popup.text, toX(popup.x), toY(popup.y));
+    ctx.globalAlpha = 1;
+  }
+
+  // Player status bars: Shield = shield.blue, Health = danger.red (AF-002 §7).
+  if (playerDefence) {
+    const defence = playerDefence.snapshot;
+    const barWidth = 150;
+    ctx.fillStyle = "rgba(5,6,10,0.7)";
+    ctx.fillRect(8, 8, barWidth + 4, 26);
+    ctx.fillStyle = "#101a38";
+    ctx.fillRect(10, 10, barWidth, 9);
+    ctx.fillStyle = "#4d7cff";
+    ctx.fillRect(10, 10, (barWidth * defence.shield) / defence.maxShield, 9);
+    ctx.fillStyle = "#101a38";
+    ctx.fillRect(10, 22, barWidth, 9);
+    ctx.fillStyle = "#ff4054";
+    ctx.fillRect(10, 22, (barWidth * defence.hull) / defence.maxHull, 9);
+  }
 }
 
 function render(): void {
@@ -397,6 +671,7 @@ const loop = new GameLoop({
         if (input.consumeBuffered("Boost")) movement.tryBoost();
         const move = input.movement;
         movement.update(fixedDtMs, move.x, move.y);
+        updateSandboxCombat(fixedDtMs);
         const snap = movement.snapshot;
         camera.update(fixedDtMs, snap.x, snap.y, snap.velocityX, snap.velocityY);
       }
@@ -430,6 +705,9 @@ const loop = new GameLoop({
         input: `${input.currentContext} · move (${input.movement.x.toFixed(2)}, ${input.movement.y.toFixed(2)}) · last ${input.lastAction ?? "—"}`,
         movement: movement
           ? `${movement.state} · speed ${movement.snapshot.speed.toFixed(1)} · boost cd ${movement.snapshot.boostCooldownMs.toFixed(0)}ms · contacts ${movement.snapshot.collisionContacts}`
+          : null,
+        combat: playerDefence
+          ? `drones ${drones.length} · proj ${projectiles.length} · crit ${hitCount > 0 ? ((critCount / hitCount) * 100).toFixed(0) : 0}% (${critCount}/${hitCount}) · shield ${playerDefence.snapshot.shield.toFixed(0)}/${playerDefence.snapshot.maxShield} · hull ${playerDefence.snapshot.hull.toFixed(0)}/${playerDefence.snapshot.maxHull}`
           : null,
       });
     }
