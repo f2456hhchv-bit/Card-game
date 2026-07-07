@@ -60,6 +60,8 @@ export interface DebugSnapshot {
   worldEvents: string | null;
   /** Achievement/Collection summary: achievements completed, extra collection counts, Discovery Log length (AF-042 §DEBUG). */
   achievements: string | null;
+  /** Codex summary: entries unlocked, Discovery %, Missing Links, Timeline status (AF-043 §DEBUG). */
+  codex: string | null;
 }
 
 export class DebugOverlay {
@@ -123,6 +125,7 @@ export class DebugOverlay {
       `economy    ${snapshot.economy ?? "—"}`,
       `worldEvent ${snapshot.worldEvents ?? "—"}`,
       `achieve    ${snapshot.achievements ?? "—"}`,
+      `codex      ${snapshot.codex ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

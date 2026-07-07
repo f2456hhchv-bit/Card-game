@@ -96,6 +96,8 @@ import { WorldEventRuntime } from "./game/worldEvents/WorldEventRuntime";
 import { SANDBOX_ACHIEVEMENTS } from "./game/achievements/achievementData";
 import { AchievementRuntime, type AchievementProgressReader } from "./game/achievements/AchievementRuntime";
 import { CollectionLedger, type CollectionLedgerSaveData } from "./game/achievements/CollectionLedger";
+import { SANDBOX_CODEX_ENTRIES, CODEX_SECTION_REWARDS, TIMELINE_ERAS } from "./game/codex/codexData";
+import { CodexRuntime, type CodexUnlockReader } from "./game/codex/CodexRuntime";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -399,6 +401,15 @@ const metaAchievementReader: AchievementProgressReader = {
   isCompleted: (id) => meta.hasDiscovered("achievements", id),
 };
 
+// ── Codex (AF-043): a pure read-only presentation layer — zero new unlock
+// mechanism, zero new save slice. Section Completion persists through the
+// exact same meta.discover("achievements", …) bucket AF-042 already uses.
+const codexRuntime = new CodexRuntime(SANDBOX_CODEX_ENTRIES);
+const codexReader: CodexUnlockReader = {
+  hasDiscovered: (category, id) => meta.hasDiscovered(category, id),
+  hasExtraDiscovered: (category, id) => collectionLedger.hasDiscovered(category, id),
+};
+
 function persistCollectionLedger(): void {
   void collectionLedgerSlice.save(collectionLedger.toSave());
 }
@@ -527,6 +538,12 @@ bus.on("ResearchUnlocked", ({ nodeId }) => {
   persistMeta();
   awardCredits(CREDIT_AWARDS.researchUnlocked); // AF-040: Research as a Resource Source.
 });
+// AF-043: the "relics" collection bucket has existed since AF-026 with no
+// producer until now — RelicAcquired already fires every time; nothing new.
+bus.on("RelicAcquired", ({ relicId }) => {
+  meta.discover("relics", relicId);
+  persistMeta();
+});
 bus.on("RunEnded", ({ result, playTimeMs }) => {
   meta.recordStat("runs");
   meta.recordStat(result === "victory" ? "victories" : "defeats");
@@ -550,6 +567,10 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
       meta.recordStat(repKey, repDelta);
       persistMeta();
       awardCredits(CREDIT_AWARDS.factionMissionBonus); // AF-040: Faction Rewards as a Resource Source.
+      // AF-043: FactionDef.loreId has existed since AF-039 with no producer
+      // until now — completing that faction's mission is a real discovery.
+      const missionFaction = factionRuntime.findFaction(factionMission.factionId);
+      if (missionFaction) meta.discover("lore", missionFaction.loreId);
       const reward = factionMission.reward;
       if (reward.kind === "resource") {
         crafting.addMaterial(reward.id as Parameters<typeof crafting.addMaterial>[0], reward.amount);
@@ -1488,6 +1509,13 @@ function startRun(): void {
     Date.now(),
   );
   sessionMs = 0;
+  // AF-043: the "ships"/"commanders"/"weapons" collection buckets have
+  // existed since AF-026 with no producer until now — fielding one for a
+  // run is a real discovery, not a new mechanism.
+  meta.discover("ships", sandboxShip.id);
+  meta.discover("commanders", sandboxCommander.id);
+  meta.discover("weapons", sandboxWeapon.id);
+  persistMeta();
   missionRuntime = new MissionRuntime(missionInstance, new Rng(seed).fork("mission"));
   extractionRemainingMs = 0;
   biomeRuntime = new BiomeRuntime(sandboxBiome, new Rng(seed).fork("biome"));
@@ -2223,6 +2251,11 @@ function render(): void {
         return `${done ? "★" : "☆"} ${a.name} ${done ? "" : `${progress.current}/${progress.target}`}`;
       }).join("   ");
       const recentDiscovery = collectionLedger.recentDiscoveries.at(-1);
+      // AF-043: the Codex is a read-only presentation layer over discoveries
+      // that already happen — no button here unlocks anything new.
+      const codexUnlocked = codexRuntime.unlockedEntries(codexReader);
+      const codexTitles = codexUnlocked.slice(0, 6).map((e) => e.title).join(", ");
+      const codexLine = `Codex ${codexUnlocked.length}/${codexRuntime.all.length} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · Missing Links ${codexRuntime.missingLinkCount()} · Unlocked: ${codexTitles || "none yet"}${codexUnlocked.length > 6 ? "…" : ""}`;
       screen(
         `Account Level ${profile.accountLevel}`,
         [
@@ -2232,6 +2265,7 @@ function render(): void {
           `Challenges ${profile.completedChallenges}/${profile.totalChallenges}:   ${challengeLines}`,
           `Achievements ${completedAchievementCount}/${SANDBOX_ACHIEVEMENTS.length}:   ${achievementLines}`,
           `Resources ${collectionLedger.collectionCount("resources")} · Ancient Artefacts ${collectionLedger.collectionCount("ancientArtefacts")} · Recent discovery: ${recentDiscovery?.id ?? "none yet"}`,
+          codexLine,
         ].join("\n"),
         [
           ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
@@ -2289,6 +2323,14 @@ const loop = new GameLoop({
       meta.addAccountXp(ACCOUNT_XP_AWARDS.challengeCompleted);
       persistMeta();
       lootNotices.push({ text: `ACHIEVEMENT · ${achievement.name.toUpperCase()}`, colour: "#ffc652", ttlMs: 3000 });
+    }
+    // AF-043: Codex Section Completion — reuses the exact achievement-completion
+    // bucket, namespaced so it never collides with an achievement id.
+    for (const category of codexRuntime.checkSectionCompletions(codexReader, (c) => meta.hasDiscovered("achievements", `codex-complete-${c}`))) {
+      meta.discover("achievements", `codex-complete-${category}`);
+      persistMeta();
+      const reward = CODEX_SECTION_REWARDS[category];
+      lootNotices.push({ text: `CODEX SECTION COMPLETE · ${category.toUpperCase()}${reward ? ` (${reward.kind})` : ""}`, colour: "#9b5cff", ttlMs: 3200 });
     }
     if (input.wasPressed("Pause") && machine.base === "Gameplay") {
       if (machine.overlays.at(-1) === "Pause") machine.popOverlay();
@@ -2470,6 +2512,12 @@ const loop = new GameLoop({
           const resources = collectionLedger.collectionCount("resources");
           const artefacts = collectionLedger.collectionCount("ancientArtefacts");
           return `${done}/${SANDBOX_ACHIEVEMENTS.length} complete · resources ${resources} · artefacts ${artefacts} · log ${collectionLedger.recentDiscoveries.length}`;
+        })(),
+        codex: (() => {
+          const unlocked = codexRuntime.unlockedEntries(codexReader).length;
+          const total = codexRuntime.all.length;
+          const timelineUnlocked = codexRuntime.timeline(codexReader).length;
+          return `${unlocked}/${total} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · missing links ${codexRuntime.missingLinkCount()} · timeline ${timelineUnlocked}/${TIMELINE_ERAS.length}`;
         })(),
       });
     }
