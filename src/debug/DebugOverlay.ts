@@ -72,6 +72,8 @@ export interface DebugSnapshot {
   machines: string | null;
   /** Crystal summary: ecosystem count, resonance strength, live growth zones (AF-048 §DEBUG). */
   crystals: string | null;
+  /** Void summary: swarm count, corruption level, live corruption zones (AF-049 §DEBUG). */
+  voidSwarm: string | null;
 }
 
 export class DebugOverlay {
@@ -141,6 +143,7 @@ export class DebugOverlay {
       `outlaws    ${snapshot.outlaws ?? "—"}`,
       `machines   ${snapshot.machines ?? "—"}`,
       `crystals   ${snapshot.crystals ?? "—"}`,
+      `void       ${snapshot.voidSwarm ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

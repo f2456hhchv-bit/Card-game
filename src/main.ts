@@ -83,6 +83,8 @@ import { LORE_MACHINE_NETWORK_DOCTRINE, MACHINE_ENEMIES, MACHINE_NETWORK_TUNING 
 import { MachineNetworkRuntime } from "./game/enemies/MachineNetwork";
 import { CRYSTAL_ENEMIES, CRYSTAL_GROWTH_TUNING, LORE_CRYSTAL_RESONANCE_ARCHIVE, createCrystalGrowth, growCrystalZone } from "./game/enemies/crystalData";
 import { CrystalResonanceRuntime } from "./game/enemies/CrystalResonance";
+import { LORE_VOID_CORRUPTION_ARCHIVE, VOID_ENEMIES, VOID_ZONE_TUNING, createCorruptionZone } from "./game/enemies/voidData";
+import { VoidCorruptionRuntime } from "./game/enemies/VoidCorruption";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -181,6 +183,8 @@ interface Drone {
    * formation-anchor fields: the ecosystem has no command unit for others to anchor on, so
    * "formation"-behaviour organisms fall back to AF-033's existing player-anchored default. */
   ecosystemId: string | null;
+  /** AF-049: Void swarm membership — null for every non-swarm enemy. Same no-anchor rationale as AF-048. */
+  swarmId: string | null;
 }
 
 interface TestProjectile {
@@ -592,6 +596,11 @@ bus.on("ShieldBroken", () => {
 bus.on("CommanderLevelUp", () => {
   audioEngine.play("cue-level-up"); // AF-045: Player Feedback.
 });
+// AF-049: Void Distortion is one of AF-017's existing EnvironmentalEvent
+// outcomes — reacting to the fact the Director already emits, no Director change.
+bus.on("EnvironmentalEventTriggered", ({ eventType }) => {
+  if (eventType === "VoidDistortion") spawnVoidSwarmFromEvent();
+});
 bus.on("LootDropped", ({ rarity }) => {
   if (rarity === "legendary" || rarity === "ancient" || rarity === "mythic" || rarity === "singularity") {
     audioEngine.play("cue-legendary-drop"); // AF-045: Player Feedback.
@@ -907,6 +916,7 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     networkOffsetX: null,
     networkOffsetY: null,
     ecosystemId: null,
+    swarmId: null,
   });
   return droneId;
 }
@@ -1027,6 +1037,58 @@ function spawnCrystalEcosystem(anchorX: number, anchorY: number): void {
   lootNotices.push({ text: "CRYSTAL ECOSYSTEM DETECTED — RESONANCE RISING", colour: "#9b5cff", ttlMs: 3000 });
 }
 
+// ── AF-049: Void Swarm — the fourth doctrine, and the first that is not a
+// state machine or a snapshot: corruption is TIME-VARYING, climbing for as
+// long as a Beacon survives and only falling once one is destroyed or the
+// swarm is fully contained. Swarms are run-scoped like every other structure.
+let voidSwarms: VoidCorruptionRuntime[] = [];
+let voidSwarmCounter = 0;
+let voidZones: Array<{ zone: HazardZoneDef; state: HazardZoneState }> = [];
+let voidZoneCounter = 0;
+const voidZoneClocksMs = new Map<string, number>();
+
+function swarmOf(drone: Drone): VoidCorruptionRuntime | null {
+  if (!drone.swarmId) return null;
+  return voidSwarms.find((s) => s.swarmId === drone.swarmId) ?? null;
+}
+
+/** A Void Swarm incursion: an AF-034 Elite Ancient Void Avatar plus its five
+ * supporting organisms, all through the existing shared spawn path. */
+function spawnVoidSwarm(anchorX: number, anchorY: number): void {
+  voidSwarmCounter += 1;
+  const swarmId = `void-swarm-${voidSwarmCounter}`;
+  const avatarDef = VOID_ENEMIES.find((d) => d.id === "ancient-void-avatar")!;
+  const memberDefs = VOID_ENEMIES.filter((d) => d.id !== "ancient-void-avatar");
+  const avatarDroneId = spawnEnemyInstance(avatarDef, anchorX, anchorY, true); // Elite Avatar — AF-034's pipeline, unchanged
+  // Cross-module reuse of AF-046's pure formation math — same wedge, fourth doctrine.
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  const beaconIds: string[] = [];
+  const memberDroneIds = memberDefs.map((def, index) => {
+    const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
+    if (def.id === "void-beacon") beaconIds.push(id);
+    return id;
+  });
+  voidSwarms.push(new VoidCorruptionRuntime(swarmId, [avatarDroneId, ...memberDroneIds], beaconIds));
+  for (const drone of drones) {
+    if (drone.id === avatarDroneId || memberDroneIds.includes(drone.id)) drone.swarmId = swarmId;
+  }
+  lootNotices.push({ text: "REALITY DESTABILISING — VOID SWARM DETECTED", colour: "#c94dff", ttlMs: 3000 });
+}
+
+/** AF-049: Void Distortion is one of AF-017's existing EnvironmentalEvent
+ * outcomes (`ENVIRONMENTAL_EVENTS`) — no Director change, just a new
+ * listener on the fact it already emits, the same pattern AF-035's Boss
+ * uses off `DirectorPhaseChanged`. */
+function spawnVoidSwarmFromEvent(): void {
+  if (!movement || !director || !combatRng) return;
+  const player = movement.snapshot;
+  const angle = combatRng.float(0, Math.PI * 2);
+  const x = Math.min(ARENA.maxX - 3, Math.max(ARENA.minX + 3, player.x + Math.cos(angle) * 14));
+  const y = Math.min(ARENA.maxY - 3, Math.max(ARENA.minY + 3, player.y + Math.sin(angle) * 14));
+  spawnVoidSwarm(x, y);
+  director.notifyEnemiesSpawned(6, 1); // the Avatar spawns as an AF-034 Elite
+}
+
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
 function killDrone(drone: Drone): void {
   drone.alive = false;
@@ -1142,6 +1204,23 @@ function killDrone(drone: Drone): void {
     if (ecosystem.eliminated) {
       lootNotices.push({ text: "CRYSTAL ECOSYSTEM ELIMINATED", colour: "#9b5cff", ttlMs: 2600 });
       crystalEcosystems = crystalEcosystems.filter((e) => e.ecosystemId !== ecosystem.ecosystemId);
+    }
+  }
+  // AF-049: Corruption System — "destroying Beacons weakens surrounding
+  // corruption", both an immediate step down (inside the runtime) and the
+  // removal of a growth source; unlike every prior faction, this doctrine
+  // also decays on its own once every Beacon is gone — containment, not a snap.
+  const swarm = swarmOf(drone);
+  if (swarm) {
+    const role = swarm.notifyDroneDestroyed(drone.id);
+    if (role === "beacon") {
+      lootNotices.push({ text: "VOID BEACON DESTROYED — CORRUPTION CONTAINED", colour: "#c94dff", ttlMs: 2600 });
+      meta.discover("lore", LORE_VOID_CORRUPTION_ARCHIVE); // first beacon kill unlocks the corruption archive Codex entry (AF-043)
+      persistMeta();
+    }
+    if (swarm.eliminated) {
+      lootNotices.push({ text: "VOID SWARM ELIMINATED", colour: "#c94dff", ttlMs: 2600 });
+      voidSwarms = voidSwarms.filter((s) => s.swarmId !== swarm.swarmId);
     }
   }
 }
@@ -1364,6 +1443,49 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
+  // AF-049: Corruption System — corruption climbs while Beacons live, decays
+  // once contained; Healing scales continuously with it (no threshold);
+  // Corruption Zones seed once a swarm's corruption crosses the seed
+  // threshold, reusing AF-035's exact hazard engine and carrying the
+  // corruption status on tick.
+  for (const swarm of voidSwarms) {
+    swarm.update(fixedDtMs);
+    if (swarm.healPerSecond <= 0) continue;
+    for (const drone of drones) {
+      if (drone.alive && drone.swarmId === swarm.swarmId && drone.hull < drone.maxHull) {
+        drone.hull = Math.min(drone.maxHull, drone.hull + swarm.healPerSecond * dt);
+      }
+    }
+  }
+  for (const swarm of voidSwarms) {
+    if (swarm.corruptionLevel < VOID_ZONE_TUNING.seedThreshold) continue;
+    const clock = (voidZoneClocksMs.get(swarm.swarmId) ?? 0) + fixedDtMs;
+    if (clock < VOID_ZONE_TUNING.seedIntervalMs) {
+      voidZoneClocksMs.set(swarm.swarmId, clock);
+      continue;
+    }
+    voidZoneClocksMs.set(swarm.swarmId, 0);
+    const anchor = drones.find((d) => d.alive && d.swarmId === swarm.swarmId);
+    if (anchor && voidZones.length < VOID_ZONE_TUNING.maxLiveZones) {
+      voidZoneCounter += 1;
+      voidZones.push({ zone: createCorruptionZone(`void-zone-${voidZoneCounter}`, anchor.x, anchor.y), state: { tickClockMs: 0 } });
+    }
+  }
+  for (const zone of voidZones) {
+    if (stepHazardZone(zone.zone, zone.state, fixedDtMs) && isInsideHazard(zone.zone, player.x, player.y) && !player.invulnerable) {
+      const intake = playerDefence.takeDamage(zone.zone.damagePerTick);
+      bus.emit("PlayerDamaged", { amount: zone.zone.damagePerTick, source: zone.zone.id });
+      if (zone.zone.statusOnTick && playerStatus) {
+        playerStatus.apply(zone.zone.statusOnTick);
+        bus.emit("StatusApplied", { targetId: "player", status: zone.zone.statusOnTick.kind });
+      }
+      if (intake.defeated) {
+        endRun("defeat");
+        return;
+      }
+    }
+  }
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -1425,10 +1547,12 @@ function updateSandboxCombat(fixedDtMs: number): void {
     // way but continuous: it never turns fully off, just weaker per node lost.
     const squad = squadOf(drone);
     const network = networkOf(drone);
+    const swarm = swarmOf(drone);
     const focusFire = squad?.commandActive ? 1.15 : 1;
     const targetSync = 1 + (network?.targetSyncDamageBonus ?? 0);
     const resonance = 1 + (ecosystem?.damageBonus ?? 0);
-    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance;
+    const corruption = 1 + (swarm?.damageBonus ?? 0);
+    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance * corruption;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
     // AF-046: Formation Flying — the first live producer for AF-033's reserved
@@ -1453,6 +1577,9 @@ function updateSandboxCombat(fixedDtMs: number): void {
       speed: drone.def.moveSpeed * speedMultiplier * statusSlow,
       bounds: ARENA,
       preferredRange: 6,
+      // AF-049: Shadow Hunter's teleport movement needs a deterministic source — the
+      // same seeded combatRng every other enemy/weapon roll already draws from.
+      rng: () => combatRng!.next(),
       ...(formationOffset && anchorDrone
         ? {
             formationAnchorX: anchorDrone.x,
@@ -1816,6 +1943,10 @@ function updateSandboxCombat(fixedDtMs: number): void {
           droneNetwork.recordIncomingDamage(sandboxWeapon.damageSchool);
           appliedDamage *= droneNetwork.incomingDamageFactor(sandboxWeapon.damageSchool);
         }
+        // AF-049: Reality Stability — corruption-scaled incoming-damage reduction,
+        // the Swarm's own take on the same single damage-application point.
+        const droneSwarm = swarmOf(drone);
+        if (droneSwarm) appliedDamage *= 1 - droneSwarm.incomingDamageReduction;
         drone.hull -= appliedDamage;
         hitCount += 1;
         if (result.critical) critCount += 1;
@@ -1993,6 +2124,9 @@ function startRun(): void {
   crystalEcosystems = []; // AF-048: ecosystems and growths are run-scoped too.
   crystalGrowths = [];
   crystalSeederClocksMs.clear();
+  voidSwarms = []; // AF-049: swarms and corruption zones are run-scoped too.
+  voidZones = [];
+  voidZoneClocksMs.clear();
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -2207,6 +2341,18 @@ function drawSandbox(): void {
     ctx.strokeStyle = "#9b5cff";
     ctx.lineWidth = 1.5;
     ctx.arc(toX(growth.zone.x), toY(growth.zone.y), growth.zone.radius * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // AF-049: Corruption zones — deep violet reality tears (the faction's
+  // visual language), readable area-under-threat per AF-004.
+  for (const voidZone of voidZones) {
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(201,77,255,0.16)";
+    ctx.strokeStyle = "#c94dff";
+    ctx.lineWidth = 1.5;
+    ctx.arc(toX(voidZone.zone.x), toY(voidZone.zone.y), voidZone.zone.radius * scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }
@@ -3069,6 +3215,16 @@ const loop = new GameLoop({
             .join("; ");
           return `ecosystems ${crystalEcosystems.length}${lines ? ` [${lines}]` : ""} · growths ${crystalGrowths.length}`;
         })(),
+        voidSwarm: (() => {
+          if (voidSwarms.length === 0 && voidZones.length === 0) return null;
+          const lines = voidSwarms
+            .map((s) => {
+              const snap = s.snapshot;
+              return `${snap.membersRemaining} organisms, ${snap.beaconsRemaining} beacons, corruption ${(snap.corruptionLevel * 100).toFixed(0)}%`;
+            })
+            .join("; ");
+          return `swarms ${voidSwarms.length}${lines ? ` [${lines}]` : ""} · zones ${voidZones.length}`;
+        })(),
       });
     }
   },
@@ -3076,7 +3232,7 @@ const loop = new GameLoop({
 
 const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
 
-// AF-046/047/048 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
+// AF-046/047/048/049 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
 // as the debug overlay itself (AF-016 §10) — excluded from production builds.
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
@@ -3090,6 +3246,9 @@ if (import.meta.env.DEV) {
       director?.notifyEnemiesSpawned(6, 1);
     } else if (event.key === "7") {
       spawnCrystalEcosystem(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(6, 1);
+    } else if (event.key === "6") {
+      spawnVoidSwarm(player.x + 8, player.y);
       director?.notifyEnemiesSpawned(6, 1);
     }
   });

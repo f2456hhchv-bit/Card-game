@@ -351,6 +351,27 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_CRYSTAL_RESONANCE_ARCHIVE" },
   },
+  // AF-049: Void Swarm corruption doctrine — unlocked by taking your first
+  // Void Beacon offline. Deliberately not related to a faction profile: the
+  // Swarm is not a civilisation, so it gets no AF-039 FactionDef entry.
+  {
+    id: "codex-void-corruption",
+    category: "enemies",
+    title: "Corruption Doctrine",
+    lore: {
+      summary: "It is not an army. It is a condition, and the Beacon is where the condition takes root.",
+      detailed: "Corruption climbs for as long as a Beacon survives, and only a Beacon's death rolls it back — the Swarm has no captain to break and no core to degrade, only time it is allowed to keep.",
+      historicalContext: "No record explains where it began. Every record agrees it has never once retreated for good.",
+      recoveredArchives: "Recovered fragment, sender unknown: \"Contained. For now. It does not know the word 'now'.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying a Void Beacon — rolling back your first corruption.",
+    relatedEntryIds: [],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_VOID_CORRUPTION_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
