@@ -46,6 +46,8 @@ export interface DebugSnapshot {
   enemies: string | null;
   /** Boss summary: state, phase, hull, shield, weak points destroyed (AF-035 §DEBUG). */
   boss: string | null;
+  /** Biome summary: name, weather, hazard count, events triggered (AF-036 §DEBUG). */
+  biome: string | null;
 }
 
 export class DebugOverlay {
@@ -102,6 +104,7 @@ export class DebugOverlay {
       `weapons    ${snapshot.weapons ?? "—"}`,
       `enemies    ${snapshot.enemies ?? "—"}`,
       `boss       ${snapshot.boss ?? "—"}`,
+      `biome      ${snapshot.biome ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

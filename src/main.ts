@@ -79,6 +79,8 @@ import { ELITE_TIERS, EMPTY_MUTATION_EFFECTS, type MutationEffects } from "./gam
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
+import { SANDBOX_BIOMES } from "./game/biomes/biomeData";
+import { BiomeRuntime } from "./game/biomes/BiomeRuntime";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -534,6 +536,11 @@ const bossHazardZone: HazardZoneDef = {
 };
 let bossHazardState: HazardZoneState = { tickClockMs: 0 };
 
+// ── Biome (AF-036): weather rotation, hazard ticking, weighted Biome
+// Events, and pass-through feeds into AF-017/021/023/028's existing hooks.
+const sandboxBiome = SANDBOX_BIOMES[0]!;
+let biomeRuntime: BiomeRuntime | null = null;
+
 function equipmentEffects() {
   const validation = validateLoadout(sandboxLoadoutSlots, sandboxEquipmentById);
   if (!validation.ok) {
@@ -553,6 +560,8 @@ function dropLoot(x: number, y: number): void {
       ascension: session.ascension,
       mutatorBonus: 0,
       researchBonus: sandboxBuild.researchLootBonus,
+      // AF-036: Resource Distribution feeds AF-023's own reserved-but-unused hook.
+      smartLoot: biomeRuntime ? { categoryWeights: biomeRuntime.resourceWeights } : undefined,
     },
     DEFAULT_LOOT_TUNING,
     lootRng,
@@ -613,8 +622,22 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     eliteTier = eliteInstance.tier;
     eliteMutations = eliteInstance.mutations;
   }
+  // AF-036: the biome's enemy buff is the same EquipmentBonus shape every passive uses —
+  // only shieldCapacity is mechanically live today (folded into starting shield at spawn),
+  // the same proportional scope every prior module's buff vocabulary shipped with.
+  if (biomeRuntime?.enemyBuff?.kind === "shieldCapacity") {
+    def = { ...def, shield: def.shield + biomeRuntime.enemyBuff.value };
+  }
   droneCounter += 1;
   const droneId = `drone-${droneCounter}`;
+  const status = new StatusEngine({
+    onTickDamage: (_kind, amount) => {
+      const target = drones.find((d) => d.id === droneId);
+      if (target) target.hull -= amount;
+    },
+  });
+  // AF-036: enemies native to this biome ignore its own hazards — reuses setImmunity exactly.
+  for (const kind of biomeRuntime?.hazardImmunities ?? []) status.setImmunity(kind, true);
   drones.push({
     id: droneId,
     x,
@@ -626,12 +649,7 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     maxHull: def.hull,
     elite,
     alive: true,
-    status: new StatusEngine({
-      onTickDamage: (_kind, amount) => {
-        const target = drones.find((d) => d.id === droneId);
-        if (target) target.hull -= amount;
-      },
-    }),
+    status,
     def,
     runtime: new EnemyRuntime(def),
     mutationEffects,
@@ -747,6 +765,7 @@ function grantBossRewards(): void {
             ascension: session.ascension,
             mutatorBonus: 0,
             researchBonus: sandboxBuild.researchLootBonus,
+            smartLoot: biomeRuntime ? { categoryWeights: biomeRuntime.resourceWeights } : undefined,
           },
           DEFAULT_LOOT_TUNING,
           lootRng,
@@ -953,6 +972,42 @@ function updateSandboxCombat(fixedDtMs: number): void {
           }
         }
       }
+    }
+  }
+
+  // AF-036: Biome — weather rotation feeds AF-020's own MovementModifier "force"
+  // kind, hazards reuse AF-035's exact hazard-zone engine, Biome Events extend
+  // AF-017's existing EnvironmentalEventTriggered fact.
+  if (biomeRuntime) {
+    biomeRuntime.update(fixedDtMs);
+    const weather = biomeRuntime.currentWeather;
+    if (weather && (weather.windForceX !== 0 || weather.windForceY !== 0)) {
+      movement.addModifier({
+        id: "biome-weather-wind",
+        kind: "force",
+        forceX: weather.windForceX,
+        forceY: weather.windForceY,
+        durationMs: 1000, // refreshed every tick while the weather is active
+      });
+    }
+    for (const hazard of biomeRuntime.tickHazards(fixedDtMs)) {
+      if (isInsideHazard(hazard, player.x, player.y) && !player.invulnerable) {
+        const intake = playerDefence.takeDamage(hazard.damagePerTick);
+        bus.emit("PlayerDamaged", { amount: hazard.damagePerTick, source: `biome-hazard-${hazard.id}` });
+        if (hazard.statusOnTick && playerStatus) {
+          playerStatus.apply(hazard.statusOnTick);
+          bus.emit("StatusApplied", { targetId: "player", status: hazard.statusOnTick.kind });
+        }
+        if (intake.defeated) {
+          endRun("defeat");
+          return;
+        }
+      }
+    }
+    const biomeEvent = biomeRuntime.tryTriggerEvent();
+    if (biomeEvent) {
+      bus.emit("EnvironmentalEventTriggered", { eventType: biomeEvent });
+      lootNotices.push({ text: biomeEvent.replace(/([A-Z])/g, " $1").trim().toUpperCase(), colour: "#4de868", ttlMs: 2600 });
     }
   }
 
@@ -1271,12 +1326,13 @@ function startRun(): void {
       equipmentIds: [],
       difficulty: "standard",
       ascension: 0,
-      biomeId: "placeholder-biome",
+      biomeId: sandboxBiome.id,
     },
     seed,
     Date.now(),
   );
   sessionMs = 0;
+  biomeRuntime = new BiomeRuntime(sandboxBiome, new Rng(seed).fork("biome"));
   movement = new PlayerMovement(sandboxShip.movementProfile);
   movement.setPosition(30, 17);
   movement.setBounds(ARENA);
@@ -1362,7 +1418,7 @@ function startRun(): void {
     rng: new Rng(seed).fork("director"),
     threatInputs: {
       missionDifficulty: 1,
-      biomeModifier: 1,
+      biomeModifier: biomeRuntime.threatModifier,
       mutatorModifier: 1,
       ascension: session.ascension,
       playerLevel: 1,
@@ -1867,6 +1923,21 @@ const loop = new GameLoop({
           lootNotices.push({ text: sandboxShip.ability.name.toUpperCase(), colour: "#5cffa8", ttlMs: 1200 });
         }
       }
+      // AF-036: Environmental Interaction — gives AF-019's "Interact" action its
+      // first real consumer. Only activateAncientDevice/harvestResource are
+      // mechanically live; the rest are registered future (same pattern as ever).
+      if (biomeRuntime && movement && input.consumeBuffered("Interact")) {
+        const snap = movement.snapshot;
+        const interactable = biomeRuntime.findInteractableInRange(snap.x, snap.y);
+        if (interactable?.kind === "activateAncientDevice" && interactable.discoveryCategory && interactable.discoveryId) {
+          if (meta.discover(interactable.discoveryCategory, interactable.discoveryId)) {
+            lootNotices.push({ text: "ANCIENT DEVICE ACTIVATED", colour: "#ffc652", ttlMs: 2200 });
+          }
+        } else if (interactable?.kind === "harvestResource") {
+          dropLoot(interactable.x, interactable.y);
+          lootNotices.push({ text: "RESOURCE HARVESTED", colour: "#4de868", ttlMs: 1800 });
+        }
+      }
     }
   },
   render: () => {
@@ -1942,6 +2013,12 @@ const loop = new GameLoop({
           ? (() => {
               const snap = bossRuntime!.snapshot;
               return `${sandboxBoss.name} [${snap.state}] phase ${snap.phaseIndex + 1}/${sandboxBoss.phases.length} (${snap.phaseId})${snap.enraged ? " ENRAGED" : ""} · hull ${snap.hull.toFixed(0)}/${snap.maxHull} · shield ${snap.shield.toFixed(0)}/${snap.maxShield} · weak pts destroyed ${snap.weakPointsDestroyed.length}/${sandboxBoss.weakPoints.length}`;
+            })()
+          : null,
+        biome: biomeRuntime
+          ? (() => {
+              const snap = biomeRuntime!.snapshot;
+              return `${sandboxBiome.name} · weather ${snap.activeWeather ?? "clear"} (${(snap.weatherRemainingMs / 1000).toFixed(0)}s) · hazards ${snap.hazardCount} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
             })()
           : null,
       });
