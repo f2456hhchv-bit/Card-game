@@ -262,6 +262,25 @@ export const SANDBOX_FACTION_ROSTER: FactionRosterDef = {
       uniqueResources: ["ancientComponents"],
       loreId: "LORE_ANCIENT_CUSTODIANS_CODEX",
     },
+    // AF-052: the Stellar Nomads profile the seventh of AF-039's ten
+    // registered factions (its own recorded content debt), the same way
+    // AF-046 profiled the Mercenary Guild and AF-050 the Ancient Custodians.
+    {
+      id: "nomadFleet",
+      name: "Stellar Nomads",
+      symbol: "icon-nomad-fleet-sigil",
+      leader: "No single leader — every convoy answers to its own Captain",
+      government: "Loose confederation of independent fleets; a shared code of conduct, not a chain of command.",
+      history: "Generational starships that never stopped moving after the Collapse — some by choice, some because there was nowhere left to dock.",
+      technology: "Salvage engineering — nothing matches, everything works, and every ship is a running argument about what to fix next.",
+      military: "Improvised coordination: harpoons, deployable turrets, and Scrap Shields — whatever the last derelict provided.",
+      culture: "Freedom over comfort; every convoy has its own customs, but all of them agree the fleet comes before the cargo.",
+      economy: "Salvage and barter — Scrap recovered mid-fight is currency as often as it's armour plating.",
+      territory: ["darkNebula"],
+      uniqueUnits: ["harpoon-cannon", "nomad-missile-barrage"],
+      uniqueResources: ["commonMaterials"],
+      loreId: "LORE_NOMAD_FLEET_CODEX",
+    },
   ],
   missions: [
     {

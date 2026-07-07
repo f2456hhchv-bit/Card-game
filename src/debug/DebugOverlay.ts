@@ -78,6 +78,8 @@ export interface DebugSnapshot {
   ancientSecurity: string | null;
   /** Xeno summary: hive count, evolution stage, biomass %, link state, acid pools (AF-051 §DEBUG). */
   xenoHive: string | null;
+  /** Nomad summary: fleet count, scrap level, command ship state, crew/escort counts (AF-052 §DEBUG). */
+  nomadFleets: string | null;
 }
 
 export class DebugOverlay {
@@ -150,6 +152,7 @@ export class DebugOverlay {
       `void       ${snapshot.voidSwarm ?? "—"}`,
       `ancient    ${snapshot.ancientSecurity ?? "—"}`,
       `xeno       ${snapshot.xenoHive ?? "—"}`,
+      `nomads     ${snapshot.nomadFleets ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

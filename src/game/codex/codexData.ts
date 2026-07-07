@@ -417,6 +417,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_XENOMORPH_HIVE_CODEX" },
   },
+  // AF-052: the seventh profiled faction — unlocked by destroying your
+  // first Command Ship, the encounter that reveals the fleet's cohesion.
+  {
+    id: "codex-nomad-fleet",
+    category: "factions",
+    title: "Stellar Nomads",
+    lore: {
+      summary: "No two Nomad hulls match, and every one of them still flies.",
+      detailed: "Harpoons, Deployable Turrets, and Scrap Shields — a Nomad fleet fights with whatever the last derelict provided, coordinated by Scrap they salvage mid-battle rather than any standing network. Drop the Command Ship and the fleet doesn't break; it just stops earning as fast.",
+      historicalContext: "Some convoys have been moving since the Collapse itself and never once considered stopping.",
+      recoveredArchives: "Recovered broadcast: \"Command's down. Keep salvaging — we're still flying.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying a Nomad Command Ship — disrupting your first fleet's cohesion.",
+    relatedEntryIds: ["codex-galaxy-history"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_NOMAD_FLEET_CODEX" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",

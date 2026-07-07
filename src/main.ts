@@ -89,6 +89,8 @@ import { ANCIENT_ENEMIES, ANCIENT_SECURITY_TUNING, LORE_ANCIENT_CUSTODIANS_CODEX
 import { AncientSecurityRuntime } from "./game/enemies/AncientSecurity";
 import { LORE_XENOMORPH_HIVE_CODEX, XENO_ENEMIES, createAcidPool } from "./game/enemies/xenoData";
 import { HiveEvolutionRuntime } from "./game/enemies/HiveEvolution";
+import { LORE_NOMAD_FLEET_CODEX, NOMAD_ENEMIES, NOMAD_FLEET_TUNING } from "./game/enemies/nomadData";
+import { NomadFleetRuntime } from "./game/enemies/NomadFleet";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -193,6 +195,8 @@ interface Drone {
   siteId: string | null;
   /** AF-051: Xenomorph Hive membership — null for every non-hive enemy. */
   hiveId: string | null;
+  /** AF-052: Nomad Fleet membership — null for every non-fleet enemy. */
+  fleetId: string | null;
 }
 
 interface TestProjectile {
@@ -929,6 +933,7 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     swarmId: null,
     siteId: null,
     hiveId: null,
+    fleetId: null,
   });
   return droneId;
 }
@@ -1186,6 +1191,41 @@ function spawnHive(anchorX: number, anchorY: number): void {
   lootNotices.push({ text: "HIVE DETECTED — BIOMASS RISING", colour: "#8bff4d", ttlMs: 3000 });
 }
 
+// ── AF-052: Stellar Nomads — the seventh doctrine, and the first driven by
+// an actively-spent economy rather than a passive multiplier. Fleets are
+// run-scoped like every other structure; the Nomad Flagship is both the
+// AF-034 Elite leader AND the fleet's Command Ship.
+let nomadFleets: NomadFleetRuntime[] = [];
+let nomadFleetCounter = 0;
+
+function fleetOf(drone: Drone): NomadFleetRuntime | null {
+  if (!drone.fleetId) return null;
+  return nomadFleets.find((f) => f.fleetId === drone.fleetId) ?? null;
+}
+
+/** A Nomad fleet: an AF-034 Elite Flagship (also the Command Ship) plus its
+ * five supporting crew, all through the existing shared spawn path. */
+function spawnFleet(anchorX: number, anchorY: number): void {
+  nomadFleetCounter += 1;
+  const fleetId = `nomad-fleet-${nomadFleetCounter}`;
+  const flagshipDef = NOMAD_ENEMIES.find((d) => d.id === "nomad-flagship")!;
+  const memberDefs = NOMAD_ENEMIES.filter((d) => d.id !== "nomad-flagship");
+  const flagshipDroneId = spawnEnemyInstance(flagshipDef, anchorX, anchorY, true); // Elite Flagship — AF-034's pipeline, unchanged
+  // Cross-module reuse of AF-046's pure formation math — same wedge, seventh doctrine.
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  const escortIds: string[] = [];
+  const memberDroneIds = memberDefs.map((def, index) => {
+    const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
+    if (def.id === "escort-fighter") escortIds.push(id);
+    return id;
+  });
+  nomadFleets.push(new NomadFleetRuntime(fleetId, [flagshipDroneId, ...memberDroneIds], flagshipDroneId, escortIds));
+  for (const drone of drones) {
+    if (drone.id === flagshipDroneId || memberDroneIds.includes(drone.id)) drone.fleetId = fleetId;
+  }
+  lootNotices.push({ text: "NOMAD FLEET DETECTED — SALVAGE OPPORTUNITY", colour: "#e8862a", ttlMs: 3000 });
+}
+
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
 function killDrone(drone: Drone): void {
   drone.alive = false;
@@ -1354,6 +1394,23 @@ function killDrone(drone: Drone): void {
       xenoHives = xenoHives.filter((h) => h.hiveId !== hive.hiveId);
     }
   }
+  // AF-052: Fleet Coordination — "destroying command ships disrupts fleet
+  // cohesion": the Flagship's death doesn't scatter, degrade, weaken,
+  // corrupt, de-escalate, or sever anything already banked — it only
+  // throttles the fleet's future Scrap income.
+  const fleet = fleetOf(drone);
+  if (fleet) {
+    const role = fleet.notifyDroneDestroyed(drone.id);
+    if (role === "commandShip") {
+      lootNotices.push({ text: "COMMAND SHIP DOWN — FLEET COHESION DISRUPTED", colour: "#e8862a", ttlMs: 2600 });
+      meta.discover("lore", LORE_NOMAD_FLEET_CODEX); // first command ship kill unlocks the faction's Codex entry (AF-043)
+      persistMeta();
+    }
+    if (fleet.eliminated) {
+      lootNotices.push({ text: "NOMAD FLEET ELIMINATED", colour: "#e8862a", ttlMs: 2600 });
+      nomadFleets = nomadFleets.filter((f) => f.fleetId !== fleet.fleetId);
+    }
+  }
 }
 
 function spawnWave(directive: SpawnDirective): void {
@@ -1367,11 +1424,14 @@ function spawnWave(directive: SpawnDirective): void {
   // mixed roster of cooperating organisms IS the ecosystem's doctrine.
   // AF-051: HunterPack becomes the Xenomorph Hive's — a hunting pack IS
   // Swarming/Flanking/Overwhelming Numbers, almost too literally to pass up.
+  // AF-052: AmbientPatrol becomes the Stellar Nomads' — a convoy passing
+  // through fits an opportunistic, low-intensity encounter type well.
   if (
     directive.waveType === "AmbushEvent" ||
     directive.waveType === "ReinforcementWave" ||
     directive.waveType === "MixedEncounter" ||
-    directive.waveType === "HunterPack"
+    directive.waveType === "HunterPack" ||
+    directive.waveType === "AmbientPatrol"
   ) {
     const angle = combatRng.float(0, Math.PI * 2);
     const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
@@ -1386,9 +1446,12 @@ function spawnWave(directive: SpawnDirective): void {
     } else if (directive.waveType === "MixedEncounter") {
       spawnCrystalEcosystem(x, y);
       director.notifyEnemiesSpawned(6, 1); // titan spawns as an AF-034 Elite
-    } else {
+    } else if (directive.waveType === "HunterPack") {
       spawnHive(x, y);
       director.notifyEnemiesSpawned(6, 1); // living titan spawns as an AF-034 Elite
+    } else {
+      spawnFleet(x, y);
+      director.notifyEnemiesSpawned(6, 1); // flagship spawns as an AF-034 Elite
     }
     return;
   }
@@ -1700,6 +1763,30 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
+  // AF-052: Fleet Coordination — Scrap climbs from Salvage Recovery; once
+  // affordable AND off cooldown, the fleet spends it on Deployable Turrets
+  // (a real reinforcement through the shared spawn path), Scrap Shields,
+  // and Emergency Repairs — an actively-spent economy, not a passive buff.
+  for (const fleet of nomadFleets) {
+    fleet.update(fixedDtMs);
+    const fleetMembers = drones.filter((d) => d.alive && d.fleetId === fleet.fleetId);
+    if (fleetMembers.length === 0) continue;
+    const anchor = fleetMembers[0]!;
+    if (fleet.tryDeployTurret()) {
+      const builtId = spawnEnemyInstance(NOMAD_ENEMIES.find((d) => d.id === "scout-skiff")!, anchor.x, anchor.y, false);
+      const built = drones.find((d) => d.id === builtId);
+      if (built) built.fleetId = fleet.fleetId;
+      fleet.enrolMember(builtId);
+      director.notifyEnemiesSpawned(1, 0); // the Director's census stays accurate
+    }
+    if (fleet.tryRaiseScrapShield()) {
+      for (const drone of fleetMembers) drone.hull = Math.min(drone.maxHull, drone.hull + NOMAD_FLEET_TUNING.shieldBurstAmount * 0.5);
+    }
+    if (fleet.tryEmergencyRepair()) {
+      for (const drone of fleetMembers) drone.hull = Math.min(drone.maxHull, drone.hull + NOMAD_FLEET_TUNING.repairHealAmount);
+    }
+  }
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -1764,13 +1851,16 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const network = networkOf(drone);
     const swarm = swarmOf(drone);
     const site = siteOf(drone);
+    const fleet = fleetOf(drone);
     const focusFire = squad?.commandActive ? 1.15 : 1;
     const targetSync = 1 + (network?.targetSyncDamageBonus ?? 0);
     const resonance = 1 + (ecosystem?.damageBonus ?? 0);
     const corruption = 1 + (swarm?.damageBonus ?? 0);
     const targetInformation = 1 + (site?.damageBonus ?? 0);
     const hiveTargetInfo = 1 + (hive?.damageBonus ?? 0);
-    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance * corruption * targetInformation * hiveTargetInfo;
+    const nomadTargetPriority = 1 + (fleet?.targetPriorityBonus ?? 0);
+    const damageMultiplier =
+      (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance * corruption * targetInformation * hiveTargetInfo * nomadTargetPriority;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
     // AF-046: Formation Flying — the first live producer for AF-033's reserved
@@ -2170,6 +2260,10 @@ function updateSandboxCombat(fixedDtMs: number): void {
         // same single damage-application point.
         const droneSite = siteOf(drone);
         if (droneSite) appliedDamage *= 1 - droneSite.incomingDamageReduction;
+        // AF-052: Escort Protection — a fully independent, headcount-only
+        // incoming-damage reduction; never derived from Scrap.
+        const droneFleet = fleetOf(drone);
+        if (droneFleet) appliedDamage *= 1 - droneFleet.escortDamageReduction;
         drone.hull -= appliedDamage;
         hitCount += 1;
         if (result.critical) critCount += 1;
@@ -2353,6 +2447,7 @@ function startRun(): void {
   ancientSites = []; // AF-050: sites are run-scoped too.
   xenoHives = []; // AF-051: hives and acid pools are run-scoped too.
   acidPools = [];
+  nomadFleets = []; // AF-052: fleets are run-scoped too.
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -3497,6 +3592,16 @@ const loop = new GameLoop({
             .join("; ");
           return `hives ${xenoHives.length}${lines ? ` [${lines}]` : ""} · acid pools ${acidPools.length}`;
         })(),
+        nomadFleets: (() => {
+          if (nomadFleets.length === 0) return null;
+          const lines = nomadFleets
+            .map((f) => {
+              const snap = f.snapshot;
+              return `scrap ${snap.scrap.toFixed(0)}/${NOMAD_FLEET_TUNING.maxScrap} (${snap.commandShipAlive ? "command up" : "command down"}, ${snap.membersRemaining} crew, ${snap.escortsRemaining} escorts)`;
+            })
+            .join("; ");
+          return `fleets ${nomadFleets.length} [${lines}]`;
+        })(),
       });
     }
   },
@@ -3504,7 +3609,7 @@ const loop = new GameLoop({
 
 const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
 
-// AF-046/047/048/049/050/051 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
+// AF-046/047/048/049/050/051/052 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
 // as the debug overlay itself (AF-016 §10) — excluded from production builds.
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
@@ -3527,6 +3632,9 @@ if (import.meta.env.DEV) {
       director?.notifyEnemiesSpawned(6, 1);
     } else if (event.key === "4") {
       spawnHive(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(6, 1);
+    } else if (event.key === "3") {
+      spawnFleet(player.x + 8, player.y);
       director?.notifyEnemiesSpawned(6, 1);
     }
   });
