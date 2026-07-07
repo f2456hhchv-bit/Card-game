@@ -77,6 +77,8 @@ import { stepEnemyMovement } from "./game/enemies/EnemyMovement";
 import { hasDeathEvent } from "./game/enemies/DeathEvents";
 import { generateElite } from "./game/enemies/EliteGenerator";
 import { ELITE_TIERS, EMPTY_MUTATION_EFFECTS, type MutationEffects } from "./game/enemies/eliteData";
+import { LORE_MERCENARY_GUILD_CODEX, OUTLAW_CALLSIGNS, OUTLAW_ENEMIES, OUTLAW_MINE_TUNING, createOutlawMine } from "./game/enemies/outlawData";
+import { OutlawSquadRuntime } from "./game/enemies/OutlawSquad";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -165,6 +167,8 @@ interface Drone {
   codexId: string;
   eliteTier: string | null;
   eliteMutations: readonly string[];
+  /** AF-046: Outlaw squad membership — null for every non-squad enemy. */
+  squadId: string | null;
 }
 
 interface TestProjectile {
@@ -835,8 +839,9 @@ function fireHostileProjectiles(
   }
 }
 
-/** AF-033/034: shared spawn path — normal wave spawning and death-triggered Spawn Events both use it. */
-function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: boolean): void {
+/** AF-033/034: shared spawn path — normal wave spawning and death-triggered Spawn Events both use it.
+ * Returns the spawned drone's id so AF-046 squads can enrol their members. */
+function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: boolean): string {
   let def = baseDef;
   let mutationEffects: MutationEffects = EMPTY_MUTATION_EFFECTS;
   let codexId = baseDef.id;
@@ -885,7 +890,44 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     codexId,
     eliteTier,
     eliteMutations,
+    squadId: null,
   });
+  return droneId;
+}
+
+// ── AF-046: Human Outlaws — squad state and mines are run-scoped, like every
+// other combat structure in this file. Mines reuse AF-035's exact hazard engine.
+let outlawSquads: OutlawSquadRuntime[] = [];
+let outlawMines: Array<{ zone: HazardZoneDef; state: HazardZoneState; ttlMs: number }> = [];
+let outlawMineDropClockMs = 0;
+let outlawMineCounter = 0;
+let outlawSquadCounter = 0;
+
+function squadOf(drone: Drone): OutlawSquadRuntime | null {
+  if (!drone.squadId) return null;
+  return outlawSquads.find((s) => s.squadId === drone.squadId) ?? null;
+}
+
+/** An Outlaw ambush: an AF-034 Elite Captain plus four members, enrolled in
+ * one squad. Every unit spawns through the existing shared spawn path. */
+function spawnOutlawSquad(anchorX: number, anchorY: number): void {
+  if (!combatRng) return;
+  outlawSquadCounter += 1;
+  const squadId = `outlaw-squad-${outlawSquadCounter}`;
+  const captainDef = OUTLAW_ENEMIES.find((d) => d.id === "outlaw-captain")!;
+  const memberDefs = OUTLAW_ENEMIES.filter((d) => d.id !== "outlaw-captain");
+  const captainDroneId = spawnEnemyInstance(captainDef, anchorX, anchorY, true); // Elite Captain — AF-034's pipeline, unchanged
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  const memberDroneIds = memberDefs.map((def, index) =>
+    spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false),
+  );
+  const squad = new OutlawSquadRuntime(squadId, captainDroneId, memberDroneIds);
+  outlawSquads.push(squad);
+  for (const drone of drones) {
+    if (drone.id === captainDroneId || memberDroneIds.includes(drone.id)) drone.squadId = squadId;
+  }
+  const callsign = combatRng.pick(OUTLAW_CALLSIGNS);
+  lootNotices.push({ text: `OUTLAW AMBUSH — CAPT. "${callsign}"`, colour: "#ff8c1a", ttlMs: 3000 });
 }
 
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
@@ -941,11 +983,48 @@ function killDrone(drone: Drone): void {
       if (intake.defeated) endRun("defeat");
     }
   }
+  // AF-046: Command Structure — destroying leaders weakens formations,
+  // mechanically: the squad scatters into AF-033's existing retreat state.
+  const squad = squadOf(drone);
+  if (squad) {
+    const role = squad.notifyDroneDestroyed(drone.id);
+    if (role === "captain") {
+      lootNotices.push({ text: "SQUAD BROKEN — CAPTAIN DOWN", colour: "#ff8c1a", ttlMs: 2600 });
+      meta.discover("lore", LORE_MERCENARY_GUILD_CODEX); // first captain kill unlocks the Guild's Codex entry (AF-043)
+      persistMeta();
+      for (const member of drones) {
+        if (!member.alive || member.squadId !== squad.squadId) continue;
+        const state = member.runtime.ai.current;
+        if (state === "targetAcquired" || state === "attack") member.runtime.ai.transitionTo("retreat");
+      }
+    }
+    if (squad.state === "eliminated") {
+      // Faction Synergy: their presence affects nearby systems — clearing a
+      // squad improves the current system's Sector Stability (AF-038's stat).
+      const stabilityKey = `galaxy:${galaxyRuntime.currentSystem.id}:stability`;
+      const delta = GalaxyRuntime.clampedDelta(meta.stat(stabilityKey), 5, 0, 100);
+      meta.recordStat(stabilityKey, delta);
+      persistMeta();
+      lootNotices.push({ text: "OUTLAW SQUAD ELIMINATED — SECTOR STABILITY IMPROVED", colour: "#4de868", ttlMs: 2600 });
+      outlawSquads = outlawSquads.filter((s) => s.squadId !== squad.squadId);
+    }
+  }
 }
 
 function spawnWave(directive: SpawnDirective): void {
   if (!movement || !combatRng || !director) return;
   const player = movement.snapshot;
+  // AF-046: the Director's existing AmbushEvent wave identity becomes the
+  // Outlaws' entrance — an ambush IS their doctrine. No Director changes.
+  if (directive.waveType === "AmbushEvent") {
+    const angle = combatRng.float(0, Math.PI * 2);
+    const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
+    const x = Math.min(ARENA.maxX - 3, Math.max(ARENA.minX + 3, player.x + Math.cos(angle) * distance));
+    const y = Math.min(ARENA.maxY - 3, Math.max(ARENA.minY + 3, player.y + Math.sin(angle) * distance));
+    spawnOutlawSquad(x, y);
+    director.notifyEnemiesSpawned(5, 1); // captain spawns as an AF-034 Elite
+    return;
+  }
   const count = directive.waveType === "EliteSquad"
     ? directive.eliteCount
     : Math.max(1, Math.round(directive.budgetCost / 4));
@@ -1048,6 +1127,34 @@ function updateSandboxCombat(fixedDtMs: number): void {
   const dt = fixedDtMs / 1000;
   const player = movement.snapshot;
 
+  // AF-046: squad clocks tick; mine layers seed AF-035-engine hazard zones on
+  // a cadence; live mines tick against the player exactly like a boss hazard.
+  for (const squad of outlawSquads) squad.update(fixedDtMs);
+  outlawMineDropClockMs += fixedDtMs;
+  if (outlawMineDropClockMs >= OUTLAW_MINE_TUNING.dropIntervalMs) {
+    outlawMineDropClockMs = 0;
+    for (const drone of drones) {
+      // (phase is only meaningful for ambush/burrow movement — alive is the correct gate here)
+      if (drone.alive && drone.def.id === "outlaw-mine-layer") {
+        outlawMineCounter += 1;
+        outlawMines.push({ zone: createOutlawMine(`outlaw-mine-${outlawMineCounter}`, drone.x, drone.y), state: { tickClockMs: 0 }, ttlMs: OUTLAW_MINE_TUNING.ttlMs });
+        if (outlawMines.length > OUTLAW_MINE_TUNING.maxLiveMines) outlawMines.shift();
+      }
+    }
+  }
+  for (const mine of outlawMines) {
+    mine.ttlMs -= fixedDtMs;
+    if (playerDefence && stepHazardZone(mine.zone, mine.state, fixedDtMs) && isInsideHazard(mine.zone, player.x, player.y) && !player.invulnerable) {
+      const intake = playerDefence.takeDamage(mine.zone.damagePerTick);
+      bus.emit("PlayerDamaged", { amount: mine.zone.damagePerTick, source: mine.zone.id });
+      if (intake.defeated) {
+        endRun("defeat");
+        return;
+      }
+    }
+  }
+  outlawMines = outlawMines.filter((m) => m.ttlMs > 0);
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -1080,7 +1187,10 @@ function updateSandboxCombat(fixedDtMs: number): void {
         speed: drone.def.moveSpeed,
         bounds: ARENA,
       });
-      if (hullFraction > 0.35) drone.runtime.ai.transitionTo("recover");
+      // AF-046: a scattered squad holds its retreat order for the full scatter
+      // window regardless of hull — command structure overrides self-preservation logic.
+      const scatterHold = squadOf(drone)?.scatterActive ?? false;
+      if (hullFraction > 0.35 && !scatterHold) drone.runtime.ai.transitionTo("recover");
       continue;
     }
 
@@ -1097,15 +1207,32 @@ function updateSandboxCombat(fixedDtMs: number): void {
 
     const enrage = drone.runtime.specialAbilityBonus(hullFraction);
     const speedMultiplier = 1 + (enrage.movementSpeed ?? 0);
-    const damageMultiplier = 1 + (enrage.damage ?? 0);
+    // AF-046: Focus Fire — coordinated squad members hit harder while the
+    // Captain lives; broken squads lose the bonus, not just the formation.
+    const squad = squadOf(drone);
+    const focusFire = squad?.commandActive ? 1.15 : 1;
+    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
-    stepEnemyMovement(drone.def.movementBehaviour, drone, fixedDtMs, {
+    // AF-046: Formation Flying — the first live producer for AF-033's reserved
+    // formationAnchor/formationOffset movement context: members fly their
+    // assigned wedge slot on the Captain while the squad is coordinated.
+    const captainDrone = squad?.commandActive ? drones.find((d) => d.alive && d.squadId === squad.squadId && squad.isCaptain(d.id)) : undefined;
+    const squadOffset = captainDrone ? squad?.offsetFor(drone.id) : null;
+    stepEnemyMovement(squadOffset && captainDrone ? "formation" : drone.def.movementBehaviour, drone, fixedDtMs, {
       targetX: player.x,
       targetY: player.y,
       speed: drone.def.moveSpeed * speedMultiplier * statusSlow,
       bounds: ARENA,
       preferredRange: 6,
+      ...(squadOffset && captainDrone
+        ? {
+            formationAnchorX: captainDrone.x,
+            formationAnchorY: captainDrone.y,
+            formationOffsetX: squadOffset.x,
+            formationOffsetY: squadOffset.y,
+          }
+        : {}),
     });
 
     const dx = player.x - drone.x;
@@ -1622,6 +1749,9 @@ function startRun(): void {
   hitCount = 0;
   critCount = 0;
   bossRuntime = null; // AF-035: fresh run, fresh Boss — respawns when MiniBoss phase is reached again.
+  outlawSquads = []; // AF-046: squads and mines are run-scoped, like every combat structure here.
+  outlawMines = [];
+  outlawMineDropClockMs = 0;
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -1812,6 +1942,20 @@ function drawSandbox(): void {
   ctx.fillStyle = "#101a38";
   for (const box of ARENA_OBSTACLES) {
     ctx.fillRect(toX(box.minX), toY(box.minY), (box.maxX - box.minX) * scale, (box.maxY - box.minY) * scale);
+  }
+
+  // AF-046: Outlaw mines — orange warning rings (the faction's visual language),
+  // readable area denial per AF-004's threat-communication law.
+  for (const mine of outlawMines) {
+    ctx.beginPath();
+    ctx.strokeStyle = "#ff8c1a";
+    ctx.lineWidth = 1.5;
+    ctx.arc(toX(mine.zone.x), toY(mine.zone.y), mine.zone.radius * scale, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.fillStyle = "#ff8c1a";
+    ctx.arc(toX(mine.zone.x), toY(mine.zone.y), 0.15 * scale, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   // Drones: hostile = hot hues (AF-004 §3); elites read as diamonds (AF-007).
@@ -2641,6 +2785,16 @@ const loop = new GameLoop({
           return `v1 (${statuses.length} slices) · autosave ${totalSaves} total${lastSaved ? `, last ${((Date.now() - lastSaved) / 1000).toFixed(0)}s ago` : ""} · milestone backups ${milestoneBackupCount} · cloud offline (local only) · profile ${activeProfileName}`;
         })(),
         audio: `music ${audioEngine.musicState ?? "—"} · voices ${audioEngine.activeVoiceCount()} · master ${(audioMixer.effectiveVolume("master") * 100).toFixed(0)}% · muted ${audioMixer.isMuted("master") ? "yes" : "no"}`,
+        outlaws: (() => {
+          if (outlawSquads.length === 0 && outlawMines.length === 0) return null;
+          const squadLine = outlawSquads
+            .map((s) => {
+              const snap = s.snapshot;
+              return `${snap.state} (${snap.order}, ${snap.captainAlive ? "captain up" : "captain down"}, ${snap.membersRemaining} left)`;
+            })
+            .join("; ");
+          return `squads ${outlawSquads.length}${squadLine ? ` [${squadLine}]` : ""} · mines ${outlawMines.length}`;
+        })(),
       });
     }
   },

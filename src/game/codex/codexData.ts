@@ -183,6 +183,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_HUMAN_ALLIANCE_CODEX" },
   },
+  // AF-046: the fourth profiled faction — unlocked by breaking your first
+  // Outlaw squad (killing its Captain), the encounter that defines them.
+  {
+    id: "codex-mercenary-guild",
+    category: "factions",
+    title: "Mercenary Guild",
+    lore: {
+      summary: "Humanity after collapse: raiders, mercenaries, and broken expeditionary fleets who kept their doctrine when they lost their flag.",
+      detailed: "Guild squads fight like experienced pilots because they are — focus fire, missile barrages, mine fields, shield carriers walking point, and a captain holding the formation together. Kill the captain and the rest scatter.",
+      historicalContext: "The Guild's oldest contracts predate the Collapse; the clients are gone, but the ledgers survived.",
+      recoveredArchives: "Recovered broadcast fragment: \"Formation on me. We are not dying for a wreck we can't sell.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying an Outlaw Captain — breaking your first squad.",
+    relatedEntryIds: ["codex-galaxy-history", "codex-human-alliance"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_MERCENARY_GUILD_CODEX" },
+  },
   {
     id: "codex-commander-reyes",
     category: "commanders",

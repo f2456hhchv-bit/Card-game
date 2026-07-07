@@ -159,6 +159,7 @@ describe("CodexRuntime — Section Completion (AF-043 §Discovery Rewards)", () 
       ["lore", "LORE_CRYSTAL_DOMINION_CODEX"],
       ["lore", "LORE_MACHINE_COLLECTIVE_CODEX"],
       ["lore", "LORE_HUMAN_ALLIANCE_CODEX"],
+      ["lore", "LORE_MERCENARY_GUILD_CODEX"], // AF-046 added a fourth faction entry
     ];
     const completions = runtime.checkSectionCompletions(makeReader(discovered), () => false);
     expect(completions).toContain("factions");

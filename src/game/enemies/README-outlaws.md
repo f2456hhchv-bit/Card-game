@@ -1,0 +1,13 @@
+# outlaws — Human Outlaw Enemy Faction (AF-046, game layer, inside `enemies/`)
+
+**Purpose:** The first complete enemy faction — dangerous through tactics, not statistics. Every unit is a plain AF-033 `EnemyDef`; the only new mechanics are squad-level (Command Structure, Formation Flying, scatter-on-captain-death) and Deployable Mines, both composed over engines that already exist.
+
+**Responsibilities:** Unit/tactic/mechanic/command-order/mini-boss/elite-perk vocabulary, five full sandbox `EnemyDef`s with real AF-032 `WeaponDef` ranged attacks, callsign pool, visual-language record, and the mine factory (`outlawData`); squad state (forming → coordinated → scattered → eliminated), wedge `formationOffsets`, and Command Orders (`OutlawSquad`).
+
+**Dependencies:** `enemies/enemyData` (`EnemyDef` — unchanged), `bosses/BossArena` (`HazardZoneDef` — Deployable Mines reuse AF-035's exact hazard engine, the same reuse AF-036's biome hazards already made). Squads feed AF-033's **reserved, never-before-used** `formation` movement context (`formationAnchorX/Y`, `formationOffsetX/Y` in `stepEnemyMovement`) — its first live producer — and drive AF-033's existing `retreat` AI state for scatter orders. Elite Captains ARE AF-034 generated Elites (`spawnEnemyInstance(…, elite: true)`); callsigns are presentation on top. The faction itself is AF-039's registered-but-unprofiled Mercenary Guild, now profiled (paying that module's own recorded content debt), with a Codex entry (AF-043) gated on the captain-kill lore discovery.
+
+**Data structures:** `OutlawSquadRuntime`, `SquadSnapshot`, `OUTLAW_MINE_TUNING`/`createOutlawMine`.
+
+**Extension points:** new units are `EnemyDef` data (nine of fourteen registered unit kinds await defs); new squad compositions are id lists; mini-boss kinds are registered vocabulary that binds to AF-035 `BossDef` content when authored.
+
+**Known limitations:** of the eight Special Mechanics, Deployable Mines, Formation Flying, Shield Coordination (shield-carrier `deployShields`), Missile Swarms (raider burst-seeking pod), Suppressive Fire (captain's slow-on-hit), and Retreat are mechanically live; Repair Drones, Emergency Boost, Smoke Fields, and Energy Suppression are registered awaiting content. Command Structure's Target Priority and Reinforcements orders are registered vocabulary — the sandbox squad's orders map forming→shieldCoordination, coordinated→attackOrders, scattered→retreatOrders. Mini-bosses (Gunship Commander et al.) are registered kinds, not yet authored `BossDef`s. Voice Broadcasts await the audio asset pipeline (AF-045's own honest limitation).

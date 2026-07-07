@@ -224,6 +224,25 @@ export const SANDBOX_FACTION_ROSTER: FactionRosterDef = {
       uniqueResources: ["commonMaterials", "rareAlloys"],
       loreId: "LORE_HUMAN_ALLIANCE_CODEX",
     },
+    // AF-046: the Human Outlaws are the Mercenary Guild's militant face —
+    // profiling the fourth of AF-039's ten registered factions (its own
+    // recorded content debt), not adding an eleventh faction.
+    {
+      id: "mercenaryGuild",
+      name: "Mercenary Guild",
+      symbol: "icon-mercenary-guild-sigil",
+      leader: "The Broker Council",
+      government: "Contract law enforced by reputation — no parliament, only ledgers everyone can read.",
+      history: "When the Collapse stranded whole expeditionary fleets, the crews that survived stopped asking who they used to answer to. The Guild is what professionalism looks like after civilisation.",
+      technology: "Salvaged military hardware grafted onto modified civilian hulls — nothing original, everything proven.",
+      military: "Squad doctrine over hero pilots: focus fire, missile barrages, shield coordination, and a captain whose death breaks the formation.",
+      culture: "Greed, survival, freedom — in that order on a good day, reversed on a bad one.",
+      economy: "Contracts, raiding, area denial of trade routes — the Guild sells the problem and the solution.",
+      territory: ["brokenSystems"],
+      uniqueUnits: ["outlaw-raider", "outlaw-sniper", "outlaw-shield-carrier", "outlaw-mine-layer", "outlaw-captain"],
+      uniqueResources: ["rareAlloys"],
+      loreId: "LORE_MERCENARY_GUILD_CODEX",
+    },
   ],
   missions: [
     {

@@ -66,6 +66,8 @@ export interface DebugSnapshot {
   saveFramework: string | null;
   /** Audio summary: Music State, active voice count, master mixer level (AF-045 §DEBUG). */
   audio: string | null;
+  /** Outlaw summary: squad state, command order, captain status, live mines (AF-046 §DEBUG). */
+  outlaws: string | null;
 }
 
 export class DebugOverlay {
@@ -132,6 +134,7 @@ export class DebugOverlay {
       `codex      ${snapshot.codex ?? "—"}`,
       `save       ${snapshot.saveFramework ?? "—"}`,
       `audio      ${snapshot.audio ?? "—"}`,
+      `outlaws    ${snapshot.outlaws ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
