@@ -85,6 +85,8 @@ import { BiomeRuntime } from "./game/biomes/BiomeRuntime";
 import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
+import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
+import { GalaxyRuntime } from "./game/galaxy/GalaxyRuntime";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -405,6 +407,11 @@ const meta = new MetaProgression(
   },
   (level) => bus.emit("AccountLevelUp", { level }),
 );
+
+// ── Galaxy (AF-038): the permanent overworld. Sector Stability/Exploration%
+// persist through AF-026's existing meta save slice (namespaced statistic
+// keys); the runtime's own position/event-timer state is session-local.
+const galaxyRuntime = new GalaxyRuntime(SANDBOX_GALAXY, new Rng(Date.now()).fork("galaxy"), "sys-lucent-gate");
 
 function persistMeta(): void {
   void metaSlice.save(meta.toSave());
@@ -1817,11 +1824,41 @@ function render(): void {
           },
         ]);
       }
+      // AF-038: Galaxy Map — route travel (gated by adjacency or the AF-024
+      // Fast Travel unlock) and point-of-interest discovery (AF-026 collections).
+      const fastTravelUnlocked = researchTree.isUnlocked("warp-charting");
+      const currentSystem = galaxyRuntime.currentSystem;
+      const explorationKey = `galaxy:${currentSystem.id}:explorationPercent`;
+      const stabilityKey = `galaxy:${currentSystem.id}:stability`;
+      const travelButtons: Array<[string, () => void]> = currentSystem.connectedSystemIds
+        .map((id) => galaxyRuntime.findSystem(id))
+        .filter((s): s is NonNullable<typeof s> => s !== null)
+        .map((target) => [
+          `Travel: ${target.name} (${target.region})`,
+          () => {
+            if (galaxyRuntime.travelTo(target.id, fastTravelUnlocked)) render();
+          },
+        ]);
+      const poiButtons: Array<[string, () => void]> = currentSystem.pointsOfInterest
+        .filter((poi) => !meta.hasDiscovered(poi.discoveryCategory, poi.discoveryId))
+        .map((poi) => [
+          `Discover: ${poi.kind.replace(/([A-Z])/g, " $1").trim()}`,
+          () => {
+            if (meta.discover(poi.discoveryCategory, poi.discoveryId)) {
+              const delta = GalaxyRuntime.clampedDelta(meta.stat(explorationKey), 15, 0, 100);
+              meta.recordStat(explorationKey, delta);
+              persistMeta();
+              render();
+            }
+          },
+        ]);
       screen(
         "Galaxy Command",
-        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}`,
+        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}`,
         [
           ["Select Mission", () => machine.transitionTo("MissionSelect")],
+          ...travelButtons,
+          ...poiButtons,
           ...nodeButtons,
           ...forgeButtons,
           ["Statistics", () => machine.transitionTo("Statistics")],
@@ -1949,6 +1986,10 @@ let fpsWindowStart = performance.now();
 const loop = new GameLoop({
   update: (fixedDtMs) => {
     input.update(fixedDtMs);
+    // AF-038: the galaxy evolves independent of whatever screen the player is on.
+    galaxyRuntime.update(fixedDtMs);
+    const galaxyEvent = galaxyRuntime.tryTriggerEvent();
+    if (galaxyEvent) bus.emit("EnvironmentalEventTriggered", { eventType: galaxyEvent });
     if (input.wasPressed("Pause") && machine.base === "Gameplay") {
       if (machine.overlays.at(-1) === "Pause") machine.popOverlay();
       else if (machine.overlays.length === 0) machine.pushOverlay("Pause");
@@ -2096,6 +2137,11 @@ const loop = new GameLoop({
               return `${sandboxMissionTemplate.name} [${session?.phase ?? "—"}] · primary ${snap.primaryDone}/${snap.primaryTotal} · optional ${snap.optionalDone}/${snap.optionalTotal} · modifiers [${snap.activeModifierKinds.join(", ") || "none"}]`;
             })()
           : null,
+        galaxy: (() => {
+          const snap = galaxyRuntime.snapshot;
+          const explorationKey = `galaxy:${snap.currentSystemId}:explorationPercent`;
+          return `${snap.currentSystemName} (${snap.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
+        })(),
       });
     }
   },

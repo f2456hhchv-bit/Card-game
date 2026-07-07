@@ -50,6 +50,8 @@ export interface DebugSnapshot {
   biome: string | null;
   /** Mission summary: name, RunPhase, objective progress, active modifiers (AF-037 §DEBUG). */
   mission: string | null;
+  /** Galaxy summary: current system, region, exploration%, events triggered (AF-038 §DEBUG). */
+  galaxy: string | null;
 }
 
 export class DebugOverlay {
@@ -108,6 +110,7 @@ export class DebugOverlay {
       `boss       ${snapshot.boss ?? "—"}`,
       `biome      ${snapshot.biome ?? "—"}`,
       `mission    ${snapshot.mission ?? "—"}`,
+      `galaxy     ${snapshot.galaxy ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -63,7 +63,7 @@ export interface ResearchNodeDef {
   effect: ResearchEffect | null;
 }
 
-/** Sandbox tree: 12 nodes, 3 branches, one cross-link, one hidden discovery. */
+/** Sandbox tree: 13 nodes, 3 branches, one cross-link, one hidden discovery, one galaxy unlock. */
 export const SANDBOX_RESEARCH_TREE: readonly ResearchNodeDef[] = [
   // Weapon branch
   { id: "focused-lattice", name: "Focused Lattice", category: "weaponTechnology", tier: 1, cost: 3, completionTimeMs: 0, prerequisites: [], nodeType: "passiveBonus", hidden: false, effect: { kind: "weaponResearchBonus", value: 0.05 } },
@@ -84,4 +84,7 @@ export const SANDBOX_RESEARCH_TREE: readonly ResearchNodeDef[] = [
   { id: "barrier-theory", name: "Barrier Theory", category: "shieldTechnology", tier: 1, cost: 4, completionTimeMs: 0, prerequisites: [], nodeType: "passiveBonus", hidden: false, effect: null },
   // Hidden discovery — revealed by collecting an epic+ research sample
   { id: "ancient-conduit", name: "Ancient Conduit", category: "ancientTechnology", tier: 3, cost: 10, completionTimeMs: 0, prerequisites: ["survey-protocols"], nodeType: "ancientDiscovery", hidden: true, effect: { kind: "weaponResearchBonus", value: 0.15 } },
+  // AF-038: Fast Travel gate — the first real producer for the galaxyNavigation
+  // category and galaxyUnlock node type, both registered since AF-024.
+  { id: "warp-charting", name: "Warp Charting", category: "galaxyNavigation", tier: 2, cost: 9, completionTimeMs: 0, prerequisites: ["deep-scanning"], nodeType: "galaxyUnlock", hidden: false, effect: { kind: "unlockFlag", flag: "GALAXY_FAST_TRAVEL" } },
 ];
