@@ -56,6 +56,8 @@ export interface DebugSnapshot {
   factions: string | null;
   /** Economy summary: currency balances, active merchant offer count, active Special Economic Event (AF-040 §DEBUG). */
   economy: string | null;
+  /** Galaxy Event summary: last World Event, the World State value it touched, events triggered (AF-041 §DEBUG). */
+  worldEvents: string | null;
 }
 
 export class DebugOverlay {
@@ -117,6 +119,7 @@ export class DebugOverlay {
       `galaxy     ${snapshot.galaxy ?? "—"}`,
       `factions   ${snapshot.factions ?? "—"}`,
       `economy    ${snapshot.economy ?? "—"}`,
+      `worldEvent ${snapshot.worldEvents ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -91,6 +91,8 @@ import { SANDBOX_FACTION_ROSTER, PLAYER_CHOICE_REPUTATION_DELTA, REPUTATION_MIN,
 import { FactionRuntime } from "./game/factions/FactionRuntime";
 import { SANDBOX_GALAXY_ECONOMY, CREDIT_AWARDS } from "./game/economy/economyData";
 import { MarketRuntime } from "./game/economy/MarketRuntime";
+import { SANDBOX_WORLD_EVENTS, WORLD_STATE_MIN, WORLD_STATE_MAX, PLAYER_PARTICIPATION_WORLD_STATE_DELTA, type PlayerParticipationKind } from "./game/worldEvents/worldEventData";
+import { WorldEventRuntime } from "./game/worldEvents/WorldEventRuntime";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -434,6 +436,13 @@ function awardCredits(amount: number): void {
   meta.recordStat(CREDITS_KEY, amount);
   persistMeta();
 }
+
+// ── Galaxy Events (AF-041): World State persists through the same
+// namespaced meta-statistic pattern AF-038/039/040 established
+// (worldState:<key>); the runtime's own event timer is session-local,
+// mirroring every prior *Runtime's exact discipline.
+const worldEventRuntime = new WorldEventRuntime(SANDBOX_WORLD_EVENTS, new Rng(Date.now()).fork("worldEvents"));
+const respondedWorldEvents = new Set<string>();
 
 function persistMeta(): void {
   void metaSlice.save(meta.toSave());
@@ -1993,15 +2002,46 @@ function render(): void {
             ];
           })
         : [];
+      // AF-041: Galaxy Events — the most recently fired World Event, and
+      // Player Participation buttons (Ignore/Observe are simply not
+      // responding — no button needed). Responding nudges World State on
+      // top of the event's own ambient delta and, once per event instance,
+      // records it permanently ("the galaxy remembers") plus the one
+      // live-wired Event Chain outcome.
+      const currentWorldEvent = worldEventRuntime.currentEvent;
+      const worldEventButtons: Array<[string, () => void]> = [];
+      let worldEventLine = "No Breaking Events.";
+      if (currentWorldEvent) {
+        const worldStateKey = `worldState:${currentWorldEvent.worldStateKey}`;
+        worldEventLine = `Breaking: ${currentWorldEvent.category} · ${currentWorldEvent.kind.replace(/([A-Z])/g, " $1").trim()} (${currentWorldEvent.worldStateKey} ${meta.stat(worldStateKey).toFixed(0)})`;
+        if (!respondedWorldEvents.has(currentWorldEvent.id)) {
+          const respond = (choice: PlayerParticipationKind) => {
+            const delta = GalaxyRuntime.clampedDelta(meta.stat(worldStateKey), PLAYER_PARTICIPATION_WORLD_STATE_DELTA[choice], WORLD_STATE_MIN, WORLD_STATE_MAX);
+            meta.recordStat(worldStateKey, delta);
+            respondedWorldEvents.add(currentWorldEvent.id);
+            meta.discover("lore", currentWorldEvent.id);
+            if (currentWorldEvent.chainsInto?.kind === "researchOpportunity") researchTree.addPoints(5);
+            persistMeta();
+            persistResearch();
+            render();
+          };
+          worldEventButtons.push(
+            [`Investigate: ${currentWorldEvent.kind}`, () => respond("investigate")],
+            [`Support: ${currentWorldEvent.kind}`, () => respond("support")],
+            [`Prevent: ${currentWorldEvent.kind}`, () => respond("prevent")],
+          );
+        }
+      }
       screen(
         "Galaxy Command",
-        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}\n${factionLine}\nCredits: ${credits.toFixed(0)} · ${activeMerchant?.name ?? "Market"}${marketRuntime.currentEvent ? ` — ${marketRuntime.currentEvent}` : ""}`,
+        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}\n${factionLine}\nCredits: ${credits.toFixed(0)} · ${activeMerchant?.name ?? "Market"}${marketRuntime.currentEvent ? ` — ${marketRuntime.currentEvent}` : ""}\n${worldEventLine}`,
         [
           ["Select Mission", () => machine.transitionTo("MissionSelect")],
           ...travelButtons,
           ...poiButtons,
           ...factionButtons,
           ...marketButtons,
+          ...worldEventButtons,
           ...nodeButtons,
           ...forgeButtons,
           ["Statistics", () => machine.transitionTo("Statistics")],
@@ -2162,6 +2202,19 @@ const loop = new GameLoop({
     marketRuntime.tryRotateInventories();
     const economicEvent = marketRuntime.tryTriggerEvent();
     if (economicEvent) bus.emit("EnvironmentalEventTriggered", { eventType: economicEvent });
+    // AF-041: the galaxy evolves whether or not the player is present — an
+    // ambient World State delta applies immediately on firing, independent
+    // of any later Player Participation choice.
+    worldEventRuntime.update(fixedDtMs);
+    const worldEvent = worldEventRuntime.tryTriggerEvent();
+    if (worldEvent) {
+      bus.emit("EnvironmentalEventTriggered", { eventType: worldEvent.kind });
+      const worldStateKey = `worldState:${worldEvent.worldStateKey}`;
+      const ambientDelta = GalaxyRuntime.clampedDelta(meta.stat(worldStateKey), worldEvent.worldStateDelta, WORLD_STATE_MIN, WORLD_STATE_MAX);
+      meta.recordStat(worldStateKey, ambientDelta);
+      persistMeta();
+      lootNotices.push({ text: `${worldEvent.category.toUpperCase()} · ${worldEvent.kind.replace(/([A-Z])/g, " $1").trim().toUpperCase()}`, colour: "#ffc652", ttlMs: 2800 });
+    }
     if (input.wasPressed("Pause") && machine.base === "Gameplay") {
       if (machine.overlays.at(-1) === "Pause") machine.popOverlay();
       else if (machine.overlays.length === 0) machine.pushOverlay("Pause");
@@ -2330,6 +2383,12 @@ const loop = new GameLoop({
           const crystalEssence = crafting.materialCount("crystalFragments");
           const offers = marketRuntime.offersFor("lucent-gate-trader").length;
           return `credits ${credits.toFixed(0)} · research data ${researchData} · crystal essence ${crystalEssence} · offers ${offers} · events ${snap.eventsTriggered}${snap.activeEventKind ? ` (active: ${snap.activeEventKind})` : ""}`;
+        })(),
+        worldEvents: (() => {
+          const snap = worldEventRuntime.snapshot;
+          const last = snap.lastEvent;
+          const worldStateLine = last ? `${last.worldStateKey} ${meta.stat(`worldState:${last.worldStateKey}`).toFixed(0)}` : "—";
+          return `${last ? `${last.category} · ${last.kind}` : "—"} · ${worldStateLine} · events ${snap.eventsTriggered}`;
         })(),
       });
     }
