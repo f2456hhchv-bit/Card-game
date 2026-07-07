@@ -93,6 +93,9 @@ import { SANDBOX_GALAXY_ECONOMY, CREDIT_AWARDS } from "./game/economy/economyDat
 import { MarketRuntime } from "./game/economy/MarketRuntime";
 import { SANDBOX_WORLD_EVENTS, WORLD_STATE_MIN, WORLD_STATE_MAX, PLAYER_PARTICIPATION_WORLD_STATE_DELTA, type PlayerParticipationKind } from "./game/worldEvents/worldEventData";
 import { WorldEventRuntime } from "./game/worldEvents/WorldEventRuntime";
+import { SANDBOX_ACHIEVEMENTS } from "./game/achievements/achievementData";
+import { AchievementRuntime, type AchievementProgressReader } from "./game/achievements/AchievementRuntime";
+import { CollectionLedger, type CollectionLedgerSaveData } from "./game/achievements/CollectionLedger";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -376,6 +379,30 @@ function persistCrafting(): void {
   void craftingSlice.save(crafting.toSave());
 }
 
+// ── Achievements & Collections (AF-042): the one genuinely new save slice —
+// scoped to exactly the two Collection categories AF-026 has no bucket for,
+// plus the capped Discovery Log. Achievement completion itself persists for
+// free through AF-026's existing meta.discover("achievements", id).
+const collectionLedgerSlice = new SaveSlice<CollectionLedgerSaveData>({
+  key: "collectionLedger",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({ extraCollections: {}, discoveryLog: [] }),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+const collectionLedger = new CollectionLedger();
+const achievementRuntime = new AchievementRuntime(SANDBOX_ACHIEVEMENTS);
+const metaAchievementReader: AchievementProgressReader = {
+  stat: (key) => meta.stat(key),
+  collectionCount: (category) => meta.snapshot.collectionCounts[category] ?? 0,
+  isCompleted: (id) => meta.hasDiscovered("achievements", id),
+};
+
+function persistCollectionLedger(): void {
+  void collectionLedgerSlice.save(collectionLedger.toSave());
+}
+
 /** Crafting materials bank immediately on collection (nothing is wasted). */
 function bankCraftingMaterial(drop: LootDrop): void {
   const tierIndex = RARITY_LADDER.indexOf(drop.rarity);
@@ -527,6 +554,7 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
       if (reward.kind === "resource") {
         crafting.addMaterial(reward.id as Parameters<typeof crafting.addMaterial>[0], reward.amount);
         persistCrafting();
+        if (collectionLedger.discover("resources", reward.id)) persistCollectionLedger(); // AF-042: Collections.
       } else if (reward.kind === "blueprint") {
         crafting.unlockBlueprint(reward.id);
         persistCrafting();
@@ -886,6 +914,18 @@ function grantBossRewards(): void {
   meta.recordStat("bossesDefeated");
   meta.discover("bosses", def.codexId);
   awardCredits(CREDIT_AWARDS.bossDefeated); // AF-040: Bosses as a Resource Source.
+  // AF-042: Discovery Log — full context for a boss-defeat discovery.
+  collectionLedger.recordDiscovery({
+    id: def.codexId,
+    category: "bosses",
+    atMs: Date.now(),
+    missionId: session?.missionId ?? null,
+    biomeId: sandboxBiome.id,
+    galaxySectorId: galaxyRuntime.currentSystem.id,
+    commanderId: sandboxCommander.id,
+    shipId: sandboxShip.id,
+  });
+  persistCollectionLedger();
   // AF-035: mastery-challenge reward — the discoverable/Codex-visible half of AF-026's
   // grantReward; the private cosmetic-unlock bookkeeping stays MetaProgression's own.
   if (!bossFightDamageTaken) {
@@ -1915,6 +1955,21 @@ function render(): void {
               meta.recordStat(explorationKey, delta);
               persistMeta();
               awardCredits(CREDIT_AWARDS.discovery); // AF-040: Exploration/Ancient Vaults as a Resource Source.
+              // AF-042: Ancient Vaults double as the Ancient Artefacts collection; every
+              // discovery gains full Discovery Log context (AF-042 §Discovery Log).
+              if (poi.kind === "ancientVaults" && collectionLedger.discover("ancientArtefacts", poi.discoveryId)) {
+                collectionLedger.recordDiscovery({
+                  id: poi.discoveryId,
+                  category: poi.discoveryCategory,
+                  atMs: Date.now(),
+                  missionId: session?.missionId ?? null,
+                  biomeId: currentSystem.biomeId,
+                  galaxySectorId: currentSystem.id,
+                  commanderId: sandboxCommander.id,
+                  shipId: sandboxShip.id,
+                });
+                persistCollectionLedger();
+              }
               render();
             }
           },
@@ -1990,6 +2045,7 @@ function render(): void {
                 if (reward.kind === "resource") {
                   crafting.addMaterial(reward.id, reward.amount);
                   persistCrafting();
+                  if (collectionLedger.discover("resources", reward.id)) persistCollectionLedger(); // AF-042: Collections.
                 } else if (reward.kind === "researchPoints") {
                   researchTree.addPoints(reward.amount);
                   persistResearch();
@@ -2158,6 +2214,15 @@ function render(): void {
         const done = meta.isChallengeCompleted(c.id);
         return `${done ? "★" : "☆"} ${c.name} ${progress ? `${progress.current}/${progress.target}` : ""}`;
       }).join("   ");
+      // AF-042: Achievements/Collections — Hidden Achievements stay "???" until completed.
+      const completedAchievementCount = SANDBOX_ACHIEVEMENTS.filter((a) => meta.hasDiscovered("achievements", a.id)).length;
+      const achievementLines = SANDBOX_ACHIEVEMENTS.map((a) => {
+        const done = meta.hasDiscovered("achievements", a.id);
+        if (a.hidden && !done) return "☆ ???";
+        const progress = achievementRuntime.progress(a, metaAchievementReader);
+        return `${done ? "★" : "☆"} ${a.name} ${done ? "" : `${progress.current}/${progress.target}`}`;
+      }).join("   ");
+      const recentDiscovery = collectionLedger.recentDiscoveries.at(-1);
       screen(
         `Account Level ${profile.accountLevel}`,
         [
@@ -2165,6 +2230,8 @@ function render(): void {
           `Enemies ${Math.round(stats["enemiesDestroyed"] ?? 0)} · Damage dealt ${Math.round(stats["damageDealt"] ?? 0)} · taken ${Math.round(stats["damageTaken"] ?? 0)}`,
           `Items ${stats["itemsCollected"] ?? 0} (rare ${stats["rareItemsFound"] ?? 0}) · Discovered: ${Object.entries(profile.collectionCounts).map(([k, v]) => `${k} ${v}`).join(", ") || "nothing yet"}`,
           `Challenges ${profile.completedChallenges}/${profile.totalChallenges}:   ${challengeLines}`,
+          `Achievements ${completedAchievementCount}/${SANDBOX_ACHIEVEMENTS.length}:   ${achievementLines}`,
+          `Resources ${collectionLedger.collectionCount("resources")} · Ancient Artefacts ${collectionLedger.collectionCount("ancientArtefacts")} · Recent discovery: ${recentDiscovery?.id ?? "none yet"}`,
         ].join("\n"),
         [
           ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
@@ -2214,6 +2281,14 @@ const loop = new GameLoop({
       meta.recordStat(worldStateKey, ambientDelta);
       persistMeta();
       lootNotices.push({ text: `${worldEvent.category.toUpperCase()} · ${worldEvent.kind.replace(/([A-Z])/g, " $1").trim().toUpperCase()}`, colour: "#ffc652", ttlMs: 2800 });
+    }
+    // AF-042: Achievements — a pure read over already-public MetaProgression
+    // state; completion persists for free through meta.discover("achievements", id).
+    for (const achievement of achievementRuntime.checkCompletions(metaAchievementReader)) {
+      meta.discover("achievements", achievement.id);
+      meta.addAccountXp(ACCOUNT_XP_AWARDS.challengeCompleted);
+      persistMeta();
+      lootNotices.push({ text: `ACHIEVEMENT · ${achievement.name.toUpperCase()}`, colour: "#ffc652", ttlMs: 3000 });
     }
     if (input.wasPressed("Pause") && machine.base === "Gameplay") {
       if (machine.overlays.at(-1) === "Pause") machine.popOverlay();
@@ -2390,6 +2465,12 @@ const loop = new GameLoop({
           const worldStateLine = last ? `${last.worldStateKey} ${meta.stat(`worldState:${last.worldStateKey}`).toFixed(0)}` : "—";
           return `${last ? `${last.category} · ${last.kind}` : "—"} · ${worldStateLine} · events ${snap.eventsTriggered}`;
         })(),
+        achievements: (() => {
+          const done = SANDBOX_ACHIEVEMENTS.filter((a) => meta.hasDiscovered("achievements", a.id)).length;
+          const resources = collectionLedger.collectionCount("resources");
+          const artefacts = collectionLedger.collectionCount("ancientArtefacts");
+          return `${done}/${SANDBOX_ACHIEVEMENTS.length} complete · resources ${resources} · artefacts ${artefacts} · log ${collectionLedger.recentDiscoveries.length}`;
+        })(),
       });
     }
   },
@@ -2405,6 +2486,7 @@ void (async () => {
   crafting.loadSave(await craftingSlice.load());
   meta.loadSave(await metaSlice.load());
   inventory.loadSave(await inventorySlice.load());
+  collectionLedger.loadSave(await collectionLedgerSlice.load());
   machine.transitionTo("Splash");
   log.info("boot", "Afterlight core gameplay skeleton started", {
     researchUnlocked: researchTree.snapshot.unlockedCount,

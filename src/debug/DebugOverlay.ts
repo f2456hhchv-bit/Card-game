@@ -58,6 +58,8 @@ export interface DebugSnapshot {
   economy: string | null;
   /** Galaxy Event summary: last World Event, the World State value it touched, events triggered (AF-041 §DEBUG). */
   worldEvents: string | null;
+  /** Achievement/Collection summary: achievements completed, extra collection counts, Discovery Log length (AF-042 §DEBUG). */
+  achievements: string | null;
 }
 
 export class DebugOverlay {
@@ -120,6 +122,7 @@ export class DebugOverlay {
       `factions   ${snapshot.factions ?? "—"}`,
       `economy    ${snapshot.economy ?? "—"}`,
       `worldEvent ${snapshot.worldEvents ?? "—"}`,
+      `achieve    ${snapshot.achievements ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
