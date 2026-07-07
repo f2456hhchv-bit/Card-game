@@ -30,6 +30,10 @@ export interface DebugSnapshot {
   research: string | null;
   /** Meta ledger: account level, runs, kills, challenges (AF-026 §9). */
   meta: string | null;
+  /** Inventory summary: size, storage usage, loadouts (AF-027 §DEBUG). */
+  inventory: string | null;
+  /** Equipment summary: bonuses, set count, power rating (AF-028 §10). */
+  equipment: string | null;
 }
 
 export class DebugOverlay {
@@ -78,6 +82,8 @@ export class DebugOverlay {
       `loot       ${snapshot.loot ?? "—"}`,
       `research   ${snapshot.research ?? "—"}`,
       `meta       ${snapshot.meta ?? "—"}`,
+      `inventory  ${snapshot.inventory ?? "—"}`,
+      `equipment  ${snapshot.equipment ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

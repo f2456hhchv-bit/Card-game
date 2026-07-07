@@ -55,6 +55,10 @@ import {
 } from "./game/crafting/craftingData";
 import { MetaProgression, type MetaSaveData } from "./game/meta/MetaProgression";
 import { ACCOUNT_XP_AWARDS, SANDBOX_CHALLENGES } from "./game/meta/metaData";
+import { Inventory, type InventorySaveData } from "./game/inventory/Inventory";
+import { DEFAULT_INVENTORY_TUNING } from "./game/inventory/inventoryData";
+import { validateLoadout, aggregateLoadout } from "./game/equipment/EquipmentAggregate";
+import { SANDBOX_EQUIPMENT, SANDBOX_SETS } from "./game/equipment/equipmentData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -156,6 +160,7 @@ const sandboxBuild = {
   magnetBonus: 0,
   researchWeaponBonus: 0, // AF-024 → AF-021 pipeline research stage
   researchLootBonus: 0, // AF-024 → AF-023 ladder shift
+  equipmentWeaponBonus: 0, // AF-028 → AF-021 pipeline equipment stage
 };
 
 const SANDBOX_UPGRADES: UpgradeDefinition[] = [
@@ -381,6 +386,42 @@ function researchEffects(): { weaponBonus: number; lootBonus: number; magnetBonu
   return { weaponBonus, lootBonus, magnetBonus };
 }
 
+// ── Inventory (AF-027): fifth save slice — the command centre for items.
+const inventorySlice = new SaveSlice<InventorySaveData>({
+  key: "inventory",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({ items: [], loadouts: [], nextInstanceId: 1 }),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+
+const inventory = new Inventory(DEFAULT_INVENTORY_TUNING);
+
+function persistInventory(): void {
+  void inventorySlice.save(inventory.toSave());
+}
+
+// ── Equipment (AF-028): fixed sandbox loadout demonstrates the aggregation/
+// set-bonus engine feeding directly into existing combat/movement fields —
+// no new stat pipeline. Real loadout editing arrives with the UI module.
+const sandboxLoadoutSlots: Partial<Record<import("./game/equipment/equipmentData").EquipmentSlot, string>> = {
+  primaryWeapon: "refit-cannon",
+  equipment1: "barrier-plate",
+  equipment2: "vanguard-thrusters",
+  equipment3: "vanguard-core",
+};
+const sandboxEquipmentById = new Map(SANDBOX_EQUIPMENT.map((item) => [item.id, item]));
+
+function equipmentEffects() {
+  const validation = validateLoadout(sandboxLoadoutSlots, sandboxEquipmentById);
+  if (!validation.ok) {
+    log.warn("equipment", "sandbox loadout failed validation", validation);
+    return aggregateLoadout({}, sandboxEquipmentById, SANDBOX_SETS);
+  }
+  return aggregateLoadout(sandboxLoadoutSlots, sandboxEquipmentById, SANDBOX_SETS);
+}
+
 function dropLoot(x: number, y: number): void {
   if (!lootRng || !groundLoot || !xpSystem || !session) return;
   const drop = generateDrop(
@@ -519,7 +560,12 @@ function updateSandboxCombat(fixedDtMs: number): void {
       if (Math.hypot(drone.x - projectile.x, drone.y - projectile.y) < 0.6) {
         const result = resolveDamage(
           playerPacket(),
-          { ...NEUTRAL_MODIFIERS, weapon: sandboxBuild.weaponBonus, research: sandboxBuild.researchWeaponBonus },
+          {
+            ...NEUTRAL_MODIFIERS,
+            weapon: sandboxBuild.weaponBonus,
+            research: sandboxBuild.researchWeaponBonus,
+            equipment: sandboxBuild.equipmentWeaponBonus,
+          },
           { values: {} },
           DEFAULT_COMBAT_TUNING,
           combatRng,
@@ -677,6 +723,18 @@ function startRun(): void {
   sandboxBuild.magnetBonus = research.magnetBonus;
   sandboxBuild.researchWeaponBonus = research.weaponBonus;
   sandboxBuild.researchLootBonus = research.lootBonus;
+  // AF-028: equipped bonuses feed existing systems directly — no new stat pipeline.
+  const equipment = equipmentEffects();
+  sandboxBuild.equipmentWeaponBonus = equipment.bonuses.damage ?? 0;
+  playerDefence.addBarrier(equipment.bonuses.shieldCapacity ?? 0);
+  if ((equipment.bonuses.movementSpeed ?? 0) > 0) {
+    movement.addModifier({
+      id: "equipment-speed",
+      kind: "speedMultiplier",
+      multiplier: 1 + (equipment.bonuses.movementSpeed ?? 0),
+      durationMs: Number.MAX_SAFE_INTEGER,
+    });
+  }
   currentOffer = [];
   xpSystem = new XpSystem(DEFAULT_XP_TUNING, null, (level) =>
     bus.emit("CommanderLevelUp", { level }),
@@ -702,6 +760,11 @@ function startRun(): void {
       bus.emit("LootCollected", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category });
       if (drop.category === "researchSample") bankResearchSample(drop);
       if (drop.category === "craftingMaterial") bankCraftingMaterial(drop);
+      // Weapons/equipment/relics land in the persistent inventory (AF-027).
+      if (drop.category === "weapon" || drop.category === "equipment" || drop.category === "relic") {
+        inventory.add(drop, Date.now());
+        persistInventory();
+      }
     },
     () => {
       lootBankedCount += 1; // banked to Results — value preserved (AF-023 §6)
@@ -1107,9 +1170,20 @@ function render(): void {
       );
       break;
     }
-    case "InventoryOverlay":
-      screen(state, "Overlay placeholder.", [["Close", () => machine.popOverlay()]]);
+    case "InventoryOverlay": {
+      // AF-027: real persistent inventory, sorted by power, top entries shown.
+      const topItems = inventory.sorted("power").slice(0, 6);
+      const lines = topItems.length > 0
+        ? topItems
+            .map(
+              (item) =>
+                `${item.favourite ? "★" : " "} ${item.drop.rarity.toUpperCase()} ${item.drop.baseItemId.replaceAll("_", " ")} (lvl ${item.drop.itemLevel}, pwr ${Math.round(item.drop.affixes.reduce((s, a) => s + a.value, 0) + item.drop.itemLevel * 10)})`,
+            )
+            .join("\n")
+        : "No items collected yet — weapons, equipment and relics found in expeditions land here permanently.";
+      screen(`Inventory (${inventory.size} items)`, lines, [["Close", () => machine.popOverlay()]]);
       break;
+    }
     case "MissionComplete":
       screen("Mission Complete", "Rewards banked. The galaxy grows brighter.", [
         ["Return to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
@@ -1167,6 +1241,10 @@ const loop = new GameLoop({
       if (machine.overlays.at(-1) === "Pause") machine.popOverlay();
       else if (machine.overlays.length === 0) machine.pushOverlay("Pause");
     }
+    if (input.consumeBuffered("InventoryOverlay") && machine.base === "Gameplay") {
+      if (machine.overlays.at(-1) === "InventoryOverlay") machine.popOverlay();
+      else if (machine.overlays.length === 0) machine.pushOverlay("InventoryOverlay");
+    }
     if (machine.base === "Gameplay" && machine.overlays.length === 0) {
       sessionMs += fixedDtMs;
       director?.update(fixedDtMs);
@@ -1220,6 +1298,11 @@ const loop = new GameLoop({
           : null,
         research: `pts ${researchTree.snapshot.points} · unlocked ${researchTree.snapshot.unlockedCount} · wpn +${(sandboxBuild.researchWeaponBonus * 100).toFixed(0)}% · loot +${(sandboxBuild.researchLootBonus * 100).toFixed(0)}%`,
         meta: `acct Lv ${meta.snapshot.accountLevel} · runs ${meta.stat("runs")} · kills ${Math.round(meta.stat("enemiesDestroyed"))} · challenges ${meta.snapshot.completedChallenges}/${meta.snapshot.totalChallenges}`,
+        inventory: `${inventory.size} items · player ${inventory.countIn("player")} · loadouts ${inventory.allLoadouts.length}`,
+        equipment: (() => {
+          const eq = equipmentEffects();
+          return `wpn +${((eq.bonuses.damage ?? 0) * 100).toFixed(0)}% · shield +${(eq.bonuses.shieldCapacity ?? 0).toFixed(0)} · sets ${eq.activeSetBonuses.length} · pwr ${eq.powerRating}`;
+        })(),
       });
     }
   },
@@ -1234,6 +1317,7 @@ void (async () => {
   researchTree.loadSave(await researchSlice.load());
   crafting.loadSave(await craftingSlice.load());
   meta.loadSave(await metaSlice.load());
+  inventory.loadSave(await inventorySlice.load());
   machine.transitionTo("Splash");
   log.info("boot", "Afterlight core gameplay skeleton started", {
     researchUnlocked: researchTree.snapshot.unlockedCount,

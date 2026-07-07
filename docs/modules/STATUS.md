@@ -43,6 +43,13 @@ Phase note: AF-000 → AF-012 are specification/framework modules — their buil
 
 **AF-016 §8 integration list COMPLETE: all ten planned systems (AF-017 → AF-026) implemented on the locked foundation with zero foundational additions.**
 
+## Post-integration extension modules
+
+| Module | Title | Version | Stage | Review | QA | Approval | Lock |
+|---|---|---|---|---|---|---|---|
+| AF-027 | Inventory Framework | v1 | Complete — spec + implementation (`src/game/inventory/`): stacking, cached sort, filters, search, loadouts, protection; live in sandbox (Tab opens real inventory), fifth save slice, 20k-item scale-tested | Aligned | 177 tests green incl. 20k-item scale suite; inventory screen binds at UI module | Approved 9.5/10 | **LOCKED** |
+| AF-028 | Equipment Framework | v1 *(resolves AF-027's deferred slot vocabulary; droneEffectiveness/orbitalPower and onBossPresent/onMissionModifier registered — no consuming system yet)* | Complete — spec + implementation (`src/game/equipment/`): slot vocabulary, additive aggregation, additive-only set bonuses, named-reason validation; bonuses route into existing AF-020/AF-021 fields, live in sandbox | Aligned | 188 tests green incl. 5000-combination fuzz suite; build-diversity/balance passes bind at equipment content modules | Approved 9.5/10 | **LOCKED** |
+
 **Authorised amendments log:**
 - 2026-07-05 — AF-002 output: palette extended with `vitality.green`, `shield.blue` (owner ruling via AF-004 review).
 - 2026-07-05 — AF-002 output: rarity ramp superseded by AF-007's nine-tier ladder (owner authority via AF-007).
