@@ -62,6 +62,8 @@ export interface DebugSnapshot {
   achievements: string | null;
   /** Codex summary: entries unlocked, Discovery %, Missing Links, Timeline status (AF-043 §DEBUG). */
   codex: string | null;
+  /** Save Framework summary: slice version, Autosave Status, Cloud Status, Backup Count, active profile (AF-044 §DEBUG). */
+  saveFramework: string | null;
 }
 
 export class DebugOverlay {
@@ -126,6 +128,7 @@ export class DebugOverlay {
       `worldEvent ${snapshot.worldEvents ?? "—"}`,
       `achieve    ${snapshot.achievements ?? "—"}`,
       `codex      ${snapshot.codex ?? "—"}`,
+      `save       ${snapshot.saveFramework ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

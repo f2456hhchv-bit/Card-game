@@ -98,6 +98,9 @@ import { AchievementRuntime, type AchievementProgressReader } from "./game/achie
 import { CollectionLedger, type CollectionLedgerSaveData } from "./game/achievements/CollectionLedger";
 import { SANDBOX_CODEX_ENTRIES, CODEX_SECTION_REWARDS, TIMELINE_ERAS } from "./game/codex/codexData";
 import { CodexRuntime, type CodexUnlockReader } from "./game/codex/CodexRuntime";
+import { DEFAULT_SETTINGS, type SettingsData } from "./core/save/settingsData";
+import { SaveProfileManager } from "./core/save/SaveProfileManager";
+import { SaveCoordinator } from "./core/save/SaveCoordinator";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -328,6 +331,35 @@ let lootNotices: LootNotice[] = [];
 let lootBankedCount = 0;
 let lootCollectedCount = 0;
 
+// ── Save Framework (AF-044): Autosave-status bookkeeping and Save Profiles
+// sit above every existing SaveSlice without changing any of them. Settings
+// are deliberately profile-independent (device-scoped), so they get their
+// own slice constructed here, ahead of everything else.
+const saveCoordinator = new SaveCoordinator();
+const saveProfileManager = new SaveProfileManager(new LocalStorageAdapter());
+const settingsSlice = new SaveSlice<SettingsData>({
+  key: "settings",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => DEFAULT_SETTINGS,
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+let settings: SettingsData = DEFAULT_SETTINGS;
+// Cached synchronously for screen rendering — SaveProfileManager itself is async.
+let activeProfileName = "—";
+function persistSettings(): void {
+  void settingsSlice.save(settings);
+  saveCoordinator.recordSave("settings");
+}
+saveCoordinator.register({
+  id: "settings",
+  toSave: () => settings,
+  loadSave: (data) => {
+    settings = data;
+  },
+});
+
 // ── Research (AF-024): permanent progression through a real save slice.
 const researchSlice = new SaveSlice<ResearchSaveData>({
   key: "research",
@@ -344,7 +376,9 @@ const researchTree = new ResearchTree(SANDBOX_RESEARCH_TREE, (node) =>
 
 function persistResearch(): void {
   void researchSlice.save(researchTree.toSave());
+  saveCoordinator.recordSave("research");
 }
+saveCoordinator.register({ id: "research", toSave: () => researchTree.toSave(), loadSave: (data) => researchTree.loadSave(data) });
 
 /** Research is never lost: points bank immediately on sample collection. */
 function bankResearchSample(drop: LootDrop): void {
@@ -379,7 +413,9 @@ const crafting = new CraftingSystem(
 
 function persistCrafting(): void {
   void craftingSlice.save(crafting.toSave());
+  saveCoordinator.recordSave("crafting");
 }
+saveCoordinator.register({ id: "crafting", toSave: () => crafting.toSave(), loadSave: (data) => crafting.loadSave(data) });
 
 // ── Achievements & Collections (AF-042): the one genuinely new save slice —
 // scoped to exactly the two Collection categories AF-026 has no bucket for,
@@ -412,7 +448,9 @@ const codexReader: CodexUnlockReader = {
 
 function persistCollectionLedger(): void {
   void collectionLedgerSlice.save(collectionLedger.toSave());
+  saveCoordinator.recordSave("collectionLedger");
 }
+saveCoordinator.register({ id: "collectionLedger", toSave: () => collectionLedger.toSave(), loadSave: (data) => collectionLedger.loadSave(data) });
 
 /** Crafting materials bank immediately on collection (nothing is wasted). */
 function bankCraftingMaterial(drop: LootDrop): void {
@@ -484,7 +522,9 @@ const respondedWorldEvents = new Set<string>();
 
 function persistMeta(): void {
   void metaSlice.save(meta.toSave());
+  saveCoordinator.recordSave("meta");
 }
+saveCoordinator.register({ id: "meta", toSave: () => meta.toSave(), loadSave: (data) => meta.loadSave(data) });
 
 // The ledger listens; gameplay systems never know meta exists (AF-001 §7).
 bus.on("EnemyKilled", ({ enemyId, elite, boss }) => {
@@ -543,6 +583,14 @@ bus.on("ResearchUnlocked", ({ nodeId }) => {
 bus.on("RelicAcquired", ({ relicId }) => {
   meta.discover("relics", relicId);
   persistMeta();
+});
+// AF-044: a Major Milestone Backup — a checksum-protected, cross-slice
+// snapshot taken at a genuinely significant moment, not on every save.
+let milestoneBackupCount = 0;
+bus.on("AccountLevelUp", () => {
+  void saveCoordinator.writeMilestoneBackup(new LocalStorageAdapter(), "milestone-backup").then(() => {
+    milestoneBackupCount += 1;
+  });
 });
 bus.on("RunEnded", ({ result, playTimeMs }) => {
   meta.recordStat("runs");
@@ -619,7 +667,9 @@ const inventory = new Inventory(DEFAULT_INVENTORY_TUNING);
 
 function persistInventory(): void {
   void inventorySlice.save(inventory.toSave());
+  saveCoordinator.recordSave("inventory");
 }
+saveCoordinator.register({ id: "inventory", toSave: () => inventory.toSave(), loadSave: (data) => inventory.loadSave(data) });
 
 // ── Equipment (AF-028): fixed sandbox loadout demonstrates the aggregation/
 // set-bonus engine feeding directly into existing combat/movement fields —
@@ -2256,6 +2306,10 @@ function render(): void {
       const codexUnlocked = codexRuntime.unlockedEntries(codexReader);
       const codexTitles = codexUnlocked.slice(0, 6).map((e) => e.title).join(", ");
       const codexLine = `Codex ${codexUnlocked.length}/${codexRuntime.all.length} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · Missing Links ${codexRuntime.missingLinkCount()} · Unlocked: ${codexTitles || "none yet"}${codexUnlocked.length > 6 ? "…" : ""}`;
+      // AF-044: Player Profile (Identity/Preferences) + Autosave Status — the
+      // Save Framework's own summary line, matching every module's pattern.
+      const metaStatus = saveCoordinator.status("meta");
+      const saveLine = `Profile: ${activeProfileName} · Autosave: ${metaStatus ? `${metaStatus.saveCount} saves, last ${((Date.now() - metaStatus.lastSavedAtMs) / 1000).toFixed(0)}s ago` : "not yet saved"} · Reduced Notifications: ${settings.accessibility.reducedNotificationMode ? "on" : "off"}`;
       screen(
         `Account Level ${profile.accountLevel}`,
         [
@@ -2266,8 +2320,17 @@ function render(): void {
           `Achievements ${completedAchievementCount}/${SANDBOX_ACHIEVEMENTS.length}:   ${achievementLines}`,
           `Resources ${collectionLedger.collectionCount("resources")} · Ancient Artefacts ${collectionLedger.collectionCount("ancientArtefacts")} · Recent discovery: ${recentDiscovery?.id ?? "none yet"}`,
           codexLine,
+          saveLine,
         ].join("\n"),
         [
+          [
+            `Toggle Reduced Notifications (currently ${settings.accessibility.reducedNotificationMode ? "on" : "off"})`,
+            () => {
+              settings = { ...settings, accessibility: { ...settings.accessibility, reducedNotificationMode: !settings.accessibility.reducedNotificationMode } };
+              persistSettings();
+              render();
+            },
+          ],
           ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
           ["Back to Main Menu", () => machine.transitionTo("MainMenu")],
         ],
@@ -2314,7 +2377,12 @@ const loop = new GameLoop({
       const ambientDelta = GalaxyRuntime.clampedDelta(meta.stat(worldStateKey), worldEvent.worldStateDelta, WORLD_STATE_MIN, WORLD_STATE_MAX);
       meta.recordStat(worldStateKey, ambientDelta);
       persistMeta();
-      lootNotices.push({ text: `${worldEvent.category.toUpperCase()} · ${worldEvent.kind.replace(/([A-Z])/g, " $1").trim().toUpperCase()}`, colour: "#ffc652", ttlMs: 2800 });
+      // AF-044: Reduced Notification Mode — registered as accessibility
+      // vocabulary by AF-041 with no producer until now. Ambient events
+      // still apply their World State effect either way; only the toast is suppressed.
+      if (!settings.accessibility.reducedNotificationMode) {
+        lootNotices.push({ text: `${worldEvent.category.toUpperCase()} · ${worldEvent.kind.replace(/([A-Z])/g, " $1").trim().toUpperCase()}`, colour: "#ffc652", ttlMs: 2800 });
+      }
     }
     // AF-042: Achievements — a pure read over already-public MetaProgression
     // state; completion persists for free through meta.discover("achievements", id).
@@ -2519,6 +2587,12 @@ const loop = new GameLoop({
           const timelineUnlocked = codexRuntime.timeline(codexReader).length;
           return `${unlocked}/${total} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · missing links ${codexRuntime.missingLinkCount()} · timeline ${timelineUnlocked}/${TIMELINE_ERAS.length}`;
         })(),
+        saveFramework: (() => {
+          const statuses = saveCoordinator.allStatuses;
+          const totalSaves = statuses.reduce((sum, s) => sum + s.saveCount, 0);
+          const lastSaved = statuses.length > 0 ? Math.max(...statuses.map((s) => s.lastSavedAtMs)) : null;
+          return `v1 (${statuses.length} slices) · autosave ${totalSaves} total${lastSaved ? `, last ${((Date.now() - lastSaved) / 1000).toFixed(0)}s ago` : ""} · milestone backups ${milestoneBackupCount} · cloud offline (local only) · profile ${activeProfileName}`;
+        })(),
       });
     }
   },
@@ -2530,11 +2604,20 @@ render();
 loop.start();
 // Boot state loads persistent slices, then hands over (AF-016 Boot's job).
 void (async () => {
+  settings = await settingsSlice.load();
   researchTree.loadSave(await researchSlice.load());
   crafting.loadSave(await craftingSlice.load());
   meta.loadSave(await metaSlice.load());
   inventory.loadSave(await inventorySlice.load());
   collectionLedger.loadSave(await collectionLedgerSlice.load());
+  // AF-044: Save Slots — every install always has at least a Primary Profile.
+  let profiles = await saveProfileManager.list();
+  if (profiles.length === 0) {
+    await saveProfileManager.create("Commander", "primary");
+    profiles = await saveProfileManager.list();
+  }
+  const activeId = await saveProfileManager.activeProfileId();
+  activeProfileName = profiles.find((p) => p.id === activeId)?.name ?? "—";
   machine.transitionTo("Splash");
   log.info("boot", "Afterlight core gameplay skeleton started", {
     researchUnlocked: researchTree.snapshot.unlockedCount,
