@@ -6,7 +6,7 @@
 
 **Dependencies:** `game/movement` (`MovementProfile` — the ship's movement profile IS this type, finally populating AF-020's reserved handling fields). `game/equipment` (`ActiveModule`, `EquipmentBonus`, `PassiveTrigger`, `BonusTotals` — reused, not duplicated). Mastery/progression are `game/meta`'s existing `ship:<id>` tracks — this module adds no persistence beyond the one new resource below.
 
-**New resource — Energy:** the first genuinely new numeric resource added to the game (AF-031), scoped tightly to ability activation cost. Regenerates continuously; abilities are gated on both cooldown *and* available energy.
+**New resource — Energy:** the first genuinely new numeric resource added to the game (AF-031), scoped tightly to ability activation cost. Regenerates continuously; abilities are gated on both cooldown *and* available energy. AF-032 widens this scope: `ShipRuntime.trySpendEnergy()` lets weapons with a non-zero Energy Cost draw from the same pool — still one resource, not two.
 
 **Data structures:** `ShipDef`, `ShipPassive`, `ShipAbility` (an `ActiveModule` plus `energyCost`), `ShipSnapshot`.
 

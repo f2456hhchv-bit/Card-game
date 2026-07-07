@@ -39,6 +39,13 @@ export class ShipRuntime {
     return true;
   }
 
+  /** AF-032 scope extension: weapons with a non-zero Energy Cost draw from this same pool. */
+  trySpendEnergy(amount: number): boolean {
+    if (this.energy < amount) return false;
+    this.energy -= amount;
+    return true;
+  }
+
   /** Passive bonus — feeds the shared BonusTotals shape. */
   get bonuses(): BonusTotals {
     const totals: BonusTotals = {};

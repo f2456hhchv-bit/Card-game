@@ -40,6 +40,8 @@ export interface DebugSnapshot {
   commander: string | null;
   /** Ship summary: name, class, energy, ability cooldown (AF-031 §11). */
   ships: string | null;
+  /** Weapon summary: name, category/pattern, shots fired, live projectiles, crit rate (AF-032 §DEBUG). */
+  weapons: string | null;
 }
 
 export class DebugOverlay {
@@ -93,6 +95,7 @@ export class DebugOverlay {
       `relics     ${snapshot.relics ?? "—"}`,
       `commander  ${snapshot.commander ?? "—"}`,
       `ships      ${snapshot.ships ?? "—"}`,
+      `weapons    ${snapshot.weapons ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
