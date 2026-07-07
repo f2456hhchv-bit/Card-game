@@ -59,6 +59,8 @@ import { Inventory, type InventorySaveData } from "./game/inventory/Inventory";
 import { DEFAULT_INVENTORY_TUNING } from "./game/inventory/inventoryData";
 import { validateLoadout, aggregateLoadout } from "./game/equipment/EquipmentAggregate";
 import { SANDBOX_EQUIPMENT, SANDBOX_SETS } from "./game/equipment/equipmentData";
+import { RelicSystem } from "./game/relics/RelicSystem";
+import { SANDBOX_RELICS } from "./game/relics/relicData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -413,6 +415,15 @@ const sandboxLoadoutSlots: Partial<Record<import("./game/equipment/equipmentData
 };
 const sandboxEquipmentById = new Map(SANDBOX_EQUIPMENT.map((item) => [item.id, item]));
 
+// ── Relics (AF-029): in-run discoveries, apply on pickup, reset per run.
+let relicSystem = new RelicSystem(SANDBOX_RELICS);
+function newRelicSystem(): RelicSystem {
+  return new RelicSystem(SANDBOX_RELICS, (from, to) => {
+    lootNotices.push({ text: `EVOLVED · ${from.name.toUpperCase()} → ${to.name.toUpperCase()}`, colour: "#ffc652", ttlMs: 2600 });
+    bus.emit("RelicEvolved", { fromId: from.id, toId: to.id });
+  });
+}
+
 function equipmentEffects() {
   const validation = validateLoadout(sandboxLoadoutSlots, sandboxEquipmentById);
   if (!validation.ok) {
@@ -564,7 +575,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
             ...NEUTRAL_MODIFIERS,
             weapon: sandboxBuild.weaponBonus,
             research: sandboxBuild.researchWeaponBonus,
-            equipment: sandboxBuild.equipmentWeaponBonus,
+            equipment: sandboxBuild.equipmentWeaponBonus + (relicSystem.aggregate.bonuses.damage ?? 0),
           },
           { values: {} },
           DEFAULT_COMBAT_TUNING,
@@ -588,6 +599,15 @@ function updateSandboxCombat(fixedDtMs: number): void {
           director.notifyEnemiesRemoved(1, drone.elite ? 1 : 0);
           xpPickups?.spawn(drone.elite ? "elite" : "medium", drone.x, drone.y);
           if (drone.elite || (lootRng && lootRng.next() < 0.08)) dropLoot(drone.x, drone.y);
+          // AF-029: elites never simply drop gold — relic pool applies on pickup.
+          if (drone.elite && lootRng) {
+            const relicId = lootRng.pick(SANDBOX_RELICS.map((r) => r.id));
+            const result = relicSystem.acquire(relicId);
+            if (result.ok) {
+              lootNotices.push({ text: `RELIC · ${relicId.toUpperCase().replaceAll("-", " ")}`, colour: "#9b5cff", ttlMs: 2200 });
+              bus.emit("RelicAcquired", { relicId });
+            }
+          }
         }
         projectile.live = false;
         break;
@@ -736,6 +756,7 @@ function startRun(): void {
     });
   }
   currentOffer = [];
+  relicSystem = newRelicSystem();
   xpSystem = new XpSystem(DEFAULT_XP_TUNING, null, (level) =>
     bus.emit("CommanderLevelUp", { level }),
   );
@@ -1303,6 +1324,7 @@ const loop = new GameLoop({
           const eq = equipmentEffects();
           return `wpn +${((eq.bonuses.damage ?? 0) * 100).toFixed(0)}% · shield +${(eq.bonuses.shieldCapacity ?? 0).toFixed(0)} · sets ${eq.activeSetBonuses.length} · pwr ${eq.powerRating}`;
         })(),
+        relics: `active ${relicSystem.activeRelicIds.length} [${relicSystem.activeRelicIds.join(", ") || "none"}] · synergies ${relicSystem.aggregate.synergies.length}`,
       });
     }
   },

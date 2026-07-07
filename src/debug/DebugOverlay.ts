@@ -34,6 +34,8 @@ export interface DebugSnapshot {
   inventory: string | null;
   /** Equipment summary: bonuses, set count, power rating (AF-028 §10). */
   equipment: string | null;
+  /** Relic summary: active relics, synergies (AF-029 §9). */
+  relics: string | null;
 }
 
 export class DebugOverlay {
@@ -84,6 +86,7 @@ export class DebugOverlay {
       `meta       ${snapshot.meta ?? "—"}`,
       `inventory  ${snapshot.inventory ?? "—"}`,
       `equipment  ${snapshot.equipment ?? "—"}`,
+      `relics     ${snapshot.relics ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -58,4 +58,8 @@ export interface GameEvents extends Record<string, unknown> {
   ChallengeCompleted: { challengeId: string; rewardKind: string; rewardId: string };
   /** The account gained a level — permanent, never resets (AF-026 §2). */
   AccountLevelUp: { level: number };
+  /** A relic was acquired mid-run — applies on pickup (AF-029 §1). */
+  RelicAcquired: { relicId: string };
+  /** A relic evolved into a new form (AF-029 §6). */
+  RelicEvolved: { fromId: string; toId: string };
 }
