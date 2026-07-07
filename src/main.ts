@@ -97,6 +97,8 @@ import { CELESTIAL_ENEMIES, GRAVITY_WELL_TUNING, LORE_CELESTIAL_CONCLAVE_CODEX, 
 import { CelestialConstellationRuntime } from "./game/enemies/CelestialConstellation";
 import { ECLIPSED_ENEMIES, LORE_ECLIPSED_CODEX } from "./game/enemies/eclipsedData";
 import { EclipsedCorruptionRuntime } from "./game/enemies/EclipsedCorruption";
+import { DirectorConductor } from "./game/director/DirectorConductor";
+import { WAVE_TYPE_TO_ENCOUNTER_TYPE, pressureFor } from "./game/director/conductorData";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -143,6 +145,9 @@ const bus = new EventBus<GameEvents>();
 let session: RunSessionRecord | null = null;
 let sessionMs = 0;
 let director: EnemyDirector | null = null;
+// AF-056: the Conductor sits OVER the locked AF-017 Director — it never
+// touches enemy stats or budgets, only shapes WHEN directives land.
+let conductor: DirectorConductor<SpawnDirective> | null = null;
 
 const input = new ActionInput(DEFAULT_INPUT_TUNING, DEFAULT_BINDINGS);
 new KeyboardMouseAdapter(input).attach();
@@ -583,6 +588,9 @@ saveCoordinator.register({ id: "meta", toSave: () => meta.toSave(), loadSave: (d
 
 // The ledger listens; gameplay systems never know meta exists (AF-001 §7).
 bus.on("EnemyKilled", ({ enemyId, elite, boss }) => {
+  // AF-056: breathing room after Elite Battles and Boss Phases — pacing, not stats.
+  if (elite) conductor?.openRecoveryWindow("eliteBattles");
+  if (boss) conductor?.openRecoveryWindow("bossPhases");
   meta.recordStat("enemiesDestroyed");
   meta.addMasteryCounter("weapon:test-cannon", "kills");
   meta.addMasteryXp("weapon:test-cannon", elite ? 5 : 1);
@@ -610,6 +618,7 @@ bus.on("DamageDealt", ({ amount, critical }) => {
   }
 });
 bus.on("PlayerDamaged", ({ amount }) => {
+  conductor?.recordPlayerDamaged(amount); // AF-056: Adaptive Response's live damageTaken input
   meta.recordStat("damageTaken", amount);
   if (bossRuntime) bossFightDamageTaken = true; // AF-035: gates the "No Damage" mastery challenge.
   missionRuntime?.recordProgress("missionDamageTaken", amount); // AF-037: gates the No Damage optional objective.
@@ -623,6 +632,9 @@ bus.on("CommanderLevelUp", () => {
 // AF-049: Void Distortion is one of AF-017's existing EnvironmentalEvent
 // outcomes — reacting to the fact the Director already emits, no Director change.
 bus.on("EnvironmentalEventTriggered", ({ eventType }) => {
+  // AF-056: breathing room after Major Events — the window opens once the
+  // event (including any faction entrance below) has landed.
+  conductor?.openRecoveryWindow("majorEvents");
   if (eventType === "VoidDistortion") spawnVoidSwarmFromEvent();
   // AF-050: Ancient Signal is one of AF-017's existing EnvironmentalEvent outcomes.
   if (eventType === "AncientSignal") spawnAncientSiteFromEvent();
@@ -653,6 +665,8 @@ bus.on("LootCollected", ({ itemId, rarity }) => {
   meta.discover("equipment", itemId);
   if (rarity === "legendary" || rarity === "ancient" || rarity === "mythic" || rarity === "singularity") {
     meta.recordStat("rareItemsFound");
+    // AF-056: a Resource Discovery earns breathing room to enjoy it in.
+    conductor?.openRecoveryWindow("resourceDiscoveries");
   }
 });
 bus.on("ResearchUnlocked", ({ nodeId }) => {
@@ -1633,7 +1647,23 @@ function killDrone(drone: Drone): void {
   }
 }
 
+/** AF-056: the Conductor's gate — ordinary directives can wait out a Recovery
+ * Window in the Spawn Queue; boss timing is AF-017/035's own domain and is
+ * never deferred. Deferred directives flush from the per-tick update. */
 function spawnWave(directive: SpawnDirective): void {
+  if (!conductor || directive.waveType === "MiniBossWave" || directive.waveType === "BossWave") {
+    executeWave(directive);
+    return;
+  }
+  const released = conductor.gateDirective(directive);
+  if (released.length === 0) {
+    // Visual threat indicator (AF-056 §Accessibility): the held encounter is named, not hidden.
+    lootNotices.push({ text: `${WAVE_TYPE_TO_ENCOUNTER_TYPE[directive.waveType].toUpperCase()} HOLDING — RECOVERY WINDOW`, colour: "#8a94a8", ttlMs: 2200 });
+  }
+  for (const gated of released) executeWave(gated);
+}
+
+function executeWave(directive: SpawnDirective): void {
   if (!movement || !combatRng || !director) return;
   const player = movement.snapshot;
   // AF-046: the Director's existing AmbushEvent wave identity becomes the
@@ -1680,6 +1710,8 @@ function spawnWave(directive: SpawnDirective): void {
       spawnEclipsed(x, y);
       director.notifyEnemiesSpawned(6, 1); // champion spawns as an AF-034 Elite
     }
+    // AF-056: a full faction group is a Large Enemy Wave — it earns breathing room.
+    conductor?.notifyWaveLanded(6);
     return;
   }
   // Remaining generic waves (SwarmWave, MiniBossWave overflow, etc.) — never
@@ -1695,6 +1727,7 @@ function spawnWave(directive: SpawnDirective): void {
     spawnEnemyInstance(baseDef, x, y, false);
   }
   director.notifyEnemiesSpawned(count, 0);
+  conductor?.notifyWaveLanded(count);
 }
 
 /** AF-035: the Boss spawns once per run, triggered by the Director's existing MiniBoss phase. */
@@ -2078,6 +2111,16 @@ function updateSandboxCombat(fixedDtMs: number): void {
         return;
       }
     }
+  }
+
+  // AF-056: the Conductor's clock — advance the Recovery Window, feed the
+  // live playerHealth input, and land whatever the Spawn Queue releases
+  // this tick (two different faction directives flushing together IS a
+  // dual-faction moment).
+  if (conductor) {
+    const defence = playerDefence.snapshot;
+    const released = conductor.update(fixedDtMs, defence.maxHull > 0 ? defence.hull / defence.maxHull : 1);
+    for (const directive of released) executeWave(directive);
   }
 
   // AF-055: the Eclipsed — every member's personal fall advances (slowed by
@@ -2857,6 +2900,7 @@ function startRun(): void {
       lootBankedCount += 1; // banked to Results — value preserved (AF-023 §6)
     },
   );
+  conductor = new DirectorConductor<SpawnDirective>(); // AF-056: run-scoped, like the Director itself
   director = new EnemyDirector({
     // AF-037: a mission modifier may widen Elite Squads for this run only —
     // a per-run tuning clone, never a change to the shared DirectorTuning constant.
@@ -4003,6 +4047,15 @@ const loop = new GameLoop({
             })
             .join("; ");
           return `expeditions ${eclipsedGroups.length} [${lines}]`;
+        })(),
+        conductor: (() => {
+          if (!conductor || !director) return null;
+          const snap = conductor.snapshot;
+          const pressure = pressureFor(director.snapshot.phase, snap.windowOpen);
+          const window = snap.windowOpen
+            ? `recovery ${(snap.windowRemainingMs / 1000).toFixed(1)}s (${snap.lastTrigger})`
+            : `no window (cooldown ${(snap.cooldownRemainingMs / 1000).toFixed(1)}s)`;
+          return `${pressure} · ${window} · queue ${snap.queuedDirectives} · struggle ${(snap.struggleScore * 100).toFixed(0)}% · windows ${snap.windowsOpened}`;
         })(),
       });
     }

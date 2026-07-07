@@ -86,6 +86,8 @@ export interface DebugSnapshot {
   celestialConstellations: string | null;
   /** Eclipsed summary: expedition count, per-member corruption stages, warden state, mirror %, echoes (AF-055 §DEBUG). */
   eclipsed: string | null;
+  /** Conductor summary: pressure, recovery window + trigger, spawn queue, struggle score (AF-056 §DEBUG). */
+  conductor: string | null;
 }
 
 export class DebugOverlay {
@@ -162,6 +164,7 @@ export class DebugOverlay {
       `paragon    ${snapshot.paragonProtocols ?? "—"}`,
       `celestial  ${snapshot.celestialConstellations ?? "—"}`,
       `eclipsed   ${snapshot.eclipsed ?? "—"}`,
+      `conductor  ${snapshot.conductor ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
