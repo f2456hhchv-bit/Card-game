@@ -65,9 +65,15 @@ import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { WeaponRuntime } from "./game/weapons/WeaponRuntime";
-import { SANDBOX_WEAPONS } from "./game/weapons/weaponData";
+import { SANDBOX_WEAPONS, type StatusOnHit } from "./game/weapons/weaponData";
 import { stepProjectile } from "./game/weapons/ProjectileBehaviour";
+import { computeShotAngles } from "./game/weapons/FirePattern";
 import { StatusEngine } from "./game/combat/StatusEngine";
+import type { DamageSchool, DamageSourceKind } from "./game/combat/combatTuning";
+import { SANDBOX_ENEMIES, applyEliteModifier, type EnemyDef } from "./game/enemies/enemyData";
+import { EnemyRuntime } from "./game/enemies/EnemyRuntime";
+import { stepEnemyMovement } from "./game/enemies/EnemyMovement";
+import { hasDeathEvent } from "./game/enemies/DeathEvents";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -104,20 +110,25 @@ const camera = new Camera(DEFAULT_CAMERA_TUNING, 32, 18);
 let movement: PlayerMovement | null = null;
 let sandboxCanvas: HTMLCanvasElement | null = null;
 
-// ── Sandbox combat (AF-021): director directives materialise as drones,
-// a test cannon fires back through the real pipeline. Replaced by proper
-// enemy/weapon modules later; the framework underneath is the deliverable.
+// ── Sandbox combat (AF-021/AF-033): director directives materialise as
+// EnemyDef-driven drones; the framework underneath is the deliverable.
 interface Drone {
   id: string;
   x: number;
   y: number;
+  // AF-033: EnemyMovementState fields — stepEnemyMovement mutates these directly.
+  elapsedMs: number;
+  strafeDirection: 1 | -1;
+  phase: "hidden" | "active";
   hull: number;
   maxHull: number;
   elite: boolean;
   alive: boolean;
-  contactCooldownMs: number;
   /** AF-032: weapons apply statuses through this same engine — no per-drone reimplementation. */
   status: StatusEngine;
+  /** AF-033: identity + behaviour source of truth — elite-adjusted view if applicable. */
+  def: EnemyDef;
+  runtime: EnemyRuntime;
 }
 
 interface TestProjectile {
@@ -135,6 +146,15 @@ interface TestProjectile {
   reversed: boolean;
   behaviour: (typeof SANDBOX_WEAPONS)[number]["projectileBehaviour"];
   pierceRemaining: number;
+  // AF-033: enemy-fired projectiles carry their own damage packet — they hit the
+  // player, not other drones, so they can't read it from the player's build.
+  hostile: boolean;
+  damageBaseDamage: number;
+  damageCritChance: number;
+  damageCritMultiplier: number;
+  damageSchool: DamageSchool;
+  damageSourceKind: DamageSourceKind;
+  statusOnHit: StatusOnHit | null;
 }
 
 interface DamagePopup {
@@ -161,6 +181,13 @@ const projectilePool = new Pool<TestProjectile>({
     reversed: false,
     behaviour: "straight",
     pierceRemaining: 0,
+    hostile: false,
+    damageBaseDamage: 0,
+    damageCritChance: 0,
+    damageCritMultiplier: 1,
+    damageSchool: "physical",
+    damageSourceKind: "direct",
+    statusOnHit: null,
   }),
   reset: (p) => (p.live = false),
 });
@@ -173,11 +200,12 @@ let drones: Drone[] = [];
 let projectiles: TestProjectile[] = [];
 let popups: DamagePopup[] = [];
 let playerDefence: DefenceState | null = null;
+/** AF-033: enemy status-on-hit applies here — bridges into AF-020 movement exactly as StatusEngine already documents. */
+let playerStatus: StatusEngine | null = null;
 let combatRng: Rng | null = null;
 let droneCounter = 0;
 let hitCount = 0;
 let critCount = 0;
-const DRONE_PACKET = { baseDamage: 6, kind: "direct", school: "physical", critChance: 0, critMultiplier: 1 } as const;
 
 // ── Sandbox XP & upgrades (AF-022): kills drop gems, gems level you up,
 // levels present real build choices. Placeholder upgrade content — the
@@ -493,22 +521,71 @@ function dropLoot(x: number, y: number): void {
   bus.emit("LootDropped", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category, seed: drop.seed });
 }
 
+/** AF-033: shared spawn path — normal wave spawning and death-triggered Spawn Events both use it. */
+function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: boolean): void {
+  const def = elite ? applyEliteModifier(baseDef) : baseDef;
+  droneCounter += 1;
+  const droneId = `drone-${droneCounter}`;
+  drones.push({
+    id: droneId,
+    x,
+    y,
+    elapsedMs: 0,
+    strafeDirection: 1,
+    phase: "hidden",
+    hull: def.hull,
+    maxHull: def.hull,
+    elite,
+    alive: true,
+    status: new StatusEngine({
+      onTickDamage: (_kind, amount) => {
+        const target = drones.find((d) => d.id === droneId);
+        if (target) target.hull -= amount;
+      },
+    }),
+    def,
+    runtime: new EnemyRuntime(def),
+  });
+}
+
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
 function killDrone(drone: Drone): void {
   drone.alive = false;
+  drone.runtime.ai.transitionTo("death");
   bus.emit("EnemyKilled", { enemyId: drone.id, elite: drone.elite, boss: false });
   commanderRuntime?.notifyKill();
   director?.notifyEnemiesRemoved(1, drone.elite ? 1 : 0);
-  xpPickups?.spawn(drone.elite ? "elite" : "medium", drone.x, drone.y);
-  if (drone.elite || (lootRng && lootRng.next() < 0.08)) dropLoot(drone.x, drone.y);
+  // AF-033: Death Events are configuration over this same unconditional EnemyKilled fact.
+  if (hasDeathEvent(drone.def, "xp")) {
+    xpPickups?.spawn(drone.elite ? "elite" : drone.def.xpTier, drone.x, drone.y);
+  }
+  if (hasDeathEvent(drone.def, "loot") && (drone.elite || (lootRng && lootRng.next() < 0.08))) {
+    dropLoot(drone.x, drone.y);
+  }
   // AF-029: elites never simply drop gold — relic pool applies on pickup.
-  if (drone.elite && lootRng) {
+  if (drone.elite && lootRng && hasDeathEvent(drone.def, "loot")) {
     const relicId = lootRng.pick(SANDBOX_RELICS.map((r) => r.id));
     const result = relicSystem.acquire(relicId);
     if (result.ok) {
       lootNotices.push({ text: `RELIC · ${relicId.toUpperCase().replaceAll("-", " ")}`, colour: "#9b5cff", ttlMs: 2200 });
       bus.emit("RelicAcquired", { relicId });
     }
+  }
+  // AF-033: Status Explosion — StatusEngine.apply() in a radius, reusing AF-021's engine exactly.
+  if (hasDeathEvent(drone.def, "statusExplosion") && drone.def.attack.mechanism.kind === "ranged") {
+    const statusOnHit = drone.def.attack.mechanism.weapon.statusOnHit;
+    if (statusOnHit) {
+      for (const other of drones) {
+        if (!other.alive || other.id === drone.id) continue;
+        if (Math.hypot(other.x - drone.x, other.y - drone.y) <= 3) {
+          other.status.apply({ kind: statusOnHit.kind, strength: statusOnHit.strength, durationMs: statusOnHit.durationMs });
+        }
+      }
+    }
+  }
+  // AF-033: Spawn Event — death-triggered spawn, reusing this module's own spawn path, not a second one.
+  if (hasDeathEvent(drone.def, "spawnEvent")) {
+    spawnEnemyInstance(SANDBOX_ENEMIES[0]!, drone.x, drone.y, false);
   }
 }
 
@@ -524,24 +601,8 @@ function spawnWave(directive: SpawnDirective): void {
     const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
     const x = Math.min(ARENA.maxX - 1, Math.max(ARENA.minX + 1, player.x + Math.cos(angle) * distance));
     const y = Math.min(ARENA.maxY - 1, Math.max(ARENA.minY + 1, player.y + Math.sin(angle) * distance));
-    droneCounter += 1;
-    const droneId = `drone-${droneCounter}`;
-    drones.push({
-      id: droneId,
-      x,
-      y,
-      hull: elite ? 90 : 24,
-      maxHull: elite ? 90 : 24,
-      elite,
-      alive: true,
-      contactCooldownMs: 0,
-      status: new StatusEngine({
-        onTickDamage: (_kind, amount) => {
-          const target = drones.find((d) => d.id === droneId);
-          if (target) target.hull -= amount;
-        },
-      }),
-    });
+    const baseDef = combatRng.pick(SANDBOX_ENEMIES);
+    spawnEnemyInstance(baseDef, x, y, elite);
   }
   director.notifyEnemiesSpawned(count, directive.waveType === "EliteSquad" ? count : 0);
 }
@@ -551,29 +612,59 @@ function updateSandboxCombat(fixedDtMs: number): void {
   const dt = fixedDtMs / 1000;
   const player = movement.snapshot;
 
-  // Drones seek the player; contact damage through the real pipeline.
+  // AF-033: EnemyDef governs movement/attack; melee is contact damage through
+  // the real pipeline, ranged fires a real WeaponDef through the same engine
+  // the player's weapon uses.
   for (const drone of drones) {
     if (!drone.alive) continue;
     // AF-032: statuses a weapon applied tick down through the same StatusEngine as the player's.
     drone.status.update(fixedDtMs);
+    drone.runtime.update(fixedDtMs);
     if (drone.hull <= 0) {
       killDrone(drone);
       continue;
     }
+
+    // AF-033: advance the AI state chain — idle→patrol→search→targetAcquired
+    // happens immediately (no patrol waypoints yet); attack is entered the
+    // tick a telegraphed attack resolves and exited back to targetAcquired.
+    const aiState = drone.runtime.ai.current;
+    if (aiState === "idle") drone.runtime.ai.transitionTo("patrol");
+    else if (aiState === "patrol") drone.runtime.ai.transitionTo("search");
+    else if (aiState === "search") drone.runtime.ai.transitionTo("targetAcquired");
+    else if (aiState === "attack") drone.runtime.ai.transitionTo("targetAcquired");
+
+    const enrage = drone.runtime.specialAbilityBonus(drone.hull / drone.maxHull);
+    const speedMultiplier = 1 + (enrage.movementSpeed ?? 0);
+    const damageMultiplier = 1 + (enrage.damage ?? 0);
+    const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
+
+    stepEnemyMovement(drone.def.movementBehaviour, drone, fixedDtMs, {
+      targetX: player.x,
+      targetY: player.y,
+      speed: drone.def.moveSpeed * speedMultiplier * statusSlow,
+      bounds: ARENA,
+      preferredRange: 6,
+    });
+
     const dx = player.x - drone.x;
     const dy = player.y - drone.y;
-    const distance = Math.hypot(dx, dy);
-    if (distance > 0.01) {
-      const slowed = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
-      const speed = (drone.elite ? 1.8 : 2.4) * slowed;
-      drone.x += (dx / distance) * speed * dt;
-      drone.y += (dy / distance) * speed * dt;
-    }
-    drone.contactCooldownMs = Math.max(0, drone.contactCooldownMs - fixedDtMs);
-    if (distance < 1.0 && drone.contactCooldownMs === 0) {
-      drone.contactCooldownMs = 700;
-      if (!player.invulnerable) {
-        const result = resolveDamage(DRONE_PACKET, NEUTRAL_MODIFIERS, { values: {} }, DEFAULT_COMBAT_TUNING, combatRng);
+    const distance = Math.hypot(dx, dy) || 0.0001;
+
+    if (drone.def.attack.mechanism.kind === "melee") {
+      const mechanism = drone.def.attack.mechanism;
+      const canEngage = distance <= mechanism.contactRangeUnits;
+      const attackResolved = drone.runtime.tryAttack(canEngage);
+      if (attackResolved) drone.runtime.ai.transitionTo("attack");
+      if (attackResolved && !player.invulnerable) {
+        const packet = {
+          baseDamage: mechanism.baseDamage * damageMultiplier,
+          kind: "direct",
+          school: mechanism.damageSchool,
+          critChance: 0,
+          critMultiplier: 1,
+        } as const;
+        const result = resolveDamage(packet, NEUTRAL_MODIFIERS, { values: {} }, DEFAULT_COMBAT_TUNING, combatRng);
         const intake = playerDefence.takeDamage(result.finalDamage);
         bus.emit("PlayerDamaged", { amount: result.finalDamage, source: drone.id });
         movement.applyImpulse((-dx / distance) * 5, (-dy / distance) * 5, 100);
@@ -586,6 +677,38 @@ function updateSandboxCombat(fixedDtMs: number): void {
         if (intake.defeated) {
           endRun("defeat");
           return;
+        }
+      }
+    } else {
+      const weapon = drone.def.attack.mechanism.weapon;
+      const canEngage = distance <= weapon.range;
+      if (drone.runtime.tryAttack(canEngage)) {
+        drone.runtime.ai.transitionTo("attack");
+        const angle = Math.atan2(dy, dx);
+        const shotAngles = computeShotAngles(weapon.firePattern, weapon.projectilesPerShot, angle);
+        for (const shotAngle of shotAngles) {
+          const projectile = projectilePool.acquire();
+          projectile.x = drone.x;
+          projectile.y = drone.y;
+          projectile.originX = drone.x;
+          projectile.originY = drone.y;
+          projectile.velocityX = Math.cos(shotAngle) * weapon.projectileSpeed;
+          projectile.velocityY = Math.sin(shotAngle) * weapon.projectileSpeed;
+          projectile.ttlMs = (weapon.range / weapon.projectileSpeed) * 1000 + 200;
+          projectile.elapsedMs = 0;
+          projectile.bouncesRemaining = 1;
+          projectile.reversed = false;
+          projectile.behaviour = weapon.projectileBehaviour;
+          projectile.pierceRemaining = weapon.pierceCount;
+          projectile.hostile = true;
+          projectile.damageBaseDamage = weapon.baseDamage * damageMultiplier;
+          projectile.damageCritChance = weapon.critChance;
+          projectile.damageCritMultiplier = weapon.critMultiplier;
+          projectile.damageSchool = weapon.damageSchool;
+          projectile.damageSourceKind = weapon.damageSourceKind;
+          projectile.statusOnHit = weapon.statusOnHit;
+          projectile.live = true;
+          projectiles.push(projectile);
         }
       }
     }
@@ -645,6 +768,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
   }
 
   // Projectiles advance (deterministic per-behaviour motion, AF-032 §2) and resolve hits.
+  // AF-033: hostile (enemy-fired) projectiles hit the player, never other drones.
   for (const projectile of projectiles) {
     if (!projectile.live) continue;
     stepProjectile(projectile.behaviour, projectile, fixedDtMs, { bounds: ARENA });
@@ -653,6 +777,44 @@ function updateSandboxCombat(fixedDtMs: number): void {
       projectile.live = false;
       continue;
     }
+
+    if (projectile.hostile) {
+      if (Math.hypot(player.x - projectile.x, player.y - projectile.y) < 0.6) {
+        projectile.live = false;
+        if (!player.invulnerable) {
+          const packet = {
+            baseDamage: projectile.damageBaseDamage,
+            kind: projectile.damageSourceKind,
+            school: projectile.damageSchool,
+            critChance: projectile.damageCritChance,
+            critMultiplier: projectile.damageCritMultiplier,
+          } as const;
+          const result = resolveDamage(packet, NEUTRAL_MODIFIERS, { values: {} }, DEFAULT_COMBAT_TUNING, combatRng);
+          const intake = playerDefence.takeDamage(result.finalDamage);
+          bus.emit("PlayerDamaged", { amount: result.finalDamage, source: "enemy-projectile" });
+          if (intake.shieldBroken) {
+            bus.emit("ShieldBroken", { targetId: "player" });
+            camera.shake("ShieldBreak");
+          } else {
+            camera.shake("WeaponImpact");
+          }
+          if (projectile.statusOnHit && playerStatus && combatRng.next() < projectile.statusOnHit.chance) {
+            playerStatus.apply({
+              kind: projectile.statusOnHit.kind,
+              strength: projectile.statusOnHit.strength,
+              durationMs: projectile.statusOnHit.durationMs,
+            });
+            bus.emit("StatusApplied", { targetId: "player", status: projectile.statusOnHit.kind });
+          }
+          if (intake.defeated) {
+            endRun("defeat");
+            return;
+          }
+        }
+      }
+      continue;
+    }
+
     for (const drone of drones) {
       if (!drone.alive) continue;
       if (Math.hypot(drone.x - projectile.x, drone.y - projectile.y) < 0.6) {
@@ -820,6 +982,9 @@ function startRun(): void {
   camera.setBounds(ARENA);
   camera.snapTo(30, 17);
   playerDefence = new DefenceState(sandboxShip.shield, sandboxShip.hull, DEFAULT_COMBAT_TUNING);
+  playerStatus = new StatusEngine({
+    onTickDamage: (_kind, amount) => playerDefence?.takeDamage(amount),
+  });
   combatRng = new Rng(seed).fork("combat");
   drones = [];
   projectiles = [];
@@ -1369,6 +1534,12 @@ const loop = new GameLoop({
       director?.update(fixedDtMs);
       if (movement) {
         if (input.consumeBuffered("Boost")) movement.tryBoost();
+        // AF-033: enemy status-on-hit reaches the player through the exact
+        // AF-020 movement bridge StatusEngine already documents.
+        if (playerStatus) {
+          playerStatus.update(fixedDtMs);
+          for (const modifier of playerStatus.movementModifiers) movement.addModifier(modifier);
+        }
         const move = input.movement;
         movement.update(fixedDtMs, move.x, move.y);
         updateSandboxCombat(fixedDtMs);
@@ -1450,6 +1621,17 @@ const loop = new GameLoop({
         weapons: weaponRuntime
           ? `${sandboxWeapon.name} (${sandboxWeapon.category}/${sandboxWeapon.firePattern}) · shots ${weaponRuntime.snapshot.shotsFired} · proj ${projectiles.filter((p) => p.live).length} · dmg ${hitCount > 0 ? ((critCount / hitCount) * 100).toFixed(0) : 0}%crit`
           : null,
+        enemies: (() => {
+          const alive = drones.filter((d) => d.alive);
+          if (alive.length === 0) return "none active";
+          const px = movement?.snapshot.x ?? 0;
+          const py = movement?.snapshot.y ?? 0;
+          const nearest = alive.reduce((closest, d) =>
+            Math.hypot(d.x - px, d.y - py) < Math.hypot(closest.x - px, closest.y - py) ? d : closest,
+          );
+          const eliteCount = alive.filter((d) => d.elite).length;
+          return `active ${alive.length} (${eliteCount}E) · nearest ${nearest.def.name} [${nearest.runtime.snapshot.state}]${nearest.runtime.isTelegraphing ? " TELEGRAPH" : ""} · hull ${nearest.hull.toFixed(0)}/${nearest.maxHull}`;
+        })(),
       });
     }
   },

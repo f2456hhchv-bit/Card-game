@@ -42,6 +42,8 @@ export interface DebugSnapshot {
   ships: string | null;
   /** Weapon summary: name, category/pattern, shots fired, live projectiles, crit rate (AF-032 §DEBUG). */
   weapons: string | null;
+  /** Enemy summary: active/elite count, nearest enemy's AI state + telegraph + hull (AF-033 §DEBUG). */
+  enemies: string | null;
 }
 
 export class DebugOverlay {
@@ -96,6 +98,7 @@ export class DebugOverlay {
       `commander  ${snapshot.commander ?? "—"}`,
       `ships      ${snapshot.ships ?? "—"}`,
       `weapons    ${snapshot.weapons ?? "—"}`,
+      `enemies    ${snapshot.enemies ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
