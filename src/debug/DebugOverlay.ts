@@ -76,6 +76,8 @@ export interface DebugSnapshot {
   voidSwarm: string | null;
   /** Ancient summary: site count, security stage, alert %, ceiling %, node count (AF-050 §DEBUG). */
   ancientSecurity: string | null;
+  /** Xeno summary: hive count, evolution stage, biomass %, link state, acid pools (AF-051 §DEBUG). */
+  xenoHive: string | null;
 }
 
 export class DebugOverlay {
@@ -147,6 +149,7 @@ export class DebugOverlay {
       `crystals   ${snapshot.crystals ?? "—"}`,
       `void       ${snapshot.voidSwarm ?? "—"}`,
       `ancient    ${snapshot.ancientSecurity ?? "—"}`,
+      `xeno       ${snapshot.xenoHive ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

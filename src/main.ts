@@ -87,6 +87,8 @@ import { LORE_VOID_CORRUPTION_ARCHIVE, VOID_ENEMIES, VOID_ZONE_TUNING, createCor
 import { VoidCorruptionRuntime } from "./game/enemies/VoidCorruption";
 import { ANCIENT_ENEMIES, ANCIENT_SECURITY_TUNING, LORE_ANCIENT_CUSTODIANS_CODEX } from "./game/enemies/ancientData";
 import { AncientSecurityRuntime } from "./game/enemies/AncientSecurity";
+import { LORE_XENOMORPH_HIVE_CODEX, XENO_ENEMIES, createAcidPool } from "./game/enemies/xenoData";
+import { HiveEvolutionRuntime } from "./game/enemies/HiveEvolution";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -189,6 +191,8 @@ interface Drone {
   swarmId: string | null;
   /** AF-050: Ancient Custodian site membership — null for every non-site enemy. */
   siteId: string | null;
+  /** AF-051: Xenomorph Hive membership — null for every non-hive enemy. */
+  hiveId: string | null;
 }
 
 interface TestProjectile {
@@ -924,6 +928,7 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     ecosystemId: null,
     swarmId: null,
     siteId: null,
+    hiveId: null,
   });
   return droneId;
 }
@@ -1144,6 +1149,43 @@ function spawnAncientSiteFromEvent(): void {
   director.notifyEnemiesSpawned(6, 1); // the Executor spawns as an AF-034 Elite
 }
 
+// ── AF-051: Bio-Engineered Xenomorphs — the sixth doctrine, and the first
+// whose core meter only ever grows: Biomass climbs from every death,
+// including the Hive's own, and never decreases. Hives are run-scoped like
+// every other structure; Acid Pools reuse AF-035's exact hazard engine.
+let xenoHives: HiveEvolutionRuntime[] = [];
+let xenoHiveCounter = 0;
+let acidPools: Array<{ zone: HazardZoneDef; state: HazardZoneState }> = [];
+let acidPoolCounter = 0;
+
+function hiveOf(drone: Drone): HiveEvolutionRuntime | null {
+  if (!drone.hiveId) return null;
+  return xenoHives.find((h) => h.hiveId === drone.hiveId) ?? null;
+}
+
+/** A Xenomorph incursion: an AF-034 Elite Living Titan plus its five
+ * supporting organisms, all through the existing shared spawn path. */
+function spawnHive(anchorX: number, anchorY: number): void {
+  xenoHiveCounter += 1;
+  const hiveId = `xeno-hive-${xenoHiveCounter}`;
+  const titanDef = XENO_ENEMIES.find((d) => d.id === "living-titan")!;
+  const memberDefs = XENO_ENEMIES.filter((d) => d.id !== "living-titan");
+  const titanDroneId = spawnEnemyInstance(titanDef, anchorX, anchorY, true); // Elite Titan — AF-034's pipeline, unchanged
+  // Cross-module reuse of AF-046's pure formation math — same wedge, sixth doctrine.
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  const nodeIds: string[] = [];
+  const memberDroneIds = memberDefs.map((def, index) => {
+    const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
+    if (def.id === "evolution-node") nodeIds.push(id);
+    return id;
+  });
+  xenoHives.push(new HiveEvolutionRuntime(hiveId, [titanDroneId, ...memberDroneIds], nodeIds));
+  for (const drone of drones) {
+    if (drone.id === titanDroneId || memberDroneIds.includes(drone.id)) drone.hiveId = hiveId;
+  }
+  lootNotices.push({ text: "HIVE DETECTED — BIOMASS RISING", colour: "#8bff4d", ttlMs: 3000 });
+}
+
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
 function killDrone(drone: Drone): void {
   drone.alive = false;
@@ -1295,6 +1337,23 @@ function killDrone(drone: Drone): void {
       ancientSites = ancientSites.filter((s) => s.siteId !== site.siteId);
     }
   }
+  // AF-051: Evolution System — "the Hive never wastes biomass": every death
+  // here feeds it, including this one. A Node kill additionally severs the
+  // network link immediately, cutting shared bonuses without ever lowering
+  // Biomass itself — the sixth doctrine has no way down at all.
+  const hive = hiveOf(drone);
+  if (hive) {
+    const role = hive.notifyDroneDestroyed(drone.id);
+    if (role === "node") {
+      lootNotices.push({ text: "EVOLUTION NODE SEVERED — HIVE NETWORK CUT", colour: "#8bff4d", ttlMs: 2600 });
+      meta.discover("lore", LORE_XENOMORPH_HIVE_CODEX); // first node kill unlocks the doctrine Codex entry (AF-043)
+      persistMeta();
+    }
+    if (hive.eliminated) {
+      lootNotices.push({ text: "HIVE ELIMINATED", colour: "#8bff4d", ttlMs: 2600 });
+      xenoHives = xenoHives.filter((h) => h.hiveId !== hive.hiveId);
+    }
+  }
 }
 
 function spawnWave(directive: SpawnDirective): void {
@@ -1306,7 +1365,14 @@ function spawnWave(directive: SpawnDirective): void {
   // Automated Reinforcements ARE their doctrine.
   // AF-048: MixedEncounter becomes the Crystal Ascendancy's entrance — a
   // mixed roster of cooperating organisms IS the ecosystem's doctrine.
-  if (directive.waveType === "AmbushEvent" || directive.waveType === "ReinforcementWave" || directive.waveType === "MixedEncounter") {
+  // AF-051: HunterPack becomes the Xenomorph Hive's — a hunting pack IS
+  // Swarming/Flanking/Overwhelming Numbers, almost too literally to pass up.
+  if (
+    directive.waveType === "AmbushEvent" ||
+    directive.waveType === "ReinforcementWave" ||
+    directive.waveType === "MixedEncounter" ||
+    directive.waveType === "HunterPack"
+  ) {
     const angle = combatRng.float(0, Math.PI * 2);
     const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
     const x = Math.min(ARENA.maxX - 3, Math.max(ARENA.minX + 3, player.x + Math.cos(angle) * distance));
@@ -1317,9 +1383,12 @@ function spawnWave(directive: SpawnDirective): void {
     } else if (directive.waveType === "ReinforcementWave") {
       spawnMachineNetwork(x, y);
       director.notifyEnemiesSpawned(6, 1); // command core spawns as an AF-034 Elite
-    } else {
+    } else if (directive.waveType === "MixedEncounter") {
       spawnCrystalEcosystem(x, y);
       director.notifyEnemiesSpawned(6, 1); // titan spawns as an AF-034 Elite
+    } else {
+      spawnHive(x, y);
+      director.notifyEnemiesSpawned(6, 1); // living titan spawns as an AF-034 Elite
     }
     return;
   }
@@ -1583,6 +1652,54 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
+  // AF-051: Evolution System — Biomass climbs on its own; Organic
+  // Regeneration heals hive members while the Node link holds; Rapid
+  // Reinforcement manufactures one real Hive Drone through the shared
+  // spawn path, cadence-gated and lifetime-capped like AF-047's Drone
+  // Factory. Acid Pools tick against the player exactly like every prior
+  // faction's hazard-engine reuse.
+  for (const hive of xenoHives) {
+    hive.update(fixedDtMs);
+    if (hive.healPerSecond > 0) {
+      for (const drone of drones) {
+        if (drone.alive && drone.hiveId === hive.hiveId && drone.hull < drone.maxHull) {
+          drone.hull = Math.min(drone.maxHull, drone.hull + hive.healPerSecond * dt);
+        }
+      }
+    }
+    if (hive.tryReinforce()) {
+      const anchor = drones.find((d) => d.alive && d.hiveId === hive.hiveId);
+      if (anchor) {
+        const builtId = spawnEnemyInstance(XENO_ENEMIES.find((d) => d.id === "hive-drone")!, anchor.x, anchor.y, false);
+        const built = drones.find((d) => d.id === builtId);
+        if (built) built.hiveId = hive.hiveId;
+        hive.enrolMember(builtId);
+        director.notifyEnemiesSpawned(1, 0); // the Director's census stays accurate
+      }
+    }
+    if (hive.stageIndex >= 1 && acidPools.length < 4 && combatRng.next() < 0.001) {
+      const seeder = drones.find((d) => d.alive && d.hiveId === hive.hiveId);
+      if (seeder) {
+        acidPoolCounter += 1;
+        acidPools.push({ zone: createAcidPool(`acid-pool-${acidPoolCounter}`, seeder.x, seeder.y), state: { tickClockMs: 0 } });
+      }
+    }
+  }
+  for (const pool of acidPools) {
+    if (stepHazardZone(pool.zone, pool.state, fixedDtMs) && isInsideHazard(pool.zone, player.x, player.y) && !player.invulnerable) {
+      const intake = playerDefence.takeDamage(pool.zone.damagePerTick);
+      bus.emit("PlayerDamaged", { amount: pool.zone.damagePerTick, source: pool.zone.id });
+      if (pool.zone.statusOnTick && playerStatus) {
+        playerStatus.apply(pool.zone.statusOnTick);
+        bus.emit("StatusApplied", { targetId: "player", status: pool.zone.statusOnTick.kind });
+      }
+      if (intake.defeated) {
+        endRun("defeat");
+        return;
+      }
+    }
+  }
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -1635,7 +1752,8 @@ function updateSandboxCombat(fixedDtMs: number): void {
 
     const enrage = drone.runtime.specialAbilityBonus(hullFraction);
     const ecosystem = ecosystemOf(drone);
-    const speedMultiplier = 1 + (enrage.movementSpeed ?? 0) + (ecosystem?.speedBonus ?? 0);
+    const hive = hiveOf(drone);
+    const speedMultiplier = 1 + (enrage.movementSpeed ?? 0) + (ecosystem?.speedBonus ?? 0) + (hive?.speedBonus ?? 0);
     // AF-046: Focus Fire — coordinated squad members hit harder while the
     // Captain lives; broken squads lose the bonus, not just the formation.
     // AF-047: Target Synchronisation — the machine equivalent, routed through
@@ -1651,7 +1769,8 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const resonance = 1 + (ecosystem?.damageBonus ?? 0);
     const corruption = 1 + (swarm?.damageBonus ?? 0);
     const targetInformation = 1 + (site?.damageBonus ?? 0);
-    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance * corruption * targetInformation;
+    const hiveTargetInfo = 1 + (hive?.damageBonus ?? 0);
+    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance * corruption * targetInformation * hiveTargetInfo;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
     // AF-046: Formation Flying — the first live producer for AF-033's reserved
@@ -2232,6 +2351,8 @@ function startRun(): void {
   voidZones = [];
   voidZoneClocksMs.clear();
   ancientSites = []; // AF-050: sites are run-scoped too.
+  xenoHives = []; // AF-051: hives and acid pools are run-scoped too.
+  acidPools = [];
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -2458,6 +2579,18 @@ function drawSandbox(): void {
     ctx.strokeStyle = "#c94dff";
     ctx.lineWidth = 1.5;
     ctx.arc(toX(voidZone.zone.x), toY(voidZone.zone.y), voidZone.zone.radius * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // AF-051: Acid Pools — sickly bioluminescent-green filled zones (the
+  // faction's visual language), readable area-under-threat per AF-004.
+  for (const pool of acidPools) {
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(139,255,77,0.2)";
+    ctx.strokeStyle = "#8bff4d";
+    ctx.lineWidth = 1.5;
+    ctx.arc(toX(pool.zone.x), toY(pool.zone.y), pool.zone.radius * scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }
@@ -3354,6 +3487,16 @@ const loop = new GameLoop({
             .join("; ");
           return `sites ${ancientSites.length} [${lines}]`;
         })(),
+        xenoHive: (() => {
+          if (xenoHives.length === 0 && acidPools.length === 0) return null;
+          const lines = xenoHives
+            .map((h) => {
+              const snap = h.snapshot;
+              return `${snap.stage} (biomass ${(snap.biomass * 100).toFixed(0)}%, ${snap.nodeLinked ? "linked" : "severed"}, ${snap.membersRemaining} organisms, reinforced ${snap.reinforcementsCalled})`;
+            })
+            .join("; ");
+          return `hives ${xenoHives.length}${lines ? ` [${lines}]` : ""} · acid pools ${acidPools.length}`;
+        })(),
       });
     }
   },
@@ -3361,7 +3504,7 @@ const loop = new GameLoop({
 
 const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
 
-// AF-046/047/048/049/050 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
+// AF-046/047/048/049/050/051 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
 // as the debug overlay itself (AF-016 §10) — excluded from production builds.
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
@@ -3381,6 +3524,9 @@ if (import.meta.env.DEV) {
       director?.notifyEnemiesSpawned(6, 1);
     } else if (event.key === "5") {
       spawnAncientSite(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(6, 1);
+    } else if (event.key === "4") {
+      spawnHive(player.x + 8, player.y);
       director?.notifyEnemiesSpawned(6, 1);
     }
   });

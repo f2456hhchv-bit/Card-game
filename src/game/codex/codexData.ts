@@ -395,6 +395,28 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_VOID_CORRUPTION_ARCHIVE" },
   },
+  // AF-051: Xenomorph Hive evolution doctrine — unlocked by taking your
+  // first Evolution Node offline. Like AF-049's Void Swarm, the Hive is not
+  // a civilisation, so it gets no AF-039 FactionDef; the two share a
+  // cross-reference here as the galaxy's other non-civilisation threats.
+  {
+    id: "codex-xenomorph-hive",
+    category: "enemies",
+    title: "Hive Evolution Doctrine",
+    lore: {
+      summary: "It does not remember losing. It only remembers what worked, and it never stops working.",
+      detailed: "Every death feeds the Hive's Biomass — its own losses included — and Biomass never falls, only rises toward the next Evolution Stage. There is no core to break and no timer to outlast. The only thing that can be cut is a Node's link to what's nearby, and even that never touches what the Hive has already become.",
+      historicalContext: "No one engineered the Hive to stop evolving, because no one expected it to still be here to ask.",
+      recoveredArchives: "Recovered field log: \"Killed the big one. Ten minutes later the small ones hit like the big one did.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying an Evolution Node — severing your first Hive network link.",
+    relatedEntryIds: ["codex-void-corruption"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_XENOMORPH_HIVE_CODEX" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
