@@ -38,6 +38,8 @@ export interface DebugSnapshot {
   relics: string | null;
   /** Commander summary: callsign, ability cooldown, ultimate charge (AF-030 §7). */
   commander: string | null;
+  /** Ship summary: name, class, energy, ability cooldown (AF-031 §11). */
+  ships: string | null;
 }
 
 export class DebugOverlay {
@@ -90,6 +92,7 @@ export class DebugOverlay {
       `equipment  ${snapshot.equipment ?? "—"}`,
       `relics     ${snapshot.relics ?? "—"}`,
       `commander  ${snapshot.commander ?? "—"}`,
+      `ships      ${snapshot.ships ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

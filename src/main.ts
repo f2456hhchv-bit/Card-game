@@ -29,7 +29,6 @@ import { DEFAULT_BINDINGS, DEFAULT_INPUT_TUNING } from "./engine/input/inputTuni
 import { Camera } from "./engine/camera/Camera";
 import { DEFAULT_CAMERA_TUNING, type CameraMode } from "./engine/camera/cameraTuning";
 import { PlayerMovement, type Obstacle } from "./game/movement/PlayerMovement";
-import { DEFAULT_MOVEMENT_PROFILE } from "./game/movement/movementTuning";
 import { resolveDamage, NEUTRAL_MODIFIERS } from "./game/combat/DamagePipeline";
 import { DefenceState } from "./game/combat/DefenceState";
 import { TARGET_SELECTORS, type TargetCandidate } from "./game/combat/targetPriority";
@@ -63,6 +62,8 @@ import { RelicSystem } from "./game/relics/RelicSystem";
 import { SANDBOX_RELICS } from "./game/relics/relicData";
 import { CommanderRuntime } from "./game/commanders/CommanderRuntime";
 import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
+import { ShipRuntime } from "./game/ships/ShipRuntime";
+import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -431,6 +432,10 @@ function newRelicSystem(): RelicSystem {
 const sandboxCommander = SANDBOX_COMMANDERS[0]!;
 let commanderRuntime: CommanderRuntime | null = null;
 
+// ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
+const sandboxShip = SANDBOX_SHIPS[0]!;
+let shipRuntime: ShipRuntime | null = null;
+
 function equipmentEffects() {
   const validation = validateLoadout(sandboxLoadoutSlots, sandboxEquipmentById);
   if (!validation.ok) {
@@ -733,13 +738,13 @@ function startRun(): void {
     Date.now(),
   );
   sessionMs = 0;
-  movement = new PlayerMovement(DEFAULT_MOVEMENT_PROFILE);
+  movement = new PlayerMovement(sandboxShip.movementProfile);
   movement.setPosition(30, 17);
   movement.setBounds(ARENA);
   movement.setObstacles(ARENA_OBSTACLES);
   camera.setBounds(ARENA);
   camera.snapTo(30, 17);
-  playerDefence = new DefenceState(40, 100, DEFAULT_COMBAT_TUNING);
+  playerDefence = new DefenceState(sandboxShip.shield, sandboxShip.hull, DEFAULT_COMBAT_TUNING);
   combatRng = new Rng(seed).fork("combat");
   drones = [];
   projectiles = [];
@@ -759,11 +764,14 @@ function startRun(): void {
   const equipment = equipmentEffects();
   sandboxBuild.equipmentWeaponBonus = equipment.bonuses.damage ?? 0;
   playerDefence.addBarrier(equipment.bonuses.shieldCapacity ?? 0);
-  if ((equipment.bonuses.movementSpeed ?? 0) > 0) {
+  shipRuntime = new ShipRuntime(sandboxShip);
+  const shipSpeedBonus = shipRuntime.bonuses.movementSpeed ?? 0;
+  const equipmentSpeedBonus = equipment.bonuses.movementSpeed ?? 0;
+  if (shipSpeedBonus + equipmentSpeedBonus > 0) {
     movement.addModifier({
-      id: "equipment-speed",
+      id: "ship-and-equipment-speed",
       kind: "speedMultiplier",
-      multiplier: 1 + (equipment.bonuses.movementSpeed ?? 0),
+      multiplier: 1 + shipSpeedBonus + equipmentSpeedBonus,
       durationMs: Number.MAX_SAFE_INTEGER,
     });
   }
@@ -994,7 +1002,7 @@ function drawSandbox(): void {
   const dirY = speed > 0.1 ? snap.velocityY / speed : -1;
   const px = toX(snap.x);
   const py = toY(snap.y);
-  const size = DEFAULT_MOVEMENT_PROFILE.collisionRadius * scale * 2;
+  const size = sandboxShip.movementProfile.collisionRadius * scale * 2;
 
   ctx.save();
   ctx.translate(px, py);
@@ -1303,6 +1311,13 @@ const loop = new GameLoop({
           lootNotices.push({ text: `${sandboxCommander.ultimate.name.toUpperCase()}!`, colour: "#9b5cff", ttlMs: 2600 });
         }
       }
+      if (shipRuntime) {
+        shipRuntime.update(fixedDtMs);
+        if (input.consumeBuffered("ShipAbility") && shipRuntime.tryActivateAbility()) {
+          camera.shake("WeaponImpact");
+          lootNotices.push({ text: sandboxShip.ability.name.toUpperCase(), colour: "#5cffa8", ttlMs: 1200 });
+        }
+      }
     }
   },
   render: () => {
@@ -1353,6 +1368,9 @@ const loop = new GameLoop({
         relics: `active ${relicSystem.activeRelicIds.length} [${relicSystem.activeRelicIds.join(", ") || "none"}] · synergies ${relicSystem.aggregate.synergies.length}`,
         commander: commanderRuntime
           ? `${sandboxCommander.callsign} · ability cd ${commanderRuntime.snapshot.activeCooldownMs.toFixed(0)}ms · ult ${commanderRuntime.snapshot.ultimateCharge.toFixed(0)}/${sandboxCommander.ultimate.chargeRequired}${commanderRuntime.snapshot.ultimateReady ? " READY" : ""}`
+          : null,
+        ships: shipRuntime
+          ? `${sandboxShip.name} (${sandboxShip.shipClass}) · energy ${shipRuntime.snapshot.energy.toFixed(0)}/${sandboxShip.maxEnergy} · ability cd ${shipRuntime.snapshot.abilityCooldownMs.toFixed(0)}ms`
           : null,
       });
     }
