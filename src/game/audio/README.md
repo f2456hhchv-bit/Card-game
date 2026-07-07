@@ -1,0 +1,13 @@
+# audio — Audio Framework (AF-045, game layer)
+
+**Purpose:** Gameplay communication through sound — cue routing, mixing, priority-based voice limiting, and adaptive music, wired entirely to events and states that already exist. No audio asset pipeline exists yet, so this module builds the real engine behind a swappable backend rather than faking playback.
+
+**Responsibilities:** `AudioCueDef`/category/channel/music-state vocabulary (`audioData`); independent per-channel volume/mute (`AudioMixer`); per-category simultaneous-voice capping with priority-based eviction (`VoicePool`); pure Adaptive Music state resolution and Distance Attenuation (`MusicState`); the orchestrator tying all of it together behind a pluggable `AudioBackend` (`AudioEngine`).
+
+**Dependencies:** `core/save` (`SettingsData["audio"]` — `AudioMixer.fromSettings` seeds the mixer from AF-044's existing three-slider settings rather than a second volume store). Every sandbox cue's `triggerSource` names a real, already-existing `GameEvents` fact or composition-root call site — zero new gameplay signaling anywhere in this module.
+
+**Data structures:** `AudioCueDef`, `AudioBackend` (the same pluggable-interface pattern AF-024's `SaveStorage` established), `MusicStateInputs`.
+
+**Extension points:** new cues/categories/channels are data; `NullAudioBackend` is the only backend today (it records intent — `playedCues`, `currentMusicTrack` — without producing sound); a real Web Audio backend implements the same three-method `AudioBackend` interface with zero changes to `AudioEngine`, `VoicePool`, or `AudioMixer`.
+
+**Known limitations:** no audio assets exist, so every cue is "would have played" rather than audible; Mono Audio / Reduced Dynamic Range / Tinnitus-Friendly Presets / Frequency Filtering are registered accessibility vocabulary with no real backend to apply them to yet. Positional Audio's Distance Attenuation is a real, tested pure function, but nothing in the composition root feeds it a live player-to-source distance yet — wiring that is content work for whichever module first needs spatial cues (e.g., a directional boss-telegraph). Adaptive Music's Research/Crafting/Credits states are registered but unreachable, since AF-016's `GalaxyCommand` hosts research/crafting inline rather than as distinct game states, and no credits sequence exists. Only twelve of the spec's many example cues are wired live in the sandbox (one per §Player Feedback example); the remaining Weapon/Enemy/Boss/Ambience audio identity described in AF-045 is registered category vocabulary awaiting real content and assets.

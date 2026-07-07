@@ -101,6 +101,9 @@ import { CodexRuntime, type CodexUnlockReader } from "./game/codex/CodexRuntime"
 import { DEFAULT_SETTINGS, type SettingsData } from "./core/save/settingsData";
 import { SaveProfileManager } from "./core/save/SaveProfileManager";
 import { SaveCoordinator } from "./core/save/SaveCoordinator";
+import { AudioMixer } from "./game/audio/AudioMixer";
+import { AudioEngine, NullAudioBackend, createSandboxAudioEngine } from "./game/audio/AudioEngine";
+import { resolveMusicState } from "./game/audio/MusicState";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -351,6 +354,7 @@ let activeProfileName = "—";
 function persistSettings(): void {
   void settingsSlice.save(settings);
   saveCoordinator.recordSave("settings");
+  audioMixer.syncFromSettings(settings.audio);
 }
 saveCoordinator.register({
   id: "settings",
@@ -359,6 +363,13 @@ saveCoordinator.register({
     settings = data;
   },
 });
+
+// ── Audio (AF-045): mixer seeded from AF-044's existing settings; no audio
+// asset pipeline exists yet, so NullAudioBackend records intent rather than
+// producing sound — a real backend implements the same three-method
+// interface with zero changes here.
+const audioMixer = AudioMixer.fromSettings(settings.audio);
+const audioEngine: AudioEngine = createSandboxAudioEngine(audioMixer, new NullAudioBackend());
 
 // ── Research (AF-024): permanent progression through a real save slice.
 const researchSlice = new SaveSlice<ResearchSaveData>({
@@ -539,6 +550,7 @@ bus.on("EnemyKilled", ({ enemyId, elite, boss }) => {
   // codexId is the base def id, or a tier+mutation-set signature for a generated Elite.
   const killedDrone = drones.find((d) => d.id === enemyId);
   meta.discover("enemies", killedDrone?.codexId ?? enemyId);
+  if (!boss) audioEngine.play(elite ? "cue-elite-death" : "cue-enemy-death"); // AF-045.
   // AF-037: mission objective progress — the same EnemyKilled fact every prior module already reads.
   if (boss) missionRuntime?.recordProgress("missionBossDefeated");
   else {
@@ -548,12 +560,26 @@ bus.on("EnemyKilled", ({ enemyId, elite, boss }) => {
 });
 bus.on("DamageDealt", ({ amount, critical }) => {
   meta.recordStat("damageDealt", amount);
-  if (critical) meta.addMasteryCounter("weapon:test-cannon", "criticalHits");
+  if (critical) {
+    meta.addMasteryCounter("weapon:test-cannon", "criticalHits");
+    audioEngine.play("cue-critical-hit"); // AF-045: Player Feedback.
+  }
 });
 bus.on("PlayerDamaged", ({ amount }) => {
   meta.recordStat("damageTaken", amount);
   if (bossRuntime) bossFightDamageTaken = true; // AF-035: gates the "No Damage" mastery challenge.
   missionRuntime?.recordProgress("missionDamageTaken", amount); // AF-037: gates the No Damage optional objective.
+});
+bus.on("ShieldBroken", () => {
+  audioEngine.play("cue-shield-break"); // AF-045: Player Feedback.
+});
+bus.on("CommanderLevelUp", () => {
+  audioEngine.play("cue-level-up"); // AF-045: Player Feedback.
+});
+bus.on("LootDropped", ({ rarity }) => {
+  if (rarity === "legendary" || rarity === "ancient" || rarity === "mythic" || rarity === "singularity") {
+    audioEngine.play("cue-legendary-drop"); // AF-045: Player Feedback.
+  }
 });
 // AF-035: the Boss spawns when the Director's existing MiniBoss phase begins — no Director change.
 // AF-037: automatic RunPhase advancement replaces the placeholder manual "Advance Run Phase" button.
@@ -577,6 +603,13 @@ bus.on("ResearchUnlocked", ({ nodeId }) => {
   meta.discover("research", nodeId);
   persistMeta();
   awardCredits(CREDIT_AWARDS.researchUnlocked); // AF-040: Research as a Resource Source.
+  audioEngine.play("cue-research-complete"); // AF-045.
+});
+bus.on("ItemCrafted", () => {
+  audioEngine.play("cue-craft-success"); // AF-045.
+});
+bus.on("ChallengeCompleted", () => {
+  audioEngine.play("cue-achievement"); // AF-045.
 });
 // AF-043: the "relics" collection bucket has existed since AF-026 with no
 // producer until now — RelicAcquired already fires every time; nothing new.
@@ -591,8 +624,10 @@ bus.on("AccountLevelUp", () => {
   void saveCoordinator.writeMilestoneBackup(new LocalStorageAdapter(), "milestone-backup").then(() => {
     milestoneBackupCount += 1;
   });
+  audioEngine.play("cue-achievement"); // AF-045: Player Feedback.
 });
 bus.on("RunEnded", ({ result, playTimeMs }) => {
+  audioEngine.play(result === "victory" ? "cue-mission-complete" : "cue-mission-failed"); // AF-045.
   meta.recordStat("runs");
   meta.recordStat(result === "victory" ? "victories" : "defeats");
   meta.recordStat("playTimeMs", playTimeMs);
@@ -941,6 +976,7 @@ function spawnBoss(): void {
     colour: "#ffc652",
     ttlMs: 3200,
   });
+  audioEngine.play("cue-boss-spawn"); // AF-045: Player Feedback; also cues the Boss Introduction music transition.
 }
 
 /** AF-035: reward ceremony — reuses every acquisition system the "boss" xp tier/loot categories already gate. */
@@ -2400,6 +2436,17 @@ const loop = new GameLoop({
       const reward = CODEX_SECTION_REWARDS[category];
       lootNotices.push({ text: `CODEX SECTION COMPLETE · ${category.toUpperCase()}${reward ? ` (${reward.kind})` : ""}`, colour: "#9b5cff", ttlMs: 3200 });
     }
+    // AF-045: Adaptive Music — a pure read over state AF-016/017/035 already
+    // expose; transitions are seamless since setMusicState is idempotent.
+    audioEngine.setMusicState(
+      resolveMusicState({
+        gameState: machine.base,
+        directorPhase: director?.snapshot.phase ?? null,
+        bossActive: bossRuntime !== null,
+        bossPhase: bossRuntime ? bossRuntime.snapshot.phaseIndex + 1 : null,
+        runResult: session?.result ?? null,
+      }),
+    );
     if (input.wasPressed("Pause") && machine.base === "Gameplay") {
       if (machine.overlays.at(-1) === "Pause") machine.popOverlay();
       else if (machine.overlays.length === 0) machine.pushOverlay("Pause");
@@ -2593,6 +2640,7 @@ const loop = new GameLoop({
           const lastSaved = statuses.length > 0 ? Math.max(...statuses.map((s) => s.lastSavedAtMs)) : null;
           return `v1 (${statuses.length} slices) · autosave ${totalSaves} total${lastSaved ? `, last ${((Date.now() - lastSaved) / 1000).toFixed(0)}s ago` : ""} · milestone backups ${milestoneBackupCount} · cloud offline (local only) · profile ${activeProfileName}`;
         })(),
+        audio: `music ${audioEngine.musicState ?? "—"} · voices ${audioEngine.activeVoiceCount()} · master ${(audioMixer.effectiveVolume("master") * 100).toFixed(0)}% · muted ${audioMixer.isMuted("master") ? "yes" : "no"}`,
       });
     }
   },

@@ -64,6 +64,8 @@ export interface DebugSnapshot {
   codex: string | null;
   /** Save Framework summary: slice version, Autosave Status, Cloud Status, Backup Count, active profile (AF-044 §DEBUG). */
   saveFramework: string | null;
+  /** Audio summary: Music State, active voice count, master mixer level (AF-045 §DEBUG). */
+  audio: string | null;
 }
 
 export class DebugOverlay {
@@ -129,6 +131,7 @@ export class DebugOverlay {
       `achieve    ${snapshot.achievements ?? "—"}`,
       `codex      ${snapshot.codex ?? "—"}`,
       `save       ${snapshot.saveFramework ?? "—"}`,
+      `audio      ${snapshot.audio ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
