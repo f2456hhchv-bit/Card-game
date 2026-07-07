@@ -1,0 +1,13 @@
+# factions — Faction Framework (AF-039, game layer)
+
+**Purpose:** Faction identity, reputation, inter-faction relationships (the Conflict System), Faction Missions, and Faction Events. Pays off AF-010's nine-attribute-profile content debt with real per-faction data.
+
+**Responsibilities:** `FactionDef`/`FactionMissionDef`/`FactionEventDef`/`FactionRosterDef` data shapes (`factionData`); pairwise relationship tracking and weighted Faction Event scheduling (`FactionRuntime`); a pure `reputationLevel` threshold lookup.
+
+**Dependencies:** `game/galaxy` (`GalaxyRegion` for Territory; `GalaxyRuntime.clampedDelta` reused directly for reputation clamping — not reimplemented). References AF-037's `SANDBOX_MISSIONS` ids as content for Faction Missions, and AF-025's blueprint/resource ids and AF-024's research points for Faction Rewards. `game/meta`'s `CollectionCategory` ("lore") backs faction codex discovery.
+
+**Data structures:** `FactionDef`, `FactionMissionDef`, `FactionEventDef`, `FactionRosterDef`, `FactionRewardDef` (discriminated union over existing acquisition id-spaces).
+
+**Extension points:** new factions/missions/events are data; `FactionRuntime` is deliberately kept pure — Reputation and the ten Faction Attributes are **not** a new persistence layer. The composition root applies clamped deltas through AF-026's existing `MetaProgression.recordStat`, namespaced per faction (`faction:<id>:reputation`), the exact pattern AF-038 established for Sector Stability/Exploration%, now at the diplomacy layer.
+
+**Known limitations:** only Reputation is mechanically live per faction today; the other nine Faction Attributes (Influence, Military Strength, Technology, Economic Power, Stability, Exploration, Aggression, Trust, Corruption, Expansion) are registered vocabulary without their own statistic keys yet — the same "registered, no consumer yet" pattern used repeatedly across this project. `FactionRewardDef`'s `ship`/`weapon`/`equipment`/`commander`/`cosmetic` kinds are structurally defined but have no sandbox producer, since no per-category ownership/unlock system exists yet for those categories to bind against; the sandbox roster only issues `blueprint`/`researchPoints`/`resource`/`lore` rewards, all of which have a real consumer today. Inter-faction relationships (Conflict System) are session-scoped, matching `GalaxyRuntime`'s exact precedent of not persisting its own runtime state — only the meta-recorded reputation persists across sessions. Only one sandbox mission template exists, so all three sandbox Faction Missions reference the same `crystal-fields-incursion` id, mirroring AF-038's identical deferral for `StarSystemDef.missionIds`.

@@ -87,6 +87,8 @@ import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
 import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
 import { GalaxyRuntime } from "./game/galaxy/GalaxyRuntime";
+import { SANDBOX_FACTION_ROSTER, PLAYER_CHOICE_REPUTATION_DELTA, REPUTATION_MIN, REPUTATION_MAX, type PlayerChoiceKind } from "./game/factions/factionData";
+import { FactionRuntime } from "./game/factions/FactionRuntime";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -413,6 +415,12 @@ const meta = new MetaProgression(
 // keys); the runtime's own position/event-timer state is session-local.
 const galaxyRuntime = new GalaxyRuntime(SANDBOX_GALAXY, new Rng(Date.now()).fork("galaxy"), "sys-lucent-gate");
 
+// ── Factions (AF-039): reputation persists through the same namespaced
+// meta-statistic pattern AF-038 established; relationships/events are
+// session-local runtime state, mirroring GalaxyRuntime's exact discipline.
+const factionRuntime = new FactionRuntime(SANDBOX_FACTION_ROSTER, new Rng(Date.now()).fork("faction"));
+let activeFactionMissionId: string | null = null;
+
 function persistMeta(): void {
   void metaSlice.save(meta.toSave());
 }
@@ -475,6 +483,33 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
     result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
   );
   persistMeta();
+  // AF-039: a completed Faction Mission grants reputation (clamped through
+  // AF-038's exact GalaxyRuntime.clampedDelta) plus its faction reward,
+  // reusing whichever existing acquisition system that reward kind already has.
+  if (activeFactionMissionId) {
+    const factionMission = SANDBOX_FACTION_ROSTER.missions.find((m) => m.id === activeFactionMissionId);
+    if (result === "victory" && factionMission) {
+      const repKey = `faction:${factionMission.factionId}:reputation`;
+      const repDelta = GalaxyRuntime.clampedDelta(meta.stat(repKey), factionMission.reputationReward, REPUTATION_MIN, REPUTATION_MAX);
+      meta.recordStat(repKey, repDelta);
+      persistMeta();
+      const reward = factionMission.reward;
+      if (reward.kind === "resource") {
+        crafting.addMaterial(reward.id as Parameters<typeof crafting.addMaterial>[0], reward.amount);
+        persistCrafting();
+      } else if (reward.kind === "blueprint") {
+        crafting.unlockBlueprint(reward.id);
+        persistCrafting();
+      } else if (reward.kind === "researchPoints") {
+        researchTree.addPoints(reward.amount);
+        persistResearch();
+      } else if (reward.kind === "lore") {
+        meta.discover("lore", reward.id);
+        persistMeta();
+      }
+    }
+    activeFactionMissionId = null;
+  }
 });
 
 /** Unlocked research feeds live systems at run start (AF-024 §4). */
@@ -1852,13 +1887,54 @@ function render(): void {
             }
           },
         ]);
+      // AF-039: Faction Relations — the current system's dominant faction
+      // (StarSystemDef.dominantFaction is a plain string, matched by name),
+      // its reputation (namespaced meta stat, clamped by AF-038's exact
+      // GalaxyRuntime.clampedDelta), and Support/Oppose/Negotiate/Faction
+      // Mission buttons. Player choice never blocks progression — Ignore
+      // and Explore Independently are simply "do nothing" (no button needed).
+      const dominantFaction = factionRuntime.findFactionByName(currentSystem.dominantFaction);
+      const factionButtons: Array<[string, () => void]> = [];
+      let factionLine = "";
+      if (dominantFaction) {
+        const repKey = `faction:${dominantFaction.id}:reputation`;
+        const reputation = meta.stat(repKey);
+        const reputationLevel = FactionRuntime.reputationLevel(reputation);
+        const relation = factionRuntime.relationshipBetween("crystalDominion", "machineCollective");
+        factionLine = `${dominantFaction.name} · reputation ${reputation.toFixed(0)} (${reputationLevel}) · Crystal Dominion ↔ Machine Collective: ${relation}`;
+        const applyChoice = (choice: PlayerChoiceKind) => {
+          const delta = GalaxyRuntime.clampedDelta(reputation, PLAYER_CHOICE_REPUTATION_DELTA[choice], REPUTATION_MIN, REPUTATION_MAX);
+          meta.recordStat(repKey, delta);
+          persistMeta();
+          render();
+        };
+        factionButtons.push(
+          [`Support ${dominantFaction.name}`, () => applyChoice("support")],
+          [`Oppose ${dominantFaction.name}`, () => applyChoice("oppose")],
+          [`Negotiate with ${dominantFaction.name}`, () => applyChoice("negotiate")],
+        );
+        const availableMission = factionRuntime.missionsFor(dominantFaction.id)[0];
+        if (availableMission && !activeFactionMissionId) {
+          factionButtons.push([
+            `Accept Faction Mission: ${availableMission.name} (+${availableMission.reputationReward} rep)`,
+            () => {
+              // GalaxyCommand's legal transitions (AF-016) don't include Loading
+              // directly — accepting queues the mission and routes through the
+              // existing MissionSelect → Loading path, same as any other launch.
+              activeFactionMissionId = availableMission.id;
+              machine.transitionTo("MissionSelect");
+            },
+          ]);
+        }
+      }
       screen(
         "Galaxy Command",
-        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}`,
+        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}\n${factionLine}`,
         [
           ["Select Mission", () => machine.transitionTo("MissionSelect")],
           ...travelButtons,
           ...poiButtons,
+          ...factionButtons,
           ...nodeButtons,
           ...forgeButtons,
           ["Statistics", () => machine.transitionTo("Statistics")],
@@ -1867,18 +1943,34 @@ function render(): void {
       );
       break;
     }
-    case "MissionSelect":
-      screen("Mission Selection", "One placeholder expedition is available.", [
+    case "MissionSelect": {
+      const queuedFactionMission = activeFactionMissionId
+        ? SANDBOX_FACTION_ROSTER.missions.find((m) => m.id === activeFactionMissionId)
+        : null;
+      screen(
+        "Mission Selection",
+        queuedFactionMission
+          ? `Faction Mission queued: ${queuedFactionMission.name} (+${queuedFactionMission.reputationReward} rep on success).`
+          : "One placeholder expedition is available.",
         [
-          "Launch Expedition",
-          () => {
-            startRun();
-            machine.transitionTo("Loading");
-          },
+          [
+            "Launch Expedition",
+            () => {
+              startRun();
+              machine.transitionTo("Loading");
+            },
+          ],
+          [
+            "Back",
+            () => {
+              activeFactionMissionId = null;
+              machine.transitionTo("GalaxyCommand");
+            },
+          ],
         ],
-        ["Back", () => machine.transitionTo("GalaxyCommand")],
-      ]);
+      );
       break;
+    }
     case "Loading":
       screen("Loading", "Streaming expedition data…", []);
       // Async loading pattern: heavy work happens here, never inside a transition.
@@ -1896,6 +1988,10 @@ function render(): void {
           "Abandon Run",
           () => {
             director = null;
+            // AF-039: an abandoned run never completes RunEnded, so a queued
+            // Faction Mission must be released here — never permanently
+            // trapping the offer (AF-039 §Player Choice).
+            activeFactionMissionId = null;
             machine.transitionTo("GalaxyCommand");
           },
         ],
@@ -1990,6 +2086,10 @@ const loop = new GameLoop({
     galaxyRuntime.update(fixedDtMs);
     const galaxyEvent = galaxyRuntime.tryTriggerEvent();
     if (galaxyEvent) bus.emit("EnvironmentalEventTriggered", { eventType: galaxyEvent });
+    // AF-039: faction politics evolve independent of whatever screen the player is on.
+    factionRuntime.update(fixedDtMs);
+    const factionEvent = factionRuntime.tryTriggerEvent();
+    if (factionEvent) bus.emit("EnvironmentalEventTriggered", { eventType: factionEvent });
     if (input.wasPressed("Pause") && machine.base === "Gameplay") {
       if (machine.overlays.at(-1) === "Pause") machine.popOverlay();
       else if (machine.overlays.length === 0) machine.pushOverlay("Pause");
@@ -2141,6 +2241,15 @@ const loop = new GameLoop({
           const snap = galaxyRuntime.snapshot;
           const explorationKey = `galaxy:${snap.currentSystemId}:explorationPercent`;
           return `${snap.currentSystemName} (${snap.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
+        })(),
+        factions: (() => {
+          const snap = factionRuntime.snapshot;
+          const currentSystem = galaxyRuntime.currentSystem;
+          const dominant = factionRuntime.findFactionByName(currentSystem.dominantFaction);
+          const rep = dominant ? meta.stat(`faction:${dominant.id}:reputation`) : 0;
+          const level = dominant ? FactionRuntime.reputationLevel(rep) : "—";
+          const relation = factionRuntime.relationshipBetween("crystalDominion", "machineCollective");
+          return `${dominant?.name ?? "—"} rep ${rep.toFixed(0)} (${level}) · CD↔MC ${relation} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
         })(),
       });
     }

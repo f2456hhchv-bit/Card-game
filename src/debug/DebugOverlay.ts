@@ -52,6 +52,8 @@ export interface DebugSnapshot {
   mission: string | null;
   /** Galaxy summary: current system, region, exploration%, events triggered (AF-038 §DEBUG). */
   galaxy: string | null;
+  /** Faction summary: dominant faction, reputation + level, a relationship, events triggered (AF-039 §DEBUG). */
+  factions: string | null;
 }
 
 export class DebugOverlay {
@@ -111,6 +113,7 @@ export class DebugOverlay {
       `biome      ${snapshot.biome ?? "—"}`,
       `mission    ${snapshot.mission ?? "—"}`,
       `galaxy     ${snapshot.galaxy ?? "—"}`,
+      `factions   ${snapshot.factions ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
