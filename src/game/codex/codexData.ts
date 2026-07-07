@@ -523,6 +523,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_HUMAN_FRONTIER_ARCHIVE" },
   },
+  // AF-059: the Crystal Expanse biome — unlocked by activating Prismheart's
+  // resonance well in the field (the biome's own lore interactable).
+  {
+    id: "codex-biome-crystal-expanse",
+    category: "biomes",
+    title: "The Crystal Expanse",
+    lore: {
+      summary: "Nothing here is hostile until you forget it's all one organism.",
+      detailed: "Prismheart is geology, biology and energy grown into a single planetary consciousness — forests that refract, rivers that carry charge instead of water, and temples the Custodians still tend. The Ascendancy wasn't built here. It woke up here.",
+      historicalContext: "Every Dominion account of its own origin begins in the Expanse, and none of them agree on when.",
+      recoveredArchives: "Survey note, unsigned: \"Day 6. The valley learned our approach pattern. Recommend we stop having one.\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Activating the resonance well at Prismheart.",
+    relatedEntryIds: ["codex-crystal-dominion", "codex-crystal-resonance"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_CRYSTAL_EXPANSE_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",

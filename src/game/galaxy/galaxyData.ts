@@ -127,7 +127,7 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "crystalDominion",
       biomeId: "crystal-fields-alpha",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-hollow-drift", "sys-meridian-rest"], // AF-058: the frontier joins the route map
+      connectedSystemIds: ["sys-hollow-drift", "sys-meridian-rest", "sys-prismheart"], // AF-058/059: the frontier and the Expanse join the route map
       pointsOfInterest: [
         { id: "lucent-gate-vault", kind: "ancientVaults", discoveryCategory: "lore", discoveryId: "LORE_LUCENT_GATE_VAULT" },
       ],
@@ -178,6 +178,22 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       ],
       dominantFaction: "Human Alliance",
       threatLevel: 1,
+      requiresFastTravelUnlock: false,
+    },
+    // AF-059: Prismheart — the Crystal Expanse, the Ascendancy's birthplace,
+    // deeper into Dominion space than the Lucent Gate approach.
+    {
+      id: "sys-prismheart",
+      name: "Prismheart",
+      region: "crystalDominion",
+      biomeId: "crystal-expanse",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-lucent-gate"],
+      pointsOfInterest: [
+        { id: "prismheart-temple", kind: "crystalTemples", discoveryCategory: "lore", discoveryId: "LORE_PRISMHEART_TEMPLE" },
+      ],
+      dominantFaction: "Crystal Dominion",
+      threatLevel: 3,
       requiresFastTravelUnlock: false,
     },
   ],

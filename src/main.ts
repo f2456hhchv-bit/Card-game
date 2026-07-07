@@ -106,6 +106,7 @@ import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
 import { SANDBOX_BIOMES, type BiomeDef } from "./game/biomes/biomeData";
 import { HUMAN_FRONTIER_BIOME } from "./game/biomes/frontierBiome";
+import { CRYSTAL_EXPANSE_BIOME } from "./game/biomes/crystalExpanseBiome";
 import { BiomeRuntime } from "./game/biomes/BiomeRuntime";
 import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
 import { generateMission } from "./game/missions/MissionGenerator";
@@ -844,7 +845,7 @@ const sandboxBiome = SANDBOX_BIOMES[0]!;
 // AF-058: AF-038's StarSystemDef.biomeId gets its first consumer — the run's
 // biome follows the galaxy. The registry is additive; the sandbox biome is
 // the fallback for any system whose biomeId has no authored def yet.
-const BIOME_REGISTRY: readonly BiomeDef[] = [...SANDBOX_BIOMES, HUMAN_FRONTIER_BIOME];
+const BIOME_REGISTRY: readonly BiomeDef[] = [...SANDBOX_BIOMES, HUMAN_FRONTIER_BIOME, CRYSTAL_EXPANSE_BIOME];
 let activeBiome: BiomeDef = sandboxBiome;
 let biomeRuntime: BiomeRuntime | null = null;
 
