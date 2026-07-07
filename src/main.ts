@@ -61,6 +61,8 @@ import { validateLoadout, aggregateLoadout } from "./game/equipment/EquipmentAgg
 import { SANDBOX_EQUIPMENT, SANDBOX_SETS } from "./game/equipment/equipmentData";
 import { RelicSystem } from "./game/relics/RelicSystem";
 import { SANDBOX_RELICS } from "./game/relics/relicData";
+import { CommanderRuntime } from "./game/commanders/CommanderRuntime";
+import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -175,12 +177,13 @@ const SANDBOX_UPGRADES: UpgradeDefinition[] = [
 ];
 
 function playerPacket() {
+  const commanderCritDamage = commanderRuntime?.bonuses.criticalDamage ?? 0;
   return {
     baseDamage: 9,
     kind: "direct",
     school: "energy",
     critChance: 0.15 + sandboxBuild.critBonus,
-    critMultiplier: 2,
+    critMultiplier: 2 + commanderCritDamage,
   } as const;
 }
 
@@ -424,6 +427,10 @@ function newRelicSystem(): RelicSystem {
   });
 }
 
+// ── Commander (AF-030): governs the run via the four-hook signature.
+const sandboxCommander = SANDBOX_COMMANDERS[0]!;
+let commanderRuntime: CommanderRuntime | null = null;
+
 function equipmentEffects() {
   const validation = validateLoadout(sandboxLoadoutSlots, sandboxEquipmentById);
   if (!validation.ok) {
@@ -575,7 +582,10 @@ function updateSandboxCombat(fixedDtMs: number): void {
             ...NEUTRAL_MODIFIERS,
             weapon: sandboxBuild.weaponBonus,
             research: sandboxBuild.researchWeaponBonus,
-            equipment: sandboxBuild.equipmentWeaponBonus + (relicSystem.aggregate.bonuses.damage ?? 0),
+            equipment:
+              sandboxBuild.equipmentWeaponBonus +
+              (relicSystem.aggregate.bonuses.damage ?? 0) +
+              (commanderRuntime?.bonuses.damage ?? 0),
           },
           { values: {} },
           DEFAULT_COMBAT_TUNING,
@@ -585,6 +595,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
         hitCount += 1;
         if (result.critical) critCount += 1;
         bus.emit("DamageDealt", { amount: result.finalDamage, critical: result.critical, kind: result.kind, targetId: drone.id });
+        commanderRuntime?.notifyDamageDealt(result.finalDamage);
         const popup = popupPool.acquire();
         popup.x = drone.x;
         popup.y = drone.y;
@@ -596,6 +607,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
         if (drone.hull <= 0) {
           drone.alive = false;
           bus.emit("EnemyKilled", { enemyId: drone.id, elite: drone.elite, boss: false });
+          commanderRuntime?.notifyKill();
           director.notifyEnemiesRemoved(1, drone.elite ? 1 : 0);
           xpPickups?.spawn(drone.elite ? "elite" : "medium", drone.x, drone.y);
           if (drone.elite || (lootRng && lootRng.next() < 0.08)) dropLoot(drone.x, drone.y);
@@ -757,6 +769,9 @@ function startRun(): void {
   }
   currentOffer = [];
   relicSystem = newRelicSystem();
+  commanderRuntime = new CommanderRuntime(sandboxCommander, () => {
+    lootNotices.push({ text: `ULTIMATE READY · ${sandboxCommander.ultimate.name.toUpperCase()}`, colour: "#9b5cff", ttlMs: 2200 });
+  });
   xpSystem = new XpSystem(DEFAULT_XP_TUNING, null, (level) =>
     bus.emit("CommanderLevelUp", { level }),
   );
@@ -1277,6 +1292,17 @@ const loop = new GameLoop({
         const snap = movement.snapshot;
         camera.update(fixedDtMs, snap.x, snap.y, snap.velocityX, snap.velocityY);
       }
+      if (commanderRuntime) {
+        commanderRuntime.update(fixedDtMs);
+        if (input.consumeBuffered("CommanderAbility") && commanderRuntime.tryActivateAbility()) {
+          camera.shake("WeaponImpact");
+          lootNotices.push({ text: sandboxCommander.active.name.toUpperCase(), colour: "#3fd4f5", ttlMs: 1200 });
+        }
+        if (input.consumeBuffered("Ultimate") && commanderRuntime.tryActivateUltimate()) {
+          camera.shake("Ultimate");
+          lootNotices.push({ text: `${sandboxCommander.ultimate.name.toUpperCase()}!`, colour: "#9b5cff", ttlMs: 2600 });
+        }
+      }
     }
   },
   render: () => {
@@ -1325,6 +1351,9 @@ const loop = new GameLoop({
           return `wpn +${((eq.bonuses.damage ?? 0) * 100).toFixed(0)}% · shield +${(eq.bonuses.shieldCapacity ?? 0).toFixed(0)} · sets ${eq.activeSetBonuses.length} · pwr ${eq.powerRating}`;
         })(),
         relics: `active ${relicSystem.activeRelicIds.length} [${relicSystem.activeRelicIds.join(", ") || "none"}] · synergies ${relicSystem.aggregate.synergies.length}`,
+        commander: commanderRuntime
+          ? `${sandboxCommander.callsign} · ability cd ${commanderRuntime.snapshot.activeCooldownMs.toFixed(0)}ms · ult ${commanderRuntime.snapshot.ultimateCharge.toFixed(0)}/${sandboxCommander.ultimate.chargeRequired}${commanderRuntime.snapshot.ultimateReady ? " READY" : ""}`
+          : null,
       });
     }
   },

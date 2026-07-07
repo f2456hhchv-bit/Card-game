@@ -36,6 +36,8 @@ export interface DebugSnapshot {
   equipment: string | null;
   /** Relic summary: active relics, synergies (AF-029 §9). */
   relics: string | null;
+  /** Commander summary: callsign, ability cooldown, ultimate charge (AF-030 §7). */
+  commander: string | null;
 }
 
 export class DebugOverlay {
@@ -87,6 +89,7 @@ export class DebugOverlay {
       `inventory  ${snapshot.inventory ?? "—"}`,
       `equipment  ${snapshot.equipment ?? "—"}`,
       `relics     ${snapshot.relics ?? "—"}`,
+      `commander  ${snapshot.commander ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
