@@ -89,6 +89,8 @@ import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
 import { GalaxyRuntime } from "./game/galaxy/GalaxyRuntime";
 import { SANDBOX_FACTION_ROSTER, PLAYER_CHOICE_REPUTATION_DELTA, REPUTATION_MIN, REPUTATION_MAX, type PlayerChoiceKind } from "./game/factions/factionData";
 import { FactionRuntime } from "./game/factions/FactionRuntime";
+import { SANDBOX_GALAXY_ECONOMY, CREDIT_AWARDS } from "./game/economy/economyData";
+import { MarketRuntime } from "./game/economy/MarketRuntime";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -421,6 +423,18 @@ const galaxyRuntime = new GalaxyRuntime(SANDBOX_GALAXY, new Rng(Date.now()).fork
 const factionRuntime = new FactionRuntime(SANDBOX_FACTION_ROSTER, new Rng(Date.now()).fork("faction"));
 let activeFactionMissionId: string | null = null;
 
+// ── Galaxy Economy (AF-040): Credits persist through the same namespaced
+// meta-statistic pattern AF-038/039 established (economy:credits); the
+// runtime's own offer rotation/event timer are session-local, mirroring
+// GalaxyRuntime/FactionRuntime's exact discipline.
+const marketRuntime = new MarketRuntime(SANDBOX_GALAXY_ECONOMY, new Rng(Date.now()).fork("economy"));
+const CREDITS_KEY = "economy:credits";
+
+function awardCredits(amount: number): void {
+  meta.recordStat(CREDITS_KEY, amount);
+  persistMeta();
+}
+
 function persistMeta(): void {
   void metaSlice.save(meta.toSave());
 }
@@ -430,7 +444,10 @@ bus.on("EnemyKilled", ({ enemyId, elite, boss }) => {
   meta.recordStat("enemiesDestroyed");
   meta.addMasteryCounter("weapon:test-cannon", "kills");
   meta.addMasteryXp("weapon:test-cannon", elite ? 5 : 1);
-  if (elite) meta.addAccountXp(ACCOUNT_XP_AWARDS.eliteDefeated);
+  if (elite) {
+    meta.addAccountXp(ACCOUNT_XP_AWARDS.eliteDefeated);
+    awardCredits(CREDIT_AWARDS.eliteDefeated); // AF-040: Elite Enemies as a Resource Source.
+  }
   // AF-034: Elite Codex discovery reuses AF-026's existing collections engine —
   // codexId is the base def id, or a tier+mutation-set signature for a generated Elite.
   const killedDrone = drones.find((d) => d.id === enemyId);
@@ -472,6 +489,7 @@ bus.on("ResearchUnlocked", ({ nodeId }) => {
   meta.addAccountXp(ACCOUNT_XP_AWARDS.researchUnlocked);
   meta.discover("research", nodeId);
   persistMeta();
+  awardCredits(CREDIT_AWARDS.researchUnlocked); // AF-040: Research as a Resource Source.
 });
 bus.on("RunEnded", ({ result, playTimeMs }) => {
   meta.recordStat("runs");
@@ -483,6 +501,8 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
     result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
   );
   persistMeta();
+  // AF-040: Mission Completion as a Resource Source — Credits on victory only.
+  if (result === "victory") awardCredits(CREDIT_AWARDS.missionCompleted);
   // AF-039: a completed Faction Mission grants reputation (clamped through
   // AF-038's exact GalaxyRuntime.clampedDelta) plus its faction reward,
   // reusing whichever existing acquisition system that reward kind already has.
@@ -493,6 +513,7 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
       const repDelta = GalaxyRuntime.clampedDelta(meta.stat(repKey), factionMission.reputationReward, REPUTATION_MIN, REPUTATION_MAX);
       meta.recordStat(repKey, repDelta);
       persistMeta();
+      awardCredits(CREDIT_AWARDS.factionMissionBonus); // AF-040: Faction Rewards as a Resource Source.
       const reward = factionMission.reward;
       if (reward.kind === "resource") {
         crafting.addMaterial(reward.id as Parameters<typeof crafting.addMaterial>[0], reward.amount);
@@ -855,6 +876,7 @@ function grantBossRewards(): void {
   }
   meta.recordStat("bossesDefeated");
   meta.discover("bosses", def.codexId);
+  awardCredits(CREDIT_AWARDS.bossDefeated); // AF-040: Bosses as a Resource Source.
   // AF-035: mastery-challenge reward — the discoverable/Codex-visible half of AF-026's
   // grantReward; the private cosmetic-unlock bookkeeping stays MetaProgression's own.
   if (!bossFightDamageTaken) {
@@ -1883,6 +1905,7 @@ function render(): void {
               const delta = GalaxyRuntime.clampedDelta(meta.stat(explorationKey), 15, 0, 100);
               meta.recordStat(explorationKey, delta);
               persistMeta();
+              awardCredits(CREDIT_AWARDS.discovery); // AF-040: Exploration/Ancient Vaults as a Resource Source.
               render();
             }
           },
@@ -1927,14 +1950,58 @@ function render(): void {
           ]);
         }
       }
+      // AF-040: Galaxy Economy — a rotating merchant offer window, priced by
+      // AF-023 Rarity value, AF-039 Faction Reputation, and any active
+      // Special Economic Event. Buying spends the one genuinely new
+      // currency (Credits); the other five Currency Types are read-only
+      // views over values that already persist elsewhere (see debug overlay).
+      const credits = meta.stat(CREDITS_KEY);
+      const activeMerchant = marketRuntime.findMerchant("lucent-gate-trader");
+      const merchantReputationLevel = dominantFaction
+        ? FactionRuntime.reputationLevel(meta.stat(`faction:${dominantFaction.id}:reputation`))
+        : "neutral";
+      const marketButtons: Array<[string, () => void]> = activeMerchant
+        ? marketRuntime.offersFor(activeMerchant.id).map((offer) => {
+            const price = MarketRuntime.price(offer, merchantReputationLevel, marketRuntime.currentEvent);
+            const reward = offer.reward;
+            const label =
+              reward.kind === "resource"
+                ? `${reward.amount} ${reward.id}`
+                : reward.kind === "researchPoints"
+                  ? `${reward.amount} research pts`
+                  : reward.kind === "blueprint"
+                    ? `blueprint ${reward.id}`
+                    : reward.kind;
+            return [
+              `Buy: ${label} (${price} cr)`,
+              () => {
+                if (credits < price) return;
+                meta.recordStat(CREDITS_KEY, -price);
+                persistMeta();
+                if (reward.kind === "resource") {
+                  crafting.addMaterial(reward.id, reward.amount);
+                  persistCrafting();
+                } else if (reward.kind === "researchPoints") {
+                  researchTree.addPoints(reward.amount);
+                  persistResearch();
+                } else if (reward.kind === "blueprint") {
+                  crafting.unlockBlueprint(reward.id);
+                  persistCrafting();
+                }
+                render();
+              },
+            ];
+          })
+        : [];
       screen(
         "Galaxy Command",
-        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}\n${factionLine}`,
+        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}\n${factionLine}\nCredits: ${credits.toFixed(0)} · ${activeMerchant?.name ?? "Market"}${marketRuntime.currentEvent ? ` — ${marketRuntime.currentEvent}` : ""}`,
         [
           ["Select Mission", () => machine.transitionTo("MissionSelect")],
           ...travelButtons,
           ...poiButtons,
           ...factionButtons,
+          ...marketButtons,
           ...nodeButtons,
           ...forgeButtons,
           ["Statistics", () => machine.transitionTo("Statistics")],
@@ -2090,6 +2157,11 @@ const loop = new GameLoop({
     factionRuntime.update(fixedDtMs);
     const factionEvent = factionRuntime.tryTriggerEvent();
     if (factionEvent) bus.emit("EnvironmentalEventTriggered", { eventType: factionEvent });
+    // AF-040: the market evolves independent of whatever screen the player is on.
+    marketRuntime.update(fixedDtMs);
+    marketRuntime.tryRotateInventories();
+    const economicEvent = marketRuntime.tryTriggerEvent();
+    if (economicEvent) bus.emit("EnvironmentalEventTriggered", { eventType: economicEvent });
     if (input.wasPressed("Pause") && machine.base === "Gameplay") {
       if (machine.overlays.at(-1) === "Pause") machine.popOverlay();
       else if (machine.overlays.length === 0) machine.pushOverlay("Pause");
@@ -2250,6 +2322,14 @@ const loop = new GameLoop({
           const level = dominant ? FactionRuntime.reputationLevel(rep) : "—";
           const relation = factionRuntime.relationshipBetween("crystalDominion", "machineCollective");
           return `${dominant?.name ?? "—"} rep ${rep.toFixed(0)} (${level}) · CD↔MC ${relation} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
+        })(),
+        economy: (() => {
+          const snap = marketRuntime.snapshot;
+          const credits = meta.stat(CREDITS_KEY);
+          const researchData = researchTree.snapshot.points;
+          const crystalEssence = crafting.materialCount("crystalFragments");
+          const offers = marketRuntime.offersFor("lucent-gate-trader").length;
+          return `credits ${credits.toFixed(0)} · research data ${researchData} · crystal essence ${crystalEssence} · offers ${offers} · events ${snap.eventsTriggered}${snap.activeEventKind ? ` (active: ${snap.activeEventKind})` : ""}`;
         })(),
       });
     }

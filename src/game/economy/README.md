@@ -1,0 +1,13 @@
+# economy — Galaxy Economy Framework (AF-040, game layer)
+
+**Purpose:** Currencies, resource tiers, merchant inventories, pricing, and Special Economic Events. The economy supports gameplay — it introduces exactly one genuinely new value (Credits) and wraps everything else in a currency-facing or trade-facing view over systems that already exist.
+
+**Responsibilities:** `CurrencyId`/`MerchantDef`/`MerchantOfferDef`/`EconomicEventDef`/`GalaxyEconomyDef` data shapes (`economyData`); deterministic merchant-inventory rotation, weighted Special Economic Event scheduling, and pure pricing (`MarketRuntime`).
+
+**Dependencies:** `game/loot` (`RARITY_TABLE.collectionValue` as the base price), `game/factions` (`ReputationLevel` for the pricing discount), `game/crafting` (`ResourceType` for resource-backed currencies and offer rewards), `game/research` (research points as a currency and an offer reward). References AF-025 blueprint ids as offer rewards.
+
+**Data structures:** `CurrencySource`, `MerchantOfferDef`, `MerchantDef`, `EconomicEventDef`, `GalaxyEconomyDef`, `MerchantOfferReward` (discriminated union over existing acquisition id-spaces).
+
+**Extension points:** new merchants/offers/events are data; `MarketRuntime` is deliberately kept pure — it holds no currency balance. Credits persist through AF-026's existing `MetaProgression.recordStat` under `economy:credits`, the same namespaced-statistic pattern AF-038/039 already established, one layer up again. `MarketRuntime.price()` is a pure static helper, mirroring `GalaxyRuntime.clampedDelta`.
+
+**Known limitations:** only Credits is spendable today — Research Data, Ancient Fragments, Crystal Essence, Void Matter, and Singularity Cores are real, read-only *views* over AF-024's research points and AF-025's material counts (`CURRENCY_SOURCES`), but neither `ResearchTree` nor `CraftingSystem` expose a public decrement method outside their own gated operations (`unlock`, recipe `craft`), so those five currencies cannot be spent through this module without an owner-authorised extension to a locked class. Of the eight Pricing Model axes, only Rarity, Faction Reputation, and Special Economic Events are mechanically live; Supply, Demand, Mission Progress, Research, and Galaxy State are registered vocabulary without a producer yet — the same "registered, no consumer yet" pattern used repeatedly since AF-028. Trade System's Sell and Exchange share the same not-yet-public-decrement limitation as the resource currencies; Salvage already exists in full via AF-025's `CraftingSystem.salvage` (nothing to add); Reserve Items is explicitly flagged "(future)" by the spec itself. Only one sandbox merchant (Galaxy Trader) exists today.
