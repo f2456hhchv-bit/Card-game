@@ -76,6 +76,9 @@ import { stepEnemyMovement } from "./game/enemies/EnemyMovement";
 import { hasDeathEvent } from "./game/enemies/DeathEvents";
 import { generateElite } from "./game/enemies/EliteGenerator";
 import { ELITE_TIERS, EMPTY_MUTATION_EFFECTS, type MutationEffects } from "./game/enemies/eliteData";
+import { SANDBOX_BOSSES } from "./game/bosses/bossData";
+import { BossRuntime } from "./game/bosses/BossRuntime";
+import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -416,7 +419,14 @@ bus.on("DamageDealt", ({ amount, critical }) => {
   meta.recordStat("damageDealt", amount);
   if (critical) meta.addMasteryCounter("weapon:test-cannon", "criticalHits");
 });
-bus.on("PlayerDamaged", ({ amount }) => meta.recordStat("damageTaken", amount));
+bus.on("PlayerDamaged", ({ amount }) => {
+  meta.recordStat("damageTaken", amount);
+  if (bossRuntime) bossFightDamageTaken = true; // AF-035: gates the "No Damage" mastery challenge.
+});
+// AF-035: the Boss spawns when the Director's existing MiniBoss phase begins — no Director change.
+bus.on("DirectorPhaseChanged", ({ to }) => {
+  if (to === "MiniBoss" && !bossRuntime) spawnBoss();
+});
 bus.on("LootCollected", ({ itemId, rarity }) => {
   meta.recordStat("itemsCollected");
   meta.discover("equipment", itemId);
@@ -504,6 +514,26 @@ let shipRuntime: ShipRuntime | null = null;
 const sandboxWeapon = SANDBOX_WEAPONS[0]!;
 let weaponRuntime: WeaponRuntime | null = null;
 
+// ── Boss (AF-035): reuses DefenceState for hull/shield/armour and
+// EnemyRuntime for attack telegraph/cooldown gating — spawned when the
+// Director's existing MiniBoss phase begins.
+const sandboxBoss = SANDBOX_BOSSES[0]!;
+let bossRuntime: BossRuntime | null = null;
+let bossMotion = { x: 0, y: 0, elapsedMs: 0, strafeDirection: 1 as 1 | -1, phase: "hidden" as "hidden" | "active" };
+let bossIntroRemainingMs = 0;
+let bossRewardsGranted = false;
+let bossFightDamageTaken = false;
+const bossHazardZone: HazardZoneDef = {
+  id: "vault-collapse",
+  x: 0,
+  y: 0,
+  radius: 3,
+  tickIntervalMs: 900,
+  damagePerTick: 6,
+  statusOnTick: { kind: "corruption", strength: 3, durationMs: 1800 },
+};
+let bossHazardState: HazardZoneState = { tickClockMs: 0 };
+
 function equipmentEffects() {
   const validation = validateLoadout(sandboxLoadoutSlots, sandboxEquipmentById);
   if (!validation.ok) {
@@ -529,6 +559,42 @@ function dropLoot(x: number, y: number): void {
   );
   groundLoot.place(drop, x, y);
   bus.emit("LootDropped", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category, seed: drop.seed });
+}
+
+/** AF-033/035: shared hostile-projectile spawn path — enemy ranged attacks and Boss attacks both use it. */
+function fireHostileProjectiles(
+  originX: number,
+  originY: number,
+  weapon: (typeof SANDBOX_WEAPONS)[number],
+  baseAngle: number,
+  damageMultiplier: number,
+  statusOverride: StatusOnHit | null,
+): void {
+  const shotAngles = computeShotAngles(weapon.firePattern, weapon.projectilesPerShot, baseAngle);
+  for (const shotAngle of shotAngles) {
+    const projectile = projectilePool.acquire();
+    projectile.x = originX;
+    projectile.y = originY;
+    projectile.originX = originX;
+    projectile.originY = originY;
+    projectile.velocityX = Math.cos(shotAngle) * weapon.projectileSpeed;
+    projectile.velocityY = Math.sin(shotAngle) * weapon.projectileSpeed;
+    projectile.ttlMs = (weapon.range / weapon.projectileSpeed) * 1000 + 200;
+    projectile.elapsedMs = 0;
+    projectile.bouncesRemaining = 1;
+    projectile.reversed = false;
+    projectile.behaviour = weapon.projectileBehaviour;
+    projectile.pierceRemaining = weapon.pierceCount;
+    projectile.hostile = true;
+    projectile.damageBaseDamage = weapon.baseDamage * damageMultiplier;
+    projectile.damageCritChance = weapon.critChance;
+    projectile.damageCritMultiplier = weapon.critMultiplier;
+    projectile.damageSchool = weapon.damageSchool;
+    projectile.damageSourceKind = weapon.damageSourceKind;
+    projectile.statusOnHit = statusOverride ?? weapon.statusOnHit;
+    projectile.live = true;
+    projectiles.push(projectile);
+  }
 }
 
 /** AF-033/034: shared spawn path — normal wave spawning and death-triggered Spawn Events both use it. */
@@ -648,6 +714,73 @@ function spawnWave(directive: SpawnDirective): void {
   director.notifyEnemiesSpawned(count, directive.waveType === "EliteSquad" ? count : 0);
 }
 
+/** AF-035: the Boss spawns once per run, triggered by the Director's existing MiniBoss phase. */
+function spawnBoss(): void {
+  if (!movement) return;
+  const player = movement.snapshot;
+  bossRuntime = new BossRuntime(sandboxBoss, DEFAULT_COMBAT_TUNING);
+  bossMotion = { x: player.x + 10, y: player.y, elapsedMs: 0, strafeDirection: 1, phase: "hidden" };
+  bossIntroRemainingMs = 2500;
+  bossRewardsGranted = false;
+  bossFightDamageTaken = false;
+  bossHazardState = { tickClockMs: 0 };
+  lootNotices.push({
+    text: `${sandboxBoss.name.toUpperCase()} — ${sandboxBoss.title.toUpperCase()}`,
+    colour: "#ffc652",
+    ttlMs: 3200,
+  });
+}
+
+/** AF-035: reward ceremony — reuses every acquisition system the "boss" xp tier/loot categories already gate. */
+function grantBossRewards(): void {
+  const def = sandboxBoss;
+  xpPickups?.spawn(def.rewards.xpTier, bossMotion.x, bossMotion.y);
+  for (const category of def.rewards.dropCategories) {
+    if (lootRng && groundLoot && xpSystem && session) {
+      const filtered = SANDBOX_DROP_TABLE.filter((entry) => entry.category === category);
+      if (filtered.length > 0) {
+        const drop = generateDrop(
+          filtered,
+          {
+            itemLevel: xpSystem.snapshot.level,
+            difficulty: 1,
+            ascension: session.ascension,
+            mutatorBonus: 0,
+            researchBonus: sandboxBuild.researchLootBonus,
+          },
+          DEFAULT_LOOT_TUNING,
+          lootRng,
+        );
+        groundLoot.place(drop, bossMotion.x + lootRng.float(-1, 1), bossMotion.y + lootRng.float(-1, 1));
+        bus.emit("LootDropped", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category, seed: drop.seed });
+      }
+    }
+  }
+  if (def.rewards.guaranteedRelic && lootRng) {
+    const relicId = lootRng.pick(SANDBOX_RELICS.map((r) => r.id));
+    const result = relicSystem.acquire(relicId);
+    if (result.ok) {
+      lootNotices.push({ text: `RELIC · ${relicId.toUpperCase().replaceAll("-", " ")}`, colour: "#9b5cff", ttlMs: 2200 });
+      bus.emit("RelicAcquired", { relicId });
+    }
+  }
+  if (def.rewards.guaranteedBlueprint && crafting.unlockBlueprint("bp-prototype-lance")) {
+    bus.emit("BlueprintUnlocked", { blueprintId: "bp-prototype-lance" });
+    lootNotices.push({ text: "BLUEPRINT · PROTOTYPE LANCE", colour: "#9b5cff", ttlMs: 2200 });
+    persistCrafting();
+  }
+  meta.recordStat("bossesDefeated");
+  meta.discover("bosses", def.codexId);
+  // AF-035: mastery-challenge reward — the discoverable/Codex-visible half of AF-026's
+  // grantReward; the private cosmetic-unlock bookkeeping stays MetaProgression's own.
+  if (!bossFightDamageTaken) {
+    for (const challenge of def.masteryChallenges) {
+      if (challenge.kind === "noDamage") meta.discover("achievements", challenge.reward.id);
+    }
+  }
+  lootNotices.push({ text: `${def.name.toUpperCase()} DEFEATED`, colour: "#ffc652", ttlMs: 3200 });
+}
+
 function updateSandboxCombat(fixedDtMs: number): void {
   if (!movement || !playerDefence || !combatRng || !director) return;
   const dt = fixedDtMs / 1000;
@@ -759,31 +892,65 @@ function updateSandboxCombat(fixedDtMs: number): void {
       if (drone.runtime.tryAttack(canEngage)) {
         drone.runtime.ai.transitionTo("attack");
         const angle = Math.atan2(dy, dx);
-        const shotAngles = computeShotAngles(weapon.firePattern, weapon.projectilesPerShot, angle);
-        for (const shotAngle of shotAngles) {
-          const projectile = projectilePool.acquire();
-          projectile.x = drone.x;
-          projectile.y = drone.y;
-          projectile.originX = drone.x;
-          projectile.originY = drone.y;
-          projectile.velocityX = Math.cos(shotAngle) * weapon.projectileSpeed;
-          projectile.velocityY = Math.sin(shotAngle) * weapon.projectileSpeed;
-          projectile.ttlMs = (weapon.range / weapon.projectileSpeed) * 1000 + 200;
-          projectile.elapsedMs = 0;
-          projectile.bouncesRemaining = 1;
-          projectile.reversed = false;
-          projectile.behaviour = weapon.projectileBehaviour;
-          projectile.pierceRemaining = weapon.pierceCount;
-          projectile.hostile = true;
-          projectile.damageBaseDamage = weapon.baseDamage * damageMultiplier;
-          projectile.damageCritChance = weapon.critChance;
-          projectile.damageCritMultiplier = weapon.critMultiplier;
-          projectile.damageSchool = weapon.damageSchool;
-          projectile.damageSourceKind = weapon.damageSourceKind;
-          // AF-034: an elite's mutation status takes priority over the base weapon's own.
-          projectile.statusOnHit = drone.mutationEffects.attackStatusOnHit ?? weapon.statusOnHit;
-          projectile.live = true;
-          projectiles.push(projectile);
+        // AF-034: an elite's mutation status takes priority over the base weapon's own.
+        fireHostileProjectiles(drone.x, drone.y, weapon, angle, damageMultiplier, drone.mutationEffects.attackStatusOnHit);
+      }
+    }
+  }
+
+  // AF-035: Boss — introduction beat, then phases/enrage/attack drive through the
+  // exact same StateMachine/DefenceState/EnemyRuntime/movement/weapon engines above.
+  if (bossRuntime) {
+    if (bossRuntime.snapshot.state === "introduction") {
+      bossIntroRemainingMs = Math.max(0, bossIntroRemainingMs - fixedDtMs);
+      if (bossIntroRemainingMs === 0) bossRuntime.begin();
+    } else if (bossRuntime.snapshot.state === "rewardCeremony") {
+      // Nothing left to simulate — the fight is over, rewards already granted.
+    } else {
+      bossRuntime.update(fixedDtMs);
+      if (bossRuntime.snapshot.state === "deathSequence") {
+        if (!bossRewardsGranted) {
+          bossRewardsGranted = true;
+          grantBossRewards();
+          bus.emit("EnemyKilled", { enemyId: sandboxBoss.id, elite: false, boss: true });
+        }
+        bossRuntime.ai.transitionTo("rewardCeremony");
+      } else {
+        stepEnemyMovement(bossRuntime.movementBehaviour, bossMotion, fixedDtMs, {
+          targetX: player.x,
+          targetY: player.y,
+          speed: bossRuntime.moveSpeed,
+          bounds: ARENA,
+          preferredRange: 8,
+        });
+        const bossDx = player.x - bossMotion.x;
+        const bossDy = player.y - bossMotion.y;
+        const bossDistance = Math.hypot(bossDx, bossDy) || 0.0001;
+        const bossWeapon = bossRuntime.attack.mechanism.kind === "ranged" ? bossRuntime.attack.mechanism.weapon : null;
+        if (bossWeapon) {
+          const canEngage = bossDistance <= bossWeapon.range;
+          if (bossRuntime.tryAttack(canEngage)) {
+            const angle = Math.atan2(bossDy, bossDx);
+            fireHostileProjectiles(bossMotion.x, bossMotion.y, bossWeapon, angle, bossRuntime.damageMultiplier, null);
+          }
+        }
+        // AF-035 §Arena Design: a live hazard zone during the Collapse phase — reuses
+        // AF-021's StatusEngine exactly, the same pattern as AF-033's Status Explosion.
+        if (bossRuntime.currentPhase.mechanic === "arenaManipulation") {
+          bossHazardZone.x = bossMotion.x;
+          bossHazardZone.y = bossMotion.y;
+          if (stepHazardZone(bossHazardZone, bossHazardState, fixedDtMs) && isInsideHazard(bossHazardZone, player.x, player.y) && !player.invulnerable) {
+            const intake = playerDefence.takeDamage(bossHazardZone.damagePerTick);
+            bus.emit("PlayerDamaged", { amount: bossHazardZone.damagePerTick, source: sandboxBoss.id });
+            if (bossHazardZone.statusOnTick && playerStatus) {
+              playerStatus.apply(bossHazardZone.statusOnTick);
+              bus.emit("StatusApplied", { targetId: "player", status: bossHazardZone.statusOnTick.kind });
+            }
+            if (intake.defeated) {
+              endRun("defeat");
+              return;
+            }
+          }
         }
       }
     }
@@ -816,7 +983,21 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const candidates: TargetCandidate[] = drones
       .filter((d) => d.alive)
       .map((d) => ({ id: d.id, x: d.x, y: d.y, health: d.hull, maxHealth: d.maxHull, isBoss: false, isElite: d.elite }));
-    const target = TARGET_SELECTORS.nearest(candidates, player.x, player.y);
+    const bossAlive =
+      bossRuntime && bossRuntime.snapshot.state !== "introduction" && bossRuntime.snapshot.state !== "deathSequence" && bossRuntime.snapshot.state !== "rewardCeremony";
+    if (bossAlive && bossRuntime) {
+      candidates.push({
+        id: sandboxBoss.id,
+        x: bossMotion.x,
+        y: bossMotion.y,
+        health: bossRuntime.snapshot.hull,
+        maxHealth: bossRuntime.snapshot.maxHull,
+        isBoss: true,
+        isElite: false,
+      });
+    }
+    // AF-035: a live Boss finally gives AF-021's bossPriority selector a real consumer.
+    const target = bossAlive ? TARGET_SELECTORS.boss(candidates, player.x, player.y) : TARGET_SELECTORS.nearest(candidates, player.x, player.y);
     if (target && Math.hypot(target.x - player.x, target.y - player.y) <= sandboxWeapon.range) {
       const angle = Math.atan2(target.y - player.y, target.x - player.x);
       const shots = weaponRuntime.tryFire(angle);
@@ -888,6 +1069,52 @@ function updateSandboxCombat(fixedDtMs: number): void {
         }
       }
       continue;
+    }
+
+    // AF-035: the Boss shares the player's own damage pipeline — "boss" is already
+    // AF-021's own DamageSourceKind, with its own resistance override built in.
+    if (bossRuntime && bossRuntime.snapshot.state !== "introduction" && bossRuntime.snapshot.state !== "deathSequence" && bossRuntime.snapshot.state !== "rewardCeremony") {
+      if (Math.hypot(bossMotion.x - projectile.x, bossMotion.y - projectile.y) < 1.2) {
+        const result = resolveDamage(
+          { ...playerPacket(), kind: "boss" },
+          {
+            ...NEUTRAL_MODIFIERS,
+            weapon: sandboxBuild.weaponBonus,
+            research: sandboxBuild.researchWeaponBonus,
+            equipment:
+              sandboxBuild.equipmentWeaponBonus +
+              (relicSystem.aggregate.bonuses.damage ?? 0) +
+              (commanderRuntime?.bonuses.damage ?? 0),
+          },
+          { values: {} },
+          DEFAULT_COMBAT_TUNING,
+          combatRng,
+        );
+        const finalDamage = result.finalDamage * bossRuntime.incomingDamageMultiplier;
+        bossRuntime.defence.takeDamage(finalDamage);
+        // AF-035: a fixed fraction of every hit also chips the boss's one weak point —
+        // aiming at a specific sub-hitbox is a Hangar/targeting-UI concern, registered future.
+        const weakPoint = sandboxBoss.weakPoints[0];
+        if (weakPoint) bossRuntime.applyWeakPointDamage(weakPoint.id, finalDamage * 0.15);
+        hitCount += 1;
+        if (result.critical) critCount += 1;
+        bus.emit("DamageDealt", { amount: finalDamage, critical: result.critical, kind: "boss", targetId: sandboxBoss.id });
+        commanderRuntime?.notifyDamageDealt(finalDamage);
+        const popup = popupPool.acquire();
+        popup.x = bossMotion.x;
+        popup.y = bossMotion.y;
+        popup.text = `${Math.round(finalDamage)}`;
+        popup.critical = result.critical;
+        popup.ttlMs = 600;
+        popup.live = true;
+        popups.push(popup);
+        if (projectile.pierceRemaining > 0) {
+          projectile.pierceRemaining -= 1;
+        } else {
+          projectile.live = false;
+        }
+        continue;
+      }
     }
 
     for (const drone of drones) {
@@ -1066,6 +1293,7 @@ function startRun(): void {
   popups = [];
   hitCount = 0;
   critCount = 0;
+  bossRuntime = null; // AF-035: fresh run, fresh Boss — respawns when MiniBoss phase is reached again.
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -1710,6 +1938,12 @@ const loop = new GameLoop({
             : "";
           return `active ${alive.length} (${eliteCount}E) · nearest ${nearest.def.name} [${nearest.runtime.snapshot.state}]${nearest.runtime.isTelegraphing ? " TELEGRAPH" : ""} · hull ${nearest.hull.toFixed(0)}/${nearest.maxHull}${eliteTag}`;
         })(),
+        boss: bossRuntime
+          ? (() => {
+              const snap = bossRuntime!.snapshot;
+              return `${sandboxBoss.name} [${snap.state}] phase ${snap.phaseIndex + 1}/${sandboxBoss.phases.length} (${snap.phaseId})${snap.enraged ? " ENRAGED" : ""} · hull ${snap.hull.toFixed(0)}/${snap.maxHull} · shield ${snap.shield.toFixed(0)}/${snap.maxShield} · weak pts destroyed ${snap.weakPointsDestroyed.length}/${sandboxBoss.weakPoints.length}`;
+            })()
+          : null,
       });
     }
   },

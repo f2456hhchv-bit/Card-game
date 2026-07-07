@@ -44,6 +44,8 @@ export interface DebugSnapshot {
   weapons: string | null;
   /** Enemy summary: active/elite count, nearest enemy's AI state + telegraph + hull (AF-033 §DEBUG). */
   enemies: string | null;
+  /** Boss summary: state, phase, hull, shield, weak points destroyed (AF-035 §DEBUG). */
+  boss: string | null;
 }
 
 export class DebugOverlay {
@@ -99,6 +101,7 @@ export class DebugOverlay {
       `ships      ${snapshot.ships ?? "—"}`,
       `weapons    ${snapshot.weapons ?? "—"}`,
       `enemies    ${snapshot.enemies ?? "—"}`,
+      `boss       ${snapshot.boss ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
