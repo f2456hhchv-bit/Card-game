@@ -459,6 +459,28 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_PARAGON_PROTOCOL_CODEX" },
   },
+  // AF-054: Celestial Conclave constellation doctrine — unlocked by taking
+  // your first Constellation Avatar offline. Ancient cosmic consciousness,
+  // not a civilisation, so it gets no AF-039 FactionDef — the fourth
+  // faction sharing that framing, cross-referenced to the Paragon Protocol.
+  {
+    id: "codex-celestial-conclave",
+    category: "enemies",
+    title: "Constellation Doctrine",
+    lore: {
+      summary: "It was never one network. It was always a pattern, and every point in it drew a little strength from its neighbours.",
+      detailed: "A Constellation shares Solar Energy, Shield Strength, and Healing along specific links, not through any single core — two entities in the same formation can carry entirely different strength at the same moment, depending only on who is still standing beside them. Breaking the most-connected point costs every neighbour something at once.",
+      historicalContext: "No record exists of the Conclave being young. Every account begins with them already ancient.",
+      recoveredArchives: "Recovered transmission, untranslatable but for one phrase: \"...the pattern remains, even diminished.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying a Constellation Avatar — collapsing your first formation's anchor.",
+    relatedEntryIds: ["codex-paragon-protocol"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_CELESTIAL_CONCLAVE_CODEX" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",

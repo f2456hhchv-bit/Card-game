@@ -82,6 +82,8 @@ export interface DebugSnapshot {
   nomadFleets: string | null;
   /** Paragon summary: protocol count, reactor stability %, collapse state, unit/sentinel counts (AF-053 §DEBUG). */
   paragonProtocols: string | null;
+  /** Celestial summary: constellation count, per-entity link counts, gravity well count (AF-054 §DEBUG). */
+  celestialConstellations: string | null;
 }
 
 export class DebugOverlay {
@@ -156,6 +158,7 @@ export class DebugOverlay {
       `xeno       ${snapshot.xenoHive ?? "—"}`,
       `nomads     ${snapshot.nomadFleets ?? "—"}`,
       `paragon    ${snapshot.paragonProtocols ?? "—"}`,
+      `celestial  ${snapshot.celestialConstellations ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

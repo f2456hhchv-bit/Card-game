@@ -93,6 +93,8 @@ import { LORE_NOMAD_FLEET_CODEX, NOMAD_ENEMIES, NOMAD_FLEET_TUNING } from "./gam
 import { NomadFleetRuntime } from "./game/enemies/NomadFleet";
 import { LORE_PARAGON_PROTOCOL_CODEX, PARAGON_ENEMIES, createSingularityCharge } from "./game/enemies/paragonData";
 import { ParagonInstabilityRuntime } from "./game/enemies/ParagonInstability";
+import { CELESTIAL_ENEMIES, GRAVITY_WELL_TUNING, LORE_CELESTIAL_CONCLAVE_CODEX, createGravityWell } from "./game/enemies/celestialData";
+import { CelestialConstellationRuntime } from "./game/enemies/CelestialConstellation";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -201,6 +203,8 @@ interface Drone {
   fleetId: string | null;
   /** AF-053: Paragon Protocol membership — null for every non-protocol enemy. */
   protocolId: string | null;
+  /** AF-054: Celestial Constellation membership — null for every non-constellation enemy. */
+  constellationId: string | null;
 }
 
 interface TestProjectile {
@@ -621,6 +625,9 @@ bus.on("EnvironmentalEventTriggered", ({ eventType }) => {
   // AF-053: Gravity Flux is one of AF-017's existing EnvironmentalEvent
   // outcomes — quantum distortion and gravity-affected weaponry fit it exactly.
   if (eventType === "GravityFlux") spawnProtocolFromEvent();
+  // AF-054: Solar Flare is one of AF-017's existing EnvironmentalEvent
+  // outcomes — a perfect thematic fit for a living-star formation's entrance.
+  if (eventType === "SolarFlare") spawnConstellationFromEvent();
 });
 bus.on("LootDropped", ({ rarity }) => {
   if (rarity === "legendary" || rarity === "ancient" || rarity === "mythic" || rarity === "singularity") {
@@ -942,6 +949,7 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     hiveId: null,
     fleetId: null,
     protocolId: null,
+    constellationId: null,
   });
   return droneId;
 }
@@ -1283,6 +1291,66 @@ function spawnProtocolFromEvent(): void {
   director.notifyEnemiesSpawned(6, 1); // the Omega Prototype spawns as an AF-034 Elite
 }
 
+// ── AF-054: Celestial Conclave — the ninth doctrine, and the first whose
+// bonus is local rather than global: a fixed-pattern graph where each
+// living entity's bonus depends on its OWN surviving link count, not one
+// shared value for the whole formation. Constellations and gravity wells
+// are run-scoped like every other structure.
+let celestialConstellations: CelestialConstellationRuntime[] = [];
+let celestialConstellationCounter = 0;
+let gravityWells: Array<{ zone: HazardZoneDef; state: HazardZoneState }> = [];
+let gravityWellCounter = 0;
+const gravityWellClocksMs = new Map<string, number>();
+
+function constellationOf(drone: Drone): CelestialConstellationRuntime | null {
+  if (!drone.constellationId) return null;
+  return celestialConstellations.find((c) => c.constellationId === drone.constellationId) ?? null;
+}
+
+/** A Celestial formation: an AF-034 Elite Living Supernova plus its five
+ * supporting entities, wired into a star-pattern Constellation graph — the
+ * Constellation Avatar is the hub, linked to every other point, making it
+ * the anchor by construction rather than a hardcoded flag. */
+function spawnConstellation(anchorX: number, anchorY: number): void {
+  celestialConstellationCounter += 1;
+  const constellationId = `celestial-constellation-${celestialConstellationCounter}`;
+  const supernovaDef = CELESTIAL_ENEMIES.find((d) => d.id === "living-supernova")!;
+  const memberDefs = CELESTIAL_ENEMIES.filter((d) => d.id !== "living-supernova");
+  const supernovaDroneId = spawnEnemyInstance(supernovaDef, anchorX, anchorY, true); // Elite Supernova — AF-034's pipeline, unchanged
+  // Cross-module reuse of AF-046's pure formation math — same wedge, ninth doctrine.
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  let avatarDroneId: string | null = null;
+  const memberDroneIds = memberDefs.map((def, index) => {
+    const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
+    if (def.id === "constellation-avatar") avatarDroneId = id;
+    return id;
+  });
+  const allIds = [supernovaDroneId, ...memberDroneIds];
+  const links: Array<[string, string]> = [];
+  if (avatarDroneId) {
+    for (const id of allIds) if (id !== avatarDroneId) links.push([avatarDroneId, id]);
+  }
+  if (memberDroneIds.length >= 2) links.push([memberDroneIds[0]!, memberDroneIds[1]!]); // one extra edge beyond the hub, for a richer pattern
+  celestialConstellations.push(new CelestialConstellationRuntime(constellationId, allIds, links));
+  for (const drone of drones) {
+    if (allIds.includes(drone.id)) drone.constellationId = constellationId;
+  }
+  lootNotices.push({ text: "CELESTIAL FORMATION DETECTED — CONSTELLATION ALIGNED", colour: "#ffd24d", ttlMs: 3000 });
+}
+
+/** AF-054: Solar Flare is one of AF-017's existing EnvironmentalEvent
+ * outcomes — no Director change, the same react-to-an-existing-fact
+ * pattern AF-049/050/053 used. */
+function spawnConstellationFromEvent(): void {
+  if (!movement || !director || !combatRng) return;
+  const player = movement.snapshot;
+  const angle = combatRng.float(0, Math.PI * 2);
+  const x = Math.min(ARENA.maxX - 3, Math.max(ARENA.minX + 3, player.x + Math.cos(angle) * 14));
+  const y = Math.min(ARENA.maxY - 3, Math.max(ARENA.minY + 3, player.y + Math.sin(angle) * 14));
+  spawnConstellation(x, y);
+  director.notifyEnemiesSpawned(6, 1); // the Living Supernova spawns as an AF-034 Elite
+}
+
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
 function killDrone(drone: Drone): void {
   drone.alive = false;
@@ -1483,6 +1551,23 @@ function killDrone(drone: Drone): void {
     if (protocol.eliminated) {
       lootNotices.push({ text: "PARAGON PROTOCOL ELIMINATED", colour: "#ff8a1a", ttlMs: 2600 });
       paragonProtocols = paragonProtocols.filter((p) => p.protocolId !== protocol.protocolId);
+    }
+  }
+  // AF-054: Celestial Network — "destroying anchor entities destabilises
+  // nearby formations" needs no special case here: the Constellation Avatar
+  // is simply the highest-degree point in the graph, so its death costs
+  // every neighbour a link at once, purely from the graph shape itself.
+  const constellation = constellationOf(drone);
+  if (constellation) {
+    const role = constellation.notifyDroneDestroyed(drone.id);
+    if (role === "member" && drone.def.id === "constellation-avatar") {
+      lootNotices.push({ text: "CONSTELLATION AVATAR DESTROYED — FORMATION DESTABILISED", colour: "#ffd24d", ttlMs: 2600 });
+      meta.discover("lore", LORE_CELESTIAL_CONCLAVE_CODEX); // first avatar kill unlocks the doctrine Codex entry (AF-043)
+      persistMeta();
+    }
+    if (constellation.eliminated) {
+      lootNotices.push({ text: "CELESTIAL FORMATION ELIMINATED", colour: "#ffd24d", ttlMs: 2600 });
+      celestialConstellations = celestialConstellations.filter((c) => c.constellationId !== constellation.constellationId);
     }
   }
 }
@@ -1890,6 +1975,43 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
+  // AF-054: Celestial Network — Healing/Ability Synchronisation heals each
+  // member by ITS OWN link-derived amount (never a single shared value);
+  // Gravity Wells seed on the Gravity Oracle's own cadence, reusing AF-035's
+  // exact hazard engine a sixth time.
+  for (const constellation of celestialConstellations) {
+    for (const drone of drones) {
+      if (!drone.alive || drone.constellationId !== constellation.constellationId) continue;
+      const healPerSecond = constellation.healPerSecondFor(drone.id);
+      if (healPerSecond > 0 && drone.hull < drone.maxHull) {
+        drone.hull = Math.min(drone.maxHull, drone.hull + healPerSecond * dt);
+      }
+    }
+  }
+  for (const drone of drones) {
+    if (!drone.alive || drone.def.id !== "gravity-oracle") continue;
+    const clock = (gravityWellClocksMs.get(drone.id) ?? 0) + fixedDtMs;
+    if (clock < GRAVITY_WELL_TUNING.seedIntervalMs) {
+      gravityWellClocksMs.set(drone.id, clock);
+      continue;
+    }
+    gravityWellClocksMs.set(drone.id, 0);
+    if (gravityWells.length < GRAVITY_WELL_TUNING.maxLiveWells) {
+      gravityWellCounter += 1;
+      gravityWells.push({ zone: createGravityWell(`gravity-well-${gravityWellCounter}`, drone.x, drone.y), state: { tickClockMs: 0 } });
+    }
+  }
+  for (const well of gravityWells) {
+    if (stepHazardZone(well.zone, well.state, fixedDtMs) && isInsideHazard(well.zone, player.x, player.y) && !player.invulnerable) {
+      const intake = playerDefence.takeDamage(well.zone.damagePerTick);
+      bus.emit("PlayerDamaged", { amount: well.zone.damagePerTick, source: well.zone.id });
+      if (intake.defeated) {
+        endRun("defeat");
+        return;
+      }
+    }
+  }
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -1957,6 +2079,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const swarm = swarmOf(drone);
     const site = siteOf(drone);
     const fleet = fleetOf(drone);
+    const constellation = constellationOf(drone);
     const focusFire = squad?.commandActive ? 1.15 : 1;
     const targetSync = 1 + (network?.targetSyncDamageBonus ?? 0);
     const resonance = 1 + (ecosystem?.damageBonus ?? 0);
@@ -1965,6 +2088,8 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const hiveTargetInfo = 1 + (hive?.damageBonus ?? 0);
     const nomadTargetPriority = 1 + (fleet?.targetPriorityBonus ?? 0);
     const energyOverload = 1 + (protocol?.damageBonus ?? 0);
+    // AF-054: Solar Energy — computed per-entity from its own link count, unlike every prior bonus here.
+    const solarEnergy = 1 + (constellation?.damageBonusFor(drone.id) ?? 0);
     const damageMultiplier =
       (1 + (enrage.damage ?? 0)) *
       focusFire *
@@ -1974,7 +2099,8 @@ function updateSandboxCombat(fixedDtMs: number): void {
       targetInformation *
       hiveTargetInfo *
       nomadTargetPriority *
-      energyOverload;
+      energyOverload *
+      solarEnergy;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
     // AF-046: Formation Flying — the first live producer for AF-033's reserved
@@ -2386,6 +2512,10 @@ function updateSandboxCombat(fixedDtMs: number): void {
           appliedDamage *= 1 - droneProtocol.incomingDamageReduction;
           droneProtocol.recordIncomingDamage(appliedDamage);
         }
+        // AF-054: Shield Strength — computed per-entity from its own link
+        // count, the same "no single shared value" shape as Solar Energy above.
+        const droneConstellation = constellationOf(drone);
+        if (droneConstellation) appliedDamage *= 1 - droneConstellation.incomingDamageReductionFor(drone.id);
         drone.hull -= appliedDamage;
         hitCount += 1;
         if (result.critical) critCount += 1;
@@ -2572,6 +2702,9 @@ function startRun(): void {
   nomadFleets = []; // AF-052: fleets are run-scoped too.
   paragonProtocols = []; // AF-053: protocols and singularity charges are run-scoped too.
   singularityCharges = [];
+  celestialConstellations = []; // AF-054: constellations and gravity wells are run-scoped too.
+  gravityWells = [];
+  gravityWellClocksMs.clear();
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -2810,6 +2943,18 @@ function drawSandbox(): void {
     ctx.strokeStyle = "#8bff4d";
     ctx.lineWidth = 1.5;
     ctx.arc(toX(pool.zone.x), toY(pool.zone.y), pool.zone.radius * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // AF-054: Gravity Wells — golden-white filled zones (the faction's
+  // visual language), readable area-under-threat per AF-004.
+  for (const well of gravityWells) {
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(255,243,196,0.2)";
+    ctx.strokeStyle = "#ffd24d";
+    ctx.lineWidth = 1.5;
+    ctx.arc(toX(well.zone.x), toY(well.zone.y), well.zone.radius * scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }
@@ -3748,6 +3893,17 @@ const loop = new GameLoop({
             .join("; ");
           return `protocols ${paragonProtocols.length}${lines ? ` [${lines}]` : ""} · charges ${singularityCharges.length}`;
         })(),
+        celestialConstellations: (() => {
+          if (celestialConstellations.length === 0 && gravityWells.length === 0) return null;
+          const lines = celestialConstellations
+            .map((c) => {
+              const snap = c.snapshot;
+              const linkSummary = snap.members.map((m) => m.linkCount).join(",");
+              return `${snap.membersRemaining} entities, links [${linkSummary}]`;
+            })
+            .join("; ");
+          return `constellations ${celestialConstellations.length}${lines ? ` [${lines}]` : ""} · gravity wells ${gravityWells.length}`;
+        })(),
       });
     }
   },
@@ -3755,7 +3911,7 @@ const loop = new GameLoop({
 
 const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
 
-// AF-046/047/048/049/050/051/052/053 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
+// AF-046/047/048/049/050/051/052/053/054 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
 // as the debug overlay itself (AF-016 §10) — excluded from production builds.
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
@@ -3784,6 +3940,9 @@ if (import.meta.env.DEV) {
       director?.notifyEnemiesSpawned(6, 1);
     } else if (event.key === "2") {
       spawnProtocol(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(6, 1);
+    } else if (event.key === "1") {
+      spawnConstellation(player.x + 8, player.y);
       director?.notifyEnemiesSpawned(6, 1);
     }
   });
