@@ -48,6 +48,8 @@ export interface DebugSnapshot {
   boss: string | null;
   /** Biome summary: name, weather, hazard count, events triggered (AF-036 §DEBUG). */
   biome: string | null;
+  /** Mission summary: name, RunPhase, objective progress, active modifiers (AF-037 §DEBUG). */
+  mission: string | null;
 }
 
 export class DebugOverlay {
@@ -105,6 +107,7 @@ export class DebugOverlay {
       `enemies    ${snapshot.enemies ?? "—"}`,
       `boss       ${snapshot.boss ?? "—"}`,
       `biome      ${snapshot.biome ?? "—"}`,
+      `mission    ${snapshot.mission ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

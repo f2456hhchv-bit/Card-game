@@ -18,6 +18,7 @@ import {
 import {
   advancePhase,
   createRunSession,
+  type RunPhase,
   type RunSessionRecord,
 } from "./game/session/RunSession";
 import { EnemyDirector } from "./game/director/EnemyDirector";
@@ -81,6 +82,9 @@ import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
 import { SANDBOX_BIOMES } from "./game/biomes/biomeData";
 import { BiomeRuntime } from "./game/biomes/BiomeRuntime";
+import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
+import { generateMission } from "./game/missions/MissionGenerator";
+import { MissionRuntime } from "./game/missions/MissionRuntime";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -407,7 +411,7 @@ function persistMeta(): void {
 }
 
 // The ledger listens; gameplay systems never know meta exists (AF-001 §7).
-bus.on("EnemyKilled", ({ enemyId, elite }) => {
+bus.on("EnemyKilled", ({ enemyId, elite, boss }) => {
   meta.recordStat("enemiesDestroyed");
   meta.addMasteryCounter("weapon:test-cannon", "kills");
   meta.addMasteryXp("weapon:test-cannon", elite ? 5 : 1);
@@ -416,6 +420,12 @@ bus.on("EnemyKilled", ({ enemyId, elite }) => {
   // codexId is the base def id, or a tier+mutation-set signature for a generated Elite.
   const killedDrone = drones.find((d) => d.id === enemyId);
   meta.discover("enemies", killedDrone?.codexId ?? enemyId);
+  // AF-037: mission objective progress — the same EnemyKilled fact every prior module already reads.
+  if (boss) missionRuntime?.recordProgress("missionBossDefeated");
+  else {
+    missionRuntime?.recordProgress("missionKills");
+    if (elite) missionRuntime?.recordProgress("missionElitesKilled");
+  }
 });
 bus.on("DamageDealt", ({ amount, critical }) => {
   meta.recordStat("damageDealt", amount);
@@ -424,10 +434,17 @@ bus.on("DamageDealt", ({ amount, critical }) => {
 bus.on("PlayerDamaged", ({ amount }) => {
   meta.recordStat("damageTaken", amount);
   if (bossRuntime) bossFightDamageTaken = true; // AF-035: gates the "No Damage" mastery challenge.
+  missionRuntime?.recordProgress("missionDamageTaken", amount); // AF-037: gates the No Damage optional objective.
 });
 // AF-035: the Boss spawns when the Director's existing MiniBoss phase begins — no Director change.
+// AF-037: automatic RunPhase advancement replaces the placeholder manual "Advance Run Phase" button.
 bus.on("DirectorPhaseChanged", ({ to }) => {
   if (to === "MiniBoss" && !bossRuntime) spawnBoss();
+  if (to === "LightContact") advanceRunPhaseTo("EarlyExploration");
+  else if (to === "Combat" || to === "HeavyCombat") advanceRunPhaseTo("EnemyEscalation");
+  else if (to === "ElitePressure") advanceRunPhaseTo("EliteEncounters");
+  else if (to === "EnvironmentalEvent") advanceRunPhaseTo("EnvironmentalEvents");
+  else if (to === "MiniBoss") advanceRunPhaseTo("MiniBoss");
 });
 bus.on("LootCollected", ({ itemId, rarity }) => {
   meta.recordStat("itemsCollected");
@@ -541,6 +558,12 @@ let bossHazardState: HazardZoneState = { tickClockMs: 0 };
 const sandboxBiome = SANDBOX_BIOMES[0]!;
 let biomeRuntime: BiomeRuntime | null = null;
 
+// ── Mission (AF-037): deterministic modifier rolling, run-scoped objective
+// progress, and modifier-derived feeds into AF-017/023's reserved hooks.
+const sandboxMissionTemplate = SANDBOX_MISSIONS[0]!;
+let missionRuntime: MissionRuntime | null = null;
+let extractionRemainingMs = 0;
+
 function equipmentEffects() {
   const validation = validateLoadout(sandboxLoadoutSlots, sandboxEquipmentById);
   if (!validation.ok) {
@@ -558,7 +581,7 @@ function dropLoot(x: number, y: number): void {
       itemLevel: xpSystem.snapshot.level,
       difficulty: 1,
       ascension: session.ascension,
-      mutatorBonus: 0,
+      mutatorBonus: missionRuntime?.lootMutatorBonus ?? 0,
       researchBonus: sandboxBuild.researchLootBonus,
       // AF-036: Resource Distribution feeds AF-023's own reserved-but-unused hook.
       smartLoot: biomeRuntime ? { categoryWeights: biomeRuntime.resourceWeights } : undefined,
@@ -763,7 +786,7 @@ function grantBossRewards(): void {
             itemLevel: xpSystem.snapshot.level,
             difficulty: 1,
             ascension: session.ascension,
-            mutatorBonus: 0,
+            mutatorBonus: missionRuntime?.lootMutatorBonus ?? 0,
             researchBonus: sandboxBuild.researchLootBonus,
             smartLoot: biomeRuntime ? { categoryWeights: biomeRuntime.resourceWeights } : undefined,
           },
@@ -932,6 +955,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
           bossRewardsGranted = true;
           grantBossRewards();
           bus.emit("EnemyKilled", { enemyId: sandboxBoss.id, elite: false, boss: true });
+          advanceRunPhaseTo("RewardPhase");
         }
         bossRuntime.ai.transitionTo("rewardCeremony");
       } else {
@@ -972,6 +996,24 @@ function updateSandboxCombat(fixedDtMs: number): void {
           }
         }
       }
+    }
+  }
+
+  // AF-037: Mission — objective completion drives Extraction; a real (if
+  // short) countdown, not an instant skip, closes out the mission structure.
+  if (missionRuntime && session) {
+    missionRuntime.update(fixedDtMs);
+    if (session.phase === "RewardPhase" && missionRuntime.primaryObjectivesComplete) {
+      advanceRunPhaseTo("Extraction");
+      extractionRemainingMs = 5000;
+    } else if (session.phase === "Extraction") {
+      extractionRemainingMs = Math.max(0, extractionRemainingMs - fixedDtMs);
+      if (extractionRemainingMs === 0) advanceRunPhaseTo("Results");
+    }
+    const missionEvent = missionRuntime.tryTriggerEvent();
+    if (missionEvent) {
+      bus.emit("EnvironmentalEventTriggered", { eventType: MISSION_EVENT_TO_ENVIRONMENTAL_EVENT[missionEvent] });
+      lootNotices.push({ text: missionEvent.replace(/([A-Z])/g, " $1").trim().toUpperCase(), colour: "#3fd4f5", ttlMs: 2600 });
     }
   }
 
@@ -1317,9 +1359,10 @@ function screen(title: string, subtitle: string, actions: Array<[string, () => v
 
 function startRun(): void {
   const seed = new Rng(`${Date.now()}`).int(1, 2 ** 31);
+  const missionInstance = generateMission(sandboxMissionTemplate, seed);
   session = createRunSession(
     {
-      missionId: "placeholder-mission",
+      missionId: missionInstance.id,
       commanderId: "placeholder-commander",
       shipId: "placeholder-ship",
       weaponIds: [],
@@ -1332,6 +1375,8 @@ function startRun(): void {
     Date.now(),
   );
   sessionMs = 0;
+  missionRuntime = new MissionRuntime(missionInstance, new Rng(seed).fork("mission"));
+  extractionRemainingMs = 0;
   biomeRuntime = new BiomeRuntime(sandboxBiome, new Rng(seed).fork("biome"));
   movement = new PlayerMovement(sandboxShip.movementProfile);
   movement.setPosition(30, 17);
@@ -1414,12 +1459,16 @@ function startRun(): void {
     },
   );
   director = new EnemyDirector({
-    tuning: DEFAULT_DIRECTOR_TUNING,
+    // AF-037: a mission modifier may widen Elite Squads for this run only —
+    // a per-run tuning clone, never a change to the shared DirectorTuning constant.
+    tuning: missionRuntime.eliteSquadSizeBonus !== 0
+      ? { ...DEFAULT_DIRECTOR_TUNING, eliteSquadSize: DEFAULT_DIRECTOR_TUNING.eliteSquadSize + missionRuntime.eliteSquadSizeBonus }
+      : DEFAULT_DIRECTOR_TUNING,
     rng: new Rng(seed).fork("director"),
     threatInputs: {
       missionDifficulty: 1,
       biomeModifier: biomeRuntime.threatModifier,
-      mutatorModifier: 1,
+      mutatorModifier: missionRuntime.mutatorModifier,
       ascension: session.ascension,
       playerLevel: 1,
       equipmentQuality: 1,
@@ -1446,6 +1495,26 @@ function endRun(result: "victory" | "defeat"): void {
   director = null;
   bus.emit("RunEnded", { result, seed: session.seed, playTimeMs: sessionMs });
   machine.transitionTo(result === "victory" ? "MissionComplete" : "Defeat");
+}
+
+/**
+ * AF-037: real automatic RunPhase advancement — steps AF-016's existing
+ * advancePhase() forward one legal transition at a time until reaching the
+ * target (or Results, which ends the run). Replaces the placeholder manual
+ * "Advance Run Phase" debug button as the primary way phases now change.
+ */
+function advanceRunPhaseTo(target: RunPhase): void {
+  if (!session) return;
+  while (session.phase !== target) {
+    const previous = session.phase;
+    const next = advancePhase(session);
+    if (!next) return;
+    bus.emit("RunPhaseChanged", { from: previous, to: next });
+    if (next === "Results") {
+      endRun("victory");
+      return;
+    }
+  }
 }
 
 /** Movement sandbox (AF-020): fly the ship — input → movement → camera. */
@@ -2019,6 +2088,12 @@ const loop = new GameLoop({
           ? (() => {
               const snap = biomeRuntime!.snapshot;
               return `${sandboxBiome.name} · weather ${snap.activeWeather ?? "clear"} (${(snap.weatherRemainingMs / 1000).toFixed(0)}s) · hazards ${snap.hazardCount} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
+            })()
+          : null,
+        mission: missionRuntime
+          ? (() => {
+              const snap = missionRuntime!.snapshot;
+              return `${sandboxMissionTemplate.name} [${session?.phase ?? "—"}] · primary ${snap.primaryDone}/${snap.primaryTotal} · optional ${snap.optionalDone}/${snap.optionalTotal} · modifiers [${snap.activeModifierKinds.join(", ") || "none"}]`;
             })()
           : null,
       });
