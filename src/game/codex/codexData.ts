@@ -203,6 +203,29 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_MERCENARY_GUILD_CODEX" },
   },
+  // AF-050: the sixth profiled faction's doctrine entry — unlocked by
+  // destroying your first Shield Architect, the network node whose loss
+  // caps the site's escalation. A separate, older entry (`codex-ancient-
+  // custodians`, category ancientCivilisations, from Ancient Vault
+  // discovery) already covers who they are; this one covers how they fight.
+  {
+    id: "codex-ancient-security-doctrine",
+    category: "enemies",
+    title: "Ancient Security Doctrine",
+    lore: {
+      summary: "They did not build the Afterlight Network to be found. They built it to be kept.",
+      detailed: "A Custodian site escalates in five measured stages — Minor Trespass, Warning, Containment, Guardian Deployment, Maximum Response — climbing for as long as you linger and standing down the moment you leave. It is not aggression. It is a security system that has never once needed to improvise.",
+      historicalContext: "The precursor civilisation that raised the Network is gone. Its last order to the Custodians was never rescinded, and nothing since has outranked it.",
+      recoveredArchives: "Recovered glyph translation, partial: \"...preserve. Not pursue. Preserve.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying a Shield Architect — breaking your first defence grid.",
+    relatedEntryIds: ["codex-ancient-custodians"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_ANCIENT_CUSTODIANS_CODEX" },
+  },
   {
     id: "codex-commander-reyes",
     category: "commanders",

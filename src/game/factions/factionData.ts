@@ -243,6 +243,25 @@ export const SANDBOX_FACTION_ROSTER: FactionRosterDef = {
       uniqueResources: ["rareAlloys"],
       loreId: "LORE_MERCENARY_GUILD_CODEX",
     },
+    // AF-050: the Ancient Custodians profile the sixth of AF-039's ten
+    // registered factions (its own recorded content debt), the same way
+    // AF-046 profiled the Mercenary Guild — not adding an eleventh faction.
+    {
+      id: "ancientCustodians",
+      name: "Ancient Custodians",
+      symbol: "icon-ancient-custodians-sigil",
+      leader: "The Unbroken Directive",
+      government: "A standing order with no successor to report to — the last instruction it received was never rescinded.",
+      history: "Built by the precursor civilisation that raised the Afterlight Network, then left running when that civilisation had nothing left to protect but its own secrets.",
+      technology: "Perfect automation and gravitic architecture — engineering humanity was never intended to reverse-engineer, let alone possess.",
+      military: "Doctrine is defence, not conquest: escalating security response over a fixed site, never an offensive campaign beyond it.",
+      culture: "Patience measured in millennia; a Custodian that has never once needed to improvise does not start now.",
+      economy: "None in any sense a trader would recognise — it does not want, trade, or grow, only preserves what it was built to hold.",
+      territory: ["ancientCore"],
+      uniqueUnits: ["precision-lance", "judgment-beam"],
+      uniqueResources: ["ancientComponents"],
+      loreId: "LORE_ANCIENT_CUSTODIANS_CODEX",
+    },
   ],
   missions: [
     {

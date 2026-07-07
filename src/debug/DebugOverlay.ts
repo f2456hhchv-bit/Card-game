@@ -74,6 +74,8 @@ export interface DebugSnapshot {
   crystals: string | null;
   /** Void summary: swarm count, corruption level, live corruption zones (AF-049 §DEBUG). */
   voidSwarm: string | null;
+  /** Ancient summary: site count, security stage, alert %, ceiling %, node count (AF-050 §DEBUG). */
+  ancientSecurity: string | null;
 }
 
 export class DebugOverlay {
@@ -144,6 +146,7 @@ export class DebugOverlay {
       `machines   ${snapshot.machines ?? "—"}`,
       `crystals   ${snapshot.crystals ?? "—"}`,
       `void       ${snapshot.voidSwarm ?? "—"}`,
+      `ancient    ${snapshot.ancientSecurity ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

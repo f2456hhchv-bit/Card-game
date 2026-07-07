@@ -85,6 +85,8 @@ import { CRYSTAL_ENEMIES, CRYSTAL_GROWTH_TUNING, LORE_CRYSTAL_RESONANCE_ARCHIVE,
 import { CrystalResonanceRuntime } from "./game/enemies/CrystalResonance";
 import { LORE_VOID_CORRUPTION_ARCHIVE, VOID_ENEMIES, VOID_ZONE_TUNING, createCorruptionZone } from "./game/enemies/voidData";
 import { VoidCorruptionRuntime } from "./game/enemies/VoidCorruption";
+import { ANCIENT_ENEMIES, ANCIENT_SECURITY_TUNING, LORE_ANCIENT_CUSTODIANS_CODEX } from "./game/enemies/ancientData";
+import { AncientSecurityRuntime } from "./game/enemies/AncientSecurity";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -185,6 +187,8 @@ interface Drone {
   ecosystemId: string | null;
   /** AF-049: Void swarm membership — null for every non-swarm enemy. Same no-anchor rationale as AF-048. */
   swarmId: string | null;
+  /** AF-050: Ancient Custodian site membership — null for every non-site enemy. */
+  siteId: string | null;
 }
 
 interface TestProjectile {
@@ -600,6 +604,8 @@ bus.on("CommanderLevelUp", () => {
 // outcomes — reacting to the fact the Director already emits, no Director change.
 bus.on("EnvironmentalEventTriggered", ({ eventType }) => {
   if (eventType === "VoidDistortion") spawnVoidSwarmFromEvent();
+  // AF-050: Ancient Signal is one of AF-017's existing EnvironmentalEvent outcomes.
+  if (eventType === "AncientSignal") spawnAncientSiteFromEvent();
 });
 bus.on("LootDropped", ({ rarity }) => {
   if (rarity === "legendary" || rarity === "ancient" || rarity === "mythic" || rarity === "singularity") {
@@ -917,6 +923,7 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     networkOffsetY: null,
     ecosystemId: null,
     swarmId: null,
+    siteId: null,
   });
   return droneId;
 }
@@ -1089,6 +1096,54 @@ function spawnVoidSwarmFromEvent(): void {
   director.notifyEnemiesSpawned(6, 1); // the Avatar spawns as an AF-034 Elite
 }
 
+// ── AF-050: Ancient Custodians — the fifth doctrine, and the mirror-
+// opposite direction of every prior one: a site gets STRONGER the longer
+// the player lingers near it, not weaker as its units die. Sites are
+// run-scoped like every other structure.
+let ancientSites: AncientSecurityRuntime[] = [];
+let ancientSiteCounter = 0;
+
+function siteOf(drone: Drone): AncientSecurityRuntime | null {
+  if (!drone.siteId) return null;
+  return ancientSites.find((s) => s.siteId === drone.siteId) ?? null;
+}
+
+/** An Ancient Custodian site: an AF-034 Elite Ancient Executor plus its
+ * five supporting guardians, all through the existing shared spawn path. */
+function spawnAncientSite(anchorX: number, anchorY: number): void {
+  ancientSiteCounter += 1;
+  const siteId = `ancient-site-${ancientSiteCounter}`;
+  const executorDef = ANCIENT_ENEMIES.find((d) => d.id === "ancient-executor")!;
+  const memberDefs = ANCIENT_ENEMIES.filter((d) => d.id !== "ancient-executor");
+  const executorDroneId = spawnEnemyInstance(executorDef, anchorX, anchorY, true); // Elite Executor — AF-034's pipeline, unchanged
+  // Cross-module reuse of AF-046's pure formation math — same wedge, fifth doctrine.
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  const nodeIds: string[] = [];
+  const memberDroneIds = memberDefs.map((def, index) => {
+    const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
+    if (def.id === "shield-architect") nodeIds.push(id);
+    return id;
+  });
+  ancientSites.push(new AncientSecurityRuntime(siteId, [executorDroneId, ...memberDroneIds], nodeIds));
+  for (const drone of drones) {
+    if (drone.id === executorDroneId || memberDroneIds.includes(drone.id)) drone.siteId = siteId;
+  }
+  lootNotices.push({ text: "ANCIENT SITE DETECTED — MINOR TRESPASS LOGGED", colour: "#8fd8ff", ttlMs: 3000 });
+}
+
+/** AF-050: Ancient Signal is one of AF-017's existing EnvironmentalEvent
+ * outcomes (`ENVIRONMENTAL_EVENTS`) — no Director change, the same
+ * react-to-an-existing-fact pattern AF-049 used for Void Distortion. */
+function spawnAncientSiteFromEvent(): void {
+  if (!movement || !director || !combatRng) return;
+  const player = movement.snapshot;
+  const angle = combatRng.float(0, Math.PI * 2);
+  const x = Math.min(ARENA.maxX - 3, Math.max(ARENA.minX + 3, player.x + Math.cos(angle) * 14));
+  const y = Math.min(ARENA.maxY - 3, Math.max(ARENA.minY + 3, player.y + Math.sin(angle) * 14));
+  spawnAncientSite(x, y);
+  director.notifyEnemiesSpawned(6, 1); // the Executor spawns as an AF-034 Elite
+}
+
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
 function killDrone(drone: Drone): void {
   drone.alive = false;
@@ -1221,6 +1276,23 @@ function killDrone(drone: Drone): void {
     if (swarm.eliminated) {
       lootNotices.push({ text: "VOID SWARM ELIMINATED", colour: "#c94dff", ttlMs: 2600 });
       voidSwarms = voidSwarms.filter((s) => s.swarmId !== swarm.swarmId);
+    }
+  }
+  // AF-050: Ancient Network — "destroying network nodes weakens the defence
+  // grid", permanently: the site's alert ceiling shrinks and clamps down
+  // immediately. Unlike every prior faction, killing members otherwise does
+  // nothing to help — the site only calms down when the player disengages.
+  const site = siteOf(drone);
+  if (site) {
+    const role = site.notifyDroneDestroyed(drone.id);
+    if (role === "node") {
+      lootNotices.push({ text: "SHIELD ARCHITECT DESTROYED — DEFENCE GRID WEAKENED", colour: "#8fd8ff", ttlMs: 2600 });
+      meta.discover("lore", LORE_ANCIENT_CUSTODIANS_CODEX); // first architect kill unlocks the doctrine Codex entry (AF-043)
+      persistMeta();
+    }
+    if (site.eliminated) {
+      lootNotices.push({ text: "ANCIENT SITE CLEARED", colour: "#8fd8ff", ttlMs: 2600 });
+      ancientSites = ancientSites.filter((s) => s.siteId !== site.siteId);
     }
   }
 }
@@ -1486,6 +1558,31 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
+  // AF-050: Security System — alert escalates while the player trespasses
+  // near any living Custodian, de-escalates the moment they leave; Repair
+  // Functions heals members continuously once a stage grants it, and
+  // Guardian Deployment (stage 3+) manufactures one real reinforcement
+  // through the shared spawn path, cadence-gated and lifetime-capped like
+  // AF-047's Drone Factory.
+  for (const site of ancientSites) {
+    const siteMembers = drones.filter((d) => d.alive && d.siteId === site.siteId);
+    const playerPresent = siteMembers.some((d) => Math.hypot(d.x - player.x, d.y - player.y) <= ANCIENT_SECURITY_TUNING.siteRadius);
+    site.update(fixedDtMs, playerPresent);
+    if (site.healPerSecond > 0) {
+      for (const drone of siteMembers) {
+        if (drone.hull < drone.maxHull) drone.hull = Math.min(drone.maxHull, drone.hull + site.healPerSecond * dt);
+      }
+    }
+    if (site.tryDeployGuardian() && siteMembers.length > 0) {
+      const anchor = siteMembers[0]!;
+      const builtId = spawnEnemyInstance(ANCIENT_ENEMIES.find((d) => d.id === "defence-drone")!, anchor.x, anchor.y, false);
+      const built = drones.find((d) => d.id === builtId);
+      if (built) built.siteId = site.siteId;
+      site.enrolMember(builtId);
+      director.notifyEnemiesSpawned(1, 0); // the Director's census stays accurate
+    }
+  }
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -1548,11 +1645,13 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const squad = squadOf(drone);
     const network = networkOf(drone);
     const swarm = swarmOf(drone);
+    const site = siteOf(drone);
     const focusFire = squad?.commandActive ? 1.15 : 1;
     const targetSync = 1 + (network?.targetSyncDamageBonus ?? 0);
     const resonance = 1 + (ecosystem?.damageBonus ?? 0);
     const corruption = 1 + (swarm?.damageBonus ?? 0);
-    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance * corruption;
+    const targetInformation = 1 + (site?.damageBonus ?? 0);
+    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance * corruption * targetInformation;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
     // AF-046: Formation Flying — the first live producer for AF-033's reserved
@@ -1947,6 +2046,11 @@ function updateSandboxCombat(fixedDtMs: number): void {
         // the Swarm's own take on the same single damage-application point.
         const droneSwarm = swarmOf(drone);
         if (droneSwarm) appliedDamage *= 1 - droneSwarm.incomingDamageReduction;
+        // AF-050: Shield Capacity — the Ancient Network's stage-stepped
+        // incoming-damage reduction, the fifth doctrine's own take on the
+        // same single damage-application point.
+        const droneSite = siteOf(drone);
+        if (droneSite) appliedDamage *= 1 - droneSite.incomingDamageReduction;
         drone.hull -= appliedDamage;
         hitCount += 1;
         if (result.critical) critCount += 1;
@@ -2127,6 +2231,7 @@ function startRun(): void {
   voidSwarms = []; // AF-049: swarms and corruption zones are run-scoped too.
   voidZones = [];
   voidZoneClocksMs.clear();
+  ancientSites = []; // AF-050: sites are run-scoped too.
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -2355,6 +2460,20 @@ function drawSandbox(): void {
     ctx.arc(toX(voidZone.zone.x), toY(voidZone.zone.y), voidZone.zone.radius * scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+  }
+
+  // AF-050: Ancient site perimeters — blue-white outlines (the faction's
+  // visual language) making the trespass zone that drives escalation readable.
+  for (const site of ancientSites) {
+    const anchorDrone = drones.find((d) => d.alive && d.siteId === site.siteId);
+    if (!anchorDrone) continue;
+    ctx.beginPath();
+    ctx.strokeStyle = "#8fd8ff";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 6]);
+    ctx.arc(toX(anchorDrone.x), toY(anchorDrone.y), ANCIENT_SECURITY_TUNING.siteRadius * scale, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   // Drones: hostile = hot hues (AF-004 §3); elites read as diamonds (AF-007).
@@ -3225,6 +3344,16 @@ const loop = new GameLoop({
             .join("; ");
           return `swarms ${voidSwarms.length}${lines ? ` [${lines}]` : ""} · zones ${voidZones.length}`;
         })(),
+        ancientSecurity: (() => {
+          if (ancientSites.length === 0) return null;
+          const lines = ancientSites
+            .map((s) => {
+              const snap = s.snapshot;
+              return `${snap.stage} (${(snap.alertLevel * 100).toFixed(0)}%, ceiling ${(snap.ceiling * 100).toFixed(0)}%, ${snap.membersRemaining} units, ${snap.nodesRemaining} nodes, deployed ${snap.guardiansDeployed})`;
+            })
+            .join("; ");
+          return `sites ${ancientSites.length} [${lines}]`;
+        })(),
       });
     }
   },
@@ -3232,7 +3361,7 @@ const loop = new GameLoop({
 
 const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
 
-// AF-046/047/048/049 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
+// AF-046/047/048/049/050 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
 // as the debug overlay itself (AF-016 §10) — excluded from production builds.
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
@@ -3249,6 +3378,9 @@ if (import.meta.env.DEV) {
       director?.notifyEnemiesSpawned(6, 1);
     } else if (event.key === "6") {
       spawnVoidSwarm(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(6, 1);
+    } else if (event.key === "5") {
+      spawnAncientSite(player.x + 8, player.y);
       director?.notifyEnemiesSpawned(6, 1);
     }
   });
