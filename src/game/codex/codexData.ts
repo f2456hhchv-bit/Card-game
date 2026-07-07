@@ -331,6 +331,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_MACHINE_NETWORK_DOCTRINE" },
   },
+  // AF-048: Crystal Ascendancy resonance doctrine — unlocked by taking your
+  // first Resonance Node offline, the encounter that reveals the ecosystem.
+  {
+    id: "codex-crystal-resonance",
+    category: "enemies",
+    title: "Resonance Doctrine",
+    lore: {
+      summary: "No crystal fights alone. Every one nearby is a little stronger for the others still standing.",
+      detailed: "Healing, shielding, damage, and speed all scale continuously with how many resonance nodes remain alive — there is no threshold to cross, only a strength that rises and falls with every kill. Destroy the nodes and the ecosystem measurably weakens, node by node.",
+      historicalContext: "The Dominion's growths predate any war they were built for; they simply never stopped tuning themselves to each other.",
+      recoveredArchives: "Field note: \"Killed the small one. The big one hit noticeably softer after.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying a Crystal Resonance Node — weakening your first ecosystem.",
+    relatedEntryIds: ["codex-crystal-dominion"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_CRYSTAL_RESONANCE_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",

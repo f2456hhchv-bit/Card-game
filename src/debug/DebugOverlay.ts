@@ -70,6 +70,8 @@ export interface DebugSnapshot {
   outlaws: string | null;
   /** Machine summary: network state, core status, live services, adaptation counts (AF-047 §DEBUG). */
   machines: string | null;
+  /** Crystal summary: ecosystem count, resonance strength, live growth zones (AF-048 §DEBUG). */
+  crystals: string | null;
 }
 
 export class DebugOverlay {
@@ -138,6 +140,7 @@ export class DebugOverlay {
       `audio      ${snapshot.audio ?? "—"}`,
       `outlaws    ${snapshot.outlaws ?? "—"}`,
       `machines   ${snapshot.machines ?? "—"}`,
+      `crystals   ${snapshot.crystals ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

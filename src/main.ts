@@ -81,6 +81,8 @@ import { LORE_MERCENARY_GUILD_CODEX, OUTLAW_CALLSIGNS, OUTLAW_ENEMIES, OUTLAW_MI
 import { OutlawSquadRuntime } from "./game/enemies/OutlawSquad";
 import { LORE_MACHINE_NETWORK_DOCTRINE, MACHINE_ENEMIES, MACHINE_NETWORK_TUNING } from "./game/enemies/machineData";
 import { MachineNetworkRuntime } from "./game/enemies/MachineNetwork";
+import { CRYSTAL_ENEMIES, CRYSTAL_GROWTH_TUNING, LORE_CRYSTAL_RESONANCE_ARCHIVE, createCrystalGrowth, growCrystalZone } from "./game/enemies/crystalData";
+import { CrystalResonanceRuntime } from "./game/enemies/CrystalResonance";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -175,6 +177,10 @@ interface Drone {
   networkId: string | null;
   networkOffsetX: number | null;
   networkOffsetY: number | null;
+  /** AF-048: Crystal ecosystem membership — null for every non-ecosystem enemy. Deliberately no
+   * formation-anchor fields: the ecosystem has no command unit for others to anchor on, so
+   * "formation"-behaviour organisms fall back to AF-033's existing player-anchored default. */
+  ecosystemId: string | null;
 }
 
 interface TestProjectile {
@@ -900,6 +906,7 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     networkId: null,
     networkOffsetX: null,
     networkOffsetY: null,
+    ecosystemId: null,
   });
   return droneId;
 }
@@ -980,6 +987,44 @@ function spawnMachineNetwork(anchorX: number, anchorY: number): void {
     }
   }
   lootNotices.push({ text: "MACHINE NETWORK ONLINE — COMMAND CORE DETECTED", colour: "#4d7cff", ttlMs: 3000 });
+}
+
+// ── AF-048: Crystal Ascendancy — ecosystems are run-scoped like squads and
+// networks. Where a broken squad scatters and a broken network degrades in
+// steps, a broken ecosystem WEAKENS CONTINUOUSLY: no state machine, just
+// resonance strength recomputed from the living node count on every kill.
+let crystalEcosystems: CrystalResonanceRuntime[] = [];
+let crystalEcosystemCounter = 0;
+let crystalGrowths: Array<{ zone: HazardZoneDef; state: HazardZoneState }> = [];
+let crystalGrowthCounter = 0;
+const crystalSeederClocksMs = new Map<string, number>();
+
+function ecosystemOf(drone: Drone): CrystalResonanceRuntime | null {
+  if (!drone.ecosystemId) return null;
+  return crystalEcosystems.find((e) => e.ecosystemId === drone.ecosystemId) ?? null;
+}
+
+/** A Crystal ecosystem: an AF-034 Elite Titan plus its five supporting
+ * organisms, all through the existing shared spawn path. */
+function spawnCrystalEcosystem(anchorX: number, anchorY: number): void {
+  crystalEcosystemCounter += 1;
+  const ecosystemId = `crystal-ecosystem-${crystalEcosystemCounter}`;
+  const titanDef = CRYSTAL_ENEMIES.find((d) => d.id === "crystal-titan")!;
+  const memberDefs = CRYSTAL_ENEMIES.filter((d) => d.id !== "crystal-titan");
+  const titanDroneId = spawnEnemyInstance(titanDef, anchorX, anchorY, true); // Elite Titan — AF-034's pipeline, unchanged
+  // Cross-module reuse of AF-046's pure formation math — same wedge, third doctrine.
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  const nodeIds: string[] = [];
+  const memberDroneIds = memberDefs.map((def, index) => {
+    const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
+    if (def.id === "crystal-resonance-node") nodeIds.push(id);
+    return id;
+  });
+  crystalEcosystems.push(new CrystalResonanceRuntime(ecosystemId, [titanDroneId, ...memberDroneIds], nodeIds));
+  for (const drone of drones) {
+    if (drone.id === titanDroneId || memberDroneIds.includes(drone.id)) drone.ecosystemId = ecosystemId;
+  }
+  lootNotices.push({ text: "CRYSTAL ECOSYSTEM DETECTED — RESONANCE RISING", colour: "#9b5cff", ttlMs: 3000 });
 }
 
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
@@ -1082,6 +1127,23 @@ function killDrone(drone: Drone): void {
       machineNetworks = machineNetworks.filter((n) => n.networkId !== network.networkId);
     }
   }
+  // AF-048: Resonance Network — "destroying resonance nodes weakens nearby
+  // organisms", mechanically and immediately: no threshold, no delay, just a
+  // recomputed strength on every node kill. No scatter, no degrade step —
+  // the ecosystem simply gets a little weaker.
+  const ecosystem = ecosystemOf(drone);
+  if (ecosystem) {
+    const role = ecosystem.notifyDroneDestroyed(drone.id);
+    if (role === "node") {
+      lootNotices.push({ text: "RESONANCE NODE DESTROYED — ECOSYSTEM WEAKENED", colour: "#9b5cff", ttlMs: 2600 });
+      meta.discover("lore", LORE_CRYSTAL_RESONANCE_ARCHIVE); // first node kill unlocks the resonance archive Codex entry (AF-043)
+      persistMeta();
+    }
+    if (ecosystem.eliminated) {
+      lootNotices.push({ text: "CRYSTAL ECOSYSTEM ELIMINATED", colour: "#9b5cff", ttlMs: 2600 });
+      crystalEcosystems = crystalEcosystems.filter((e) => e.ecosystemId !== ecosystem.ecosystemId);
+    }
+  }
 }
 
 function spawnWave(directive: SpawnDirective): void {
@@ -1091,7 +1153,9 @@ function spawnWave(directive: SpawnDirective): void {
   // Outlaws' entrance — an ambush IS their doctrine. No Director changes.
   // AF-047: likewise, ReinforcementWave becomes the Machine Collective's —
   // Automated Reinforcements ARE their doctrine.
-  if (directive.waveType === "AmbushEvent" || directive.waveType === "ReinforcementWave") {
+  // AF-048: MixedEncounter becomes the Crystal Ascendancy's entrance — a
+  // mixed roster of cooperating organisms IS the ecosystem's doctrine.
+  if (directive.waveType === "AmbushEvent" || directive.waveType === "ReinforcementWave" || directive.waveType === "MixedEncounter") {
     const angle = combatRng.float(0, Math.PI * 2);
     const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
     const x = Math.min(ARENA.maxX - 3, Math.max(ARENA.minX + 3, player.x + Math.cos(angle) * distance));
@@ -1099,9 +1163,12 @@ function spawnWave(directive: SpawnDirective): void {
     if (directive.waveType === "AmbushEvent") {
       spawnOutlawSquad(x, y);
       director.notifyEnemiesSpawned(5, 1); // captain spawns as an AF-034 Elite
-    } else {
+    } else if (directive.waveType === "ReinforcementWave") {
       spawnMachineNetwork(x, y);
       director.notifyEnemiesSpawned(6, 1); // command core spawns as an AF-034 Elite
+    } else {
+      spawnCrystalEcosystem(x, y);
+      director.notifyEnemiesSpawned(6, 1); // titan spawns as an AF-034 Elite
     }
     return;
   }
@@ -1259,6 +1326,44 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
+  // AF-048: Resonance Network — Self Repair heals ecosystem members continuously,
+  // scaled by resonance strength (no on/off threshold); Growth Seeders seed
+  // AF-035-engine hazard zones on their own cadence, capped for performance;
+  // live growths tick against the player and grow their radius continuously.
+  for (const ecosystem of crystalEcosystems) {
+    if (ecosystem.healPerSecond <= 0) continue;
+    for (const drone of drones) {
+      if (drone.alive && drone.ecosystemId === ecosystem.ecosystemId && drone.hull < drone.maxHull) {
+        drone.hull = Math.min(drone.maxHull, drone.hull + ecosystem.healPerSecond * dt);
+      }
+    }
+  }
+  for (const drone of drones) {
+    if (!drone.alive || drone.def.id !== "crystal-growth-seeder") continue;
+    const clock = (crystalSeederClocksMs.get(drone.id) ?? 0) + fixedDtMs;
+    if (clock < CRYSTAL_GROWTH_TUNING.seedIntervalMs) {
+      crystalSeederClocksMs.set(drone.id, clock);
+      continue;
+    }
+    crystalSeederClocksMs.set(drone.id, 0);
+    if (crystalGrowths.length < CRYSTAL_GROWTH_TUNING.maxLiveGrowths) {
+      crystalGrowthCounter += 1;
+      crystalGrowths.push({ zone: createCrystalGrowth(`crystal-growth-${crystalGrowthCounter}`, drone.x, drone.y), state: { tickClockMs: 0 } });
+    }
+  }
+  for (let i = 0; i < crystalGrowths.length; i += 1) {
+    const growth = crystalGrowths[i]!;
+    growth.zone = growCrystalZone(growth.zone, dt);
+    if (stepHazardZone(growth.zone, growth.state, fixedDtMs) && isInsideHazard(growth.zone, player.x, player.y) && !player.invulnerable) {
+      const intake = playerDefence.takeDamage(growth.zone.damagePerTick);
+      bus.emit("PlayerDamaged", { amount: growth.zone.damagePerTick, source: growth.zone.id });
+      if (intake.defeated) {
+        endRun("defeat");
+        return;
+      }
+    }
+  }
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -1310,16 +1415,20 @@ function updateSandboxCombat(fixedDtMs: number): void {
     else if (aiState === "recover") drone.runtime.ai.transitionTo("targetAcquired");
 
     const enrage = drone.runtime.specialAbilityBonus(hullFraction);
-    const speedMultiplier = 1 + (enrage.movementSpeed ?? 0);
+    const ecosystem = ecosystemOf(drone);
+    const speedMultiplier = 1 + (enrage.movementSpeed ?? 0) + (ecosystem?.speedBonus ?? 0);
     // AF-046: Focus Fire — coordinated squad members hit harder while the
     // Captain lives; broken squads lose the bonus, not just the formation.
     // AF-047: Target Synchronisation — the machine equivalent, routed through
     // the Command Core and lost the moment the network degrades.
+    // AF-048: Resonance damage bonus — the third doctrine, composed the same
+    // way but continuous: it never turns fully off, just weaker per node lost.
     const squad = squadOf(drone);
     const network = networkOf(drone);
     const focusFire = squad?.commandActive ? 1.15 : 1;
     const targetSync = 1 + (network?.targetSyncDamageBonus ?? 0);
-    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync;
+    const resonance = 1 + (ecosystem?.damageBonus ?? 0);
+    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
     // AF-046: Formation Flying — the first live producer for AF-033's reserved
@@ -1881,6 +1990,9 @@ function startRun(): void {
   outlawMines = [];
   outlawMineDropClockMs = 0;
   machineNetworks = []; // AF-047: networks are run-scoped too.
+  crystalEcosystems = []; // AF-048: ecosystems and growths are run-scoped too.
+  crystalGrowths = [];
+  crystalSeederClocksMs.clear();
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -2085,6 +2197,18 @@ function drawSandbox(): void {
     ctx.fillStyle = "#ff8c1a";
     ctx.arc(toX(mine.zone.x), toY(mine.zone.y), 0.15 * scale, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // AF-048: Crystal growths — violet filled zones that visibly expand
+  // (the faction's visual language), readable area-under-threat per AF-004.
+  for (const growth of crystalGrowths) {
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(155,92,255,0.18)";
+    ctx.strokeStyle = "#9b5cff";
+    ctx.lineWidth = 1.5;
+    ctx.arc(toX(growth.zone.x), toY(growth.zone.y), growth.zone.radius * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
   }
 
   // Drones: hostile = hot hues (AF-004 §3); elites read as diamonds (AF-007).
@@ -2935,6 +3059,16 @@ const loop = new GameLoop({
             .join("; ");
           return `networks ${machineNetworks.length} [${lines}]`;
         })(),
+        crystals: (() => {
+          if (crystalEcosystems.length === 0 && crystalGrowths.length === 0) return null;
+          const lines = crystalEcosystems
+            .map((e) => {
+              const snap = e.snapshot;
+              return `${snap.membersRemaining} organisms, ${snap.nodesRemaining} nodes, strength ${(snap.resonanceStrength * 100).toFixed(0)}%`;
+            })
+            .join("; ");
+          return `ecosystems ${crystalEcosystems.length}${lines ? ` [${lines}]` : ""} · growths ${crystalGrowths.length}`;
+        })(),
       });
     }
   },
@@ -2942,7 +3076,7 @@ const loop = new GameLoop({
 
 const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
 
-// AF-046/047 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
+// AF-046/047/048 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
 // as the debug overlay itself (AF-016 §10) — excluded from production builds.
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
@@ -2953,6 +3087,9 @@ if (import.meta.env.DEV) {
       director?.notifyEnemiesSpawned(5, 1);
     } else if (event.key === "9") {
       spawnMachineNetwork(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(6, 1);
+    } else if (event.key === "7") {
+      spawnCrystalEcosystem(player.x + 8, player.y);
       director?.notifyEnemiesSpawned(6, 1);
     }
   });
