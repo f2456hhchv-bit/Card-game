@@ -99,6 +99,8 @@ import { ECLIPSED_ENEMIES, LORE_ECLIPSED_CODEX } from "./game/enemies/eclipsedDa
 import { EclipsedCorruptionRuntime } from "./game/enemies/EclipsedCorruption";
 import { DirectorConductor } from "./game/director/DirectorConductor";
 import { WAVE_TYPE_TO_ENCOUNTER_TYPE, pressureFor } from "./game/director/conductorData";
+import { BossDirectorRuntime } from "./game/bosses/BossDirector";
+import { SANDBOX_BOSS_SUMMON_PLAN, beatFor } from "./game/bosses/bossDirectorData";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -819,6 +821,11 @@ let bossMotion = { x: 0, y: 0, elapsedMs: 0, strafeDirection: 1 as 1 | -1, phase
 let bossIntroRemainingMs = 0;
 let bossRewardsGranted = false;
 let bossFightDamageTaken = false;
+// AF-057: the Boss Director decorates the locked AF-035 runtime — run-scoped.
+let bossDirector: BossDirectorRuntime | null = null;
+let lastBossPhaseIndex = 0;
+let bossFightElapsedMs = 0;
+const BOSS_HAZARD_BASE_RADIUS = 3;
 const bossHazardZone: HazardZoneDef = {
   id: "vault-collapse",
   x: 0,
@@ -1740,6 +1747,13 @@ function spawnBoss(): void {
   bossRewardsGranted = false;
   bossFightDamageTaken = false;
   bossHazardState = { tickClockMs: 0 };
+  // AF-057: one director per encounter; every arrival is a recorded attempt (§Boss Memory).
+  bossDirector = new BossDirectorRuntime(sandboxBoss.id, SANDBOX_BOSS_SUMMON_PLAN);
+  lastBossPhaseIndex = 0;
+  bossFightElapsedMs = 0;
+  bossHazardZone.radius = BOSS_HAZARD_BASE_RADIUS;
+  meta.recordStat(`boss:${sandboxBoss.id}:attempts`);
+  persistMeta();
   lootNotices.push({
     text: `${sandboxBoss.name.toUpperCase()} — ${sandboxBoss.title.toUpperCase()}`,
     colour: "#ffc652",
@@ -2323,23 +2337,73 @@ function updateSandboxCombat(fixedDtMs: number): void {
 
   // AF-035: Boss — introduction beat, then phases/enrage/attack drive through the
   // exact same StateMachine/DefenceState/EnemyRuntime/movement/weapon engines above.
+  // AF-057: the Boss Director decorates this encounter — cinematic one-shots,
+  // between-phase breathing room, the summon queue, arena escalation, and
+  // paced ceremony lines, all without touching the locked BossRuntime.
   if (bossRuntime) {
+    bossDirector?.update(fixedDtMs);
+    const cinematic = bossDirector?.consumeCinematicEvent();
+    if (cinematic === "bossArrival") {
+      lootNotices.push({ text: "THE VAULT WAKES — ARENA ACTIVATED", colour: "#ffc652", ttlMs: 2800 });
+      camera.shake("ShieldBreak");
+    } else if (cinematic === "victorySequence") {
+      lootNotices.push({ text: "THE WATCH ENDS — VAULT SILENT", colour: "#ffc652", ttlMs: 3200 });
+    }
     if (bossRuntime.snapshot.state === "introduction") {
       bossIntroRemainingMs = Math.max(0, bossIntroRemainingMs - fixedDtMs);
       if (bossIntroRemainingMs === 0) bossRuntime.begin();
     } else if (bossRuntime.snapshot.state === "rewardCeremony") {
-      // Nothing left to simulate — the fight is over, rewards already granted.
+      // AF-057 §Reward Ceremony: the memory lines land one at a time — paced presentation.
+      const ceremonyLine = bossDirector?.consumeCeremonyLine();
+      if (ceremonyLine) lootNotices.push({ text: ceremonyLine, colour: "#ffc652", ttlMs: 2600 });
     } else {
+      bossFightElapsedMs += fixedDtMs;
       bossRuntime.update(fixedDtMs);
+      // AF-057 §Phase Management: a phase change opens breathing room, evolves
+      // the arena (the existing AF-035 hazard grows), and queues the summon plan.
+      if (bossRuntime.snapshot.phaseIndex !== lastBossPhaseIndex && bossDirector) {
+        lastBossPhaseIndex = bossRuntime.snapshot.phaseIndex;
+        bossDirector.notifyPhaseChanged(lastBossPhaseIndex);
+        bossHazardZone.radius = BOSS_HAZARD_BASE_RADIUS * bossDirector.hazardRadiusScaleFor(lastBossPhaseIndex);
+        lootNotices.push({ text: "THE ARENA EVOLVES — HOLD YOUR GROUND", colour: "#ffc652", ttlMs: 2600 });
+      }
       if (bossRuntime.snapshot.state === "deathSequence") {
         if (!bossRewardsGranted) {
           bossRewardsGranted = true;
           grantBossRewards();
+          // AF-057 §Boss Memory: victories + fastest kill persist through AF-026's stats.
+          if (bossDirector) {
+            bossDirector.notifyDefeated();
+            meta.recordStat(`boss:${sandboxBoss.id}:victories`);
+            const bestKey = `boss:${sandboxBoss.id}:fastestKillMs`;
+            const delta = BossDirectorRuntime.fastestKillStatDelta(meta.stat(bestKey), bossFightElapsedMs);
+            if (delta !== 0) meta.recordStat(bestKey, delta);
+            persistMeta();
+            const attempts = meta.stat(`boss:${sandboxBoss.id}:attempts`);
+            const victories = meta.stat(`boss:${sandboxBoss.id}:victories`);
+            bossDirector.queueCeremonyLines([
+              `VICTORY — ATTEMPT ${attempts.toFixed(0)}, TRIUMPH ${victories.toFixed(0)}`,
+              `TIME ${(bossFightElapsedMs / 1000).toFixed(1)}s · BEST ${(meta.stat(bestKey) / 1000).toFixed(1)}s`,
+            ]);
+          }
           bus.emit("EnemyKilled", { enemyId: sandboxBoss.id, elite: false, boss: true });
           advanceRunPhaseTo("RewardPhase");
         }
         bossRuntime.ai.transitionTo("rewardCeremony");
       } else {
+        // AF-057 §Summon System: the queue drains one spec per cadence, after
+        // the breathing room — through the same shared spawn path as everything.
+        const summon = bossDirector?.consumeSummon();
+        if (summon && director) {
+          const summonDef = SANDBOX_ENEMIES.find((d) => d.id === summon.enemyId);
+          if (summonDef) {
+            for (let i = 0; i < summon.count; i += 1) {
+              spawnEnemyInstance(summonDef, bossMotion.x + (i - summon.count / 2) * 2, bossMotion.y + 2, summon.elite);
+            }
+            director.notifyEnemiesSpawned(summon.count, summon.elite ? summon.count : 0);
+            lootNotices.push({ text: "THE SENTINEL CALLS ITS GUARD", colour: "#ffc652", ttlMs: 2400 });
+          }
+        }
         stepEnemyMovement(bossRuntime.movementBehaviour, bossMotion, fixedDtMs, {
           targetX: player.x,
           targetY: player.y,
@@ -2353,7 +2417,9 @@ function updateSandboxCombat(fixedDtMs: number): void {
         const bossWeapon = bossRuntime.attack.mechanism.kind === "ranged" ? bossRuntime.attack.mechanism.weapon : null;
         if (bossWeapon) {
           const canEngage = bossDistance <= bossWeapon.range;
-          if (bossRuntime.tryAttack(canEngage)) {
+          // AF-057 §Player Recovery: the boss holds fire while the arena evolves —
+          // recovery through repositioning, never artificial healing.
+          if (!bossDirector?.attacksHeld && bossRuntime.tryAttack(canEngage)) {
             const angle = Math.atan2(bossDy, bossDx);
             fireHostileProjectiles(bossMotion.x, bossMotion.y, bossWeapon, angle, bossRuntime.damageMultiplier, null);
           }
@@ -2817,6 +2883,7 @@ function startRun(): void {
   hitCount = 0;
   critCount = 0;
   bossRuntime = null; // AF-035: fresh run, fresh Boss — respawns when MiniBoss phase is reached again.
+  bossDirector = null; // AF-057: the director lives and dies with its encounter.
   outlawSquads = []; // AF-046: squads and mines are run-scoped, like every combat structure here.
   outlawMines = [];
   outlawMineDropClockMs = 0;
@@ -4056,6 +4123,14 @@ const loop = new GameLoop({
             ? `recovery ${(snap.windowRemainingMs / 1000).toFixed(1)}s (${snap.lastTrigger})`
             : `no window (cooldown ${(snap.cooldownRemainingMs / 1000).toFixed(1)}s)`;
           return `${pressure} · ${window} · queue ${snap.queuedDirectives} · struggle ${(snap.struggleScore * 100).toFixed(0)}% · windows ${snap.windowsOpened}`;
+        })(),
+        bossDirector: (() => {
+          if (!bossDirector || !bossRuntime) return null;
+          const snap = bossDirector.snapshot;
+          const bossSnap = bossRuntime.snapshot;
+          const beat = beatFor(bossSnap.state, bossSnap.phaseIndex, sandboxBoss.phases.length, snap.transitionActive);
+          const hold = snap.transitionActive ? `holding ${(snap.transitionRemainingMs / 1000).toFixed(1)}s` : "attacking";
+          return `${beat} · ${hold} · summons ${snap.queuedSummons} queued/${snap.summonsIssued} issued · ceremony ${snap.queuedCeremonyLines} · cinematics ${snap.cinematicsFired}`;
         })(),
       });
     }

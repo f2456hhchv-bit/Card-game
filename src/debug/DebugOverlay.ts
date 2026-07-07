@@ -88,6 +88,8 @@ export interface DebugSnapshot {
   eclipsed: string | null;
   /** Conductor summary: pressure, recovery window + trigger, spawn queue, struggle score (AF-056 §DEBUG). */
   conductor: string | null;
+  /** Boss Director summary: encounter beat, attack hold, summon/ceremony queues, cinematics (AF-057 §DEBUG). */
+  bossDirector: string | null;
 }
 
 export class DebugOverlay {
@@ -165,6 +167,7 @@ export class DebugOverlay {
       `celestial  ${snapshot.celestialConstellations ?? "—"}`,
       `eclipsed   ${snapshot.eclipsed ?? "—"}`,
       `conductor  ${snapshot.conductor ?? "—"}`,
+      `bossDir    ${snapshot.bossDirector ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
