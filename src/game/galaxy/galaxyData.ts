@@ -112,6 +112,13 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Crystal Dominion",
       lore: "Silicate empires that grew instead of building — the Dominion doesn't construct its fleets, it cultivates them.",
     },
+    // AF-058: the Human Frontier region — additive galaxy content, the same
+    // roster-addition class as AF-046/050/052's faction profiles.
+    {
+      id: "humanFrontier",
+      name: "Human Frontier",
+      lore: "The fragile remains of humanity after the Collapse — rebuilding in public, so the dark can see it hasn't won.",
+    },
   ],
   systems: [
     {
@@ -120,7 +127,7 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "crystalDominion",
       biomeId: "crystal-fields-alpha",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-hollow-drift"],
+      connectedSystemIds: ["sys-hollow-drift", "sys-meridian-rest"], // AF-058: the frontier joins the route map
       pointsOfInterest: [
         { id: "lucent-gate-vault", kind: "ancientVaults", discoveryCategory: "lore", discoveryId: "LORE_LUCENT_GATE_VAULT" },
       ],
@@ -155,6 +162,23 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       dominantFaction: "Machine Collective",
       threatLevel: 4,
       requiresFastTravelUnlock: true,
+    },
+    // AF-058: Meridian Rest — the Human Frontier's first reachable system,
+    // carrying the first biome authored on AF-036's engine. Its biomeId gives
+    // AF-038's own field its first consumer.
+    {
+      id: "sys-meridian-rest",
+      name: "Meridian Rest",
+      region: "humanFrontier",
+      biomeId: "meridian-rest-frontier",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-lucent-gate"],
+      pointsOfInterest: [
+        { id: "meridian-rest-shipyard", kind: "tradeOutposts", discoveryCategory: "lore", discoveryId: "LORE_MERIDIAN_REST_SHIPYARD" },
+      ],
+      dominantFaction: "Human Alliance",
+      threatLevel: 1,
+      requiresFastTravelUnlock: false,
     },
   ],
   events: [

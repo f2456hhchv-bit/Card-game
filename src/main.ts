@@ -104,7 +104,8 @@ import { SANDBOX_BOSS_SUMMON_PLAN, beatFor } from "./game/bosses/bossDirectorDat
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
-import { SANDBOX_BIOMES } from "./game/biomes/biomeData";
+import { SANDBOX_BIOMES, type BiomeDef } from "./game/biomes/biomeData";
+import { HUMAN_FRONTIER_BIOME } from "./game/biomes/frontierBiome";
 import { BiomeRuntime } from "./game/biomes/BiomeRuntime";
 import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
 import { generateMission } from "./game/missions/MissionGenerator";
@@ -840,6 +841,11 @@ let bossHazardState: HazardZoneState = { tickClockMs: 0 };
 // ── Biome (AF-036): weather rotation, hazard ticking, weighted Biome
 // Events, and pass-through feeds into AF-017/021/023/028's existing hooks.
 const sandboxBiome = SANDBOX_BIOMES[0]!;
+// AF-058: AF-038's StarSystemDef.biomeId gets its first consumer — the run's
+// biome follows the galaxy. The registry is additive; the sandbox biome is
+// the fallback for any system whose biomeId has no authored def yet.
+const BIOME_REGISTRY: readonly BiomeDef[] = [...SANDBOX_BIOMES, HUMAN_FRONTIER_BIOME];
+let activeBiome: BiomeDef = sandboxBiome;
 let biomeRuntime: BiomeRuntime | null = null;
 
 // ── Mission (AF-037): deterministic modifier rolling, run-scoped objective
@@ -1810,7 +1816,7 @@ function grantBossRewards(): void {
     category: "bosses",
     atMs: Date.now(),
     missionId: session?.missionId ?? null,
-    biomeId: sandboxBiome.id,
+    biomeId: activeBiome.id,
     galaxySectorId: galaxyRuntime.currentSystem.id,
     commanderId: sandboxCommander.id,
     shipId: sandboxShip.id,
@@ -2840,6 +2846,9 @@ function screen(title: string, subtitle: string, actions: Array<[string, () => v
 
 function startRun(): void {
   const seed = new Rng(`${Date.now()}`).int(1, 2 ** 31);
+  // AF-058: resolve the run's biome from the current system BEFORE anything
+  // records a biomeId — the galaxy decides where this expedition happens.
+  activeBiome = BIOME_REGISTRY.find((b) => b.id === galaxyRuntime.currentSystem.biomeId) ?? sandboxBiome;
   const missionInstance = generateMission(sandboxMissionTemplate, seed);
   session = createRunSession(
     {
@@ -2850,7 +2859,7 @@ function startRun(): void {
       equipmentIds: [],
       difficulty: "standard",
       ascension: 0,
-      biomeId: sandboxBiome.id,
+      biomeId: activeBiome.id,
     },
     seed,
     Date.now(),
@@ -2865,7 +2874,7 @@ function startRun(): void {
   persistMeta();
   missionRuntime = new MissionRuntime(missionInstance, new Rng(seed).fork("mission"));
   extractionRemainingMs = 0;
-  biomeRuntime = new BiomeRuntime(sandboxBiome, new Rng(seed).fork("biome"));
+  biomeRuntime = new BiomeRuntime(activeBiome, new Rng(seed).fork("biome"));
   movement = new PlayerMovement(sandboxShip.movementProfile);
   movement.setPosition(30, 17);
   movement.setBounds(ARENA);
@@ -3956,7 +3965,7 @@ const loop = new GameLoop({
         biome: biomeRuntime
           ? (() => {
               const snap = biomeRuntime!.snapshot;
-              return `${sandboxBiome.name} · weather ${snap.activeWeather ?? "clear"} (${(snap.weatherRemainingMs / 1000).toFixed(0)}s) · hazards ${snap.hazardCount} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
+              return `${activeBiome.name} · weather ${snap.activeWeather ?? "clear"} (${(snap.weatherRemainingMs / 1000).toFixed(0)}s) · hazards ${snap.hazardCount} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
             })()
           : null,
         mission: missionRuntime

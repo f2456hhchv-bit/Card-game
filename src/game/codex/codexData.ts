@@ -503,6 +503,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_ECLIPSED_CODEX" },
   },
+  // AF-058: the Human Frontier biome — unlocked by reading Meridian Rest's
+  // civilian archive in the field (the biome's own lore interactable).
+  {
+    id: "codex-biome-human-frontier",
+    category: "biomes",
+    title: "The Human Frontier",
+    lore: {
+      summary: "Half the station lights still work, and every one of them is on.",
+      detailed: "Mining platforms, patched trade stations, convoys that fly in pairs because nobody flies alone any more. The Frontier is not safe — it is simply the place where humanity decided to be seen rebuilding.",
+      historicalContext: "The Collapse ended everything except the habit of fixing things. The Frontier is that habit, at civilisational scale.",
+      recoveredArchives: "Station log, Meridian Rest: \"Docked twelve today. Fed all of them. Write that down — someone should know we could.\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Reading the civilian archive at Meridian Rest.",
+    relatedEntryIds: ["codex-human-alliance"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_HUMAN_FRONTIER_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
