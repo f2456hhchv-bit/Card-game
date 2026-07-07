@@ -70,10 +70,12 @@ import { stepProjectile } from "./game/weapons/ProjectileBehaviour";
 import { computeShotAngles } from "./game/weapons/FirePattern";
 import { StatusEngine } from "./game/combat/StatusEngine";
 import type { DamageSchool, DamageSourceKind } from "./game/combat/combatTuning";
-import { SANDBOX_ENEMIES, applyEliteModifier, type EnemyDef } from "./game/enemies/enemyData";
+import { SANDBOX_ENEMIES, type EnemyDef } from "./game/enemies/enemyData";
 import { EnemyRuntime } from "./game/enemies/EnemyRuntime";
 import { stepEnemyMovement } from "./game/enemies/EnemyMovement";
 import { hasDeathEvent } from "./game/enemies/DeathEvents";
+import { generateElite } from "./game/enemies/EliteGenerator";
+import { ELITE_TIERS, EMPTY_MUTATION_EFFECTS, type MutationEffects } from "./game/enemies/eliteData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -129,6 +131,12 @@ interface Drone {
   /** AF-033: identity + behaviour source of truth — elite-adjusted view if applicable. */
   def: EnemyDef;
   runtime: EnemyRuntime;
+  /** AF-034: elite-only numeric effects layered alongside def, not merged into AF-033's schema. */
+  mutationEffects: MutationEffects;
+  /** AF-034: Elite Codex key — the base def id, or a tier+mutation-set signature for a generated Elite. */
+  codexId: string;
+  eliteTier: string | null;
+  eliteMutations: readonly string[];
 }
 
 interface TestProjectile {
@@ -399,8 +407,10 @@ bus.on("EnemyKilled", ({ enemyId, elite }) => {
   meta.addMasteryCounter("weapon:test-cannon", "kills");
   meta.addMasteryXp("weapon:test-cannon", elite ? 5 : 1);
   if (elite) meta.addAccountXp(ACCOUNT_XP_AWARDS.eliteDefeated);
-  meta.discover("enemies", elite ? "ENEMY_ELITE_DRONE" : "ENEMY_DRONE");
-  void enemyId;
+  // AF-034: Elite Codex discovery reuses AF-026's existing collections engine —
+  // codexId is the base def id, or a tier+mutation-set signature for a generated Elite.
+  const killedDrone = drones.find((d) => d.id === enemyId);
+  meta.discover("enemies", killedDrone?.codexId ?? enemyId);
 });
 bus.on("DamageDealt", ({ amount, critical }) => {
   meta.recordStat("damageDealt", amount);
@@ -521,9 +531,22 @@ function dropLoot(x: number, y: number): void {
   bus.emit("LootDropped", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category, seed: drop.seed });
 }
 
-/** AF-033: shared spawn path — normal wave spawning and death-triggered Spawn Events both use it. */
+/** AF-033/034: shared spawn path — normal wave spawning and death-triggered Spawn Events both use it. */
 function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: boolean): void {
-  const def = elite ? applyEliteModifier(baseDef) : baseDef;
+  let def = baseDef;
+  let mutationEffects: MutationEffects = EMPTY_MUTATION_EFFECTS;
+  let codexId = baseDef.id;
+  let eliteTier: string | null = null;
+  let eliteMutations: readonly string[] = [];
+  if (elite && combatRng) {
+    const tier = combatRng.pick(ELITE_TIERS);
+    const eliteInstance = generateElite(baseDef, tier, combatRng);
+    def = eliteInstance.def;
+    mutationEffects = eliteInstance.mutationEffects;
+    codexId = eliteInstance.id;
+    eliteTier = eliteInstance.tier;
+    eliteMutations = eliteInstance.mutations;
+  }
   droneCounter += 1;
   const droneId = `drone-${droneCounter}`;
   drones.push({
@@ -545,6 +568,10 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     }),
     def,
     runtime: new EnemyRuntime(def),
+    mutationEffects,
+    codexId,
+    eliteTier,
+    eliteMutations,
   });
 }
 
@@ -587,6 +614,20 @@ function killDrone(drone: Drone): void {
   if (hasDeathEvent(drone.def, "spawnEvent")) {
     spawnEnemyInstance(SANDBOX_ENEMIES[0]!, drone.x, drone.y, false);
   }
+  // AF-034: Explosive mutation — detonates in a damage radius on death; the actual
+  // danger is the player standing nearby, per the mutation's own counterplay text.
+  if (drone.mutationEffects.explosionOnDeath && movement && playerDefence && combatRng) {
+    const player = movement.snapshot;
+    const explosion = drone.mutationEffects.explosionOnDeath;
+    if (Math.hypot(player.x - drone.x, player.y - drone.y) <= explosion.radius && !player.invulnerable) {
+      const packet = { baseDamage: explosion.damage, kind: "area", school: "energy", critChance: 0, critMultiplier: 1 } as const;
+      const result = resolveDamage(packet, NEUTRAL_MODIFIERS, { values: {} }, DEFAULT_COMBAT_TUNING, combatRng);
+      const intake = playerDefence.takeDamage(result.finalDamage);
+      bus.emit("PlayerDamaged", { amount: result.finalDamage, source: drone.id });
+      camera.shake("ShieldBreak");
+      if (intake.defeated) endRun("defeat");
+    }
+  }
 }
 
 function spawnWave(directive: SpawnDirective): void {
@@ -625,16 +666,41 @@ function updateSandboxCombat(fixedDtMs: number): void {
       continue;
     }
 
+    // AF-034: Regeneration mutation — a MutationEffect layered alongside the def, not merged into it.
+    if (drone.mutationEffects.regenPerSecond > 0) {
+      drone.hull = Math.min(drone.maxHull, drone.hull + drone.mutationEffects.regenPerSecond * dt);
+    }
+
+    const hullFraction = drone.hull / drone.maxHull;
+
+    // AF-034: Elite AI gains Retreat Logic — disengage below a critical-health
+    // threshold instead of pressing the attack, then resume once recovered.
+    if (drone.elite && hullFraction < 0.25 && (drone.runtime.ai.current === "targetAcquired" || drone.runtime.ai.current === "attack")) {
+      drone.runtime.ai.transitionTo("retreat");
+    }
+    if (drone.runtime.ai.current === "retreat") {
+      stepEnemyMovement("retreat", drone, fixedDtMs, {
+        targetX: player.x,
+        targetY: player.y,
+        speed: drone.def.moveSpeed,
+        bounds: ARENA,
+      });
+      if (hullFraction > 0.35) drone.runtime.ai.transitionTo("recover");
+      continue;
+    }
+
     // AF-033: advance the AI state chain — idle→patrol→search→targetAcquired
     // happens immediately (no patrol waypoints yet); attack is entered the
     // tick a telegraphed attack resolves and exited back to targetAcquired.
+    // AF-034 adds recover→targetAcquired, closing the retreat loop.
     const aiState = drone.runtime.ai.current;
     if (aiState === "idle") drone.runtime.ai.transitionTo("patrol");
     else if (aiState === "patrol") drone.runtime.ai.transitionTo("search");
     else if (aiState === "search") drone.runtime.ai.transitionTo("targetAcquired");
     else if (aiState === "attack") drone.runtime.ai.transitionTo("targetAcquired");
+    else if (aiState === "recover") drone.runtime.ai.transitionTo("targetAcquired");
 
-    const enrage = drone.runtime.specialAbilityBonus(drone.hull / drone.maxHull);
+    const enrage = drone.runtime.specialAbilityBonus(hullFraction);
     const speedMultiplier = 1 + (enrage.movementSpeed ?? 0);
     const damageMultiplier = 1 + (enrage.damage ?? 0);
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
@@ -674,6 +740,14 @@ function updateSandboxCombat(fixedDtMs: number): void {
         } else {
           camera.shake("WeaponImpact");
         }
+        // AF-034: a status mutation (Cryogenic/Incendiary/Corrupted) on a melee attacker —
+        // melee has no statusOnHit field of its own, so this reaches the player through
+        // MutationEffects instead.
+        if (drone.mutationEffects.attackStatusOnHit && playerStatus && combatRng.next() < drone.mutationEffects.attackStatusOnHit.chance) {
+          const status = drone.mutationEffects.attackStatusOnHit;
+          playerStatus.apply({ kind: status.kind, strength: status.strength, durationMs: status.durationMs });
+          bus.emit("StatusApplied", { targetId: "player", status: status.kind });
+        }
         if (intake.defeated) {
           endRun("defeat");
           return;
@@ -706,7 +780,8 @@ function updateSandboxCombat(fixedDtMs: number): void {
           projectile.damageCritMultiplier = weapon.critMultiplier;
           projectile.damageSchool = weapon.damageSchool;
           projectile.damageSourceKind = weapon.damageSourceKind;
-          projectile.statusOnHit = weapon.statusOnHit;
+          // AF-034: an elite's mutation status takes priority over the base weapon's own.
+          projectile.statusOnHit = drone.mutationEffects.attackStatusOnHit ?? weapon.statusOnHit;
           projectile.live = true;
           projectiles.push(projectile);
         }
@@ -1630,7 +1705,10 @@ const loop = new GameLoop({
             Math.hypot(d.x - px, d.y - py) < Math.hypot(closest.x - px, closest.y - py) ? d : closest,
           );
           const eliteCount = alive.filter((d) => d.elite).length;
-          return `active ${alive.length} (${eliteCount}E) · nearest ${nearest.def.name} [${nearest.runtime.snapshot.state}]${nearest.runtime.isTelegraphing ? " TELEGRAPH" : ""} · hull ${nearest.hull.toFixed(0)}/${nearest.maxHull}`;
+          const eliteTag = nearest.eliteTier
+            ? ` · ${nearest.eliteTier.toUpperCase()} [${nearest.eliteMutations.join(", ") || "no mutations"}]`
+            : "";
+          return `active ${alive.length} (${eliteCount}E) · nearest ${nearest.def.name} [${nearest.runtime.snapshot.state}]${nearest.runtime.isTelegraphing ? " TELEGRAPH" : ""} · hull ${nearest.hull.toFixed(0)}/${nearest.maxHull}${eliteTag}`;
         })(),
       });
     }
