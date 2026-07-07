@@ -95,6 +95,8 @@ import { LORE_PARAGON_PROTOCOL_CODEX, PARAGON_ENEMIES, createSingularityCharge }
 import { ParagonInstabilityRuntime } from "./game/enemies/ParagonInstability";
 import { CELESTIAL_ENEMIES, GRAVITY_WELL_TUNING, LORE_CELESTIAL_CONCLAVE_CODEX, createGravityWell } from "./game/enemies/celestialData";
 import { CelestialConstellationRuntime } from "./game/enemies/CelestialConstellation";
+import { ECLIPSED_ENEMIES, LORE_ECLIPSED_CODEX } from "./game/enemies/eclipsedData";
+import { EclipsedCorruptionRuntime } from "./game/enemies/EclipsedCorruption";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -205,6 +207,8 @@ interface Drone {
   protocolId: string | null;
   /** AF-054: Celestial Constellation membership — null for every non-constellation enemy. */
   constellationId: string | null;
+  /** AF-055: Eclipsed group membership — null for every non-eclipsed enemy. */
+  eclipsedId: string | null;
 }
 
 interface TestProjectile {
@@ -950,6 +954,7 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     fleetId: null,
     protocolId: null,
     constellationId: null,
+    eclipsedId: null,
   });
   return droneId;
 }
@@ -1351,6 +1356,42 @@ function spawnConstellationFromEvent(): void {
   director.notifyEnemiesSpawned(6, 1); // the Living Supernova spawns as an AF-034 Elite
 }
 
+// ── AF-055: The Eclipsed — the tenth doctrine, and the first that is a
+// mirror: every member walks its OWN five-stage fall (staggered, slowed by
+// the Memory Warden, jumped forward by grief on every ally death), and the
+// group's Ability Mimicry scales with the player's own progression level.
+// Groups are run-scoped like every other structure.
+let eclipsedGroups: EclipsedCorruptionRuntime[] = [];
+let eclipsedGroupCounter = 0;
+
+function eclipsedOf(drone: Drone): EclipsedCorruptionRuntime | null {
+  if (!drone.eclipsedId) return null;
+  return eclipsedGroups.find((g) => g.eclipsedId === drone.eclipsedId) ?? null;
+}
+
+/** A lost expedition: an AF-034 Elite Eclipsed Champion plus its five
+ * fallen crew, all through the existing shared spawn path. */
+function spawnEclipsed(anchorX: number, anchorY: number): void {
+  eclipsedGroupCounter += 1;
+  const eclipsedId = `eclipsed-${eclipsedGroupCounter}`;
+  const championDef = ECLIPSED_ENEMIES.find((d) => d.id === "eclipsed-champion")!;
+  const memberDefs = ECLIPSED_ENEMIES.filter((d) => d.id !== "eclipsed-champion");
+  const championDroneId = spawnEnemyInstance(championDef, anchorX, anchorY, true); // Elite Champion — AF-034's pipeline, unchanged
+  // Cross-module reuse of AF-046's pure formation math — same wedge, tenth doctrine.
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  let wardenDroneId: string | null = null;
+  const memberDroneIds = memberDefs.map((def, index) => {
+    const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
+    if (def.id === "memory-warden") wardenDroneId = id;
+    return id;
+  });
+  eclipsedGroups.push(new EclipsedCorruptionRuntime(eclipsedId, [championDroneId, ...memberDroneIds], championDroneId, wardenDroneId));
+  for (const drone of drones) {
+    if (drone.id === championDroneId || memberDroneIds.includes(drone.id)) drone.eclipsedId = eclipsedId;
+  }
+  lootNotices.push({ text: "LOST EXPEDITION DETECTED — TRANSPONDERS STILL BROADCASTING", colour: "#c9d4e8", ttlMs: 3000 });
+}
+
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
 function killDrone(drone: Drone): void {
   drone.alive = false;
@@ -1570,6 +1611,26 @@ function killDrone(drone: Drone): void {
       celestialConstellations = celestialConstellations.filter((c) => c.constellationId !== constellation.constellationId);
     }
   }
+  // AF-055: the Eclipsed — grief is mechanical (handled inside the runtime:
+  // every death pushes the survivors further along their own falls). The
+  // Warden's death removes the one thing slowing them; the Champion's death
+  // recovers an identity — the group's Codex unlock is a name, not a kill.
+  const eclipsed = eclipsedOf(drone);
+  if (eclipsed) {
+    const role = eclipsed.notifyDroneDestroyed(drone.id);
+    if (role === "warden") {
+      lootNotices.push({ text: "MEMORY WARDEN LOST — THE MANIFEST GOES UNREAD", colour: "#c9d4e8", ttlMs: 2600 });
+    }
+    if (role === "champion") {
+      lootNotices.push({ text: "IDENTITY RECOVERED — A COMMANDER'S NAME COMES HOME", colour: "#c9d4e8", ttlMs: 3000 });
+      meta.discover("lore", LORE_ECLIPSED_CODEX); // first champion kill unlocks the Eclipsed Codex entry (AF-043)
+      persistMeta();
+    }
+    if (eclipsed.eliminated) {
+      lootNotices.push({ text: "LOST EXPEDITION AT REST", colour: "#c9d4e8", ttlMs: 2600 });
+      eclipsedGroups = eclipsedGroups.filter((g) => g.eclipsedId !== eclipsed.eclipsedId);
+    }
+  }
 }
 
 function spawnWave(directive: SpawnDirective): void {
@@ -1585,12 +1646,16 @@ function spawnWave(directive: SpawnDirective): void {
   // Swarming/Flanking/Overwhelming Numbers, almost too literally to pass up.
   // AF-052: AmbientPatrol becomes the Stellar Nomads' — a convoy passing
   // through fits an opportunistic, low-intensity encounter type well.
+  // AF-055: EliteSquad becomes the Eclipsed's — ElitePressure's "squad of
+  // elites" gains a face: every Eclipsed was once a Commander, and the
+  // Champion still spawns through AF-034's pipeline as the wave promises.
   if (
     directive.waveType === "AmbushEvent" ||
     directive.waveType === "ReinforcementWave" ||
     directive.waveType === "MixedEncounter" ||
     directive.waveType === "HunterPack" ||
-    directive.waveType === "AmbientPatrol"
+    directive.waveType === "AmbientPatrol" ||
+    directive.waveType === "EliteSquad"
   ) {
     const angle = combatRng.float(0, Math.PI * 2);
     const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
@@ -1608,25 +1673,28 @@ function spawnWave(directive: SpawnDirective): void {
     } else if (directive.waveType === "HunterPack") {
       spawnHive(x, y);
       director.notifyEnemiesSpawned(6, 1); // living titan spawns as an AF-034 Elite
-    } else {
+    } else if (directive.waveType === "AmbientPatrol") {
       spawnFleet(x, y);
       director.notifyEnemiesSpawned(6, 1); // flagship spawns as an AF-034 Elite
+    } else {
+      spawnEclipsed(x, y);
+      director.notifyEnemiesSpawned(6, 1); // champion spawns as an AF-034 Elite
     }
     return;
   }
-  const count = directive.waveType === "EliteSquad"
-    ? directive.eliteCount
-    : Math.max(1, Math.round(directive.budgetCost / 4));
+  // Remaining generic waves (SwarmWave, MiniBossWave overflow, etc.) — never
+  // elite: every AF-034 Elite now enters as a faction leader through the
+  // branch above, so the census's elite column is theirs alone.
+  const count = Math.max(1, Math.round(directive.budgetCost / 4));
   for (let i = 0; i < count; i += 1) {
-    const elite = directive.waveType === "EliteSquad";
     const angle = combatRng.float(0, Math.PI * 2);
     const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
     const x = Math.min(ARENA.maxX - 1, Math.max(ARENA.minX + 1, player.x + Math.cos(angle) * distance));
     const y = Math.min(ARENA.maxY - 1, Math.max(ARENA.minY + 1, player.y + Math.sin(angle) * distance));
     const baseDef = combatRng.pick(SANDBOX_ENEMIES);
-    spawnEnemyInstance(baseDef, x, y, elite);
+    spawnEnemyInstance(baseDef, x, y, false);
   }
-  director.notifyEnemiesSpawned(count, directive.waveType === "EliteSquad" ? count : 0);
+  director.notifyEnemiesSpawned(count, 0);
 }
 
 /** AF-035: the Boss spawns once per run, triggered by the Director's existing MiniBoss phase. */
@@ -2012,6 +2080,16 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
+  // AF-055: the Eclipsed — every member's personal fall advances (slowed by
+  // the Warden); Ability Mimicry reads the player's own progression level;
+  // Memory Echoes surface as capped, non-interruptive notice text.
+  for (const group of eclipsedGroups) {
+    group.update(fixedDtMs);
+    group.recordPlayerLevel(xpSystem?.snapshot.level ?? 0);
+    const echo = group.consumeEchoEvent();
+    if (echo) lootNotices.push({ text: echo, colour: "#c9d4e8", ttlMs: 3600 });
+  }
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -2066,8 +2144,15 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const ecosystem = ecosystemOf(drone);
     const hive = hiveOf(drone);
     const protocol = protocolOf(drone);
+    const eclipsed = eclipsedOf(drone);
     const speedMultiplier =
-      1 + (enrage.movementSpeed ?? 0) + (ecosystem?.speedBonus ?? 0) + (hive?.speedBonus ?? 0) + (protocol?.speedBonus ?? 0);
+      1 +
+      (enrage.movementSpeed ?? 0) +
+      (ecosystem?.speedBonus ?? 0) +
+      (hive?.speedBonus ?? 0) +
+      (protocol?.speedBonus ?? 0) +
+      // AF-055: desperation moves faster the further gone the member is — per its OWN stage.
+      (eclipsed?.speedBonusFor(drone.id) ?? 0);
     // AF-046: Focus Fire — coordinated squad members hit harder while the
     // Captain lives; broken squads lose the bonus, not just the formation.
     // AF-047: Target Synchronisation — the machine equivalent, routed through
@@ -2090,6 +2175,8 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const energyOverload = 1 + (protocol?.damageBonus ?? 0);
     // AF-054: Solar Energy — computed per-entity from its own link count, unlike every prior bonus here.
     const solarEnergy = 1 + (constellation?.damageBonusFor(drone.id) ?? 0);
+    // AF-055: the member's own fall + the group's mirror of the player's progression.
+    const eclipsedMirror = 1 + (eclipsed?.damageBonusFor(drone.id) ?? 0);
     const damageMultiplier =
       (1 + (enrage.damage ?? 0)) *
       focusFire *
@@ -2100,7 +2187,8 @@ function updateSandboxCombat(fixedDtMs: number): void {
       hiveTargetInfo *
       nomadTargetPriority *
       energyOverload *
-      solarEnergy;
+      solarEnergy *
+      eclipsedMirror;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
     // AF-046: Formation Flying — the first live producer for AF-033's reserved
@@ -2705,6 +2793,7 @@ function startRun(): void {
   celestialConstellations = []; // AF-054: constellations and gravity wells are run-scoped too.
   gravityWells = [];
   gravityWellClocksMs.clear();
+  eclipsedGroups = []; // AF-055: lost expeditions are run-scoped too.
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -3904,6 +3993,17 @@ const loop = new GameLoop({
             .join("; ");
           return `constellations ${celestialConstellations.length}${lines ? ` [${lines}]` : ""} · gravity wells ${gravityWells.length}`;
         })(),
+        eclipsed: (() => {
+          if (eclipsedGroups.length === 0) return null;
+          const lines = eclipsedGroups
+            .map((g) => {
+              const snap = g.snapshot;
+              const stages = snap.members.map((m) => m.stage).join(",");
+              return `${snap.membersRemaining} lost [${stages}] (${snap.wardenAlive ? "warden holds" : "warden gone"}, mirror +${(snap.mimicryDamageBonus * 100).toFixed(0)}%, echoes ${snap.echoesEmitted})`;
+            })
+            .join("; ");
+          return `expeditions ${eclipsedGroups.length} [${lines}]`;
+        })(),
       });
     }
   },
@@ -3911,7 +4011,7 @@ const loop = new GameLoop({
 
 const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
 
-// AF-046/047/048/049/050/051/052/053/054 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
+// AF-046 → AF-055 §DEBUG: dev-only faction-encounter spawn keys (one per digit), in the same spirit
 // as the debug overlay itself (AF-016 §10) — excluded from production builds.
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
@@ -3943,6 +4043,9 @@ if (import.meta.env.DEV) {
       director?.notifyEnemiesSpawned(6, 1);
     } else if (event.key === "1") {
       spawnConstellation(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(6, 1);
+    } else if (event.key === "0") {
+      spawnEclipsed(player.x + 8, player.y);
       director?.notifyEnemiesSpawned(6, 1);
     }
   });

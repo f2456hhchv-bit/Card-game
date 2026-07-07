@@ -481,6 +481,28 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_CELESTIAL_CONCLAVE_CODEX" },
   },
+  // AF-055: the Eclipsed — unlocked by recovering your first Champion's
+  // identity (its service record survives its hull). Former humans, not a
+  // civilisation and not a polity — no AF-039 FactionDef, cross-referenced
+  // to the Human Alliance they fell from rather than to another threat.
+  {
+    id: "codex-eclipsed",
+    category: "enemies",
+    title: "The Eclipsed",
+    lore: {
+      summary: "They are not what happens when explorers meet monsters. They are what happens when explorers stay out too long.",
+      detailed: "Every Eclipsed is somewhere along its own fall — Recently Lost, Corrupted, Broken, Consumed, Irrecoverable — and every ally you take from them pushes the survivors further along it. Their Champions still fight with Commander instincts, and they grow as you grow. The mirror is the point.",
+      historicalContext: "Every lost expedition on record ended with a final transmission. The Eclipsed are the ones still transmitting.",
+      recoveredArchives: "Recovered manifest, margin note in a steady hand: \"If you find us like this, read us our names.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying an Eclipsed Champion — recovering your first fallen Commander's identity.",
+    relatedEntryIds: ["codex-human-alliance"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_ECLIPSED_CODEX" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",

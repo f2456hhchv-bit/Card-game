@@ -84,6 +84,8 @@ export interface DebugSnapshot {
   paragonProtocols: string | null;
   /** Celestial summary: constellation count, per-entity link counts, gravity well count (AF-054 §DEBUG). */
   celestialConstellations: string | null;
+  /** Eclipsed summary: expedition count, per-member corruption stages, warden state, mirror %, echoes (AF-055 §DEBUG). */
+  eclipsed: string | null;
 }
 
 export class DebugOverlay {
@@ -159,6 +161,7 @@ export class DebugOverlay {
       `nomads     ${snapshot.nomadFleets ?? "—"}`,
       `paragon    ${snapshot.paragonProtocols ?? "—"}`,
       `celestial  ${snapshot.celestialConstellations ?? "—"}`,
+      `eclipsed   ${snapshot.eclipsed ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
