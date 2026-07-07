@@ -91,6 +91,8 @@ import { LORE_XENOMORPH_HIVE_CODEX, XENO_ENEMIES, createAcidPool } from "./game/
 import { HiveEvolutionRuntime } from "./game/enemies/HiveEvolution";
 import { LORE_NOMAD_FLEET_CODEX, NOMAD_ENEMIES, NOMAD_FLEET_TUNING } from "./game/enemies/nomadData";
 import { NomadFleetRuntime } from "./game/enemies/NomadFleet";
+import { LORE_PARAGON_PROTOCOL_CODEX, PARAGON_ENEMIES, createSingularityCharge } from "./game/enemies/paragonData";
+import { ParagonInstabilityRuntime } from "./game/enemies/ParagonInstability";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -197,6 +199,8 @@ interface Drone {
   hiveId: string | null;
   /** AF-052: Nomad Fleet membership — null for every non-fleet enemy. */
   fleetId: string | null;
+  /** AF-053: Paragon Protocol membership — null for every non-protocol enemy. */
+  protocolId: string | null;
 }
 
 interface TestProjectile {
@@ -614,6 +618,9 @@ bus.on("EnvironmentalEventTriggered", ({ eventType }) => {
   if (eventType === "VoidDistortion") spawnVoidSwarmFromEvent();
   // AF-050: Ancient Signal is one of AF-017's existing EnvironmentalEvent outcomes.
   if (eventType === "AncientSignal") spawnAncientSiteFromEvent();
+  // AF-053: Gravity Flux is one of AF-017's existing EnvironmentalEvent
+  // outcomes — quantum distortion and gravity-affected weaponry fit it exactly.
+  if (eventType === "GravityFlux") spawnProtocolFromEvent();
 });
 bus.on("LootDropped", ({ rarity }) => {
   if (rarity === "legendary" || rarity === "ancient" || rarity === "mythic" || rarity === "singularity") {
@@ -934,6 +941,7 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     siteId: null,
     hiveId: null,
     fleetId: null,
+    protocolId: null,
   });
   return droneId;
 }
@@ -1226,6 +1234,55 @@ function spawnFleet(anchorX: number, anchorY: number): void {
   lootNotices.push({ text: "NOMAD FLEET DETECTED — SALVAGE OPPORTUNITY", colour: "#e8862a", ttlMs: 3000 });
 }
 
+// ── AF-053: Paragon Protocol — the eighth doctrine, and the first with a
+// single irreversible threshold event instead of a smooth curve. Protocols
+// and singularity charges are run-scoped like every other structure.
+let paragonProtocols: ParagonInstabilityRuntime[] = [];
+let paragonProtocolCounter = 0;
+let singularityCharges: Array<{ zone: HazardZoneDef; state: HazardZoneState }> = [];
+let singularityChargeCounter = 0;
+
+function protocolOf(drone: Drone): ParagonInstabilityRuntime | null {
+  if (!drone.protocolId) return null;
+  return paragonProtocols.find((p) => p.protocolId === drone.protocolId) ?? null;
+}
+
+/** A Paragon Protocol incursion: an AF-034 Elite Omega Prototype plus its
+ * five supporting prototypes, all through the existing shared spawn path. */
+function spawnProtocol(anchorX: number, anchorY: number): void {
+  paragonProtocolCounter += 1;
+  const protocolId = `paragon-protocol-${paragonProtocolCounter}`;
+  const omegaDef = PARAGON_ENEMIES.find((d) => d.id === "omega-prototype")!;
+  const memberDefs = PARAGON_ENEMIES.filter((d) => d.id !== "omega-prototype");
+  const omegaDroneId = spawnEnemyInstance(omegaDef, anchorX, anchorY, true); // Elite Omega — AF-034's pipeline, unchanged
+  // Cross-module reuse of AF-046's pure formation math — same wedge, eighth doctrine.
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  const sentinelIds: string[] = [];
+  const memberDroneIds = memberDefs.map((def, index) => {
+    const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
+    if (def.id === "containment-sentinel") sentinelIds.push(id);
+    return id;
+  });
+  paragonProtocols.push(new ParagonInstabilityRuntime(protocolId, [omegaDroneId, ...memberDroneIds], sentinelIds));
+  for (const drone of drones) {
+    if (drone.id === omegaDroneId || memberDroneIds.includes(drone.id)) drone.protocolId = protocolId;
+  }
+  lootNotices.push({ text: "PARAGON PROTOCOL DETECTED — CONTAINMENT NOMINAL", colour: "#ff8a1a", ttlMs: 3000 });
+}
+
+/** AF-053: Gravity Flux is one of AF-017's existing EnvironmentalEvent
+ * outcomes — no Director change, the same react-to-an-existing-fact
+ * pattern AF-049/050 used for Void Distortion / Ancient Signal. */
+function spawnProtocolFromEvent(): void {
+  if (!movement || !director || !combatRng) return;
+  const player = movement.snapshot;
+  const angle = combatRng.float(0, Math.PI * 2);
+  const x = Math.min(ARENA.maxX - 3, Math.max(ARENA.minX + 3, player.x + Math.cos(angle) * 14));
+  const y = Math.min(ARENA.maxY - 3, Math.max(ARENA.minY + 3, player.y + Math.sin(angle) * 14));
+  spawnProtocol(x, y);
+  director.notifyEnemiesSpawned(6, 1); // the Omega Prototype spawns as an AF-034 Elite
+}
+
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
 function killDrone(drone: Drone): void {
   drone.alive = false;
@@ -1409,6 +1466,23 @@ function killDrone(drone: Drone): void {
     if (fleet.eliminated) {
       lootNotices.push({ text: "NOMAD FLEET ELIMINATED", colour: "#e8862a", ttlMs: 2600 });
       nomadFleets = nomadFleets.filter((f) => f.fleetId !== fleet.fleetId);
+    }
+  }
+  // AF-053: Containment System — a Containment Sentinel's death removes
+  // active repair without touching Stability's current value at all; it
+  // never triggers Collapse by itself, but it removes the only thing
+  // holding it back.
+  const protocol = protocolOf(drone);
+  if (protocol) {
+    const role = protocol.notifyDroneDestroyed(drone.id);
+    if (role === "sentinel") {
+      lootNotices.push({ text: "CONTAINMENT SENTINEL DESTROYED — REPAIR OFFLINE", colour: "#ff8a1a", ttlMs: 2600 });
+      meta.discover("lore", LORE_PARAGON_PROTOCOL_CODEX); // first sentinel kill unlocks the doctrine Codex entry (AF-043)
+      persistMeta();
+    }
+    if (protocol.eliminated) {
+      lootNotices.push({ text: "PARAGON PROTOCOL ELIMINATED", colour: "#ff8a1a", ttlMs: 2600 });
+      paragonProtocols = paragonProtocols.filter((p) => p.protocolId !== protocol.protocolId);
     }
   }
 }
@@ -1787,6 +1861,35 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
+  // AF-053: Containment System — Reactor Stability ticks down on its own,
+  // repaired by any living Containment Sentinel; the instant Collapse
+  // fires, a single Singularity Charge detonates at the protocol's
+  // location, reusing AF-035's exact hazard engine a fifth time.
+  for (const protocol of paragonProtocols) {
+    protocol.update(fixedDtMs);
+    if (protocol.consumeCollapseEvent()) {
+      const anchor = drones.find((d) => d.alive && d.protocolId === protocol.protocolId);
+      if (anchor) {
+        singularityChargeCounter += 1;
+        singularityCharges.push({
+          zone: createSingularityCharge(`singularity-charge-${singularityChargeCounter}`, anchor.x, anchor.y),
+          state: { tickClockMs: 0 },
+        });
+      }
+      lootNotices.push({ text: "CONTAINMENT COLLAPSE — REACTOR OVERLOAD", colour: "#ff8a1a", ttlMs: 3200 });
+    }
+  }
+  for (const charge of singularityCharges) {
+    if (stepHazardZone(charge.zone, charge.state, fixedDtMs) && isInsideHazard(charge.zone, player.x, player.y) && !player.invulnerable) {
+      const intake = playerDefence.takeDamage(charge.zone.damagePerTick);
+      bus.emit("PlayerDamaged", { amount: charge.zone.damagePerTick, source: charge.zone.id });
+      if (intake.defeated) {
+        endRun("defeat");
+        return;
+      }
+    }
+  }
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -1840,7 +1943,9 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const enrage = drone.runtime.specialAbilityBonus(hullFraction);
     const ecosystem = ecosystemOf(drone);
     const hive = hiveOf(drone);
-    const speedMultiplier = 1 + (enrage.movementSpeed ?? 0) + (ecosystem?.speedBonus ?? 0) + (hive?.speedBonus ?? 0);
+    const protocol = protocolOf(drone);
+    const speedMultiplier =
+      1 + (enrage.movementSpeed ?? 0) + (ecosystem?.speedBonus ?? 0) + (hive?.speedBonus ?? 0) + (protocol?.speedBonus ?? 0);
     // AF-046: Focus Fire — coordinated squad members hit harder while the
     // Captain lives; broken squads lose the bonus, not just the formation.
     // AF-047: Target Synchronisation — the machine equivalent, routed through
@@ -1859,8 +1964,17 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const targetInformation = 1 + (site?.damageBonus ?? 0);
     const hiveTargetInfo = 1 + (hive?.damageBonus ?? 0);
     const nomadTargetPriority = 1 + (fleet?.targetPriorityBonus ?? 0);
+    const energyOverload = 1 + (protocol?.damageBonus ?? 0);
     const damageMultiplier =
-      (1 + (enrage.damage ?? 0)) * focusFire * targetSync * resonance * corruption * targetInformation * hiveTargetInfo * nomadTargetPriority;
+      (1 + (enrage.damage ?? 0)) *
+      focusFire *
+      targetSync *
+      resonance *
+      corruption *
+      targetInformation *
+      hiveTargetInfo *
+      nomadTargetPriority *
+      energyOverload;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
     // AF-046: Formation Flying — the first live producer for AF-033's reserved
@@ -2264,6 +2378,14 @@ function updateSandboxCombat(fixedDtMs: number): void {
         // incoming-damage reduction; never derived from Scrap.
         const droneFleet = fleetOf(drone);
         if (droneFleet) appliedDamage *= 1 - droneFleet.escortDamageReduction;
+        // AF-053: Adaptive Shields — pre-collapse incoming-damage reduction;
+        // every point of damage dealt also cracks Reactor Stability further,
+        // the doctrine's live Adaptive Technology input.
+        const droneProtocol = protocolOf(drone);
+        if (droneProtocol) {
+          appliedDamage *= 1 - droneProtocol.incomingDamageReduction;
+          droneProtocol.recordIncomingDamage(appliedDamage);
+        }
         drone.hull -= appliedDamage;
         hitCount += 1;
         if (result.critical) critCount += 1;
@@ -2448,6 +2570,8 @@ function startRun(): void {
   xenoHives = []; // AF-051: hives and acid pools are run-scoped too.
   acidPools = [];
   nomadFleets = []; // AF-052: fleets are run-scoped too.
+  paragonProtocols = []; // AF-053: protocols and singularity charges are run-scoped too.
+  singularityCharges = [];
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -2686,6 +2810,18 @@ function drawSandbox(): void {
     ctx.strokeStyle = "#8bff4d";
     ctx.lineWidth = 1.5;
     ctx.arc(toX(pool.zone.x), toY(pool.zone.y), pool.zone.radius * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // AF-053: Singularity Charges — orange-warning filled zones (the
+  // faction's visual language), readable area-under-threat per AF-004.
+  for (const charge of singularityCharges) {
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(255,138,26,0.2)";
+    ctx.strokeStyle = "#ff8a1a";
+    ctx.lineWidth = 1.5;
+    ctx.arc(toX(charge.zone.x), toY(charge.zone.y), charge.zone.radius * scale, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }
@@ -3602,6 +3738,16 @@ const loop = new GameLoop({
             .join("; ");
           return `fleets ${nomadFleets.length} [${lines}]`;
         })(),
+        paragonProtocols: (() => {
+          if (paragonProtocols.length === 0 && singularityCharges.length === 0) return null;
+          const lines = paragonProtocols
+            .map((p) => {
+              const snap = p.snapshot;
+              return `stability ${(snap.stability * 100).toFixed(0)}% (${snap.collapsed ? "COLLAPSED" : "contained"}, ${snap.membersRemaining} units, ${snap.sentinelsRemaining} sentinels)`;
+            })
+            .join("; ");
+          return `protocols ${paragonProtocols.length}${lines ? ` [${lines}]` : ""} · charges ${singularityCharges.length}`;
+        })(),
       });
     }
   },
@@ -3609,7 +3755,7 @@ const loop = new GameLoop({
 
 const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
 
-// AF-046/047/048/049/050/051/052 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
+// AF-046/047/048/049/050/051/052/053 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
 // as the debug overlay itself (AF-016 §10) — excluded from production builds.
 if (import.meta.env.DEV) {
   window.addEventListener("keydown", (event) => {
@@ -3635,6 +3781,9 @@ if (import.meta.env.DEV) {
       director?.notifyEnemiesSpawned(6, 1);
     } else if (event.key === "3") {
       spawnFleet(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(6, 1);
+    } else if (event.key === "2") {
+      spawnProtocol(player.x + 8, player.y);
       director?.notifyEnemiesSpawned(6, 1);
     }
   });

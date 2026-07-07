@@ -437,6 +437,28 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_NOMAD_FLEET_CODEX" },
   },
+  // AF-053: Paragon Protocol containment doctrine — unlocked by taking your
+  // first Containment Sentinel offline. Belongs to no civilisation (pre-
+  // Collapse abandoned military research), so it gets no AF-039 FactionDef,
+  // the same way AF-049's Void Swarm and AF-051's Xenomorph Hive didn't.
+  {
+    id: "codex-paragon-protocol",
+    category: "enemies",
+    title: "Containment Doctrine",
+    lore: {
+      summary: "Every safety interlock on this programme was bypassed on purpose, more than once, by people who are gone now.",
+      detailed: "Reactor Stability holds a Paragon unit's Adaptive Shields up — and it only ever falls, cracked further by every hit it takes, until Containment Collapse fires once and never again. What comes out the other side is not weaker.",
+      historicalContext: "No one who approved this research survived to explain what they were hoping to contain.",
+      recoveredArchives: "Recovered lab note, final entry: \"Containment holding. Recommend immediate shutdown. Denied.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying a Containment Sentinel — removing your first line of active repair.",
+    relatedEntryIds: ["codex-xenomorph-hive"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_PARAGON_PROTOCOL_CODEX" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
