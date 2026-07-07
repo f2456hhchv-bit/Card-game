@@ -311,6 +311,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "enemies", id: "wisp-chaser" },
   },
+  // AF-047: Machine Collective combat doctrine — unlocked by taking your
+  // first Command Core offline, the encounter that reveals the network.
+  {
+    id: "codex-machine-network",
+    category: "enemies",
+    title: "Machine Network Doctrine",
+    lore: {
+      summary: "The Collective does not field soldiers. It fields a network wearing soldiers.",
+      detailed: "Target Synchronisation, Shared Shields, Self Repair, and mid-battle drone fabrication all route through a Command Core. Take the core offline and the machines do not flee — they simply stop being more than the sum of their parts.",
+      historicalContext: "The war network predates the Collapse; what survived kept optimising without anyone left to give it objectives.",
+      recoveredArchives: "Recovered process log: \"UNIT LOSS 0.4% — WITHIN PARAMETERS. CONTINUE.\"",
+    },
+    image: null,
+    statKey: "enemiesDestroyed",
+    discoverySource: "Destroying a Machine Command Core — degrading your first network.",
+    relatedEntryIds: ["codex-machine-collective"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_MACHINE_NETWORK_DOCTRINE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",

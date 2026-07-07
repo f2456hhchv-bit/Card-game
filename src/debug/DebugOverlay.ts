@@ -68,6 +68,8 @@ export interface DebugSnapshot {
   audio: string | null;
   /** Outlaw summary: squad state, command order, captain status, live mines (AF-046 §DEBUG). */
   outlaws: string | null;
+  /** Machine summary: network state, core status, live services, adaptation counts (AF-047 §DEBUG). */
+  machines: string | null;
 }
 
 export class DebugOverlay {
@@ -135,6 +137,7 @@ export class DebugOverlay {
       `save       ${snapshot.saveFramework ?? "—"}`,
       `audio      ${snapshot.audio ?? "—"}`,
       `outlaws    ${snapshot.outlaws ?? "—"}`,
+      `machines   ${snapshot.machines ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

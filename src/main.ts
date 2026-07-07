@@ -79,6 +79,8 @@ import { generateElite } from "./game/enemies/EliteGenerator";
 import { ELITE_TIERS, EMPTY_MUTATION_EFFECTS, type MutationEffects } from "./game/enemies/eliteData";
 import { LORE_MERCENARY_GUILD_CODEX, OUTLAW_CALLSIGNS, OUTLAW_ENEMIES, OUTLAW_MINE_TUNING, createOutlawMine } from "./game/enemies/outlawData";
 import { OutlawSquadRuntime } from "./game/enemies/OutlawSquad";
+import { LORE_MACHINE_NETWORK_DOCTRINE, MACHINE_ENEMIES, MACHINE_NETWORK_TUNING } from "./game/enemies/machineData";
+import { MachineNetworkRuntime } from "./game/enemies/MachineNetwork";
 import { SANDBOX_BOSSES } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
@@ -169,6 +171,10 @@ interface Drone {
   eliteMutations: readonly string[];
   /** AF-046: Outlaw squad membership — null for every non-squad enemy. */
   squadId: string | null;
+  /** AF-047: Machine network membership + assigned formation slot — null for every non-networked enemy. */
+  networkId: string | null;
+  networkOffsetX: number | null;
+  networkOffsetY: number | null;
 }
 
 interface TestProjectile {
@@ -891,6 +897,9 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     eliteTier,
     eliteMutations,
     squadId: null,
+    networkId: null,
+    networkOffsetX: null,
+    networkOffsetY: null,
   });
   return droneId;
 }
@@ -928,6 +937,49 @@ function spawnOutlawSquad(anchorX: number, anchorY: number): void {
   }
   const callsign = combatRng.pick(OUTLAW_CALLSIGNS);
   lootNotices.push({ text: `OUTLAW AMBUSH — CAPT. "${callsign}"`, colour: "#ff8c1a", ttlMs: 3000 });
+}
+
+// ── AF-047: Machine Collective — networks are run-scoped like squads. Where a
+// broken Outlaw squad scatters (fear), a broken machine network degrades (logic).
+let machineNetworks: MachineNetworkRuntime[] = [];
+let machineNetworkCounter = 0;
+
+function networkOf(drone: Drone): MachineNetworkRuntime | null {
+  if (!drone.networkId) return null;
+  return machineNetworks.find((n) => n.networkId === drone.networkId) ?? null;
+}
+
+/** A Machine reinforcement network: an AF-034 Elite Command Core plus five
+ * members, all through the existing shared spawn path. */
+function spawnMachineNetwork(anchorX: number, anchorY: number): void {
+  machineNetworkCounter += 1;
+  const networkId = `machine-network-${machineNetworkCounter}`;
+  const coreDef = MACHINE_ENEMIES.find((d) => d.id === "machine-command-core")!;
+  const memberDefs = MACHINE_ENEMIES.filter((d) => d.id !== "machine-command-core");
+  const coreDroneId = spawnEnemyInstance(coreDef, anchorX, anchorY, true); // Elite Command Core — AF-034's pipeline, unchanged
+  // Cross-module reuse of AF-046's pure formation math — same wedge, different doctrine.
+  const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
+  let shieldGeneratorDroneId: string | null = null;
+  let repairDroneId: string | null = null;
+  let constructorDroneId: string | null = null;
+  const memberDroneIds = memberDefs.map((def, index) => {
+    const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
+    if (def.id === "machine-shield-generator") shieldGeneratorDroneId = id;
+    if (def.id === "machine-repair-drone") repairDroneId = id;
+    if (def.id === "machine-swarm-constructor") constructorDroneId = id;
+    return id;
+  });
+  machineNetworks.push(new MachineNetworkRuntime(networkId, coreDroneId, memberDroneIds, shieldGeneratorDroneId, repairDroneId, constructorDroneId));
+  for (const drone of drones) {
+    if (drone.id === coreDroneId) drone.networkId = networkId;
+    const memberIndex = memberDroneIds.indexOf(drone.id);
+    if (memberIndex >= 0) {
+      drone.networkId = networkId;
+      drone.networkOffsetX = offsets[memberIndex]!.x;
+      drone.networkOffsetY = offsets[memberIndex]!.y;
+    }
+  }
+  lootNotices.push({ text: "MACHINE NETWORK ONLINE — COMMAND CORE DETECTED", colour: "#4d7cff", ttlMs: 3000 });
 }
 
 /** Shared kill-effects path — reached both by a direct hit and by a status DoT tick killing a drone. */
@@ -1009,6 +1061,27 @@ function killDrone(drone: Drone): void {
       outlawSquads = outlawSquads.filter((s) => s.squadId !== squad.squadId);
     }
   }
+  // AF-047: Network Command — destroying the Command Core degrades the network:
+  // machines keep fighting, but synchronisation, shields, repair, and the
+  // factory all stop. No scatter — machines do not fear.
+  const network = networkOf(drone);
+  if (network) {
+    const role = network.notifyDroneDestroyed(drone.id);
+    if (role === "core") {
+      lootNotices.push({ text: "NETWORK DEGRADED — COMMAND CORE OFFLINE", colour: "#4d7cff", ttlMs: 2600 });
+      meta.discover("lore", LORE_MACHINE_NETWORK_DOCTRINE); // first core kill unlocks the doctrine Codex entry (AF-043)
+      persistMeta();
+    }
+    if (network.state === "eliminated") {
+      // Loot: Research Data — banked through AF-024's existing points path,
+      // announced through its existing bus fact (bankResearchSample's pattern).
+      researchTree.addPoints(3);
+      persistResearch();
+      bus.emit("ResearchPointsGained", { amount: 3 });
+      lootNotices.push({ text: "MACHINE NETWORK ELIMINATED — RESEARCH DATA RECOVERED", colour: "#4d7cff", ttlMs: 2600 });
+      machineNetworks = machineNetworks.filter((n) => n.networkId !== network.networkId);
+    }
+  }
 }
 
 function spawnWave(directive: SpawnDirective): void {
@@ -1016,13 +1089,20 @@ function spawnWave(directive: SpawnDirective): void {
   const player = movement.snapshot;
   // AF-046: the Director's existing AmbushEvent wave identity becomes the
   // Outlaws' entrance — an ambush IS their doctrine. No Director changes.
-  if (directive.waveType === "AmbushEvent") {
+  // AF-047: likewise, ReinforcementWave becomes the Machine Collective's —
+  // Automated Reinforcements ARE their doctrine.
+  if (directive.waveType === "AmbushEvent" || directive.waveType === "ReinforcementWave") {
     const angle = combatRng.float(0, Math.PI * 2);
     const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
     const x = Math.min(ARENA.maxX - 3, Math.max(ARENA.minX + 3, player.x + Math.cos(angle) * distance));
     const y = Math.min(ARENA.maxY - 3, Math.max(ARENA.minY + 3, player.y + Math.sin(angle) * distance));
-    spawnOutlawSquad(x, y);
-    director.notifyEnemiesSpawned(5, 1); // captain spawns as an AF-034 Elite
+    if (directive.waveType === "AmbushEvent") {
+      spawnOutlawSquad(x, y);
+      director.notifyEnemiesSpawned(5, 1); // captain spawns as an AF-034 Elite
+    } else {
+      spawnMachineNetwork(x, y);
+      director.notifyEnemiesSpawned(6, 1); // command core spawns as an AF-034 Elite
+    }
     return;
   }
   const count = directive.waveType === "EliteSquad"
@@ -1155,6 +1235,30 @@ function updateSandboxCombat(fixedDtMs: number): void {
   }
   outlawMines = outlawMines.filter((m) => m.ttlMs > 0);
 
+  // AF-047: network clocks tick; Self Repair regenerates linked machines while
+  // the Repair Drone operates; the Drone Factory manufactures Combat Drones
+  // through the same shared spawn path everything else uses.
+  for (const network of machineNetworks) {
+    network.update(fixedDtMs);
+    if (network.repairUp) {
+      for (const drone of drones) {
+        if (drone.alive && drone.networkId === network.networkId && drone.hull < drone.maxHull) {
+          drone.hull = Math.min(drone.maxHull, drone.hull + MACHINE_NETWORK_TUNING.repairHullPerSecond * dt);
+        }
+      }
+    }
+    if (network.tryConstructDrone()) {
+      const constructorDrone = drones.find((d) => d.alive && d.id === network.constructorDroneId);
+      if (constructorDrone && director) {
+        const builtId = spawnEnemyInstance(MACHINE_ENEMIES.find((d) => d.id === "machine-combat-drone")!, constructorDrone.x, constructorDrone.y, false);
+        const built = drones.find((d) => d.id === builtId);
+        if (built) built.networkId = network.networkId;
+        network.enrolMember(builtId);
+        director.notifyEnemiesSpawned(1, 0); // the Director's census stays accurate
+      }
+    }
+  }
+
   // AF-033: EnemyDef governs movement/attack; melee is contact damage through
   // the real pipeline, ranged fires a real WeaponDef through the same engine
   // the player's weapon uses.
@@ -1209,28 +1313,43 @@ function updateSandboxCombat(fixedDtMs: number): void {
     const speedMultiplier = 1 + (enrage.movementSpeed ?? 0);
     // AF-046: Focus Fire — coordinated squad members hit harder while the
     // Captain lives; broken squads lose the bonus, not just the formation.
+    // AF-047: Target Synchronisation — the machine equivalent, routed through
+    // the Command Core and lost the moment the network degrades.
     const squad = squadOf(drone);
+    const network = networkOf(drone);
     const focusFire = squad?.commandActive ? 1.15 : 1;
-    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire;
+    const targetSync = 1 + (network?.targetSyncDamageBonus ?? 0);
+    const damageMultiplier = (1 + (enrage.damage ?? 0)) * focusFire * targetSync;
     const statusSlow = drone.status.has("freeze") || drone.status.has("stasis") ? 0 : drone.status.has("slow") ? 0.6 : 1;
 
     // AF-046: Formation Flying — the first live producer for AF-033's reserved
     // formationAnchor/formationOffset movement context: members fly their
     // assigned wedge slot on the Captain while the squad is coordinated.
+    // AF-047: machine formation-behaviour units anchor on the Command Core
+    // instead; other machines keep their own vectors (crossfire, not a conga line).
     const captainDrone = squad?.commandActive ? drones.find((d) => d.alive && d.squadId === squad.squadId && squad.isCaptain(d.id)) : undefined;
-    const squadOffset = captainDrone ? squad?.offsetFor(drone.id) : null;
-    stepEnemyMovement(squadOffset && captainDrone ? "formation" : drone.def.movementBehaviour, drone, fixedDtMs, {
+    const coreDrone =
+      network?.targetSyncActive && !network.isCore(drone.id) && drone.def.movementBehaviour === "formation"
+        ? drones.find((d) => d.alive && d.networkId === network.networkId && network.isCore(d.id))
+        : undefined;
+    const anchorDrone = captainDrone ?? coreDrone;
+    const formationOffset = captainDrone
+      ? squad?.offsetFor(drone.id)
+      : coreDrone && drone.networkOffsetX !== null && drone.networkOffsetY !== null
+        ? { x: drone.networkOffsetX, y: drone.networkOffsetY }
+        : null;
+    stepEnemyMovement(formationOffset && anchorDrone ? "formation" : drone.def.movementBehaviour, drone, fixedDtMs, {
       targetX: player.x,
       targetY: player.y,
       speed: drone.def.moveSpeed * speedMultiplier * statusSlow,
       bounds: ARENA,
       preferredRange: 6,
-      ...(squadOffset && captainDrone
+      ...(formationOffset && anchorDrone
         ? {
-            formationAnchorX: captainDrone.x,
-            formationAnchorY: captainDrone.y,
-            formationOffsetX: squadOffset.x,
-            formationOffsetY: squadOffset.y,
+            formationAnchorX: anchorDrone.x,
+            formationAnchorY: anchorDrone.y,
+            formationOffsetX: formationOffset.x,
+            formationOffsetY: formationOffset.y,
           }
         : {}),
     });
@@ -1579,11 +1698,20 @@ function updateSandboxCombat(fixedDtMs: number): void {
           DEFAULT_COMBAT_TUNING,
           combatRng,
         );
-        drone.hull -= result.finalDamage;
+        // AF-047: Shared Shields + Adaptive AI — a networked machine takes
+        // lattice-reduced, school-adapted damage while its network is linked;
+        // the network also analyses what hit it (§Adaptive AI, damageTypes input).
+        const droneNetwork = networkOf(drone);
+        let appliedDamage = result.finalDamage;
+        if (droneNetwork) {
+          droneNetwork.recordIncomingDamage(sandboxWeapon.damageSchool);
+          appliedDamage *= droneNetwork.incomingDamageFactor(sandboxWeapon.damageSchool);
+        }
+        drone.hull -= appliedDamage;
         hitCount += 1;
         if (result.critical) critCount += 1;
-        bus.emit("DamageDealt", { amount: result.finalDamage, critical: result.critical, kind: result.kind, targetId: drone.id });
-        commanderRuntime?.notifyDamageDealt(result.finalDamage);
+        bus.emit("DamageDealt", { amount: appliedDamage, critical: result.critical, kind: result.kind, targetId: drone.id });
+        commanderRuntime?.notifyDamageDealt(appliedDamage);
         // AF-032: status-on-hit applies through the same StatusEngine every status-inflicting system already uses.
         if (sandboxWeapon.statusOnHit && combatRng.next() < sandboxWeapon.statusOnHit.chance) {
           drone.status.apply({
@@ -1596,7 +1724,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
         const popup = popupPool.acquire();
         popup.x = drone.x;
         popup.y = drone.y;
-        popup.text = `${Math.round(result.finalDamage)}`;
+        popup.text = `${Math.round(appliedDamage)}`; // AF-047: the number shown IS the number applied (shield lattice included)
         popup.critical = result.critical;
         popup.ttlMs = 600;
         popup.live = true;
@@ -1752,6 +1880,7 @@ function startRun(): void {
   outlawSquads = []; // AF-046: squads and mines are run-scoped, like every combat structure here.
   outlawMines = [];
   outlawMineDropClockMs = 0;
+  machineNetworks = []; // AF-047: networks are run-scoped too.
   sandboxBuild.weaponBonus = 0;
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
@@ -2795,12 +2924,39 @@ const loop = new GameLoop({
             .join("; ");
           return `squads ${outlawSquads.length}${squadLine ? ` [${squadLine}]` : ""} · mines ${outlawMines.length}`;
         })(),
+        machines: (() => {
+          if (machineNetworks.length === 0) return null;
+          const lines = machineNetworks
+            .map((n) => {
+              const snap = n.snapshot;
+              const services = [snap.shieldNetworkUp ? "shields" : null, snap.repairUp ? "repair" : null, snap.factoryUp ? "factory" : null].filter(Boolean).join("+") || "none";
+              return `${snap.state} (${snap.coreOnline ? "core online" : "core offline"}, ${snap.membersRemaining} units, ${services}, adapt p${snap.adaptation.physical}/e${snap.adaptation.energy}, built ${snap.factorySpawns})`;
+            })
+            .join("; ");
+          return `networks ${machineNetworks.length} [${lines}]`;
+        })(),
       });
     }
   },
 });
 
 const debugOverlay = import.meta.env.DEV ? new DebugOverlay(document.body) : null;
+
+// AF-046/047 §DEBUG: dev-only faction-encounter spawn keys, in the same spirit
+// as the debug overlay itself (AF-016 §10) — excluded from production builds.
+if (import.meta.env.DEV) {
+  window.addEventListener("keydown", (event) => {
+    if (machine.base !== "Gameplay" || !movement) return;
+    const player = movement.snapshot;
+    if (event.key === "8") {
+      spawnOutlawSquad(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(5, 1);
+    } else if (event.key === "9") {
+      spawnMachineNetwork(player.x + 8, player.y);
+      director?.notifyEnemiesSpawned(6, 1);
+    }
+  });
+}
 
 render();
 loop.start();
