@@ -69,6 +69,8 @@ import { RosterRuntime } from "./game/commanders/RosterRuntime";
 import { RECRUITMENT_TABLE, STARTING_COMMANDER_IDS, philosophyFor } from "./game/commanders/rosterData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
+import { SANDBOX_SHIP_MODULES, SHIP_PROFILES } from "./game/ships/shipFrameworkData";
+import { ShipOutfittingRuntime } from "./game/ships/ShipOutfittingRuntime";
 import { WeaponRuntime } from "./game/weapons/WeaponRuntime";
 import { SANDBOX_WEAPONS, type StatusOnHit } from "./game/weapons/weaponData";
 import { stepProjectile } from "./game/weapons/ProjectileBehaviour";
@@ -734,6 +736,7 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
   meta.addMasteryXp(sandboxCommanderProfile.masteryTrackId, result === "victory" ? 20 : 8);
   if (result === "victory") commanderProgression.grantTalentPoints(1);
   roster.recordUse(sandboxCommander.id, result === "victory"); // AF-072: usage informs future balancing
+  shipOutfitting.recordUse(); // AF-073: hull mastery accumulates per expedition
   meta.addMasteryXp("ship:placeholder", result === "victory" ? 20 : 8);
   meta.addAccountXp(
     result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
@@ -842,6 +845,10 @@ let commanderRuntime: CommanderRuntime | null = null;
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
+// AF-073: the framework profile wraps AF-031's def — modules, mastery,
+// identity, ascension. One outfitting runtime for the active hull.
+const sandboxShipProfile = SHIP_PROFILES.find((p) => p.shipId === sandboxShip.id)!;
+const shipOutfitting = new ShipOutfittingRuntime(sandboxShipProfile, SANDBOX_SHIP_MODULES);
 let shipRuntime: ShipRuntime | null = null;
 
 // ── Weapon (AF-032): fires through the same DamagePipeline "weapon" stage
@@ -4019,7 +4026,10 @@ const loop = new GameLoop({
             })()
           : null,
         ships: shipRuntime
-          ? `${sandboxShip.name} (${sandboxShip.shipClass}) · energy ${shipRuntime.snapshot.energy.toFixed(0)}/${sandboxShip.maxEnergy} · ability cd ${shipRuntime.snapshot.abilityCooldownMs.toFixed(0)}ms`
+          ? (() => {
+              const fit = shipOutfitting.snapshot;
+              return `${sandboxShip.name} (${sandboxShip.shipClass}/${fit.frameworkClass}) · energy ${shipRuntime.snapshot.energy.toFixed(0)}/${sandboxShip.maxEnergy} · ability cd ${shipRuntime.snapshot.abilityCooldownMs.toFixed(0)}ms · ${fit.offensiveIdentity}/${fit.primaryDefence} · modules ${fit.fittedModules}/${fit.moduleSlots} · uses ${fit.mastery.uses}`;
+            })()
           : null,
         weapons: weaponRuntime
           ? `${sandboxWeapon.name} (${sandboxWeapon.category}/${sandboxWeapon.firePattern}) · shots ${weaponRuntime.snapshot.shotsFired} · proj ${projectiles.filter((p) => p.live).length} · dmg ${hitCount > 0 ? ((critCount / hitCount) * 100).toFixed(0) : 0}%crit`
