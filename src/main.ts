@@ -71,6 +71,8 @@ import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { SANDBOX_SHIP_MODULES, SHIP_PROFILES } from "./game/ships/shipFrameworkData";
 import { ShipOutfittingRuntime } from "./game/ships/ShipOutfittingRuntime";
+import { FLEET_ENTRIES, STARTING_SHIP_IDS } from "./game/ships/shipRosterData";
+import { ShipCollectionRuntime } from "./game/ships/ShipCollectionRuntime";
 import { WeaponRuntime } from "./game/weapons/WeaponRuntime";
 import { SANDBOX_WEAPONS, type StatusOnHit } from "./game/weapons/weaponData";
 import { stepProjectile } from "./game/weapons/ProjectileBehaviour";
@@ -737,6 +739,7 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
   if (result === "victory") commanderProgression.grantTalentPoints(1);
   roster.recordUse(sandboxCommander.id, result === "victory"); // AF-072: usage informs future balancing
   shipOutfitting.recordUse(); // AF-073: hull mastery accumulates per expedition
+  fleet.recordMission(sandboxShip.id, result === "victory"); // AF-074: fleet statistics support long-term balancing
   meta.addMasteryXp("ship:placeholder", result === "victory" ? 20 : 8);
   meta.addAccountXp(
     result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
@@ -849,6 +852,10 @@ const sandboxShip = SANDBOX_SHIPS[0]!;
 // identity, ascension. One outfitting runtime for the active hull.
 const sandboxShipProfile = SHIP_PROFILES.find((p) => p.shipId === sandboxShip.id)!;
 const shipOutfitting = new ShipOutfittingRuntime(sandboxShipProfile, SANDBOX_SHIP_MODULES);
+// AF-074: the launch fleet — ten berths, the Wayfarer collected, missions
+// recorded per hull so statistics support long-term balancing.
+const fleet = new ShipCollectionRuntime(FLEET_ENTRIES, STARTING_SHIP_IDS);
+const sandboxFleetEntry = FLEET_ENTRIES.find((e) => e.shipId === sandboxShip.id)!;
 let shipRuntime: ShipRuntime | null = null;
 
 // ── Weapon (AF-032): fires through the same DamagePipeline "weapon" stage
@@ -4028,7 +4035,8 @@ const loop = new GameLoop({
         ships: shipRuntime
           ? (() => {
               const fit = shipOutfitting.snapshot;
-              return `${sandboxShip.name} (${sandboxShip.shipClass}/${fit.frameworkClass}) · energy ${shipRuntime.snapshot.energy.toFixed(0)}/${sandboxShip.maxEnergy} · ability cd ${shipRuntime.snapshot.abilityCooldownMs.toFixed(0)}ms · ${fit.offensiveIdentity}/${fit.primaryDefence} · modules ${fit.fittedModules}/${fit.moduleSlots} · uses ${fit.mastery.uses}`;
+              const fleetSnap = fleet.snapshot;
+              return `${sandboxShip.name} (${sandboxShip.shipClass}/${fit.frameworkClass}) · ${sandboxFleetEntry.tier}/${sandboxFleetEntry.specialisation} · energy ${shipRuntime.snapshot.energy.toFixed(0)}/${sandboxShip.maxEnergy} · ${fit.offensiveIdentity}/${fit.primaryDefence} · modules ${fit.fittedModules}/${fit.moduleSlots} · fleet ${fleetSnap.collectedCount}/${fleetSnap.fleetSize}`;
             })()
           : null,
         weapons: weaponRuntime
