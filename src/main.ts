@@ -71,6 +71,8 @@ import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { WEAPON_PROFILES } from "./game/weapons/weaponFrameworkData";
 import { WeaponMasteryRuntime } from "./game/weapons/WeaponMasteryRuntime";
+import { ARSENAL_ENTRIES, STARTING_WEAPON_IDS } from "./game/weapons/weaponRosterData";
+import { WeaponCollectionRuntime } from "./game/weapons/WeaponCollectionRuntime";
 import { SANDBOX_SHIP_MODULES, SHIP_PROFILES } from "./game/ships/shipFrameworkData";
 import { ShipOutfittingRuntime } from "./game/ships/ShipOutfittingRuntime";
 import { FLEET_ENTRIES, STARTING_SHIP_IDS } from "./game/ships/shipRosterData";
@@ -743,6 +745,7 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
   shipOutfitting.recordUse(); // AF-073: hull mastery accumulates per expedition
   fleet.recordMission(sandboxShip.id, result === "victory"); // AF-074: fleet statistics support long-term balancing
   if (weaponRuntime) weaponMastery.recordShots(weaponRuntime.snapshot.shotsFired); // AF-075: accuracy is derived from real fire
+  arsenal.recordUse(sandboxWeapon.id); // AF-076: arsenal statistics support future balancing
   meta.addMasteryXp("ship:placeholder", result === "victory" ? 20 : 8);
   meta.addAccountXp(
     result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
@@ -868,6 +871,10 @@ const sandboxWeapon = SANDBOX_WEAPONS[0]!;
 // unique mechanic. One mastery ledger for the equipped weapon.
 const sandboxWeaponProfile = WEAPON_PROFILES.find((p) => p.weaponId === sandboxWeapon.id)!;
 const weaponMastery = new WeaponMasteryRuntime(sandboxWeaponProfile);
+// AF-076: the launch arsenal — ten weapons, the Coil Ripper collected,
+// uses recorded per expedition so statistics support future balancing.
+const arsenal = new WeaponCollectionRuntime(ARSENAL_ENTRIES, STARTING_WEAPON_IDS);
+const sandboxArsenalEntry = ARSENAL_ENTRIES.find((e) => e.weaponId === sandboxWeapon.id)!;
 let weaponRuntime: WeaponRuntime | null = null;
 
 // ── Boss (AF-035): reuses DefenceState for hull/shield/armour and
@@ -4052,7 +4059,8 @@ const loop = new GameLoop({
         weapons: weaponRuntime
           ? (() => {
               const mastery = weaponMastery.snapshot;
-              return `${sandboxWeapon.name} (${sandboxWeapon.category}/${sandboxWeapon.firePattern}) · ${mastery.frameworkCategory}/${mastery.element}${mastery.elementStatus ? `→${mastery.elementStatus}` : ""} · shots ${weaponRuntime.snapshot.shotsFired} · proj ${projectiles.filter((p) => p.live).length} · dmg ${hitCount > 0 ? ((critCount / hitCount) * 100).toFixed(0) : 0}%crit · mastery ${mastery.kills} kills ${(mastery.accuracy * 100).toFixed(0)}%acc`;
+              const arsenalSnap = arsenal.snapshot;
+              return `${sandboxWeapon.name} (${sandboxWeapon.category}/${sandboxWeapon.firePattern}) · ${sandboxArsenalEntry.tier}/${sandboxArsenalEntry.familyId} · ${mastery.frameworkCategory}/${mastery.element}${mastery.elementStatus ? `→${mastery.elementStatus}` : ""} · shots ${weaponRuntime.snapshot.shotsFired} · proj ${projectiles.filter((p) => p.live).length} · arsenal ${arsenalSnap.collectedCount}/${arsenalSnap.arsenalSize}`;
             })()
           : null,
         enemies: (() => {
