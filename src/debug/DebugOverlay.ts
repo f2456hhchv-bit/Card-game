@@ -94,6 +94,8 @@ export interface DebugSnapshot {
   campaign: string | null;
   /** Endgame summary: ascension level, milestones, expeditions, research, evolution, legacy (AF-069 §DEBUG). */
   endgame: string | null;
+  /** Live-ops summary: live version, content packs, season state, compatibility (AF-070 §DEBUG). */
+  liveOps: string | null;
 }
 
 export class DebugOverlay {
@@ -174,6 +176,7 @@ export class DebugOverlay {
       `bossDir    ${snapshot.bossDirector ?? "—"}`,
       `campaign   ${snapshot.campaign ?? "—"}`,
       `endgame    ${snapshot.endgame ?? "—"}`,
+      `liveops    ${snapshot.liveOps ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -125,6 +125,8 @@ import {
 } from "./game/campaign/campaignData";
 import { EndgameRuntime } from "./game/endgame/EndgameRuntime";
 import { SANDBOX_ASCENSIONS } from "./game/endgame/endgameData";
+import { LiveOpsRegistry } from "./game/liveops/LiveOpsRegistry";
+import { CORE_GAME_PACK, SEASON_ONE, SEASON_ONE_PACK } from "./game/liveops/liveOpsData";
 import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
@@ -855,6 +857,13 @@ const CAMPAIGN_BEAT_CADENCE_MS = 1500;
 // AF-069: the endgame begins after the main campaign — constructed locked,
 // unlocked the moment AF-068's ladder completes, fed by the same real play.
 const endgame = new EndgameRuntime(SANDBOX_ASCENSIONS);
+
+// AF-070: the live-ops registry — the core game registers as pack zero so the
+// no-replacement gate protects every shipped id; season one layers on top.
+const liveOps = new LiveOpsRegistry();
+liveOps.registerPack(CORE_GAME_PACK);
+liveOps.registerPack(SEASON_ONE_PACK);
+liveOps.beginSeason(SEASON_ONE);
 
 function feedCampaignProgress(counterKey: string): void {
   campaign.recordProgress(counterKey);
@@ -4204,6 +4213,10 @@ const loop = new GameLoop({
           const snap = endgame.snapshot;
           if (!snap.unlocked) return "locked — the endgame begins after the main campaign";
           return `Ascension ${snap.ascensionLevel} · milestones ${snap.milestonesThisAscension}/${snap.milestonesRequired}${snap.canAscend ? " (ASCEND READY)" : ""} · expeditions ${snap.expeditionsThisAscension}/${snap.expeditionsLifetime} lifetime · research ${snap.researchNodesTotal} · evolution ${snap.worldEvolutionCount} · legacy ${snap.legacyCount} · mods ${snap.activeModifierCount}`;
+        })(),
+        liveOps: (() => {
+          const snap = liveOps.snapshot;
+          return `v${snap.liveVersion} · packs ${snap.packCount} (${snap.contentCount} additions) · season ${snap.activeSeason ?? "—"} · retired ${snap.retiredTemporaryCount} · compat ok`;
         })(),
       });
     }
