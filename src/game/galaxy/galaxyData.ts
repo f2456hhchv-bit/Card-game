@@ -149,6 +149,12 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Frozen Reach",
       lore: "Where light barely reaches, entire systems chose suspension over escape. The quietest region of space is not empty — it is waiting.",
     },
+    // AF-065: the Broken Systems region — the galaxy's largest starship graveyard.
+    {
+      id: "brokenSystems",
+      name: "Broken Systems",
+      lore: "Millions of vessels from thousands of years of conflict, drifting where they fell. Nothing here was ever salvaged. Nobody agrees on why.",
+    },
   ],
   systems: [
     {
@@ -202,7 +208,7 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "humanFrontier",
       biomeId: "meridian-rest-frontier",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-lucent-gate", "sys-winterline"], // AF-064: the frozen edge lies past the frontier
+      connectedSystemIds: ["sys-lucent-gate", "sys-winterline", "sys-gravewake"], // AF-064/065: the frozen edge and the graveyard lie past the frontier
       pointsOfInterest: [
         { id: "meridian-rest-shipyard", kind: "tradeOutposts", discoveryCategory: "lore", discoveryId: "LORE_MERIDIAN_REST_SHIPYARD" },
       ],
@@ -304,6 +310,22 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       ],
       dominantFaction: "The Eclipsed",
       threatLevel: 3,
+      requiresFastTravelUnlock: false,
+    },
+    // AF-065: Gravewake — the Derelict Expanse, the fleet graveyard off the
+    // Human Frontier; the Alliance's lost fleets drifted home almost far enough.
+    {
+      id: "sys-gravewake",
+      name: "Gravewake",
+      region: "brokenSystems",
+      biomeId: "derelict-expanse",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-meridian-rest"],
+      pointsOfInterest: [
+        { id: "gravewake-carrier", kind: "abandonedFleets", discoveryCategory: "lore", discoveryId: "LORE_GRAVEWAKE_CARRIER" },
+      ],
+      dominantFaction: "The Eclipsed",
+      threatLevel: 2,
       requiresFastTravelUnlock: false,
     },
   ],

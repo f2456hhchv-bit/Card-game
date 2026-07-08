@@ -643,6 +643,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_FROZEN_REACH_ARCHIVE" },
   },
+  // AF-065: the Derelict Expanse biome — unlocked by activating the black
+  // box archive at Gravewake (the biome's own lore interactable).
+  {
+    id: "codex-biome-derelict-expanse",
+    category: "biomes",
+    title: "The Derelict Expanse",
+    lore: {
+      summary: "Nothing here was ever salvaged. Nobody agrees on why.",
+      detailed: "Gravewake is millions of ships from thousands of years of losing — carriers sealed since their last battle, convoys still holding formation, distress beacons that outlived everyone who could answer. The Outlaws and the Nomads race each other for hulls the Eclipsed may once have crewed. There is no one story here. There are millions, one per wreck, and the Expanse keeps every log.",
+      historicalContext: "Every fleet that came to reclaim the graveyard joined it instead. The salvage guilds call that the Gravewake Rule and price their contracts accordingly.",
+      recoveredArchives: "Black box, carrier unidentified: \"—repeat, we are intact, all hands alive. We just can't leave. Nobody leaves. Tell them to stop sending—\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Activating the black box archive at Gravewake.",
+    relatedEntryIds: ["codex-eclipsed", "codex-nomad-fleet"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_DERELICT_EXPANSE_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
