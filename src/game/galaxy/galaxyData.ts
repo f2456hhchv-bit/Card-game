@@ -155,6 +155,12 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Broken Systems",
       lore: "Millions of vessels from thousands of years of conflict, drifting where they fell. Nothing here was ever salvaged. Nobody agrees on why.",
     },
+    // AF-066: the Dark Nebula region — the clouds that hide living worlds.
+    {
+      id: "darkNebula",
+      name: "Dark Nebula",
+      lore: "The nebula does not block the starlight. Something inside it drinks the starlight — and whatever grew in the dark grew very, very large.",
+    },
   ],
   systems: [
     {
@@ -224,7 +230,7 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "crystalDominion",
       biomeId: "crystal-expanse",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-lucent-gate"],
+      connectedSystemIds: ["sys-lucent-gate", "sys-verdance"], // AF-066: the living world grows past the Ascendancy's birthplace
       pointsOfInterest: [
         { id: "prismheart-temple", kind: "crystalTemples", discoveryCategory: "lore", discoveryId: "LORE_PRISMHEART_TEMPLE" },
       ],
@@ -326,6 +332,22 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       ],
       dominantFaction: "The Eclipsed",
       threatLevel: 2,
+      requiresFastTravelUnlock: false,
+    },
+    // AF-066: Verdance — the Living Ecospheres, hidden in the Dark Nebula
+    // past Prismheart; the Hive's home and a planet that is one organism.
+    {
+      id: "sys-verdance",
+      name: "Verdance",
+      region: "darkNebula",
+      biomeId: "living-ecospheres",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-prismheart"],
+      pointsOfInterest: [
+        { id: "verdance-bio-lab", kind: "researchStations", discoveryCategory: "lore", discoveryId: "LORE_VERDANCE_BIO_LAB" },
+      ],
+      dominantFaction: "Xenomorph Hive",
+      threatLevel: 4,
       requiresFastTravelUnlock: false,
     },
   ],

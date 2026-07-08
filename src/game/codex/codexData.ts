@@ -663,6 +663,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_DERELICT_EXPANSE_ARCHIVE" },
   },
+  // AF-066: the Living Ecospheres biome — unlocked by activating the
+  // organic archive at Verdance (the biome's own lore interactable).
+  {
+    id: "codex-biome-living-ecospheres",
+    category: "biomes",
+    title: "The Living Ecospheres",
+    lore: {
+      summary: "You are not exploring it. It is examining you.",
+      detailed: "Verdance is one organism the size of a world: forests for nerves, rivers for blood, wildlife for an immune system, and a planetary heart no expedition has reached. The Hive tends it like a body tends itself. The Ascendancy grows along its coasts — two living doctrines sharing one garden. Everything that arrives becomes either symbiont or nutrient.",
+      historicalContext: "The bio labs beneath the roots are older than the forests above them. Someone engineered the first seed of this — which means someone once asked whether a planet could be made to think, and did not wait for permission to find out.",
+      recoveredArchives: "Research log, final entry: \"The planet's responses are 0.8 seconds faster than yesterday. It is learning our schedule. Recommend we stop keeping one.\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Activating the organic archive at Verdance.",
+    relatedEntryIds: ["codex-xenomorph-hive", "codex-crystal-resonance"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_LIVING_ECOSPHERES_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
