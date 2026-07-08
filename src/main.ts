@@ -69,6 +69,8 @@ import { RosterRuntime } from "./game/commanders/RosterRuntime";
 import { RECRUITMENT_TABLE, STARTING_COMMANDER_IDS, philosophyFor } from "./game/commanders/rosterData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
+import { RELIC_PROFILES } from "./game/relics/relicFrameworkData";
+import { RelicCollectionRuntime } from "./game/relics/RelicCollectionRuntime";
 import { WEAPON_PROFILES } from "./game/weapons/weaponFrameworkData";
 import { WeaponMasteryRuntime } from "./game/weapons/WeaponMasteryRuntime";
 import { ARSENAL_ENTRIES, STARTING_WEAPON_IDS } from "./game/weapons/weaponRosterData";
@@ -835,6 +837,8 @@ const sandboxEquipmentById = new Map(SANDBOX_EQUIPMENT.map((item) => [item.id, i
 let relicSystem = new RelicSystem(SANDBOX_RELICS);
 function newRelicSystem(): RelicSystem {
   return new RelicSystem(SANDBOX_RELICS, (from, to) => {
+    reliquary.recordEvolved(from.id); // AF-077: evolution is remembered forever
+    reliquary.recordOwned(to.id);
     lootNotices.push({ text: `EVOLVED · ${from.name.toUpperCase()} → ${to.name.toUpperCase()}`, colour: "#ffc652", ttlMs: 2600 });
     bus.emit("RelicEvolved", { fromId: from.id, toId: to.id });
   });
@@ -874,6 +878,8 @@ const weaponMastery = new WeaponMasteryRuntime(sandboxWeaponProfile);
 // AF-076: the launch arsenal — ten weapons, the Coil Ripper collected,
 // uses recorded per expedition so statistics support future balancing.
 const arsenal = new WeaponCollectionRuntime(ARSENAL_ENTRIES, STARTING_WEAPON_IDS);
+// AF-077: the reliquary — a monotone collection lattice fed by real acquisitions.
+const reliquary = new RelicCollectionRuntime(RELIC_PROFILES);
 const sandboxArsenalEntry = ARSENAL_ENTRIES.find((e) => e.weaponId === sandboxWeapon.id)!;
 let weaponRuntime: WeaponRuntime | null = null;
 
@@ -1528,6 +1534,7 @@ function killDrone(drone: Drone): void {
     const relicId = lootRng.pick(SANDBOX_RELICS.map((r) => r.id));
     const result = relicSystem.acquire(relicId);
     if (result.ok) {
+      reliquary.recordOwned(relicId); // AF-077: the lattice advances on real acquisition
       lootNotices.push({ text: `RELIC · ${relicId.toUpperCase().replaceAll("-", " ")}`, colour: "#9b5cff", ttlMs: 2200 });
       bus.emit("RelicAcquired", { relicId });
     }
@@ -1888,6 +1895,7 @@ function grantBossRewards(): void {
     const relicId = lootRng.pick(SANDBOX_RELICS.map((r) => r.id));
     const result = relicSystem.acquire(relicId);
     if (result.ok) {
+      reliquary.recordOwned(relicId); // AF-077: the lattice advances on real acquisition
       lootNotices.push({ text: `RELIC · ${relicId.toUpperCase().replaceAll("-", " ")}`, colour: "#9b5cff", ttlMs: 2200 });
       bus.emit("RelicAcquired", { relicId });
     }
@@ -4040,7 +4048,10 @@ const loop = new GameLoop({
           const eq = equipmentEffects();
           return `wpn +${((eq.bonuses.damage ?? 0) * 100).toFixed(0)}% · shield +${(eq.bonuses.shieldCapacity ?? 0).toFixed(0)} · sets ${eq.activeSetBonuses.length} · pwr ${eq.powerRating}`;
         })(),
-        relics: `active ${relicSystem.activeRelicIds.length} [${relicSystem.activeRelicIds.join(", ") || "none"}] · synergies ${relicSystem.aggregate.synergies.length}`,
+        relics: (() => {
+          const collection = reliquary.snapshot;
+          return `active ${relicSystem.activeRelicIds.length} [${relicSystem.activeRelicIds.join(", ") || "none"}] · synergies ${relicSystem.aggregate.synergies.length} · reliquary ${collection.ownedCount}/${collection.reliquarySize} owned, ${collection.evolvedCount} evolved`;
+        })(),
         commander: commanderRuntime
           ? (() => {
               const prog = commanderProgression.snapshot;
