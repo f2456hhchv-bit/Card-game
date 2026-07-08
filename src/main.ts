@@ -58,7 +58,9 @@ import { ACCOUNT_XP_AWARDS, SANDBOX_CHALLENGES } from "./game/meta/metaData";
 import { Inventory, type InventorySaveData } from "./game/inventory/Inventory";
 import { DEFAULT_INVENTORY_TUNING } from "./game/inventory/inventoryData";
 import { validateLoadout, aggregateLoadout } from "./game/equipment/EquipmentAggregate";
-import { SANDBOX_EQUIPMENT, SANDBOX_SETS } from "./game/equipment/equipmentData";
+import { SANDBOX_SETS } from "./game/equipment/equipmentData";
+import { EQUIPMENT_PROFILES, FRAMEWORK_EQUIPMENT, engineeringLoadFor } from "./game/equipment/equipmentFrameworkData";
+import { EquipmentCollectionRuntime } from "./game/equipment/EquipmentCollectionRuntime";
 import { RelicSystem } from "./game/relics/RelicSystem";
 import { CommanderRuntime } from "./game/commanders/CommanderRuntime";
 import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
@@ -829,8 +831,15 @@ const sandboxLoadoutSlots: Partial<Record<import("./game/equipment/equipmentData
   equipment1: "barrier-plate",
   equipment2: "vanguard-thrusters",
   equipment3: "vanguard-core",
+  equipment4: "cryo-manifold", // AF-079: the first active-bearing module, live in the loadout
 };
-const sandboxEquipmentById = new Map(SANDBOX_EQUIPMENT.map((item) => [item.id, item]));
+// AF-079: the workshop — the sandbox five plus the Cryo Manifold, additively.
+const sandboxEquipmentById = new Map(FRAMEWORK_EQUIPMENT.map((item) => [item.id, item]));
+// AF-079: the workshop collection — a monotone lattice mirroring AF-077's
+// reliquary. Installed modules are crafted; the relay is discovered lore.
+const workshop = new EquipmentCollectionRuntime(EQUIPMENT_PROFILES);
+for (const itemId of Object.values(sandboxLoadoutSlots)) workshop.recordCrafted(itemId);
+workshop.recordDiscovered("ancient-relay");
 
 // ── Relics (AF-029): in-run discoveries, apply on pickup, reset per run.
 let relicSystem = new RelicSystem(ROSTER_RELICS);
@@ -4046,7 +4055,11 @@ const loop = new GameLoop({
         inventory: `${inventory.size} items · player ${inventory.countIn("player")} · loadouts ${inventory.allLoadouts.length}`,
         equipment: (() => {
           const eq = equipmentEffects();
-          return `wpn +${((eq.bonuses.damage ?? 0) * 100).toFixed(0)}% · shield +${(eq.bonuses.shieldCapacity ?? 0).toFixed(0)} · sets ${eq.activeSetBonuses.length} · pwr ${eq.powerRating}`;
+          // AF-079: §Debug — energy usage, heat, mass from installed profiles + workshop lattice.
+          const installedIds = new Set(Object.values(sandboxLoadoutSlots));
+          const load = engineeringLoadFor(EQUIPMENT_PROFILES.filter((p) => installedIds.has(p.itemId)));
+          const shop = workshop.snapshot;
+          return `wpn +${((eq.bonuses.damage ?? 0) * 100).toFixed(0)}% · shield +${(eq.bonuses.shieldCapacity ?? 0).toFixed(0)} · sets ${eq.activeSetBonuses.length} · pwr ${eq.powerRating} · draw ${load.energyDraw} · heat ${load.heatLoad} · mass ${load.mass} · workshop ${shop.craftedCount}/${shop.workshopSize} crafted`;
         })(),
         relics: (() => {
           const collection = reliquary.snapshot;
