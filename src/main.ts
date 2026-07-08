@@ -63,6 +63,8 @@ import { RelicSystem } from "./game/relics/RelicSystem";
 import { SANDBOX_RELICS } from "./game/relics/relicData";
 import { CommanderRuntime } from "./game/commanders/CommanderRuntime";
 import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
+import { FRAMEWORK_PROFILES } from "./game/commanders/commanderFrameworkData";
+import { CommanderProgressionRuntime } from "./game/commanders/CommanderProgressionRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { WeaponRuntime } from "./game/weapons/WeaponRuntime";
@@ -725,7 +727,10 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
   meta.recordStat("runs");
   meta.recordStat(result === "victory" ? "victories" : "defeats");
   meta.recordStat("playTimeMs", playTimeMs);
-  meta.addMasteryXp("commander:placeholder", result === "victory" ? 20 : 8);
+  // AF-071: the placeholder mastery track becomes the commander's REAL
+  // AF-026 track, and victories grant a talent point.
+  meta.addMasteryXp(sandboxCommanderProfile.masteryTrackId, result === "victory" ? 20 : 8);
+  if (result === "victory") commanderProgression.grantTalentPoints(1);
   meta.addMasteryXp("ship:placeholder", result === "victory" ? 20 : 8);
   meta.addAccountXp(
     result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
@@ -822,6 +827,11 @@ function newRelicSystem(): RelicSystem {
 
 // ── Commander (AF-030): governs the run via the four-hook signature.
 const sandboxCommander = SANDBOX_COMMANDERS[0]!;
+// AF-071: the framework profile wraps AF-030's def — talents, missions,
+// mastery track, relationships. One progression runtime per commander,
+// profile-scoped, fed a talent point per mission victory.
+const sandboxCommanderProfile = FRAMEWORK_PROFILES.find((p) => p.commanderId === sandboxCommander.id)!;
+const commanderProgression = new CommanderProgressionRuntime(sandboxCommanderProfile);
 let commanderRuntime: CommanderRuntime | null = null;
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -3995,7 +4005,10 @@ const loop = new GameLoop({
         })(),
         relics: `active ${relicSystem.activeRelicIds.length} [${relicSystem.activeRelicIds.join(", ") || "none"}] · synergies ${relicSystem.aggregate.synergies.length}`,
         commander: commanderRuntime
-          ? `${sandboxCommander.callsign} · ability cd ${commanderRuntime.snapshot.activeCooldownMs.toFixed(0)}ms · ult ${commanderRuntime.snapshot.ultimateCharge.toFixed(0)}/${sandboxCommander.ultimate.chargeRequired}${commanderRuntime.snapshot.ultimateReady ? " READY" : ""}`
+          ? (() => {
+              const prog = commanderProgression.snapshot;
+              return `${sandboxCommander.callsign} (${prog.class}) · ability cd ${commanderRuntime.snapshot.activeCooldownMs.toFixed(0)}ms · ult ${commanderRuntime.snapshot.ultimateCharge.toFixed(0)}/${sandboxCommander.ultimate.chargeRequired}${commanderRuntime.snapshot.ultimateReady ? " READY" : ""} · talents ${prog.talentsUnlocked}/${prog.talentsTotal} (${prog.talentPoints} pts) · mission ${prog.missionBeat}`;
+            })()
           : null,
         ships: shipRuntime
           ? `${sandboxShip.name} (${sandboxShip.shipClass}) · energy ${shipRuntime.snapshot.energy.toFixed(0)}/${sandboxShip.maxEnergy} · ability cd ${shipRuntime.snapshot.abilityCooldownMs.toFixed(0)}ms`
