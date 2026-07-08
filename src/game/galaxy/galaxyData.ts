@@ -161,6 +161,13 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Dark Nebula",
       lore: "The nebula does not block the starlight. Something inside it drinks the starlight — and whatever grew in the dark grew very, very large.",
     },
+    // AF-067: the Singularity Zone region — the last region on AF-038's
+    // shelf to receive a definition; the galaxy map is complete.
+    {
+      id: "singularityZone",
+      name: "Singularity Zone",
+      lore: "Where black holes, collapsed stars and quantum anomalies merged into one impossible region. Physics is a negotiation here, and it is still being negotiated.",
+    },
   ],
   systems: [
     {
@@ -278,7 +285,7 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "ancientCore",
       biomeId: "ancient-core",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-hollow-crown"],
+      connectedSystemIds: ["sys-hollow-crown", "sys-axiom"], // AF-067: the Zone begins where the precursors' light ends
       pointsOfInterest: [
         { id: "first-light-council", kind: "ancientVaults", discoveryCategory: "lore", discoveryId: "LORE_FIRST_LIGHT_COUNCIL" },
       ],
@@ -348,6 +355,22 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       ],
       dominantFaction: "Xenomorph Hive",
       threatLevel: 4,
+      requiresFastTravelUnlock: false,
+    },
+    // AF-067: Axiom — the Singularity Zone, past even First Light; the
+    // deepest system in the galaxy, where the precursors' story ends.
+    {
+      id: "sys-axiom",
+      name: "Axiom",
+      region: "singularityZone",
+      biomeId: "singularity-zone",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-first-light"],
+      pointsOfInterest: [
+        { id: "axiom-engine", kind: "prototypeFacilities", discoveryCategory: "lore", discoveryId: "LORE_AXIOM_ENGINE" },
+      ],
+      dominantFaction: "Void Swarm",
+      threatLevel: 7,
       requiresFastTravelUnlock: false,
     },
   ],

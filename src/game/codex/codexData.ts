@@ -683,6 +683,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_LIVING_ECOSPHERES_ARCHIVE" },
   },
+  // AF-067: the Singularity Zone biome — unlocked by activating the quantum
+  // archive at Axiom (the biome's own lore interactable).
+  {
+    id: "codex-biome-singularity-zone",
+    category: "biomes",
+    title: "The Singularity Zone",
+    lore: {
+      summary: "Physics is a negotiation here, and it is still being negotiated.",
+      detailed: "Axiom lies past the precursors' last light: nested singularities, quantum oceans, towers with no far end, rivers that flow through hours instead of terrain. Every civilisation that studied the Zone vanished into it — including, the archives suggest, the one that built the Afterlight Network. They did not fall. They finished their work at First Light, and then they went in.",
+      historicalContext: "The Custodians' vigil faces outward from the Ancient Core in every direction but one. Toward the Zone, they only watch. Whatever their makers found in there, the guardians were not invited — or did not dare follow.",
+      recoveredArchives: "Final precursor calculation, recovered intact: \"The Network is complete. The question it was built to answer lies past the horizon. We go to ask it in person.\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Activating the quantum archive at Axiom.",
+    relatedEntryIds: ["codex-biome-ancient-core", "codex-void-corruption"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_SINGULARITY_ZONE_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",

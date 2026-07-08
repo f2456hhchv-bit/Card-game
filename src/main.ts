@@ -114,6 +114,7 @@ import { SOLAR_WASTES_BIOME } from "./game/biomes/solarWastesBiome";
 import { FROZEN_REACH_BIOME } from "./game/biomes/frozenReachBiome";
 import { DERELICT_EXPANSE_BIOME } from "./game/biomes/derelictExpanseBiome";
 import { LIVING_ECOSPHERES_BIOME } from "./game/biomes/livingEcospheresBiome";
+import { SINGULARITY_ZONE_BIOME } from "./game/biomes/singularityZoneBiome";
 import { BiomeRuntime } from "./game/biomes/BiomeRuntime";
 import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
 import { generateMission } from "./game/missions/MissionGenerator";
@@ -852,7 +853,7 @@ const sandboxBiome = SANDBOX_BIOMES[0]!;
 // AF-058: AF-038's StarSystemDef.biomeId gets its first consumer — the run's
 // biome follows the galaxy. The registry is additive; the sandbox biome is
 // the fallback for any system whose biomeId has no authored def yet.
-const BIOME_REGISTRY: readonly BiomeDef[] = [...SANDBOX_BIOMES, HUMAN_FRONTIER_BIOME, CRYSTAL_EXPANSE_BIOME, MACHINE_EXPANSE_BIOME, VOID_EXPANSE_BIOME, ANCIENT_CORE_BIOME, SOLAR_WASTES_BIOME, FROZEN_REACH_BIOME, DERELICT_EXPANSE_BIOME, LIVING_ECOSPHERES_BIOME];
+const BIOME_REGISTRY: readonly BiomeDef[] = [...SANDBOX_BIOMES, HUMAN_FRONTIER_BIOME, CRYSTAL_EXPANSE_BIOME, MACHINE_EXPANSE_BIOME, VOID_EXPANSE_BIOME, ANCIENT_CORE_BIOME, SOLAR_WASTES_BIOME, FROZEN_REACH_BIOME, DERELICT_EXPANSE_BIOME, LIVING_ECOSPHERES_BIOME, SINGULARITY_ZONE_BIOME];
 let activeBiome: BiomeDef = sandboxBiome;
 let biomeRuntime: BiomeRuntime | null = null;
 
