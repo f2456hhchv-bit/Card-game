@@ -125,6 +125,12 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Machine Expanse",
       lore: "Entire planets converted into autonomous factories that kept manufacturing after everyone who could read the invoices died.",
     },
+    // AF-061: the Void Expanse region — where reality has begun to collapse.
+    {
+      id: "voidExpanse",
+      name: "Void Expanse",
+      lore: "Not empty space — emptied space. The region where physics stopped being a law and became a suggestion.",
+    },
   ],
   systems: [
     {
@@ -210,12 +216,28 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "machineExpanse",
       biomeId: "machine-expanse",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-hollow-drift"],
+      connectedSystemIds: ["sys-hollow-drift", "sys-hollow-crown"], // AF-061: the Void lies past even the Forge
       pointsOfInterest: [
         { id: "forge-primus-foundry", kind: "machineFoundries", discoveryCategory: "lore", discoveryId: "LORE_FORGE_PRIMUS_FOUNDRY" },
       ],
       dominantFaction: "Machine Collective",
       threatLevel: 4,
+      requiresFastTravelUnlock: false,
+    },
+    // AF-061: Hollow Crown — the Void Expanse, past even Forge Primus; the
+    // deepest reachable system and the deepest authored biome.
+    {
+      id: "sys-hollow-crown",
+      name: "Hollow Crown",
+      region: "voidExpanse",
+      biomeId: "void-expanse",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-forge-primus"],
+      pointsOfInterest: [
+        { id: "hollow-crown-monolith", kind: "unknownSignals", discoveryCategory: "lore", discoveryId: "LORE_HOLLOW_CROWN_MONOLITH" },
+      ],
+      dominantFaction: "Void Swarm",
+      threatLevel: 5,
       requiresFastTravelUnlock: false,
     },
   ],

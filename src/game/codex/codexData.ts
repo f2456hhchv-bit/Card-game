@@ -563,6 +563,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_MACHINE_EXPANSE_ARCHIVE" },
   },
+  // AF-061: the Void Expanse biome — unlocked by activating the void
+  // archive at Hollow Crown (the biome's own lore interactable).
+  {
+    id: "codex-biome-void-expanse",
+    category: "biomes",
+    title: "The Void Expanse",
+    lore: {
+      summary: "The stars here did not go out. They went elsewhere.",
+      detailed: "Hollow Crown is what remains when reality stops holding its shape: collapsed stars, silent planets, geometry that answers to nothing. The Swarm pours through the tears, the Eclipsed drift where their fleets fell, and the Custodians still guard something at the centre of it — something older than the Collapse.",
+      historicalContext: "Every civilisation that studied the Void left warnings instead of findings. The precursors left both, and then left.",
+      recoveredArchives: "Expedition log, final entry: \"The anomaly is not expanding. We were wrong. Everything else is shrinking.\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Activating the void archive at Hollow Crown.",
+    relatedEntryIds: ["codex-void-corruption", "codex-eclipsed"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_VOID_EXPANSE_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
