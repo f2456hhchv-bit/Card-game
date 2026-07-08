@@ -583,6 +583,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_VOID_EXPANSE_ARCHIVE" },
   },
+  // AF-062: the Ancient Core biome — unlocked by activating the knowledge
+  // vault at First Light (the biome's own lore interactable).
+  {
+    id: "codex-biome-ancient-core",
+    category: "biomes",
+    title: "The Ancient Core",
+    lore: {
+      summary: "The library is still open. The librarians never stood down.",
+      detailed: "First Light is not a ruin. It is a civilisation preserved at its peak — orbital rings, quantum libraries, Dyson fragments still drinking the star. The precursors built the Afterlight Network here, recorded everything they knew, and then were gone. Not destroyed. Finished. The Custodians guard the difference.",
+      historicalContext: "Every answer recovered from the Core creates a better question. The largest so far: they studied the Void before the Collapse — and their last archives are warnings addressed to whoever came next.",
+      recoveredArchives: "Council record, final session: \"We have decided what must be kept. Begin the vigil.\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Activating the knowledge vault at First Light.",
+    relatedEntryIds: ["codex-ancient-custodians", "codex-ancient-security-doctrine"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_ANCIENT_CORE_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",

@@ -131,6 +131,12 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Void Expanse",
       lore: "Not empty space — emptied space. The region where physics stopped being a law and became a suggestion.",
     },
+    // AF-062: the Ancient Core region — the precursors' preserved stellar civilisation.
+    {
+      id: "ancientCore",
+      name: "Ancient Core",
+      lore: "The civilisation that built the Afterlight Network did not fall here. It finished here — and whatever it finished, the Custodians still guard.",
+    },
   ],
   systems: [
     {
@@ -232,12 +238,28 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "voidExpanse",
       biomeId: "void-expanse",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-forge-primus"],
+      connectedSystemIds: ["sys-forge-primus", "sys-first-light"], // AF-062: the precursors' home lies beyond the collapse
       pointsOfInterest: [
         { id: "hollow-crown-monolith", kind: "unknownSignals", discoveryCategory: "lore", discoveryId: "LORE_HOLLOW_CROWN_MONOLITH" },
       ],
       dominantFaction: "Void Swarm",
       threatLevel: 5,
+      requiresFastTravelUnlock: false,
+    },
+    // AF-062: First Light — the Ancient Core, past even the Void; the journey
+    // to the precursors' home crosses everything they left behind.
+    {
+      id: "sys-first-light",
+      name: "First Light",
+      region: "ancientCore",
+      biomeId: "ancient-core",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-hollow-crown"],
+      pointsOfInterest: [
+        { id: "first-light-council", kind: "ancientVaults", discoveryCategory: "lore", discoveryId: "LORE_FIRST_LIGHT_COUNCIL" },
+      ],
+      dominantFaction: "Ancient Custodians",
+      threatLevel: 6,
       requiresFastTravelUnlock: false,
     },
   ],
