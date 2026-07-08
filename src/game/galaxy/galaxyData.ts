@@ -119,6 +119,12 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Human Frontier",
       lore: "The fragile remains of humanity after the Collapse — rebuilding in public, so the dark can see it hasn't won.",
     },
+    // AF-060: the Machine Expanse region — the Collective's industrial heart.
+    {
+      id: "machineExpanse",
+      name: "Machine Expanse",
+      lore: "Entire planets converted into autonomous factories that kept manufacturing after everyone who could read the invoices died.",
+    },
   ],
   systems: [
     {
@@ -141,7 +147,7 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "crystalDominion",
       biomeId: "crystal-fields-alpha",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-lucent-gate", "sys-ember-reach"],
+      connectedSystemIds: ["sys-lucent-gate", "sys-ember-reach", "sys-forge-primus"], // AF-060: the Expanse joins through contested space
       pointsOfInterest: [
         { id: "hollow-drift-beacon", kind: "distressBeacons", discoveryCategory: "lore", discoveryId: "LORE_HOLLOW_DRIFT_BEACON" },
       ],
@@ -194,6 +200,22 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       ],
       dominantFaction: "Crystal Dominion",
       threatLevel: 3,
+      requiresFastTravelUnlock: false,
+    },
+    // AF-060: Forge Primus — the Machine Expanse, reached through Hollow
+    // Drift's contested space; the deepest authored biome.
+    {
+      id: "sys-forge-primus",
+      name: "Forge Primus",
+      region: "machineExpanse",
+      biomeId: "machine-expanse",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-hollow-drift"],
+      pointsOfInterest: [
+        { id: "forge-primus-foundry", kind: "machineFoundries", discoveryCategory: "lore", discoveryId: "LORE_FORGE_PRIMUS_FOUNDRY" },
+      ],
+      dominantFaction: "Machine Collective",
+      threatLevel: 4,
       requiresFastTravelUnlock: false,
     },
   ],

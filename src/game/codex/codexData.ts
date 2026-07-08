@@ -543,6 +543,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_CRYSTAL_EXPANSE_ARCHIVE" },
   },
+  // AF-060: the Machine Expanse biome — unlocked by activating Forge
+  // Primus's AI archive in the field (the biome's own lore interactable).
+  {
+    id: "codex-biome-machine-expanse",
+    category: "biomes",
+    title: "The Machine Expanse",
+    lore: {
+      summary: "You are simply not yet a scheduled task.",
+      detailed: "Forge Primus is a planet that became a factory and then forgot the difference. Assembly continents, refining oceans, drone factories feeding drone factories — production without purpose, perfected. The Custodians watch it. Even they no longer remember why.",
+      historicalContext: "The Collective did not conquer the Expanse. It was manufactured there, one uninterrupted production run ago.",
+      recoveredArchives: "Foundry log, timestamp corrupt: \"OUTPUT NOMINAL. DEMAND: NO DATA. CONTINUE.\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Activating the AI archive at Forge Primus.",
+    relatedEntryIds: ["codex-machine-collective", "codex-machine-network"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_MACHINE_EXPANSE_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
