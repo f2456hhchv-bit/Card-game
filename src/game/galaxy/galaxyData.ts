@@ -137,6 +137,12 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Ancient Core",
       lore: "The civilisation that built the Afterlight Network did not fall here. It finished here — and whatever it finished, the Custodians still guard.",
     },
+    // AF-063: the Solar Wastes region — star systems dying in public.
+    {
+      id: "solarWastes",
+      name: "Solar Wastes",
+      lore: "Dying suns and the salvage wars beneath them. The stars gave these systems everything, and now they are taking it back.",
+    },
   ],
   systems: [
     {
@@ -222,7 +228,7 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "machineExpanse",
       biomeId: "machine-expanse",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-hollow-drift", "sys-hollow-crown"], // AF-061: the Void lies past even the Forge
+      connectedSystemIds: ["sys-hollow-drift", "sys-hollow-crown", "sys-cinderfall"], // AF-061/063: the Void and the Wastes lie past the Forge
       pointsOfInterest: [
         { id: "forge-primus-foundry", kind: "machineFoundries", discoveryCategory: "lore", discoveryId: "LORE_FORGE_PRIMUS_FOUNDRY" },
       ],
@@ -260,6 +266,22 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       ],
       dominantFaction: "Ancient Custodians",
       threatLevel: 6,
+      requiresFastTravelUnlock: false,
+    },
+    // AF-063: Cinderfall — the Solar Wastes, a dying system off Forge Primus;
+    // the Collective's burning shipyards and the Outlaws' salvage wars.
+    {
+      id: "sys-cinderfall",
+      name: "Cinderfall",
+      region: "solarWastes",
+      biomeId: "solar-wastes",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-forge-primus"],
+      pointsOfInterest: [
+        { id: "cinderfall-colony", kind: "miningColonies", discoveryCategory: "lore", discoveryId: "LORE_CINDERFALL_COLONY" },
+      ],
+      dominantFaction: "Machine Collective",
+      threatLevel: 4,
       requiresFastTravelUnlock: false,
     },
   ],

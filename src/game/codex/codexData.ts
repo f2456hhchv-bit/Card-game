@@ -603,6 +603,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_ANCIENT_CORE_ARCHIVE" },
   },
+  // AF-063: the Solar Wastes biome — unlocked by activating the ancient
+  // forge at Cinderfall (the biome's own lore interactable).
+  {
+    id: "codex-biome-solar-wastes",
+    category: "biomes",
+    title: "The Solar Wastes",
+    lore: {
+      summary: "The stars gave these systems everything, and now they are taking it back.",
+      detailed: "Cinderfall is surviving inside the final moments of a dying sun: plasma oceans, burning shipyards, harvesters still drinking a corona that will kill them. The Collective salvages, the Outlaws raid the salvagers, and the Conclave's entities move through the flare-light like it belongs to them. It does.",
+      historicalContext: "Every civilisation that settled here believed it could out-engineer stellar decay. The forges they left behind run on the same arrogance — and the precursors' relays needed stars like these whole.",
+      recoveredArchives: "Harvester log: \"Output climbing again. That is not good news. That is the star letting go.\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Activating the ancient forge at Cinderfall.",
+    relatedEntryIds: ["codex-celestial-conclave", "codex-biome-ancient-core"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_SOLAR_WASTES_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
