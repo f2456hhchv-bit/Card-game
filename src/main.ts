@@ -123,6 +123,8 @@ import {
   CAMPAIGN_COUNTER_SYSTEMS,
   SANDBOX_CAMPAIGN,
 } from "./game/campaign/campaignData";
+import { EndgameRuntime } from "./game/endgame/EndgameRuntime";
+import { SANDBOX_ASCENSIONS } from "./game/endgame/endgameData";
 import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
@@ -849,6 +851,16 @@ const campaign = new CampaignRuntime(SANDBOX_CAMPAIGN);
 let lastCampaignBeat: string | null = null;
 let campaignBeatClockMs = 0;
 const CAMPAIGN_BEAT_CADENCE_MS = 1500;
+
+// AF-069: the endgame begins after the main campaign — constructed locked,
+// unlocked the moment AF-068's ladder completes, fed by the same real play.
+const endgame = new EndgameRuntime(SANDBOX_ASCENSIONS);
+
+function feedCampaignProgress(counterKey: string): void {
+  campaign.recordProgress(counterKey);
+  if (campaign.isComplete && !endgame.isUnlocked) endgame.notifyCampaignComplete();
+  if (endgame.isUnlocked) endgame.recordMilestone();
+}
 let lastBossPhaseIndex = 0;
 let bossFightElapsedMs = 0;
 const BOSS_HAZARD_BASE_RADIUS = 3;
@@ -2405,7 +2417,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
           // AF-057 §Boss Memory: victories + fastest kill persist through AF-026's stats.
           if (bossDirector) {
             bossDirector.notifyDefeated();
-            campaign.recordProgress(CAMPAIGN_COUNTER_BOSSES); // AF-068: guardians fell for the story too
+            feedCampaignProgress(CAMPAIGN_COUNTER_BOSSES); // AF-068/069: guardians fell for the story too
             meta.recordStat(`boss:${sandboxBoss.id}:victories`);
             const bestKey = `boss:${sandboxBoss.id}:fastestKillMs`;
             const delta = BossDirectorRuntime.fastestKillStatDelta(meta.stat(bestKey), bossFightElapsedMs);
@@ -3039,7 +3051,7 @@ function endRun(result: "victory" | "defeat"): void {
   session.playTimeMs = sessionMs;
   director = null;
   bus.emit("RunEnded", { result, seed: session.seed, playTimeMs: sessionMs });
-  if (result === "victory") campaign.recordProgress(CAMPAIGN_COUNTER_MISSIONS); // AF-068: campaign progress from real play
+  if (result === "victory") feedCampaignProgress(CAMPAIGN_COUNTER_MISSIONS); // AF-068/069: campaign + endgame progress from real play
   machine.transitionTo(result === "victory" ? "MissionComplete" : "Defeat");
 }
 
@@ -3464,7 +3476,7 @@ function render(): void {
           `Travel: ${target.name} (${target.region})`,
           () => {
             if (galaxyRuntime.travelTo(target.id, fastTravelUnlocked)) {
-              campaign.recordProgress(CAMPAIGN_COUNTER_SYSTEMS); // AF-068: exploration is campaign progress
+              feedCampaignProgress(CAMPAIGN_COUNTER_SYSTEMS); // AF-068/069: exploration is campaign + endgame progress
               render();
             }
           },
@@ -4187,6 +4199,11 @@ const loop = new GameLoop({
             ? snap.objectives.map((o) => `${o.current}/${o.target}`).join(" ")
             : "open galaxy";
           return `${snap.stage} · "${snap.chapterName}" (${snap.chapterIndex + 1}/${snap.chapterCount}) · obj ${objectives} · flags ${snap.storyFlagCount} · unlocks ${snap.unlockCount} · beats ${snap.pendingBeats} · world ${snap.worldChangeCount}`;
+        })(),
+        endgame: (() => {
+          const snap = endgame.snapshot;
+          if (!snap.unlocked) return "locked — the endgame begins after the main campaign";
+          return `Ascension ${snap.ascensionLevel} · milestones ${snap.milestonesThisAscension}/${snap.milestonesRequired}${snap.canAscend ? " (ASCEND READY)" : ""} · expeditions ${snap.expeditionsThisAscension}/${snap.expeditionsLifetime} lifetime · research ${snap.researchNodesTotal} · evolution ${snap.worldEvolutionCount} · legacy ${snap.legacyCount} · mods ${snap.activeModifierCount}`;
         })(),
       });
     }

@@ -92,6 +92,8 @@ export interface DebugSnapshot {
   bossDirector: string | null;
   /** Campaign summary: stage, chapter, objectives, story flags, world evolution (AF-068 §DEBUG). */
   campaign: string | null;
+  /** Endgame summary: ascension level, milestones, expeditions, research, evolution, legacy (AF-069 §DEBUG). */
+  endgame: string | null;
 }
 
 export class DebugOverlay {
@@ -171,6 +173,7 @@ export class DebugOverlay {
       `conductor  ${snapshot.conductor ?? "—"}`,
       `bossDir    ${snapshot.bossDirector ?? "—"}`,
       `campaign   ${snapshot.campaign ?? "—"}`,
+      `endgame    ${snapshot.endgame ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
