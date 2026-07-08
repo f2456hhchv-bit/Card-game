@@ -65,6 +65,8 @@ import { CommanderRuntime } from "./game/commanders/CommanderRuntime";
 import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
 import { FRAMEWORK_PROFILES } from "./game/commanders/commanderFrameworkData";
 import { CommanderProgressionRuntime } from "./game/commanders/CommanderProgressionRuntime";
+import { RosterRuntime } from "./game/commanders/RosterRuntime";
+import { RECRUITMENT_TABLE, STARTING_COMMANDER_IDS, philosophyFor } from "./game/commanders/rosterData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { WeaponRuntime } from "./game/weapons/WeaponRuntime";
@@ -731,6 +733,7 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
   // AF-026 track, and victories grant a talent point.
   meta.addMasteryXp(sandboxCommanderProfile.masteryTrackId, result === "victory" ? 20 : 8);
   if (result === "victory") commanderProgression.grantTalentPoints(1);
+  roster.recordUse(sandboxCommander.id, result === "victory"); // AF-072: usage informs future balancing
   meta.addMasteryXp("ship:placeholder", result === "victory" ? 20 : 8);
   meta.addAccountXp(
     result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
@@ -832,6 +835,9 @@ const sandboxCommander = SANDBOX_COMMANDERS[0]!;
 // profile-scoped, fed a talent point per mission victory.
 const sandboxCommanderProfile = FRAMEWORK_PROFILES.find((p) => p.commanderId === sandboxCommander.id)!;
 const commanderProgression = new CommanderProgressionRuntime(sandboxCommanderProfile);
+// AF-072: the launch roster — fourteen seats, the starting trio recruited,
+// usage recorded per expedition so statistics can inform future balancing.
+const roster = new RosterRuntime(RECRUITMENT_TABLE, STARTING_COMMANDER_IDS);
 let commanderRuntime: CommanderRuntime | null = null;
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -4007,7 +4013,9 @@ const loop = new GameLoop({
         commander: commanderRuntime
           ? (() => {
               const prog = commanderProgression.snapshot;
-              return `${sandboxCommander.callsign} (${prog.class}) · ability cd ${commanderRuntime.snapshot.activeCooldownMs.toFixed(0)}ms · ult ${commanderRuntime.snapshot.ultimateCharge.toFixed(0)}/${sandboxCommander.ultimate.chargeRequired}${commanderRuntime.snapshot.ultimateReady ? " READY" : ""} · talents ${prog.talentsUnlocked}/${prog.talentsTotal} (${prog.talentPoints} pts) · mission ${prog.missionBeat}`;
+              const rosterSnap = roster.snapshot;
+              const usage = roster.statsFor(sandboxCommander.id);
+              return `${sandboxCommander.callsign} (${prog.class}/${philosophyFor(sandboxCommander.id)}) · ability cd ${commanderRuntime.snapshot.activeCooldownMs.toFixed(0)}ms · ult ${commanderRuntime.snapshot.ultimateCharge.toFixed(0)}/${sandboxCommander.ultimate.chargeRequired}${commanderRuntime.snapshot.ultimateReady ? " READY" : ""} · talents ${prog.talentsUnlocked}/${prog.talentsTotal} (${prog.talentPoints} pts) · mission ${prog.missionBeat} · roster ${rosterSnap.recruitedCount}/${rosterSnap.rosterSize} · uses ${usage.uses} (${(usage.winRate * 100).toFixed(0)}% wr)`;
             })()
           : null,
         ships: shipRuntime
