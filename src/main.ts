@@ -60,7 +60,6 @@ import { DEFAULT_INVENTORY_TUNING } from "./game/inventory/inventoryData";
 import { validateLoadout, aggregateLoadout } from "./game/equipment/EquipmentAggregate";
 import { SANDBOX_EQUIPMENT, SANDBOX_SETS } from "./game/equipment/equipmentData";
 import { RelicSystem } from "./game/relics/RelicSystem";
-import { SANDBOX_RELICS } from "./game/relics/relicData";
 import { CommanderRuntime } from "./game/commanders/CommanderRuntime";
 import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
 import { FRAMEWORK_PROFILES } from "./game/commanders/commanderFrameworkData";
@@ -69,7 +68,7 @@ import { RosterRuntime } from "./game/commanders/RosterRuntime";
 import { RECRUITMENT_TABLE, STARTING_COMMANDER_IDS, philosophyFor } from "./game/commanders/rosterData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
-import { RELIC_PROFILES } from "./game/relics/relicFrameworkData";
+import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
 import { RelicCollectionRuntime } from "./game/relics/RelicCollectionRuntime";
 import { WEAPON_PROFILES } from "./game/weapons/weaponFrameworkData";
 import { WeaponMasteryRuntime } from "./game/weapons/WeaponMasteryRuntime";
@@ -834,9 +833,9 @@ const sandboxLoadoutSlots: Partial<Record<import("./game/equipment/equipmentData
 const sandboxEquipmentById = new Map(SANDBOX_EQUIPMENT.map((item) => [item.id, item]));
 
 // ── Relics (AF-029): in-run discoveries, apply on pickup, reset per run.
-let relicSystem = new RelicSystem(SANDBOX_RELICS);
+let relicSystem = new RelicSystem(ROSTER_RELICS);
 function newRelicSystem(): RelicSystem {
-  return new RelicSystem(SANDBOX_RELICS, (from, to) => {
+  return new RelicSystem(ROSTER_RELICS, (from, to) => {
     reliquary.recordEvolved(from.id); // AF-077: evolution is remembered forever
     reliquary.recordOwned(to.id);
     lootNotices.push({ text: `EVOLVED · ${from.name.toUpperCase()} → ${to.name.toUpperCase()}`, colour: "#ffc652", ttlMs: 2600 });
@@ -879,7 +878,8 @@ const weaponMastery = new WeaponMasteryRuntime(sandboxWeaponProfile);
 // uses recorded per expedition so statistics support future balancing.
 const arsenal = new WeaponCollectionRuntime(ARSENAL_ENTRIES, STARTING_WEAPON_IDS);
 // AF-077: the reliquary — a monotone collection lattice fed by real acquisitions.
-const reliquary = new RelicCollectionRuntime(RELIC_PROFILES);
+const reliquary = new RelicCollectionRuntime(ROSTER_RELIC_PROFILES);
+// AF-078: the drop pool and set detection ride the FULL roster.
 const sandboxArsenalEntry = ARSENAL_ENTRIES.find((e) => e.weaponId === sandboxWeapon.id)!;
 let weaponRuntime: WeaponRuntime | null = null;
 
@@ -1531,7 +1531,7 @@ function killDrone(drone: Drone): void {
   }
   // AF-029: elites never simply drop gold — relic pool applies on pickup.
   if (drone.elite && lootRng && hasDeathEvent(drone.def, "loot")) {
-    const relicId = lootRng.pick(SANDBOX_RELICS.map((r) => r.id));
+    const relicId = lootRng.pick(ROSTER_RELICS.map((r) => r.id)); // AF-078: the full roster drops
     const result = relicSystem.acquire(relicId);
     if (result.ok) {
       reliquary.recordOwned(relicId); // AF-077: the lattice advances on real acquisition
@@ -1892,7 +1892,7 @@ function grantBossRewards(): void {
     }
   }
   if (def.rewards.guaranteedRelic && lootRng) {
-    const relicId = lootRng.pick(SANDBOX_RELICS.map((r) => r.id));
+    const relicId = lootRng.pick(ROSTER_RELICS.map((r) => r.id)); // AF-078: the full roster drops
     const result = relicSystem.acquire(relicId);
     if (result.ok) {
       reliquary.recordOwned(relicId); // AF-077: the lattice advances on real acquisition
@@ -4050,7 +4050,8 @@ const loop = new GameLoop({
         })(),
         relics: (() => {
           const collection = reliquary.snapshot;
-          return `active ${relicSystem.activeRelicIds.length} [${relicSystem.activeRelicIds.join(", ") || "none"}] · synergies ${relicSystem.aggregate.synergies.length} · reliquary ${collection.ownedCount}/${collection.reliquarySize} owned, ${collection.evolvedCount} evolved`;
+          const setBonuses = activeSetBonusesFor(relicSystem.activeRelicIds);
+          return `active ${relicSystem.activeRelicIds.length} [${relicSystem.activeRelicIds.join(", ") || "none"}] · synergies ${relicSystem.aggregate.synergies.length} · sets ${setBonuses.length} live · reliquary ${collection.ownedCount}/${collection.reliquarySize} owned, ${collection.evolvedCount} evolved`;
         })(),
         commander: commanderRuntime
           ? (() => {
