@@ -69,6 +69,8 @@ import { RosterRuntime } from "./game/commanders/RosterRuntime";
 import { RECRUITMENT_TABLE, STARTING_COMMANDER_IDS, philosophyFor } from "./game/commanders/rosterData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
+import { WEAPON_PROFILES } from "./game/weapons/weaponFrameworkData";
+import { WeaponMasteryRuntime } from "./game/weapons/WeaponMasteryRuntime";
 import { SANDBOX_SHIP_MODULES, SHIP_PROFILES } from "./game/ships/shipFrameworkData";
 import { ShipOutfittingRuntime } from "./game/ships/ShipOutfittingRuntime";
 import { FLEET_ENTRIES, STARTING_SHIP_IDS } from "./game/ships/shipRosterData";
@@ -740,6 +742,7 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
   roster.recordUse(sandboxCommander.id, result === "victory"); // AF-072: usage informs future balancing
   shipOutfitting.recordUse(); // AF-073: hull mastery accumulates per expedition
   fleet.recordMission(sandboxShip.id, result === "victory"); // AF-074: fleet statistics support long-term balancing
+  if (weaponRuntime) weaponMastery.recordShots(weaponRuntime.snapshot.shotsFired); // AF-075: accuracy is derived from real fire
   meta.addMasteryXp("ship:placeholder", result === "victory" ? 20 : 8);
   meta.addAccountXp(
     result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
@@ -861,6 +864,10 @@ let shipRuntime: ShipRuntime | null = null;
 // ── Weapon (AF-032): fires through the same DamagePipeline "weapon" stage
 // and StatusEngine every prior module already reserved — no new plumbing.
 const sandboxWeapon = SANDBOX_WEAPONS[0]!;
+// AF-075: the framework profile wraps AF-032's def — element, mastery,
+// unique mechanic. One mastery ledger for the equipped weapon.
+const sandboxWeaponProfile = WEAPON_PROFILES.find((p) => p.weaponId === sandboxWeapon.id)!;
+const weaponMastery = new WeaponMasteryRuntime(sandboxWeaponProfile);
 let weaponRuntime: WeaponRuntime | null = null;
 
 // ── Boss (AF-035): reuses DefenceState for hull/shield/armour and
@@ -2725,6 +2732,8 @@ function updateSandboxCombat(fixedDtMs: number): void {
         if (weakPoint) bossRuntime.applyWeakPointDamage(weakPoint.id, finalDamage * 0.15);
         hitCount += 1;
         if (result.critical) critCount += 1;
+        weaponMastery.recordHit(result.critical); // AF-075
+        weaponMastery.recordBossDamage(finalDamage);
         bus.emit("DamageDealt", { amount: finalDamage, critical: result.critical, kind: "boss", targetId: sandboxBoss.id });
         commanderRuntime?.notifyDamageDealt(finalDamage);
         const popup = popupPool.acquire();
@@ -2799,6 +2808,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
         drone.hull -= appliedDamage;
         hitCount += 1;
         if (result.critical) critCount += 1;
+        weaponMastery.recordHit(result.critical); // AF-075
         bus.emit("DamageDealt", { amount: appliedDamage, critical: result.critical, kind: result.kind, targetId: drone.id });
         commanderRuntime?.notifyDamageDealt(appliedDamage);
         // AF-032: status-on-hit applies through the same StatusEngine every status-inflicting system already uses.
@@ -4040,7 +4050,10 @@ const loop = new GameLoop({
             })()
           : null,
         weapons: weaponRuntime
-          ? `${sandboxWeapon.name} (${sandboxWeapon.category}/${sandboxWeapon.firePattern}) · shots ${weaponRuntime.snapshot.shotsFired} · proj ${projectiles.filter((p) => p.live).length} · dmg ${hitCount > 0 ? ((critCount / hitCount) * 100).toFixed(0) : 0}%crit`
+          ? (() => {
+              const mastery = weaponMastery.snapshot;
+              return `${sandboxWeapon.name} (${sandboxWeapon.category}/${sandboxWeapon.firePattern}) · ${mastery.frameworkCategory}/${mastery.element}${mastery.elementStatus ? `→${mastery.elementStatus}` : ""} · shots ${weaponRuntime.snapshot.shotsFired} · proj ${projectiles.filter((p) => p.live).length} · dmg ${hitCount > 0 ? ((critCount / hitCount) * 100).toFixed(0) : 0}%crit · mastery ${mastery.kills} kills ${(mastery.accuracy * 100).toFixed(0)}%acc`;
+            })()
           : null,
         enemies: (() => {
           const alive = drones.filter((d) => d.alive);
