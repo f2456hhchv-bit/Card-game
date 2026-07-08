@@ -90,6 +90,8 @@ export interface DebugSnapshot {
   conductor: string | null;
   /** Boss Director summary: encounter beat, attack hold, summon/ceremony queues, cinematics (AF-057 §DEBUG). */
   bossDirector: string | null;
+  /** Campaign summary: stage, chapter, objectives, story flags, world evolution (AF-068 §DEBUG). */
+  campaign: string | null;
 }
 
 export class DebugOverlay {
@@ -168,6 +170,7 @@ export class DebugOverlay {
       `eclipsed   ${snapshot.eclipsed ?? "—"}`,
       `conductor  ${snapshot.conductor ?? "—"}`,
       `bossDir    ${snapshot.bossDirector ?? "—"}`,
+      `campaign   ${snapshot.campaign ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

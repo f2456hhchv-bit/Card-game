@@ -116,6 +116,13 @@ import { DERELICT_EXPANSE_BIOME } from "./game/biomes/derelictExpanseBiome";
 import { LIVING_ECOSPHERES_BIOME } from "./game/biomes/livingEcospheresBiome";
 import { SINGULARITY_ZONE_BIOME } from "./game/biomes/singularityZoneBiome";
 import { BiomeRuntime } from "./game/biomes/BiomeRuntime";
+import { CampaignRuntime } from "./game/campaign/CampaignRuntime";
+import {
+  CAMPAIGN_COUNTER_BOSSES,
+  CAMPAIGN_COUNTER_MISSIONS,
+  CAMPAIGN_COUNTER_SYSTEMS,
+  SANDBOX_CAMPAIGN,
+} from "./game/campaign/campaignData";
 import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
@@ -833,6 +840,15 @@ let bossRewardsGranted = false;
 let bossFightDamageTaken = false;
 // AF-057: the Boss Director decorates the locked AF-035 runtime — run-scoped.
 let bossDirector: BossDirectorRuntime | null = null;
+
+// AF-068: the campaign spans the whole profile, not one run — module-scoped,
+// fed by mission victories, system arrivals, and boss defeats. Story beats
+// drain through the AF-055/057 consume seam at a paced cadence: gameplay
+// never pauses for the story.
+const campaign = new CampaignRuntime(SANDBOX_CAMPAIGN);
+let lastCampaignBeat: string | null = null;
+let campaignBeatClockMs = 0;
+const CAMPAIGN_BEAT_CADENCE_MS = 1500;
 let lastBossPhaseIndex = 0;
 let bossFightElapsedMs = 0;
 const BOSS_HAZARD_BASE_RADIUS = 3;
@@ -2389,6 +2405,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
           // AF-057 §Boss Memory: victories + fastest kill persist through AF-026's stats.
           if (bossDirector) {
             bossDirector.notifyDefeated();
+            campaign.recordProgress(CAMPAIGN_COUNTER_BOSSES); // AF-068: guardians fell for the story too
             meta.recordStat(`boss:${sandboxBoss.id}:victories`);
             const bestKey = `boss:${sandboxBoss.id}:fastestKillMs`;
             const delta = BossDirectorRuntime.fastestKillStatDelta(meta.stat(bestKey), bossFightElapsedMs);
@@ -3022,6 +3039,7 @@ function endRun(result: "victory" | "defeat"): void {
   session.playTimeMs = sessionMs;
   director = null;
   bus.emit("RunEnded", { result, seed: session.seed, playTimeMs: sessionMs });
+  if (result === "victory") campaign.recordProgress(CAMPAIGN_COUNTER_MISSIONS); // AF-068: campaign progress from real play
   machine.transitionTo(result === "victory" ? "MissionComplete" : "Defeat");
 }
 
@@ -3445,7 +3463,10 @@ function render(): void {
         .map((target) => [
           `Travel: ${target.name} (${target.region})`,
           () => {
-            if (galaxyRuntime.travelTo(target.id, fastTravelUnlocked)) render();
+            if (galaxyRuntime.travelTo(target.id, fastTravelUnlocked)) {
+              campaign.recordProgress(CAMPAIGN_COUNTER_SYSTEMS); // AF-068: exploration is campaign progress
+              render();
+            }
           },
         ]);
       const poiButtons: Array<[string, () => void]> = currentSystem.pointsOfInterest
@@ -3906,6 +3927,16 @@ const loop = new GameLoop({
       framesThisSecond = 0;
       fpsWindowStart = now;
     }
+    // AF-068 §Story Delivery: presentation drains beats at its own pace —
+    // one per cadence — through the consume seam; gameplay never pauses.
+    if (now - campaignBeatClockMs >= CAMPAIGN_BEAT_CADENCE_MS) {
+      const beat = campaign.consumeStoryBeat();
+      if (beat) {
+        lastCampaignBeat = `[${beat.channel}] ${beat.text}`;
+        campaignBeatClockMs = now;
+        lootNotices.push({ text: lastCampaignBeat.toUpperCase().slice(0, 72), colour: "#9fd0ff", ttlMs: 3200 });
+      }
+    }
     if (debugOverlay) {
       debugOverlay.update({
         gameState: machine.base,
@@ -4149,6 +4180,13 @@ const loop = new GameLoop({
           const beat = beatFor(bossSnap.state, bossSnap.phaseIndex, sandboxBoss.phases.length, snap.transitionActive);
           const hold = snap.transitionActive ? `holding ${(snap.transitionRemainingMs / 1000).toFixed(1)}s` : "attacking";
           return `${beat} · ${hold} · summons ${snap.queuedSummons} queued/${snap.summonsIssued} issued · ceremony ${snap.queuedCeremonyLines} · cinematics ${snap.cinematicsFired}`;
+        })(),
+        campaign: (() => {
+          const snap = campaign.snapshot;
+          const objectives = snap.objectives.length > 0
+            ? snap.objectives.map((o) => `${o.current}/${o.target}`).join(" ")
+            : "open galaxy";
+          return `${snap.stage} · "${snap.chapterName}" (${snap.chapterIndex + 1}/${snap.chapterCount}) · obj ${objectives} · flags ${snap.storyFlagCount} · unlocks ${snap.unlockCount} · beats ${snap.pendingBeats} · world ${snap.worldChangeCount}`;
         })(),
       });
     }
