@@ -143,6 +143,12 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Solar Wastes",
       lore: "Dying suns and the salvage wars beneath them. The stars gave these systems everything, and now they are taking it back.",
     },
+    // AF-064: the Frozen Reach region — the galaxy's cryogenic edge.
+    {
+      id: "frozenReach",
+      name: "Frozen Reach",
+      lore: "Where light barely reaches, entire systems chose suspension over escape. The quietest region of space is not empty — it is waiting.",
+    },
   ],
   systems: [
     {
@@ -196,7 +202,7 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       region: "humanFrontier",
       biomeId: "meridian-rest-frontier",
       missionIds: ["crystal-fields-incursion"],
-      connectedSystemIds: ["sys-lucent-gate"],
+      connectedSystemIds: ["sys-lucent-gate", "sys-winterline"], // AF-064: the frozen edge lies past the frontier
       pointsOfInterest: [
         { id: "meridian-rest-shipyard", kind: "tradeOutposts", discoveryCategory: "lore", discoveryId: "LORE_MERIDIAN_REST_SHIPYARD" },
       ],
@@ -282,6 +288,22 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       ],
       dominantFaction: "Machine Collective",
       threatLevel: 4,
+      requiresFastTravelUnlock: false,
+    },
+    // AF-064: Winterline — the Frozen Reach, past the Human Frontier on the
+    // galaxy's dark edge; the colonies that chose suspension over escape.
+    {
+      id: "sys-winterline",
+      name: "Winterline",
+      region: "frozenReach",
+      biomeId: "frozen-reach",
+      missionIds: ["crystal-fields-incursion"],
+      connectedSystemIds: ["sys-meridian-rest"],
+      pointsOfInterest: [
+        { id: "winterline-fleet", kind: "abandonedFleets", discoveryCategory: "lore", discoveryId: "LORE_WINTERLINE_FLEET" },
+      ],
+      dominantFaction: "The Eclipsed",
+      threatLevel: 3,
       requiresFastTravelUnlock: false,
     },
   ],

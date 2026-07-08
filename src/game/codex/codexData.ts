@@ -623,6 +623,26 @@ export const SANDBOX_CODEX_ENTRIES: readonly CodexEntryDef[] = [
     version: 1,
     unlock: { kind: "collection", category: "lore", id: "LORE_SOLAR_WASTES_ARCHIVE" },
   },
+  // AF-064: the Frozen Reach biome — unlocked by activating the cryo vault
+  // at Winterline (the biome's own lore interactable).
+  {
+    id: "codex-biome-frozen-reach",
+    category: "biomes",
+    title: "The Frozen Reach",
+    lore: {
+      summary: "They are all still waiting.",
+      detailed: "Winterline is the quietest place in the galaxy, and none of it is empty. The colonies saw the Collapse coming and chose suspension over escape — kilometres under the ice, the preservation systems still run, the instruments still record. The Eclipsed drift above frozen fleets they may once have crewed. Nothing here is dead. Everything here is paused.",
+      historicalContext: "Every other region answers the Collapse with wreckage. The Reach answers with a decision: entire worlds that measured the odds of running and chose to wait instead. Whether that was wisdom or surrender is the question the ice preserves.",
+      recoveredArchives: "Colony directive, final broadcast: \"Suspension confirmed for all districts. To whoever thaws us — we kept everything. Please be the ones we hoped for.\"",
+    },
+    image: null,
+    statKey: null,
+    discoverySource: "Activating the cryo vault at Winterline.",
+    relatedEntryIds: ["codex-eclipsed", "codex-human-alliance"],
+    timelinePosition: null,
+    version: 1,
+    unlock: { kind: "collection", category: "lore", id: "LORE_FROZEN_REACH_ARCHIVE" },
+  },
   {
     id: "codex-elite-variant-overview",
     category: "eliteVariants",
