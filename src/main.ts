@@ -143,7 +143,8 @@ import { EndgameRuntime } from "./game/endgame/EndgameRuntime";
 import { SANDBOX_ASCENSIONS } from "./game/endgame/endgameData";
 import { LiveOpsRegistry } from "./game/liveops/LiveOpsRegistry";
 import { CORE_GAME_PACK, SEASON_ONE, SEASON_ONE_PACK } from "./game/liveops/liveOpsData";
-import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
+import { MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
+import { FRAMEWORK_MISSIONS, MISSION_PROFILES } from "./game/missions/missionFrameworkData";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
 import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
@@ -960,7 +961,9 @@ let biomeRuntime: BiomeRuntime | null = null;
 
 // ── Mission (AF-037): deterministic modifier rolling, run-scoped objective
 // progress, and modifier-derived feeds into AF-017/023's reserved hooks.
-const sandboxMissionTemplate = SANDBOX_MISSIONS[0]!;
+// AF-083: the expedition roster — selectable in Mission Selection; the
+// sandbox template heads the array unchanged.
+let selectedMissionTemplate = FRAMEWORK_MISSIONS[0]!;
 let missionRuntime: MissionRuntime | null = null;
 let extractionRemainingMs = 0;
 
@@ -2965,7 +2968,7 @@ function startRun(): void {
   // AF-058: resolve the run's biome from the current system BEFORE anything
   // records a biomeId — the galaxy decides where this expedition happens.
   activeBiome = BIOME_REGISTRY.find((b) => b.id === galaxyRuntime.currentSystem.biomeId) ?? sandboxBiome;
-  const missionInstance = generateMission(sandboxMissionTemplate, seed);
+  const missionInstance = generateMission(selectedMissionTemplate, seed);
   session = createRunSession(
     {
       missionId: missionInstance.id,
@@ -3724,11 +3727,24 @@ function render(): void {
       const queuedFactionMission = activeFactionMissionId
         ? SANDBOX_FACTION_ROSTER.missions.find((m) => m.id === activeFactionMissionId)
         : null;
+      // AF-083: every framework expedition is selectable — preview shows
+      // category, difficulty, and threat budget (§Accessibility: Mission
+      // Preview / Difficulty Preview).
+      const missionButtons: Array<[string, () => void]> = FRAMEWORK_MISSIONS.filter((m) => m.id !== selectedMissionTemplate.id).map((m) => {
+        const profile = MISSION_PROFILES.find((p) => p.missionId === m.id);
+        return [
+          `Select: ${m.name} (${m.category} · T${m.difficulty} · budget ${profile?.threatBudget ?? 0})`,
+          () => {
+            selectedMissionTemplate = m;
+            render();
+          },
+        ];
+      });
       screen(
         "Mission Selection",
         queuedFactionMission
           ? `Faction Mission queued: ${queuedFactionMission.name} (+${queuedFactionMission.reputationReward} rep on success).`
-          : "One placeholder expedition is available.",
+          : `Selected: ${selectedMissionTemplate.name} — ${selectedMissionTemplate.briefing}`,
         [
           [
             "Launch Expedition",
@@ -3737,6 +3753,7 @@ function render(): void {
               machine.transitionTo("Loading");
             },
           ],
+          ...missionButtons,
           [
             "Back",
             () => {
@@ -4128,7 +4145,8 @@ const loop = new GameLoop({
         mission: missionRuntime
           ? (() => {
               const snap = missionRuntime!.snapshot;
-              return `${sandboxMissionTemplate.name} [${session?.phase ?? "—"}] · primary ${snap.primaryDone}/${snap.primaryTotal} · optional ${snap.optionalDone}/${snap.optionalTotal} · modifiers [${snap.activeModifierKinds.join(", ") || "none"}]`;
+              const missionProfile = MISSION_PROFILES.find((p) => p.missionId === selectedMissionTemplate.id);
+              return `${selectedMissionTemplate.name} (${missionProfile?.frameworkCategory ?? "?"} · budget ${missionProfile?.threatBudget ?? 0}) [${session?.phase ?? "—"}] · primary ${snap.primaryDone}/${snap.primaryTotal} · optional ${snap.optionalDone}/${snap.optionalTotal} · modifiers [${snap.activeModifierKinds.join(", ") || "none"}]`;
             })()
           : null,
         galaxy: (() => {
