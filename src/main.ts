@@ -166,6 +166,7 @@ import { SANDBOX_FACTION_ROSTER, PLAYER_CHOICE_REPUTATION_DELTA, REPUTATION_MIN,
 import { FactionRuntime } from "./game/factions/FactionRuntime";
 import { SANDBOX_GALAXY_ECONOMY, CREDIT_AWARDS } from "./game/economy/economyData";
 import { MarketRuntime } from "./game/economy/MarketRuntime";
+import { GalacticEconomyRuntime } from "./game/economy/GalacticEconomyRuntime";
 import { SANDBOX_WORLD_EVENTS, WORLD_STATE_MIN, WORLD_STATE_MAX, PLAYER_PARTICIPATION_WORLD_STATE_DELTA, type PlayerParticipationKind } from "./game/worldEvents/worldEventData";
 import { WorldEventRuntime } from "./game/worldEvents/WorldEventRuntime";
 import { SANDBOX_ACHIEVEMENTS } from "./game/achievements/achievementData";
@@ -640,6 +641,11 @@ let activeFactionMissionId: string | null = null;
 // GalaxyRuntime/FactionRuntime's exact discipline.
 const marketRuntime = new MarketRuntime(SANDBOX_GALAXY_ECONOMY, new Rng(Date.now()).fork("economy"));
 const CREDITS_KEY = "economy:credits";
+// AF-089: the Galactic Economy — colonies produce, consume, and trade
+// whether or not the player is present, reading AF-086's real
+// civilisation state directly and writing back only through its
+// bounded feedPlayerImpact.
+const galacticEconomy = new GalacticEconomyRuntime(civSim, new Rng(Date.now()).fork("galacticEconomy"));
 
 function awardCredits(amount: number): void {
   meta.recordStat(CREDITS_KEY, amount);
@@ -3184,6 +3190,15 @@ function endRun(result: "victory" | "defeat"): void {
     expeditionJournal.record("bosses", selectedMissionTemplate.id, `Boss defeated during ${selectedMissionTemplate.name}`);
   }
   if (result === "victory") feedCampaignProgress(CAMPAIGN_COUNTER_MISSIONS); // AF-068/069: campaign + endgame progress from real play
+  // AF-089 §Player Participation: a victorious expedition genuinely
+  // delivers resources to the mission's present faction's colony — the
+  // spec's own "every expedition contributes to rebuilding civilisation."
+  if (result === "victory") {
+    const factionPresence = MISSION_PROFILES.find((p) => p.missionId === selectedMissionTemplate.id)?.factionPresence;
+    if (factionPresence && factionPresence !== "none" && galacticEconomy.colonyFor(factionPresence)) {
+      galacticEconomy.deliverResources(factionPresence, "civilianGoods", 3);
+    }
+  }
   machine.transitionTo(result === "victory" ? "MissionComplete" : "Defeat");
 }
 
@@ -4003,6 +4018,8 @@ const loop = new GameLoop({
     marketRuntime.tryRotateInventories();
     const economicEvent = marketRuntime.tryTriggerEvent();
     if (economicEvent) bus.emit("EnvironmentalEventTriggered", { eventType: economicEvent });
+    // AF-089: the galactic economy ticks on the same ambient schedule.
+    galacticEconomy.update(fixedDtMs);
     // AF-041: the galaxy evolves whether or not the player is present — an
     // ambient World State delta applies immediately on firing, independent
     // of any later Player Participation choice.
@@ -4283,7 +4300,10 @@ const loop = new GameLoop({
           const researchData = researchTree.snapshot.points;
           const crystalEssence = crafting.materialCount("crystalFragments");
           const offers = marketRuntime.offersFor("lucent-gate-trader").length;
-          return `credits ${credits.toFixed(0)} · research data ${researchData} · crystal essence ${crystalEssence} · offers ${offers} · events ${snap.eventsTriggered}${snap.activeEventKind ? ` (active: ${snap.activeEventKind})` : ""}`;
+          // AF-089 §Debug: Supply, Demand, Trade Routes, Industrial Output,
+          // Population, Economic Health — the galactic economy, live.
+          const galEco = galacticEconomy.snapshot;
+          return `credits ${credits.toFixed(0)} · research data ${researchData} · crystal essence ${crystalEssence} · offers ${offers} · events ${snap.eventsTriggered}${snap.activeEventKind ? ` (active: ${snap.activeEventKind})` : ""} · supply ${galEco.totalSupply.toFixed(0)} · demand ${galEco.totalDemand.toFixed(1)} · routes ${galEco.openTradeRouteCount} · industry ${galEco.averageIndustrialOutput.toFixed(0)} · pop ${galEco.averagePopulation.toFixed(0)} · health ${galEco.economicHealth.toFixed(0)}%`;
         })(),
         worldEvents: (() => {
           const snap = worldEventRuntime.snapshot;
