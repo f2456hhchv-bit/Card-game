@@ -146,6 +146,7 @@ import { CORE_GAME_PACK, SEASON_ONE, SEASON_ONE_PACK } from "./game/liveops/live
 import { MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
 import { FRAMEWORK_MISSIONS, MISSION_PROFILES } from "./game/missions/missionFrameworkData";
 import { ExpeditionLogRuntime, MISSION_ROSTER_ENTRIES } from "./game/missions/missionRosterData";
+import { CIVILISATION_REGISTER, FACTION_PROFILES } from "./game/factions/factionFrameworkData";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
 import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
@@ -4176,7 +4177,9 @@ const loop = new GameLoop({
           const rep = dominant ? meta.stat(`faction:${dominant.id}:reputation`) : 0;
           const level = dominant ? FactionRuntime.reputationLevel(rep) : "—";
           const relation = factionRuntime.relationshipBetween("crystalDominion", "machineCollective");
-          return `${dominant?.name ?? "—"} rep ${rep.toFixed(0)} (${level}) · CD↔MC ${relation} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
+          // AF-085: profiled coverage + the ten-civilisation register, live.
+          const diplomatic = CIVILISATION_REGISTER.filter((c) => c.realisation.kind === "diplomatic").length;
+          return `${dominant?.name ?? "—"} rep ${rep.toFixed(0)} (${level}) · CD↔MC ${relation} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""} · profiled ${FACTION_PROFILES.length}/10 · civs ${CIVILISATION_REGISTER.length} (${diplomatic} diplomatic)`;
         })(),
         economy: (() => {
           const snap = marketRuntime.snapshot;
