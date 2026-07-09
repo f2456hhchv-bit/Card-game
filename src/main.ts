@@ -76,7 +76,8 @@ import { CAEL_WEAVER_CODEX_ENTRY } from "./game/commanders/cmd004SeraphinaCael";
 import { DRAKE_HUNTER_CODEX_ENTRY } from "./game/commanders/cmd005KaelDrake";
 import { SOL_RESONANT_CODEX_ENTRY } from "./game/commanders/cmd006AriaSol";
 import { VALE_VOIDRUNNER_CODEX_ENTRY } from "./game/commanders/cmd007OrionVale";
-import { FULL_RECRUITMENT_WITH_SWARMMASTER, ISKANDER_SWARMMASTER_CODEX_ENTRY } from "./game/commanders/cmd008NovaIskander";
+import { ISKANDER_SWARMMASTER_CODEX_ENTRY } from "./game/commanders/cmd008NovaIskander";
+import { FULL_RECRUITMENT_WITH_STARFORGED, THORNE_STARFORGED_CODEX_ENTRY } from "./game/commanders/cmd009CassiaThorne";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -576,7 +577,7 @@ const metaAchievementReader: AchievementProgressReader = {
 // ── Codex (AF-043): a pure read-only presentation layer — zero new unlock
 // mechanism, zero new save slice. Section Completion persists through the
 // exact same meta.discover("achievements", …) bucket AF-042 already uses.
-const codexRuntime = new CodexRuntime([...SANDBOX_CODEX_ENTRIES, LYRA_VOSS_CODEX_ENTRY, KANE_VANGUARD_CODEX_ENTRY, RYKER_ENGINEER_CODEX_ENTRY, CAEL_WEAVER_CODEX_ENTRY, DRAKE_HUNTER_CODEX_ENTRY, SOL_RESONANT_CODEX_ENTRY, VALE_VOIDRUNNER_CODEX_ENTRY, ISKANDER_SWARMMASTER_CODEX_ENTRY]);
+const codexRuntime = new CodexRuntime([...SANDBOX_CODEX_ENTRIES, LYRA_VOSS_CODEX_ENTRY, KANE_VANGUARD_CODEX_ENTRY, RYKER_ENGINEER_CODEX_ENTRY, CAEL_WEAVER_CODEX_ENTRY, DRAKE_HUNTER_CODEX_ENTRY, SOL_RESONANT_CODEX_ENTRY, VALE_VOIDRUNNER_CODEX_ENTRY, ISKANDER_SWARMMASTER_CODEX_ENTRY, THORNE_STARFORGED_CODEX_ENTRY]);
 const codexReader: CodexUnlockReader = {
   hasDiscovered: (category, id) => meta.hasDiscovered(category, id),
   hasExtraDiscovered: (category, id) => collectionLedger.hasDiscovered(category, id),
@@ -925,7 +926,7 @@ const sandboxCommanderProfile = FRAMEWORK_PROFILES.find((p) => p.commanderId ===
 const commanderProgression = new CommanderProgressionRuntime(sandboxCommanderProfile);
 // AF-072: the launch roster — fourteen seats, the starting trio recruited,
 // usage recorded per expedition so statistics can inform future balancing.
-const roster = new RosterRuntime(FULL_RECRUITMENT_WITH_SWARMMASTER, STARTING_COMMANDER_IDS);
+const roster = new RosterRuntime(FULL_RECRUITMENT_WITH_STARFORGED, STARTING_COMMANDER_IDS);
 let commanderRuntime: CommanderRuntime | null = null;
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
