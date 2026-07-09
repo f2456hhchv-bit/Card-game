@@ -68,7 +68,8 @@ import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
 import { FRAMEWORK_PROFILES } from "./game/commanders/commanderFrameworkData";
 import { CommanderProgressionRuntime } from "./game/commanders/CommanderProgressionRuntime";
 import { RosterRuntime } from "./game/commanders/RosterRuntime";
-import { RECRUITMENT_TABLE, STARTING_COMMANDER_IDS, philosophyFor } from "./game/commanders/rosterData";
+import { STARTING_COMMANDER_IDS, philosophyFor } from "./game/commanders/rosterData";
+import { FULL_RECRUITMENT_TABLE } from "./game/commanders/commanderExpansionRoster";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -917,7 +918,7 @@ const sandboxCommanderProfile = FRAMEWORK_PROFILES.find((p) => p.commanderId ===
 const commanderProgression = new CommanderProgressionRuntime(sandboxCommanderProfile);
 // AF-072: the launch roster — fourteen seats, the starting trio recruited,
 // usage recorded per expedition so statistics can inform future balancing.
-const roster = new RosterRuntime(RECRUITMENT_TABLE, STARTING_COMMANDER_IDS);
+const roster = new RosterRuntime(FULL_RECRUITMENT_TABLE, STARTING_COMMANDER_IDS);
 let commanderRuntime: CommanderRuntime | null = null;
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.

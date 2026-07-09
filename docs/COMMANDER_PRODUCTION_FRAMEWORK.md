@@ -20,3 +20,7 @@ The `commander` debug overlay line now appends real template/recruitment/relatio
 ## Review
 
 Zero changes to any locked module. 12 tests, suite at 1141. Score 9.5/10 — approved and locked.
+
+## Roster Expansion, Batch 1 (produced immediately after, per Project Owner direction)
+
+`commanderExpansionRoster.ts` adds 8 new, fully fleshed-out commanders (Korr "Wardbreaker", Voss "Lanternkeep", Devereux "Static", Okafor "Halcyon", Ur-Sella "Chorus", Kade "Fulcrum", Calder "Driftline", Aldana "Aftercare") additively onto the launch roster — 14 → 22 toward AF-097's 100+ target. Each carries the full 37-field template, including real content for all 16 AF-098-new fields (age, species, homeworld, psychological profile, leadership style, animation style, music motif, all 6 Preferred-X fields bound to real ship/weapon/equipment/relic/research/biome ids, ending story, dialogue library, mastery challenges) — a `CommanderExpandedProfileDef` wrapper, since AF-030/071's locked shapes don't carry these fields. Every new commander is proven distinct from the entire 22-commander roster via the real AF-030 fingerprint/`findOverlap` law and AF-071's real 17-part `architectureFor` completeness check — not eyeballed. All 8 are genuinely recruitable through the real `RosterRuntime`, bound to AF-072's unchanged 7-value `RECRUITMENT_SOURCES`. Live: the `commander` overlay's `roster` count now reads `3/22`. 10 more tests, suite at 1151.
