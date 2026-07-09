@@ -184,6 +184,7 @@ import { AudioEngine, NullAudioBackend, createSandboxAudioEngine } from "./game/
 import { resolveMusicState } from "./game/audio/MusicState";
 import { adaptiveMusicLayersFor } from "./game/audio/audioFrameworkData";
 import { biomeVisualIdentityFor } from "./game/visual/visualDirectionData";
+import { buildManagementLiveSummary, hudLiveSummary, inputLatencyProxyMs, navigationRealisationSummary } from "./game/ux/uxFrameworkData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -4187,7 +4188,7 @@ const loop = new GameLoop({
     }
     if (debugOverlay) {
       debugOverlay.update({
-        gameState: machine.base,
+        gameState: `${machine.base} · ${navigationRealisationSummary()} · ${hudLiveSummary()}`,
         overlays: machine.overlays,
         runPhase: session?.phase ?? null,
         missionSeed: session?.seed ?? null,
@@ -4200,7 +4201,7 @@ const loop = new GameLoop({
         director: director
           ? `${director.snapshot.phase} · threat ${director.snapshot.threat.toFixed(2)} · budget ${director.snapshot.budget.toFixed(0)} · enemies ${director.snapshot.activeEnemies} (${director.snapshot.activeElites}E)`
           : null,
-        input: `${input.currentContext} · move (${input.movement.x.toFixed(2)}, ${input.movement.y.toFixed(2)}) · last ${input.lastAction ?? "—"}`,
+        input: `${input.currentContext} · move (${input.movement.x.toFixed(2)}, ${input.movement.y.toFixed(2)}) · last ${input.lastAction ?? "—"} · latency ~${inputLatencyProxyMs(fps).toFixed(1)}ms (frame-time proxy)`,
         movement: movement
           ? `${movement.state} · speed ${movement.snapshot.speed.toFixed(1)} · boost cd ${movement.snapshot.boostCooldownMs.toFixed(0)}ms · contacts ${movement.snapshot.collisionContacts}`
           : null,
@@ -4221,7 +4222,7 @@ const loop = new GameLoop({
           return `pts ${snap.points} · unlocked ${snap.unlockedCount} · wpn +${(sandboxBuild.researchWeaponBonus * 100).toFixed(0)}% · loot +${(sandboxBuild.researchLootBonus * 100).toFixed(0)}% · eff ${(eff * 100).toFixed(0)}% · sci ${(sci * 100).toFixed(0)}%`;
         })(),
         meta: `acct Lv ${meta.snapshot.accountLevel} · runs ${meta.stat("runs")} · kills ${Math.round(meta.stat("enemiesDestroyed"))} · challenges ${meta.snapshot.completedChallenges}/${meta.snapshot.totalChallenges}`,
-        inventory: `${inventory.size} items · player ${inventory.countIn("player")} · loadouts ${inventory.allLoadouts.length}`,
+        inventory: `${inventory.size} items · player ${inventory.countIn("player")} · loadouts ${inventory.allLoadouts.length} · builds ${buildManagementLiveSummary()}`,
         equipment: (() => {
           const eq = equipmentEffects();
           // AF-079: §Debug — energy usage, heat, mass from installed profiles + workshop lattice.
