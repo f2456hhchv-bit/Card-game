@@ -122,3 +122,4 @@ Phase note: AF-000 → AF-012 are specification/framework modules — their buil
 - 2026-07-05 — AF-002 output: secondary display face permitted, titles only (owner authority via AF-009).
 - 2026-07-05 — AF-008 output: Plasma Blue → `shield.blue`; Poison → `toxin.green`; Slow → `neutral.grey` (three calls ratified by owner).
 - 2026-07-06 — DR-005: research unlocks instant permanently (owner ratified Option A); extends to crafting time by the same reasoning.
+- 2026-07-09 — Technology Decision amended: primary art style is now Nintendo-inspired stylized 3D mobile game art (chibi proportions, hand-painted textures, soft PBR lighting), superseding AF-002/092's prior art-style vocabulary wherever it conflicts; requires a real 3D rendering pipeline in place of the current 2D Canvas renderer. See `docs/TECHNOLOGY_DECISION.md` amendment. Implementation scope/sequencing pending Project Owner direction.
