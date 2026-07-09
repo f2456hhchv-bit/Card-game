@@ -598,4 +598,6 @@ Only then lock AF-114.
 
 ## Foundation / AF-000–113 / GP-FINAL alignment review
 
-(pending implementation)
+Built entirely on AF-030's unchanged `CommanderDef`, AF-071's unchanged `CommanderProfileDef`, and AF-098's `CommanderExpandedProfileDef` wrapper. Per the spec's own self-review directive ("Reduce overlap with Adrian Kane"), her `support`/`hybrid` archetype/class and her `onShieldBreak`/`shieldRegeneration` passive are deliberately distinct from Kane's `guardian`/`defender`/`onDamageTaken` kit — verified by a dedicated test asserting the two commanders' archetype, class, and passive all differ. Proven distinct from the entire 37-commander existing roster via the real fingerprint/`findOverlap` law and AF-071's real 17-part `architectureFor` completeness check. Her three spec'd relationships (Close Friend Kane, Professional Respect Syn, Works Closely With Iskander) bind to their real roster ids exactly, with no relationship to Ryker, Cael, Drake, Sol, Vale, Thorne, Vex, Ash, Korven, Solari, or Kain invented since the spec is silent on those pairings; her Codex entry's `relatedEntryIds` accordingly names only the three commanders the spec actually relates her to. Several Preferred-X ids resolve to strong real-data ties (`nova-warden-hive`'s literal "Warden" name matching her own codename, `warden-token`'s real name, `bastion-hull-mk1`'s real `guardian`-class `frigate`). Zero changes to any locked module (AF-000–113).
+
+Score: 9.5/10 — approved and locked.
