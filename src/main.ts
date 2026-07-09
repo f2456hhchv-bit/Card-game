@@ -46,7 +46,7 @@ import { DEFAULT_LOOT_TUNING, RARITY_LADDER, RARITY_TABLE } from "./game/loot/lo
 import { SaveSlice } from "./core/save/SaveSlice";
 import { LocalStorageAdapter } from "./core/save/SaveStorage";
 import { ResearchTree, type ResearchSaveData } from "./game/research/ResearchTree";
-import { SANDBOX_RESEARCH_TREE } from "./game/research/researchData";
+import { FRAMEWORK_RESEARCH_TREE, researchEfficiencyFor, scientificProgressFor } from "./game/research/researchFrameworkData";
 import { CraftingSystem, type CraftingSaveData } from "./game/crafting/CraftingSystem";
 import {
   DEFAULT_CRAFTING_TUNING,
@@ -468,7 +468,9 @@ const researchSlice = new SaveSlice<ResearchSaveData>({
   onWarning: (message, detail) => log.warn("save", message, detail),
 });
 
-const researchTree = new ResearchTree(SANDBOX_RESEARCH_TREE, (node) =>
+// AF-081: the framework tree — AF-024's fourteen projects plus Lattice
+// Attunement (the first crystalResonance project), through the unchanged engine.
+const researchTree = new ResearchTree(FRAMEWORK_RESEARCH_TREE, (node) =>
   bus.emit("ResearchUnlocked", { nodeId: node.id, category: node.category }),
 );
 
@@ -3701,7 +3703,7 @@ function render(): void {
       }
       screen(
         "Galaxy Command",
-        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${SANDBOX_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}\n${factionLine}\nCredits: ${credits.toFixed(0)} · ${activeMerchant?.name ?? "Market"}${marketRuntime.currentEvent ? ` — ${marketRuntime.currentEvent}` : ""}\n${worldEventLine}`,
+        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${FRAMEWORK_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}\n${factionLine}\nCredits: ${credits.toFixed(0)} · ${activeMerchant?.name ?? "Market"}${marketRuntime.currentEvent ? ` — ${marketRuntime.currentEvent}` : ""}\n${worldEventLine}`,
         [
           ["Select Mission", () => machine.transitionTo("MissionSelect")],
           ...travelButtons,
@@ -4052,7 +4054,13 @@ const loop = new GameLoop({
         loot: groundLoot
           ? `ground ${groundLoot.live.length}/${DEFAULT_LOOT_TUNING.maxGroundLoot} · collected ${lootCollectedCount} · banked ${lootBankedCount}`
           : null,
-        research: `pts ${researchTree.snapshot.points} · unlocked ${researchTree.snapshot.unlockedCount} · wpn +${(sandboxBuild.researchWeaponBonus * 100).toFixed(0)}% · loot +${(sandboxBuild.researchLootBonus * 100).toFixed(0)}%`,
+        research: (() => {
+          // AF-081 §Debug: efficiency + scientific progress, derived pure.
+          const snap = researchTree.snapshot;
+          const eff = researchEfficiencyFor(snap);
+          const sci = scientificProgressFor(snap.unlockedCount, FRAMEWORK_RESEARCH_TREE.length);
+          return `pts ${snap.points} · unlocked ${snap.unlockedCount} · wpn +${(sandboxBuild.researchWeaponBonus * 100).toFixed(0)}% · loot +${(sandboxBuild.researchLootBonus * 100).toFixed(0)}% · eff ${(eff * 100).toFixed(0)}% · sci ${(sci * 100).toFixed(0)}%`;
+        })(),
         meta: `acct Lv ${meta.snapshot.accountLevel} · runs ${meta.stat("runs")} · kills ${Math.round(meta.stat("enemiesDestroyed"))} · challenges ${meta.snapshot.completedChallenges}/${meta.snapshot.totalChallenges}`,
         inventory: `${inventory.size} items · player ${inventory.countIn("player")} · loadouts ${inventory.allLoadouts.length}`,
         equipment: (() => {
