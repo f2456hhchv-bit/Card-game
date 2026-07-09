@@ -183,6 +183,7 @@ import { AudioMixer } from "./game/audio/AudioMixer";
 import { AudioEngine, NullAudioBackend, createSandboxAudioEngine } from "./game/audio/AudioEngine";
 import { resolveMusicState } from "./game/audio/MusicState";
 import { adaptiveMusicLayersFor } from "./game/audio/audioFrameworkData";
+import { biomeVisualIdentityFor } from "./game/visual/visualDirectionData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -4279,7 +4280,8 @@ const loop = new GameLoop({
         biome: biomeRuntime
           ? (() => {
               const snap = biomeRuntime!.snapshot;
-              return `${activeBiome.name} · weather ${snap.activeWeather ?? "clear"} (${(snap.weatherRemainingMs / 1000).toFixed(0)}s) · hazards ${snap.hazardCount} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
+              const visual = biomeVisualIdentityFor(activeBiome.id);
+              return `${activeBiome.name} · weather ${snap.activeWeather ?? "clear"} (${(snap.weatherRemainingMs / 1000).toFixed(0)}s) · hazards ${snap.hazardCount} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""} · lighting ${visual.lighting} · skybox ${visual.skybox}`;
             })()
           : null,
         mission: missionRuntime
