@@ -187,6 +187,7 @@ import { biomeVisualIdentityFor } from "./game/visual/visualDirectionData";
 import { buildManagementLiveSummary, hudLiveSummary, inputLatencyProxyMs, navigationRealisationSummary } from "./game/ux/uxFrameworkData";
 import { eventQueueSummary, moduleStatusSummary, saveVersionSummary } from "./game/technical/technicalArchitectureData";
 import { accessibilityStatusSummary, qaStatusSummary, regressionCoverageSummary, releaseReadinessSummary } from "./game/qa/qualityAssuranceData";
+import { commanderTemplateCoverageSummary, dialogueLibraryStatusSummary, masteryFeaturesLiveSummary, personalityFrameworkSummary, recruitmentMethodLiveSummary, relationshipCoverageSummary } from "./game/commanders/commanderProductionData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -4243,7 +4244,7 @@ const loop = new GameLoop({
               const prog = commanderProgression.snapshot;
               const rosterSnap = roster.snapshot;
               const usage = roster.statsFor(sandboxCommander.id);
-              return `${sandboxCommander.callsign} (${prog.class}/${philosophyFor(sandboxCommander.id)}) · ability cd ${commanderRuntime.snapshot.activeCooldownMs.toFixed(0)}ms · ult ${commanderRuntime.snapshot.ultimateCharge.toFixed(0)}/${sandboxCommander.ultimate.chargeRequired}${commanderRuntime.snapshot.ultimateReady ? " READY" : ""} · talents ${prog.talentsUnlocked}/${prog.talentsTotal} (${prog.talentPoints} pts) · mission ${prog.missionBeat} · roster ${rosterSnap.recruitedCount}/${rosterSnap.rosterSize} · uses ${usage.uses} (${(usage.winRate * 100).toFixed(0)}% wr)`;
+              return `${sandboxCommander.callsign} (${prog.class}/${philosophyFor(sandboxCommander.id)}) · ability cd ${commanderRuntime.snapshot.activeCooldownMs.toFixed(0)}ms · ult ${commanderRuntime.snapshot.ultimateCharge.toFixed(0)}/${sandboxCommander.ultimate.chargeRequired}${commanderRuntime.snapshot.ultimateReady ? " READY" : ""} · talents ${prog.talentsUnlocked}/${prog.talentsTotal} (${prog.talentPoints} pts) · mission ${prog.missionBeat} · roster ${rosterSnap.recruitedCount}/${rosterSnap.rosterSize} · uses ${usage.uses} (${(usage.winRate * 100).toFixed(0)}% wr) · ${commanderTemplateCoverageSummary()} · ${recruitmentMethodLiveSummary()} · ${relationshipCoverageSummary()} · ${personalityFrameworkSummary()} · ${dialogueLibraryStatusSummary()} · ${masteryFeaturesLiveSummary()}`;
             })()
           : null,
         ships: shipRuntime
