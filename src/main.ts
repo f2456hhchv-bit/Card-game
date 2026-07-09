@@ -185,6 +185,7 @@ import { resolveMusicState } from "./game/audio/MusicState";
 import { adaptiveMusicLayersFor } from "./game/audio/audioFrameworkData";
 import { biomeVisualIdentityFor } from "./game/visual/visualDirectionData";
 import { buildManagementLiveSummary, hudLiveSummary, inputLatencyProxyMs, navigationRealisationSummary } from "./game/ux/uxFrameworkData";
+import { eventQueueSummary, moduleStatusSummary, saveVersionSummary } from "./game/technical/technicalArchitectureData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -4188,7 +4189,7 @@ const loop = new GameLoop({
     }
     if (debugOverlay) {
       debugOverlay.update({
-        gameState: `${machine.base} · ${navigationRealisationSummary()} · ${hudLiveSummary()}`,
+        gameState: `${machine.base} · ${navigationRealisationSummary()} · ${hudLiveSummary()} · ${moduleStatusSummary()} · ${eventQueueSummary(bus)}`,
         overlays: machine.overlays,
         runPhase: session?.phase ?? null,
         missionSeed: session?.seed ?? null,
@@ -4354,7 +4355,15 @@ const loop = new GameLoop({
           const statuses = saveCoordinator.allStatuses;
           const totalSaves = statuses.reduce((sum, s) => sum + s.saveCount, 0);
           const lastSaved = statuses.length > 0 ? Math.max(...statuses.map((s) => s.lastSavedAtMs)) : null;
-          return `v1 (${statuses.length} slices) · autosave ${totalSaves} total${lastSaved ? `, last ${((Date.now() - lastSaved) / 1000).toFixed(0)}s ago` : ""} · milestone backups ${milestoneBackupCount} · cloud offline (local only) · profile ${activeProfileName}`;
+          const sliceVersions = saveVersionSummary([
+            { key: "settings", version: 1 },
+            { key: "research", version: 1 },
+            { key: "crafting", version: 1 },
+            { key: "collectionLedger", version: 1 },
+            { key: "meta", version: 1 },
+            { key: "inventory", version: 1 },
+          ]);
+          return `v1 (${statuses.length} slices) · autosave ${totalSaves} total${lastSaved ? `, last ${((Date.now() - lastSaved) / 1000).toFixed(0)}s ago` : ""} · milestone backups ${milestoneBackupCount} · cloud offline (local only) · profile ${activeProfileName} · schema ${sliceVersions}`;
         })(),
         audio: (() => {
           // AF-091: adaptive layers composed on top of AF-045's real music state.
