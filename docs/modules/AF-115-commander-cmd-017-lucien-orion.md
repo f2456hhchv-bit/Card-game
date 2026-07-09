@@ -592,4 +592,6 @@ Only then lock AF-115.
 
 ## Foundation / AF-000–114 / GP-FINAL alignment review
 
-(pending implementation)
+Built entirely on AF-030's unchanged `CommanderDef`, AF-071's unchanged `CommanderProfileDef`, and AF-098's `CommanderExpandedProfileDef` wrapper. His passive/signature bind to `onCriticalHit`/`movementSpeed` and `onKill`/`criticalDamage`, proven distinct from the entire 38-commander existing roster via the real fingerprint/`findOverlap` law and AF-071's real 17-part `architectureFor` completeness check. Unlike every prior commander, the spec gives him FOUR relationships, not three (Close Friend Ash, Professional Rival Drake, Great Respect Kane, Enjoys Working With Voss) — all four are honoured literally, binding to their real roster ids, with no relationship to Ryker, Cael, Sol, Vale, Iskander, Thorne, Vex, Korven, Syn, Solari, Kain, or Reyes invented since the spec is silent on those pairings; his Codex entry's `relatedEntryIds` accordingly names all four commanders the spec actually relates him to. His Professional Rival pairing with Drake is the roster's first "rival" relationship semantics, expressed the same way as every other relationship (a real `CommanderRelationshipDef` targetId plus dialogue-only flavour). Several Preferred-X ids resolve to strong real-data ties (`vanguard-thrusters`'s real thruster item, `sable-dart-mk1`'s real interceptor class and speed specialisation, `gambler-die`'s real +0.5 criticalDamage effect). Zero changes to any locked module (AF-000–114).
+
+Score: 9.5/10 — approved and locked.
