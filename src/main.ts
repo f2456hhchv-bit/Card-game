@@ -167,6 +167,8 @@ import { FactionRuntime } from "./game/factions/FactionRuntime";
 import { SANDBOX_GALAXY_ECONOMY, CREDIT_AWARDS } from "./game/economy/economyData";
 import { MarketRuntime } from "./game/economy/MarketRuntime";
 import { GalacticEconomyRuntime } from "./game/economy/GalacticEconomyRuntime";
+import { SEEDED_SETTLEMENTS } from "./game/civilisation/civilisationFrameworkData";
+import { CivilisationFrameworkRuntime } from "./game/civilisation/CivilisationFrameworkRuntime";
 import { SANDBOX_WORLD_EVENTS, WORLD_STATE_MIN, WORLD_STATE_MAX, PLAYER_PARTICIPATION_WORLD_STATE_DELTA, type PlayerParticipationKind } from "./game/worldEvents/worldEventData";
 import { WorldEventRuntime } from "./game/worldEvents/WorldEventRuntime";
 import { SANDBOX_ACHIEVEMENTS } from "./game/achievements/achievementData";
@@ -646,6 +648,11 @@ const CREDITS_KEY = "economy:credits";
 // civilisation state directly and writing back only through its
 // bounded feedPlayerImpact.
 const galacticEconomy = new GalacticEconomyRuntime(civSim, new Rng(Date.now()).fork("galacticEconomy"));
+// AF-090: the Civilisation Framework — named settlements at real galaxy
+// systems, developing through a linear ladder toward Legendary Status;
+// reads AF-086's civilisation state and AF-024's research tree, and
+// delegates four of its eight investment actions to AF-089's own methods.
+const civilisation = new CivilisationFrameworkRuntime(civSim, galacticEconomy, researchTree, new Rng(Date.now()).fork("civilisation"));
 
 function awardCredits(amount: number): void {
   meta.recordStat(CREDITS_KEY, amount);
@@ -3197,6 +3204,10 @@ function endRun(result: "victory" | "defeat"): void {
     const factionPresence = MISSION_PROFILES.find((p) => p.missionId === selectedMissionTemplate.id)?.factionPresence;
     if (factionPresence && factionPresence !== "none" && galacticEconomy.colonyFor(factionPresence)) {
       galacticEconomy.deliverResources(factionPresence, "civilianGoods", 3);
+      // AF-090: the same victory funds that faction's named settlement's
+      // own construction — the expedition visibly rebuilds a real place.
+      const settlement = SEEDED_SETTLEMENTS.find((s) => s.factionId === factionPresence);
+      if (settlement) civilisation.fundProjects(settlement.settlementId, 3);
     }
   }
   machine.transitionTo(result === "victory" ? "MissionComplete" : "Defeat");
@@ -4020,6 +4031,8 @@ const loop = new GameLoop({
     if (economicEvent) bus.emit("EnvironmentalEventTriggered", { eventType: economicEvent });
     // AF-089: the galactic economy ticks on the same ambient schedule.
     galacticEconomy.update(fixedDtMs);
+    // AF-090: settlements and megastructures tick on the same ambient schedule.
+    civilisation.update(fixedDtMs);
     // AF-041: the galaxy evolves whether or not the player is present — an
     // ambient World State delta applies immediately on firing, independent
     // of any later Player Participation choice.
@@ -4278,7 +4291,11 @@ const loop = new GameLoop({
         galaxy: (() => {
           const snap = galaxyRuntime.snapshot;
           const explorationKey = `galaxy:${snap.currentSystemId}:explorationPercent`;
-          return `${snap.currentSystemName} (${snap.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""}`;
+          // AF-090 §Debug: Population, Infrastructure, Construction,
+          // Development Level, Civilisation Rating — the visible rebuild.
+          const civSnap = civilisation.snapshot;
+          const megastructuresComplete = civilisation.allMegastructures.filter((m) => m.completed).length;
+          return `${snap.currentSystemName} (${snap.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""} · settlements ${civSnap.settlementCount} · pop ${civSnap.averagePopulation.toFixed(0)} · upgrades ${civSnap.totalUpgradesBuilt} · construction ${civSnap.averageConstructionProgress.toFixed(0)}% · dev ${civSnap.averageDevelopmentLevel.toFixed(1)}/6 · rating ${civSnap.civilisationRating.toFixed(0)} · megastructures ${megastructuresComplete}/9`;
         })(),
         factions: (() => {
           const snap = factionRuntime.snapshot;
