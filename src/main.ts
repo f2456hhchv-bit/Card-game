@@ -58,8 +58,8 @@ import { ACCOUNT_XP_AWARDS, SANDBOX_CHALLENGES } from "./game/meta/metaData";
 import { Inventory, type InventorySaveData } from "./game/inventory/Inventory";
 import { DEFAULT_INVENTORY_TUNING } from "./game/inventory/inventoryData";
 import { validateLoadout, aggregateLoadout } from "./game/equipment/EquipmentAggregate";
-import { SANDBOX_SETS } from "./game/equipment/equipmentData";
-import { EQUIPMENT_PROFILES, FRAMEWORK_EQUIPMENT, engineeringLoadFor } from "./game/equipment/equipmentFrameworkData";
+import { engineeringLoadFor } from "./game/equipment/equipmentFrameworkData";
+import { ROSTER_EQUIPMENT, ROSTER_EQUIPMENT_PROFILES, ROSTER_EQUIPMENT_SETS } from "./game/equipment/equipmentRosterData";
 import { EquipmentCollectionRuntime } from "./game/equipment/EquipmentCollectionRuntime";
 import { RelicSystem } from "./game/relics/RelicSystem";
 import { CommanderRuntime } from "./game/commanders/CommanderRuntime";
@@ -832,12 +832,14 @@ const sandboxLoadoutSlots: Partial<Record<import("./game/equipment/equipmentData
   equipment2: "vanguard-thrusters",
   equipment3: "vanguard-core",
   equipment4: "cryo-manifold", // AF-079: the first active-bearing module, live in the loadout
+  equipment5: "aegis-bastion-array", // AF-080: the Bastion manufacturer set, live —
+  equipment6: "aegis-ward-projector", // — both pieces, so set detection has a subject
 };
-// AF-079: the workshop — the sandbox five plus the Cryo Manifold, additively.
-const sandboxEquipmentById = new Map(FRAMEWORK_EQUIPMENT.map((item) => [item.id, item]));
+// AF-080: the full roster — AF-079's six plus the four roster modules, additively.
+const sandboxEquipmentById = new Map(ROSTER_EQUIPMENT.map((item) => [item.id, item]));
 // AF-079: the workshop collection — a monotone lattice mirroring AF-077's
 // reliquary. Installed modules are crafted; the relay is discovered lore.
-const workshop = new EquipmentCollectionRuntime(EQUIPMENT_PROFILES);
+const workshop = new EquipmentCollectionRuntime(ROSTER_EQUIPMENT_PROFILES);
 for (const itemId of Object.values(sandboxLoadoutSlots)) workshop.recordCrafted(itemId);
 workshop.recordDiscovered("ancient-relay");
 
@@ -963,9 +965,9 @@ function equipmentEffects() {
   const validation = validateLoadout(sandboxLoadoutSlots, sandboxEquipmentById);
   if (!validation.ok) {
     log.warn("equipment", "sandbox loadout failed validation", validation);
-    return aggregateLoadout({}, sandboxEquipmentById, SANDBOX_SETS);
+    return aggregateLoadout({}, sandboxEquipmentById, ROSTER_EQUIPMENT_SETS);
   }
-  return aggregateLoadout(sandboxLoadoutSlots, sandboxEquipmentById, SANDBOX_SETS);
+  return aggregateLoadout(sandboxLoadoutSlots, sandboxEquipmentById, ROSTER_EQUIPMENT_SETS);
 }
 
 function dropLoot(x: number, y: number): void {
@@ -4057,7 +4059,7 @@ const loop = new GameLoop({
           const eq = equipmentEffects();
           // AF-079: §Debug — energy usage, heat, mass from installed profiles + workshop lattice.
           const installedIds = new Set(Object.values(sandboxLoadoutSlots));
-          const load = engineeringLoadFor(EQUIPMENT_PROFILES.filter((p) => installedIds.has(p.itemId)));
+          const load = engineeringLoadFor(ROSTER_EQUIPMENT_PROFILES.filter((p) => installedIds.has(p.itemId)));
           const shop = workshop.snapshot;
           return `wpn +${((eq.bonuses.damage ?? 0) * 100).toFixed(0)}% · shield +${(eq.bonuses.shieldCapacity ?? 0).toFixed(0)} · sets ${eq.activeSetBonuses.length} · pwr ${eq.powerRating} · draw ${load.energyDraw} · heat ${load.heatLoad} · mass ${load.mass} · workshop ${shop.craftedCount}/${shop.workshopSize} crafted`;
         })(),
