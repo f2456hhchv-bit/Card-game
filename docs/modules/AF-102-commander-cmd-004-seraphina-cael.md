@@ -598,4 +598,6 @@ Only then lock AF-102.
 
 ## Foundation / AF-000–101 / GP-FINAL alignment review
 
-(pending implementation)
+Built entirely on AF-030's unchanged `CommanderDef`, AF-071's unchanged `CommanderProfileDef`, and AF-098's `CommanderExpandedProfileDef` wrapper. Her passive/signature bind to `onCriticalHit`/`experienceGain` and `onCriticalHit`/`statusChance` — fresh pairs not yet used elsewhere in the roster. Proven distinct from the entire 25-commander existing roster via the real fingerprint/`findOverlap` law and AF-071's real 17-part `architectureFor` completeness check. Her spec'd Close Friend/Professional Collaboration/Respect relationships with all three prior commanders are real bindings to their actual roster ids, and her Codex entry cross-references all three of theirs — the roster's first four-way continuity web. Recruitment source `research` (rather than the more commonly used `campaign`) reflects her scientific identity honestly, still drawn from AF-072's real 7-value shelf. All 20 Preferred-X ids resolve against real, existing rosters. Zero changes to any locked module (AF-000–101).
+
+Score: 9.5/10 — approved and locked.
