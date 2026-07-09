@@ -69,7 +69,8 @@ import { FRAMEWORK_PROFILES } from "./game/commanders/commanderFrameworkData";
 import { CommanderProgressionRuntime } from "./game/commanders/CommanderProgressionRuntime";
 import { RosterRuntime } from "./game/commanders/RosterRuntime";
 import { STARTING_COMMANDER_IDS, philosophyFor } from "./game/commanders/rosterData";
-import { FULL_RECRUITMENT_WITH_PATHFINDER, LYRA_VOSS_CODEX_ENTRY } from "./game/commanders/cmd001LyraVoss";
+import { LYRA_VOSS_CODEX_ENTRY } from "./game/commanders/cmd001LyraVoss";
+import { FULL_RECRUITMENT_WITH_VANGUARD, KANE_VANGUARD_CODEX_ENTRY } from "./game/commanders/cmd002AdrianKane";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -569,7 +570,7 @@ const metaAchievementReader: AchievementProgressReader = {
 // ── Codex (AF-043): a pure read-only presentation layer — zero new unlock
 // mechanism, zero new save slice. Section Completion persists through the
 // exact same meta.discover("achievements", …) bucket AF-042 already uses.
-const codexRuntime = new CodexRuntime([...SANDBOX_CODEX_ENTRIES, LYRA_VOSS_CODEX_ENTRY]);
+const codexRuntime = new CodexRuntime([...SANDBOX_CODEX_ENTRIES, LYRA_VOSS_CODEX_ENTRY, KANE_VANGUARD_CODEX_ENTRY]);
 const codexReader: CodexUnlockReader = {
   hasDiscovered: (category, id) => meta.hasDiscovered(category, id),
   hasExtraDiscovered: (category, id) => collectionLedger.hasDiscovered(category, id),
@@ -918,7 +919,7 @@ const sandboxCommanderProfile = FRAMEWORK_PROFILES.find((p) => p.commanderId ===
 const commanderProgression = new CommanderProgressionRuntime(sandboxCommanderProfile);
 // AF-072: the launch roster — fourteen seats, the starting trio recruited,
 // usage recorded per expedition so statistics can inform future balancing.
-const roster = new RosterRuntime(FULL_RECRUITMENT_WITH_PATHFINDER, STARTING_COMMANDER_IDS);
+const roster = new RosterRuntime(FULL_RECRUITMENT_WITH_VANGUARD, STARTING_COMMANDER_IDS);
 let commanderRuntime: CommanderRuntime | null = null;
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
