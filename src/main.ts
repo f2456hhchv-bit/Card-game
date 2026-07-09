@@ -186,6 +186,7 @@ import { adaptiveMusicLayersFor } from "./game/audio/audioFrameworkData";
 import { biomeVisualIdentityFor } from "./game/visual/visualDirectionData";
 import { buildManagementLiveSummary, hudLiveSummary, inputLatencyProxyMs, navigationRealisationSummary } from "./game/ux/uxFrameworkData";
 import { eventQueueSummary, moduleStatusSummary, saveVersionSummary } from "./game/technical/technicalArchitectureData";
+import { accessibilityStatusSummary, qaStatusSummary, regressionCoverageSummary, releaseReadinessSummary } from "./game/qa/qualityAssuranceData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -4222,7 +4223,7 @@ const loop = new GameLoop({
           const sci = scientificProgressFor(snap.unlockedCount, ROSTER_RESEARCH_TREE.length);
           return `pts ${snap.points} · unlocked ${snap.unlockedCount} · wpn +${(sandboxBuild.researchWeaponBonus * 100).toFixed(0)}% · loot +${(sandboxBuild.researchLootBonus * 100).toFixed(0)}% · eff ${(eff * 100).toFixed(0)}% · sci ${(sci * 100).toFixed(0)}%`;
         })(),
-        meta: `acct Lv ${meta.snapshot.accountLevel} · runs ${meta.stat("runs")} · kills ${Math.round(meta.stat("enemiesDestroyed"))} · challenges ${meta.snapshot.completedChallenges}/${meta.snapshot.totalChallenges}`,
+        meta: `acct Lv ${meta.snapshot.accountLevel} · runs ${meta.stat("runs")} · kills ${Math.round(meta.stat("enemiesDestroyed"))} · challenges ${meta.snapshot.completedChallenges}/${meta.snapshot.totalChallenges} · ${qaStatusSummary()} · ${regressionCoverageSummary()} · ${accessibilityStatusSummary()} · ${releaseReadinessSummary()}`,
         inventory: `${inventory.size} items · player ${inventory.countIn("player")} · loadouts ${inventory.allLoadouts.length} · builds ${buildManagementLiveSummary()}`,
         equipment: (() => {
           const eq = equipmentEffects();
