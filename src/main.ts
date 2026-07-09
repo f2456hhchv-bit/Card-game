@@ -148,6 +148,8 @@ import { FRAMEWORK_MISSIONS, MISSION_PROFILES } from "./game/missions/missionFra
 import { ExpeditionLogRuntime, MISSION_ROSTER_ENTRIES } from "./game/missions/missionRosterData";
 import { CIVILISATION_REGISTER, FACTION_PROFILES } from "./game/factions/factionFrameworkData";
 import { CivilisationSimulationRuntime } from "./game/factions/CivilisationSimulationRuntime";
+import { profileFor as codexProfileFor } from "./game/codex/codexFrameworkData";
+import { CodexDiscoveryRuntime, CodexJournalRuntime } from "./game/codex/CodexProgressionRuntime";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
 import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
@@ -550,6 +552,10 @@ const codexReader: CodexUnlockReader = {
   hasDiscovered: (category, id) => meta.hasDiscovered(category, id),
   hasExtraDiscovered: (category, id) => collectionLedger.hasDiscovered(category, id),
 };
+// AF-087: the discovery-progression lattice rides on top of AF-043's
+// unchanged binary unlock gate; the player journal is curated separately.
+const codexDiscovery = new CodexDiscoveryRuntime();
+const codexJournal = new CodexJournalRuntime();
 
 function persistCollectionLedger(): void {
   void collectionLedgerSlice.save(collectionLedger.toSave());
@@ -3883,6 +3889,12 @@ function render(): void {
       const codexUnlocked = codexRuntime.unlockedEntries(codexReader);
       const codexTitles = codexUnlocked.slice(0, 6).map((e) => e.title).join(", ");
       const codexLine = `Codex ${codexUnlocked.length}/${codexRuntime.all.length} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · Missing Links ${codexRuntime.missingLinkCount()} · Unlocked: ${codexTitles || "none yet"}${codexUnlocked.length > 6 ? "…" : ""}`;
+      // AF-087: the Player Journal — pin the most recently unlocked entry
+      // as a real, curatable action; the note and history are live below.
+      const featuredEntry = codexUnlocked.at(-1) ?? null;
+      const journalLine = featuredEntry
+        ? `Journal: ${codexJournal.snapshot.pinnedCount} pinned, ${codexJournal.snapshot.favouriteCount} favourite, ${codexJournal.snapshot.bookmarkedCount} bookmarked · Featured: ${featuredEntry.title} (${codexJournal.isPinned(featuredEntry.id) ? "pinned" : "not pinned"}) — ${codexProfileFor(featuredEntry).gameplayInformation}`
+        : `Journal: ${codexJournal.snapshot.pinnedCount} pinned, ${codexJournal.snapshot.favouriteCount} favourite, ${codexJournal.snapshot.bookmarkedCount} bookmarked · Featured: no discoveries yet`;
       // AF-044: Player Profile (Identity/Preferences) + Autosave Status — the
       // Save Framework's own summary line, matching every module's pattern.
       const metaStatus = saveCoordinator.status("meta");
@@ -3897,6 +3909,7 @@ function render(): void {
           `Achievements ${completedAchievementCount}/${SANDBOX_ACHIEVEMENTS.length}:   ${achievementLines}`,
           `Resources ${collectionLedger.collectionCount("resources")} · Ancient Artefacts ${collectionLedger.collectionCount("ancientArtefacts")} · Recent discovery: ${recentDiscovery?.id ?? "none yet"}`,
           codexLine,
+          journalLine,
           saveLine,
         ].join("\n"),
         [
@@ -3908,6 +3921,17 @@ function render(): void {
               render();
             },
           ],
+          ...(featuredEntry
+            ? [
+                [
+                  `${codexJournal.isPinned(featuredEntry.id) ? "Unpin" : "Pin"} Featured Discovery: ${featuredEntry.title}`,
+                  () => {
+                    codexJournal.togglePin(featuredEntry.id);
+                    render();
+                  },
+                ] as [string, () => void],
+              ]
+            : []),
           ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
           ["Back to Main Menu", () => machine.transitionTo("MainMenu")],
         ],
@@ -3978,6 +4002,21 @@ const loop = new GameLoop({
       persistMeta();
       const reward = CODEX_SECTION_REWARDS[category];
       lootNotices.push({ text: `CODEX SECTION COMPLETE · ${category.toUpperCase()}${reward ? ` (${reward.kind})` : ""}`, colour: "#9b5cff", ttlMs: 3200 });
+    }
+    // AF-087: every newly-unlocked entry is "Observed" the moment the
+    // player genuinely discovers it — the lattice never gates ahead of
+    // AF-043's own unlock check.
+    for (const entry of codexRuntime.unlockedEntries(codexReader)) {
+      if (codexDiscovery.recordObserved(entry.id)) codexJournal.recordDiscoveryEvent(entry.id, "observed");
+    }
+    // AF-087: completing a whole Codex section masters every entry inside
+    // it — the section-completion reward becomes a real progression event,
+    // not just a notification.
+    for (const category of codexRuntime.checkSectionCompletions(codexReader, (c) => meta.hasDiscovered("achievements", `codex-mastered-${c}`))) {
+      meta.discover("achievements", `codex-mastered-${category}`);
+      for (const entry of codexRuntime.entriesByCategory(category)) {
+        if (codexDiscovery.recordMastered(entry.id)) codexJournal.recordDiscoveryEvent(entry.id, "mastered");
+      }
     }
     // AF-045: Adaptive Music — a pure read over state AF-016/017/035 already
     // expose; transitions are seamless since setMusicState is idempotent.
@@ -4218,7 +4257,10 @@ const loop = new GameLoop({
           const unlocked = codexRuntime.unlockedEntries(codexReader).length;
           const total = codexRuntime.all.length;
           const timelineUnlocked = codexRuntime.timeline(codexReader).length;
-          return `${unlocked}/${total} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · missing links ${codexRuntime.missingLinkCount()} · timeline ${timelineUnlocked}/${TIMELINE_ERAS.length}`;
+          // AF-087 §Debug: Discovery Progress + Player Journal, live.
+          const progress = codexDiscovery.snapshot;
+          const journalSnap = codexJournal.snapshot;
+          return `${unlocked}/${total} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · missing links ${codexRuntime.missingLinkCount()} · timeline ${timelineUnlocked}/${TIMELINE_ERAS.length} · observed ${progress.observedCount} · mastered ${progress.masteredCount} · journal ${journalSnap.pinnedCount}pin/${journalSnap.bookmarkedCount}bm/${journalSnap.favouriteCount}fav`;
         })(),
         saveFramework: (() => {
           const statuses = saveCoordinator.allStatuses;
