@@ -147,6 +147,7 @@ import { MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionDat
 import { FRAMEWORK_MISSIONS, MISSION_PROFILES } from "./game/missions/missionFrameworkData";
 import { ExpeditionLogRuntime, MISSION_ROSTER_ENTRIES } from "./game/missions/missionRosterData";
 import { CIVILISATION_REGISTER, FACTION_PROFILES } from "./game/factions/factionFrameworkData";
+import { CivilisationSimulationRuntime } from "./game/factions/CivilisationSimulationRuntime";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
 import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
@@ -603,6 +604,9 @@ const galaxyRuntime = new GalaxyRuntime(SANDBOX_GALAXY, new Rng(Date.now()).fork
 // meta-statistic pattern AF-038 established; relationships/events are
 // session-local runtime state, mirroring GalaxyRuntime's exact discipline.
 const factionRuntime = new FactionRuntime(SANDBOX_FACTION_ROSTER, new Rng(Date.now()).fork("faction"));
+// AF-086: the Living Faction Ecosystem — civilisations grow, compete, and
+// decline whether or not the player is present, through AF-039's real engine.
+const civSim = new CivilisationSimulationRuntime(factionRuntime, new Rng(Date.now()).fork("civSim"));
 let activeFactionMissionId: string | null = null;
 
 // ── Galaxy Economy (AF-040): Credits persist through the same namespaced
@@ -3625,6 +3629,10 @@ function render(): void {
         const applyChoice = (choice: PlayerChoiceKind) => {
           const delta = GalaxyRuntime.clampedDelta(reputation, PLAYER_CHOICE_REPUTATION_DELTA[choice], REPUTATION_MIN, REPUTATION_MAX);
           meta.recordStat(repKey, delta);
+          // AF-086 §Player Impact: diplomatic decisions nudge the living
+          // ecosystem's politics surface — bounded, never dictating.
+          if (choice === "support") civSim.feedPlayerImpact("politics", 3);
+          else if (choice === "oppose") civSim.feedPlayerImpact("politics", -3);
           persistMeta();
           render();
         };
@@ -3930,6 +3938,8 @@ const loop = new GameLoop({
     factionRuntime.update(fixedDtMs);
     const factionEvent = factionRuntime.tryTriggerEvent();
     if (factionEvent) bus.emit("EnvironmentalEventTriggered", { eventType: factionEvent });
+    // AF-086: the civilisation simulation ticks on the same ambient schedule.
+    civSim.update(fixedDtMs);
     // AF-040: the market evolves independent of whatever screen the player is on.
     marketRuntime.update(fixedDtMs);
     marketRuntime.tryRotateInventories();
@@ -4179,7 +4189,10 @@ const loop = new GameLoop({
           const relation = factionRuntime.relationshipBetween("crystalDominion", "machineCollective");
           // AF-085: profiled coverage + the ten-civilisation register, live.
           const diplomatic = CIVILISATION_REGISTER.filter((c) => c.realisation.kind === "diplomatic").length;
-          return `${dominant?.name ?? "—"} rep ${rep.toFixed(0)} (${level}) · CD↔MC ${relation} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""} · profiled ${FACTION_PROFILES.length}/10 · civs ${CIVILISATION_REGISTER.length} (${diplomatic} diplomatic)`;
+          // AF-086: Galaxy Stability, Faction Growth, Active Wars, Economic
+          // Output, Scientific Progress — the living ecosystem's §Debug fields.
+          const eco = civSim.snapshot;
+          return `${dominant?.name ?? "—"} rep ${rep.toFixed(0)} (${level}) · CD↔MC ${relation} · events ${snap.eventsTriggered}${snap.lastEventKind ? ` (last: ${snap.lastEventKind})` : ""} · profiled ${FACTION_PROFILES.length}/10 · civs ${CIVILISATION_REGISTER.length} (${diplomatic} diplomatic) · stability ${eco.galaxyStability.toFixed(0)} · growth ${eco.averagePopulationGrowth.toFixed(0)} · wars ${eco.activeWarCount} · econ ${eco.averageEconomicOutput.toFixed(0)} · sci ${eco.averageScientificProgress.toFixed(0)} · history ${eco.historyLength}`;
         })(),
         economy: (() => {
           const snap = marketRuntime.snapshot;
