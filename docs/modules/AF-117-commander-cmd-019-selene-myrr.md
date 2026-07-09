@@ -600,4 +600,6 @@ Only then lock AF-117.
 
 ## Foundation / AF-000–116 / GP-FINAL alignment review
 
-(pending implementation)
+Built entirely on AF-030's unchanged `CommanderDef`, AF-071's unchanged `CommanderProfileDef`, and AF-098's `CommanderExpandedProfileDef` wrapper. Per the spec's own self-review directive ("Reduce overlap with reconnaissance and research Commanders"), her `support`/`support` archetype/class deliberately avoids the `recon` archetype used four times already (Voss, Drake, Vex, Korven) — verified by a dedicated test asserting neither her archetype nor her class is `recon`. Her passive/signature bind to `onCriticalHit`/`pickupRadius` and `onKill`/`resourceGain`, proven distinct from the entire 40-commander existing roster via the real fingerprint/`findOverlap` law and AF-071's real 17-part `architectureFor` completeness check. Her three spec'd relationships (Close Friend Vex, Professional Respect Voss, Collaborates With Cael) bind to their real roster ids exactly, with no relationship to Kane, Ryker, Drake, Sol, Vale, Iskander, Thorne, Ash, Korven, Syn, Solari, Kain, Reyes, Orion, or Volkov invented since the spec is silent on those pairings; her Codex entry's `relatedEntryIds` accordingly names only the three commanders the spec actually relates her to. Several Preferred-X ids resolve to strong real-data ties (`horizon-flux-capacitor`'s Quantum Horizon manufacturer, `aurelia-hull-mk1`'s real scienceVessel class, `singularity-zone`'s "Axiom" lore). Zero changes to any locked module (AF-000–116).
+
+Score: 9.5/10 — approved and locked.
