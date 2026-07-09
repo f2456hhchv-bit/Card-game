@@ -145,6 +145,7 @@ import { LiveOpsRegistry } from "./game/liveops/LiveOpsRegistry";
 import { CORE_GAME_PACK, SEASON_ONE, SEASON_ONE_PACK } from "./game/liveops/liveOpsData";
 import { MISSION_EVENT_TO_ENVIRONMENTAL_EVENT } from "./game/missions/missionData";
 import { FRAMEWORK_MISSIONS, MISSION_PROFILES } from "./game/missions/missionFrameworkData";
+import { ExpeditionLogRuntime, MISSION_ROSTER_ENTRIES } from "./game/missions/missionRosterData";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
 import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
@@ -964,6 +965,9 @@ let biomeRuntime: BiomeRuntime | null = null;
 // AF-083: the expedition roster — selectable in Mission Selection; the
 // sandbox template heads the array unchanged.
 let selectedMissionTemplate = FRAMEWORK_MISSIONS[0]!;
+// AF-084: the expedition log — permanent, append-only personal history,
+// fed at the endRun seam; defeats remembered as honestly as victories.
+const expeditionLog = new ExpeditionLogRuntime();
 let missionRuntime: MissionRuntime | null = null;
 let extractionRemainingMs = 0;
 
@@ -3132,6 +3136,17 @@ function endRun(result: "victory" | "defeat"): void {
   session.playTimeMs = sessionMs;
   director = null;
   bus.emit("RunEnded", { result, seed: session.seed, playTimeMs: sessionMs });
+  // AF-084: every expedition becomes part of the player's personal history.
+  const missionSnap = missionRuntime?.snapshot ?? null;
+  expeditionLog.recordExpedition({
+    missionId: selectedMissionTemplate.id,
+    tier: MISSION_ROSTER_ENTRIES.find((e) => e.missionId === selectedMissionTemplate.id)?.tier ?? "common",
+    result,
+    perfect: result === "victory" && missionSnap !== null && missionSnap.optionalDone === missionSnap.optionalTotal,
+    optionalsDone: missionSnap?.optionalDone ?? 0,
+    bossDefeated: (missionRuntime?.currentValue("missionBossDefeated") ?? 0) > 0,
+    playTimeMs: sessionMs,
+  });
   if (result === "victory") feedCampaignProgress(CAMPAIGN_COUNTER_MISSIONS); // AF-068/069: campaign + endgame progress from real play
   machine.transitionTo(result === "victory" ? "MissionComplete" : "Defeat");
 }
@@ -4146,7 +4161,7 @@ const loop = new GameLoop({
           ? (() => {
               const snap = missionRuntime!.snapshot;
               const missionProfile = MISSION_PROFILES.find((p) => p.missionId === selectedMissionTemplate.id);
-              return `${selectedMissionTemplate.name} (${missionProfile?.frameworkCategory ?? "?"} · budget ${missionProfile?.threatBudget ?? 0}) [${session?.phase ?? "—"}] · primary ${snap.primaryDone}/${snap.primaryTotal} · optional ${snap.optionalDone}/${snap.optionalTotal} · modifiers [${snap.activeModifierKinds.join(", ") || "none"}]`;
+              return `${selectedMissionTemplate.name} (${missionProfile?.frameworkCategory ?? "?"} · budget ${missionProfile?.threatBudget ?? 0}) [${session?.phase ?? "—"}] · primary ${snap.primaryDone}/${snap.primaryTotal} · optional ${snap.optionalDone}/${snap.optionalTotal} · modifiers [${snap.activeModifierKinds.join(", ") || "none"}] · log ${expeditionLog.snapshot.timelineLength} (${expeditionLog.snapshot.perfectCount} perfect)`;
             })()
           : null,
         galaxy: (() => {
