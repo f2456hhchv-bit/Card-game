@@ -586,4 +586,6 @@ Only then lock AF-105.
 
 ## Foundation / AF-000–104 / GP-FINAL alignment review
 
-(pending implementation)
+Built entirely on AF-030's unchanged `CommanderDef`, AF-071's unchanged `CommanderProfileDef`, and AF-098's `CommanderExpandedProfileDef` wrapper. His passive/signature bind to `onLowHealth`/`movementSpeed` and `onLowHealth`/`resourceGain` — fresh pairs. Proven distinct from the entire 28-commander existing roster via the real fingerprint/`findOverlap` law and AF-071's real 17-part `architectureFor` completeness check. His three spec'd relationships (Close Respect Cael, Professional Trust Voss, Respects Kane) bind to their real roster ids exactly, with no relationship to Ryker, Drake, or Sol invented since the spec is silent on those pairings; his Codex entry's `relatedEntryIds` accordingly names only the three commanders the spec actually relates him to. All 20 Preferred-X ids and his recruitment source are checked against real, existing rosters. Zero changes to any locked module (AF-000–104).
+
+Score: 9.5/10 — approved and locked.
