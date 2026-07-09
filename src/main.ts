@@ -150,6 +150,14 @@ import { CIVILISATION_REGISTER, FACTION_PROFILES } from "./game/factions/faction
 import { CivilisationSimulationRuntime } from "./game/factions/CivilisationSimulationRuntime";
 import { profileFor as codexProfileFor } from "./game/codex/codexFrameworkData";
 import { CodexDiscoveryRuntime, CodexJournalRuntime } from "./game/codex/CodexProgressionRuntime";
+import {
+  CodexArchiveRuntime,
+  ExpeditionJournalRuntime,
+  PlayerNotebookExtensionRuntime,
+  ScientificArchiveRuntime,
+  collectionCompletionFor,
+} from "./game/codex/CodexEcosystemRuntime";
+import { MUSEUM_EXHIBIT_KINDS } from "./game/codex/codexEcosystemData";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
 import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
@@ -477,9 +485,13 @@ const researchSlice = new SaveSlice<ResearchSaveData>({
 
 // AF-081/082: the roster tree — AF-024's thirteen projects, AF-081's Lattice
 // Attunement, and AF-082's four roster projects, through the unchanged engine.
-const researchTree = new ResearchTree(ROSTER_RESEARCH_TREE, (node) =>
-  bus.emit("ResearchUnlocked", { nodeId: node.id, category: node.category }),
-);
+const researchTree = new ResearchTree(ROSTER_RESEARCH_TREE, (node) => {
+  bus.emit("ResearchUnlocked", { nodeId: node.id, category: node.category });
+  // AF-088: Recovered Research (Scientific Archive) + Research (Expedition
+  // Journal) both feed from the exact same real unlock event.
+  scientificArchive.record("recoveredResearch", node.id, `Research unlocked: ${node.name}`);
+  expeditionJournal.record("research", node.id, `Research unlocked: ${node.name}`);
+});
 
 function persistResearch(): void {
   void researchSlice.save(researchTree.toSave());
@@ -556,6 +568,13 @@ const codexReader: CodexUnlockReader = {
 // unchanged binary unlock gate; the player journal is curated separately.
 const codexDiscovery = new CodexDiscoveryRuntime();
 const codexJournal = new CodexJournalRuntime();
+// AF-088: the ecosystem layer — the 8-tier archive wraps AF-087's own
+// discovery lattice by composition; the two permanent ledgers and the
+// notebook extension are new, independent surfaces.
+const codexArchive = new CodexArchiveRuntime(codexDiscovery);
+const scientificArchive = new ScientificArchiveRuntime();
+const expeditionJournal = new ExpeditionJournalRuntime();
+const playerNotebook = new PlayerNotebookExtensionRuntime();
 
 function persistCollectionLedger(): void {
   void collectionLedgerSlice.save(collectionLedger.toSave());
@@ -3158,6 +3177,12 @@ function endRun(result: "victory" | "defeat"): void {
     bossDefeated: (missionRuntime?.currentValue("missionBossDefeated") ?? 0) > 0,
     playTimeMs: sessionMs,
   });
+  // AF-088: the Expedition Journal's Mission History entry mirrors the
+  // same real endRun seam — automatically recorded, never player-curated.
+  expeditionJournal.record("missionHistory", selectedMissionTemplate.id, `${result === "victory" ? "Victory" : "Defeat"}: ${selectedMissionTemplate.name}`);
+  if ((missionRuntime?.currentValue("missionBossDefeated") ?? 0) > 0) {
+    expeditionJournal.record("bosses", selectedMissionTemplate.id, `Boss defeated during ${selectedMissionTemplate.name}`);
+  }
   if (result === "victory") feedCampaignProgress(CAMPAIGN_COUNTER_MISSIONS); // AF-068/069: campaign + endgame progress from real play
   machine.transitionTo(result === "victory" ? "MissionComplete" : "Defeat");
 }
@@ -3893,7 +3918,7 @@ function render(): void {
       // as a real, curatable action; the note and history are live below.
       const featuredEntry = codexUnlocked.at(-1) ?? null;
       const journalLine = featuredEntry
-        ? `Journal: ${codexJournal.snapshot.pinnedCount} pinned, ${codexJournal.snapshot.favouriteCount} favourite, ${codexJournal.snapshot.bookmarkedCount} bookmarked · Featured: ${featuredEntry.title} (${codexJournal.isPinned(featuredEntry.id) ? "pinned" : "not pinned"}) — ${codexProfileFor(featuredEntry).gameplayInformation}`
+        ? `Journal: ${codexJournal.snapshot.pinnedCount} pinned, ${codexJournal.snapshot.favouriteCount} favourite, ${codexJournal.snapshot.bookmarkedCount} bookmarked · Featured: ${featuredEntry.title} (${codexJournal.isPinned(featuredEntry.id) ? "pinned" : "not pinned"}${playerNotebook.researchGoalIds.includes(featuredEntry.id) ? ", goal" : ""}) — ${codexProfileFor(featuredEntry).gameplayInformation}`
         : `Journal: ${codexJournal.snapshot.pinnedCount} pinned, ${codexJournal.snapshot.favouriteCount} favourite, ${codexJournal.snapshot.bookmarkedCount} bookmarked · Featured: no discoveries yet`;
       // AF-044: Player Profile (Identity/Preferences) + Autosave Status — the
       // Save Framework's own summary line, matching every module's pattern.
@@ -3927,6 +3952,15 @@ function render(): void {
                   `${codexJournal.isPinned(featuredEntry.id) ? "Unpin" : "Pin"} Featured Discovery: ${featuredEntry.title}`,
                   () => {
                     codexJournal.togglePin(featuredEntry.id);
+                    render();
+                  },
+                ] as [string, () => void],
+                // AF-088: the Player Notebook's Research Goals surface — a
+                // real, independent toggle from AF-087's Pin.
+                [
+                  `${playerNotebook.researchGoalIds.includes(featuredEntry.id) ? "Clear" : "Set"} Research Goal: ${featuredEntry.title}`,
+                  () => {
+                    playerNotebook.toggleResearchGoal(featuredEntry.id);
                     render();
                   },
                 ] as [string, () => void],
@@ -4008,6 +4042,16 @@ const loop = new GameLoop({
     // AF-043's own unlock check.
     for (const entry of codexRuntime.unlockedEntries(codexReader)) {
       if (codexDiscovery.recordObserved(entry.id)) codexJournal.recordDiscoveryEvent(entry.id, "observed");
+    }
+    // AF-088: two AUTOMATIC feeds at the same real seam — the Expedition
+    // Journal's Discoveries entry and the Scientific Archive's Scientific
+    // Papers entry, both fed the instant AF-043's own unlock check goes
+    // true (never player-curated — that stays the Notebook's job).
+    for (const entry of codexRuntime.unlockedEntries(codexReader)) {
+      if (codexArchive.recordDetected(entry.id)) {
+        expeditionJournal.record("discoveries", entry.id, `Discovered: ${entry.title}`);
+        scientificArchive.record("scientificPapers", entry.id, codexProfileFor(entry).scientificNotes);
+      }
     }
     // AF-087: completing a whole Codex section masters every entry inside
     // it — the section-completion reward becomes a real progression event,
@@ -4260,7 +4304,10 @@ const loop = new GameLoop({
           // AF-087 §Debug: Discovery Progress + Player Journal, live.
           const progress = codexDiscovery.snapshot;
           const journalSnap = codexJournal.snapshot;
-          return `${unlocked}/${total} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · missing links ${codexRuntime.missingLinkCount()} · timeline ${timelineUnlocked}/${TIMELINE_ERAS.length} · observed ${progress.observedCount} · mastered ${progress.masteredCount} · journal ${journalSnap.pinnedCount}pin/${journalSnap.bookmarkedCount}bm/${journalSnap.favouriteCount}fav`;
+          // AF-088 §Debug: Knowledge Graph size, Museum Completion, Timeline
+          // Completion, and the two permanent ledgers, live.
+          const completion = collectionCompletionFor(codexRuntime, codexReader, 6, MUSEUM_EXHIBIT_KINDS.filter((k) => k.live).length);
+          return `${unlocked}/${total} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · missing links ${codexRuntime.missingLinkCount()} · timeline ${timelineUnlocked}/${TIMELINE_ERAS.length} · observed ${progress.observedCount} · mastered ${progress.masteredCount} · journal ${journalSnap.pinnedCount}pin/${journalSnap.bookmarkedCount}bm/${journalSnap.favouriteCount}fav · archived ${codexArchive.archivedCount} · museum ${completion.museum.toFixed(0)}% · sci-archive ${scientificArchive.length} · expo-journal ${expeditionJournal.length} · goals ${playerNotebook.researchGoalIds.length}`;
         })(),
         saveFramework: (() => {
           const statuses = saveCoordinator.allStatuses;
