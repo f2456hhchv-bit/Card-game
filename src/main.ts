@@ -182,6 +182,7 @@ import { SaveCoordinator } from "./core/save/SaveCoordinator";
 import { AudioMixer } from "./game/audio/AudioMixer";
 import { AudioEngine, NullAudioBackend, createSandboxAudioEngine } from "./game/audio/AudioEngine";
 import { resolveMusicState } from "./game/audio/MusicState";
+import { adaptiveMusicLayersFor } from "./game/audio/audioFrameworkData";
 import { DebugOverlay } from "./debug/DebugOverlay";
 
 const app = document.getElementById("app");
@@ -4352,7 +4353,16 @@ const loop = new GameLoop({
           const lastSaved = statuses.length > 0 ? Math.max(...statuses.map((s) => s.lastSavedAtMs)) : null;
           return `v1 (${statuses.length} slices) · autosave ${totalSaves} total${lastSaved ? `, last ${((Date.now() - lastSaved) / 1000).toFixed(0)}s ago` : ""} · milestone backups ${milestoneBackupCount} · cloud offline (local only) · profile ${activeProfileName}`;
         })(),
-        audio: `music ${audioEngine.musicState ?? "—"} · voices ${audioEngine.activeVoiceCount()} · master ${(audioMixer.effectiveVolume("master") * 100).toFixed(0)}% · muted ${audioMixer.isMuted("master") ? "yes" : "no"}`,
+        audio: (() => {
+          // AF-091: adaptive layers composed on top of AF-045's real music state.
+          const hullFraction = playerDefence ? playerDefence.snapshot.hull / playerDefence.snapshot.maxHull : 1;
+          const layers = adaptiveMusicLayersFor({
+            hullFraction,
+            recentDiscovery: false,
+            eliteOrBossPressure: director?.snapshot.phase === "MiniBoss" || bossRuntime !== null,
+          });
+          return `music ${audioEngine.musicState ?? "—"} · voices ${audioEngine.activeVoiceCount()} · master ${(audioMixer.effectiveVolume("master") * 100).toFixed(0)}% · muted ${audioMixer.isMuted("master") ? "yes" : "no"} · tension ${(layers.tension * 100).toFixed(0)}%${layers.lowHealthSting ? " (low-health sting)" : ""}`;
+        })(),
         outlaws: (() => {
           if (outlawSquads.length === 0 && outlawMines.length === 0) return null;
           const squadLine = outlawSquads
