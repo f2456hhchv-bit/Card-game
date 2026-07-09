@@ -592,4 +592,6 @@ Only then lock AF-101.
 
 ## Foundation / AF-000–100 / GP-FINAL alignment review
 
-(pending implementation)
+Built entirely on AF-030's unchanged `CommanderDef`, AF-071's unchanged `CommanderProfileDef`, and AF-098's `CommanderExpandedProfileDef` wrapper. His passive/signature bind to `onDamageTaken`/`resourceGain` and `onDamageTaken`/`droneEffectiveness` — the latter the third real producer of that bonus kind in the roster (alongside `kite-aviary` and CMD-001's Field Commander branch), reinforcing rather than duplicating an existing mechanic. Proven distinct from the entire 24-commander existing roster via the real fingerprint/`findOverlap` law and AF-071's real 17-part `architectureFor` completeness check. His spec'd "Close Friend"/"Professional Respect" relationships with Dr. Lyra Voss and Adrian Kane are both real cross-commander bindings to their actual roster ids, and his Codex entry cross-references both of theirs — the roster's first three-way continuity web. A fourth Codex commander entry is added additively; `codexData.ts` itself remains untouched. All 20 Preferred-X ids and his recruitment source are checked against real, existing rosters. Zero changes to any locked module (AF-000–100).
+
+Score: 9.5/10 — approved and locked.
