@@ -244,6 +244,8 @@ import { TranscendenceIndexScoreCard, UniversalLibrary } from "./game/atlasTrans
 import { STEWARDSHIP_LOOP_STAGES, TRANSCENDENCE_DOMAINS, TRANSCENDENCE_INDEX_CRITERIA, civilisationalShiftRank } from "./game/atlasTranscendence/atlasTranscendenceData";
 import { EternalArchive } from "./game/atlasEternity/AtlasEternityRuntime";
 import { ETERNITY_DOMAINS, PRESERVATION_CYCLE_STAGES } from "./game/atlasEternity/atlasEternityData";
+import { HarmonyIndexScoreCard, HarmonyTracker } from "./game/atlasHarmony/AtlasHarmonyRuntime";
+import { HARMONY_DOMAINS, HARMONY_INDEX_CRITERIA } from "./game/atlasHarmony/atlasHarmonyData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2120,6 +2122,25 @@ const eternalArchive = new EternalArchive();
   preservationCycle.record("Discover", 20);
   eternalArchive.preserve("record-first-contact-speech", "Historic speeches", 20);
   generationalHandoff.handoff(3, ["Culture"], 20);
+}
+
+// AF-182: the Atlas Harmony Engine — ensures no single domain of
+// civilisation permanently dominates another. Reuses AF-151's real
+// knowledgeGraph directly (kind "Influenced") for System
+// Relationships/Positive Feedback Loops, AF-159's real culturalTrends
+// directly for Cultural Harmony, AF-160's real mentorshipLedger
+// directly for Commander/Social Harmony, and AF-168's real beautyIndex
+// directly for Urban Harmony. HarmonyTracker/HarmonyIndexScoreCard are
+// the genuinely new pieces (see atlasHarmonyData.ts for the full reuse
+// notes).
+const harmonyTracker = new HarmonyTracker();
+const harmonyIndex = new HarmonyIndexScoreCard();
+{
+  knowledgeGraph.addEdge({ fromId: "domain-education", toId: "domain-science", kind: "Influenced", strength: 1, confidence: 1, historicalContext: "Education strengthens science.", dateEstablished: 20 });
+  culturalTrends.record("Balanced Progress Movement", "settlement-verdance", 20);
+  beautyIndex.setLevel("Public spaces", 75);
+  for (const domain of HARMONY_DOMAINS) harmonyTracker.adjustToward(domain, 60);
+  for (const criterion of HARMONY_INDEX_CRITERIA) harmonyIndex.score(criterion, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6047,6 +6068,10 @@ const loop = new GameLoop({
         atlasEternity: (() => {
           const overlap = detectOverlap(ETERNITY_DOMAINS, CONTINUUM_DOMAINS);
           return `chronicle versions ${chroniclePlanets.entryFor("settlement-verdance").allVersions().length} · institution memories ${institutionalMemory.memoriesFor("institution-verdance-academy").length} · cultural adopters ${culturalTrends.adoptersFor("Old Verdance Tongue").length} · heritage significance ${symbolSignificance.significanceOf("planet-verdance-heritage")} · constellation neighbours ${knowledgeGraph.neighbors("achievement-verdance-restoration").length} · preservation cycle ${preservationCycle.currentStage() ?? "none"} · archive preserved=${eternalArchive.isPreserved("record-first-contact-speech")} (${eternalArchive.categoryOf("record-first-contact-speech") ?? "none"}) · generation 3 baseline ${generationalHandoff.startingBaselineFor(4)} · domain overlap[Eternity,Continuum] ${overlap.shared.length}/${ETERNITY_DOMAINS.length}`;
+        })(),
+        atlasHarmony: (() => {
+          const overlap = detectOverlap(HARMONY_DOMAINS, CREATIVE_DOMAINS);
+          return `dominant ${harmonyTracker.mostDominantDomain() ?? "none"} · neglected ${harmonyTracker.mostNeglectedDomain() ?? "none"} · balanced=${harmonyTracker.isBalanced()} · network neighbours ${knowledgeGraph.neighbors("domain-education").length} · cultural adopters ${culturalTrends.adoptersFor("Balanced Progress Movement").length} · beauty Public spaces=${beautyIndex.levelFor("Public spaces")} · index score ${harmonyIndex.overallScore().toFixed(1)} (${harmonyIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Harmony,Creative] ${overlap.shared.length}/${HARMONY_DOMAINS.length}`;
         })(),
       });
     }

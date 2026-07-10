@@ -200,6 +200,8 @@ export interface DebugSnapshot {
   atlasTranscendence: string | null;
   /** Atlas Eternity Engine summary: the reused AF-135 PlanetaryChronicle's version count for The Eternal Library, the reused AF-165 InstitutionalMemoryTracker's memory count for The Eternal Museum, the reused AF-159 CulturalTrendTracker's adopter count for Cultural Preservation, the reused AF-163 SignificanceTracker's reading for Planetary Heritage, the reused AF-151 KnowledgeGraph's neighbour count for The Memory Constellation, the reused AF-155 CyclicStageTracker's current Preservation Cycle stage, the new EternalArchive's preserved status/category, the reused AF-175 GenerationalHandoffLedger's inherited baseline for The Future Curators, and a live detectOverlap reading against AF-176's real CONTINUUM_DOMAINS (AF-181 §DEBUG). */
   atlasEternity: string | null;
+  /** Atlas Harmony Engine summary: the new HarmonyTracker's emergent most-dominant/most-neglected domain and balanced status (capped-delta-per-update, never assigned directly), the reused AF-151 KnowledgeGraph's Influenced-edge neighbour count for System Relationships, the reused AF-159 CulturalTrendTracker's adopter count for Cultural Harmony, the reused AF-168 BeautyIndexTracker's Public-spaces level for Urban Harmony, the new HarmonyIndexScoreCard's score/gate status mirroring AF-143/149/170/173/179/180's real scoring-rubric shape, and a live detectOverlap reading against AF-171's real CREATIVE_DOMAINS (AF-182 §DEBUG). */
+  atlasHarmony: string | null;
 }
 
 export class DebugOverlay {
@@ -333,6 +335,7 @@ export class DebugOverlay {
       `ascension  ${snapshot.atlasAscension ?? "—"}`,
       `transcendence ${snapshot.atlasTranscendence ?? "—"}`,
       `eternity   ${snapshot.atlasEternity ?? "—"}`,
+      `harmony    ${snapshot.atlasHarmony ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
