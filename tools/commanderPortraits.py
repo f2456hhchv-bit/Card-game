@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
 Commander portrait extraction from the user's AFTERLIGHT character-sheet
-delivery (a 4x2 grid of chibi pilot portraits). The sheet has no real alpha
-(fully opaque PNG) — each cell has a baked-in near-white "transparency
-checkerboard" background, stripped here via tools/_bgremove.py.
+delivery. Two sources:
 
-Crops each grid cell, removes the checker background, auto-trims to the
-resulting alpha bounding box, re-encodes as a 320px-long-edge WebP data-URI,
-and emits src/game/render/commanderRaster.ts. Portraits are matched to
-WARDEN_LIST commanders by armor-accent colour; 8 of the 9 commanders got a
-match (wren has none yet — keeps its procedural fallback until a matching
-portrait arrives).
+  1. A 4x2 grid of chibi pilot portraits (checker-background, see
+     tools/_bgremove.strip_checker_background) — 8 of 9 commanders.
+  2. The "Pilot Outfits & Costumes" sheet's Astro Engineer card (dark-
+     background, see tools/_bgremove.strip_dark_background) for wren
+     (hue 95, yellow-green) — the one commander with no match in (1).
+
+Crops each, removes its backdrop, auto-trims to the resulting alpha
+bounding box, re-encodes as a 320px-long-edge WebP data-URI, and emits
+src/game/render/commanderRaster.ts.
 
 Usage: python3 tools/commanderPortraits.py   (from the repo root; needs
 Pillow, numpy, scipy)
@@ -23,10 +24,11 @@ from pathlib import Path
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _bgremove import strip_checker_background
+from _bgremove import keep_largest_component, strip_checker_background, strip_dark_background
 
 UP = Path("/root/.claude/uploads/8d4c5166-d731-5037-83be-9215c8d1b4be")
-SHEET = UP / "67750283-5173515F482A40B6B0537080F275A0A1.png"
+PORTRAIT_SHEET = UP / "67750283-5173515F482A40B6B0537080F275A0A1.png"
+OUTFIT_SHEET = UP / "96923b8c-0E43CEE766214B8BA0B893F705C1C9D0.png"
 OUT = Path(__file__).resolve().parent.parent / "src/game/render/commanderRaster.ts"
 
 # commander id (see wardenDefs.ts) -> (column, row) in the 4-col x 2-row grid.
@@ -39,7 +41,6 @@ CELLS = {
     "pyre": (1, 1),  # orange goggles, red/orange armor
     "vesper": (2, 1),  # silver hair, white/purple armor
     "surge": (3, 1),  # beard, navy/orange armor
-    # "wren" has no matching portrait in this delivery yet.
 }
 
 
@@ -66,6 +67,18 @@ def grid_cell(sheet_path, col, row, cols=4, rows=2, inset=0.02):
     return autocrop_alpha(cell)
 
 
+def wren_cell():
+    # Astro Engineer card, generously cropped (calibrated by inspection) so
+    # the backpack device isn't clipped, then de-speckled: a wide crop this
+    # close to a neighbouring card's border picks up stray chrome (a corner
+    # star icon, the divider line) as small disconnected islands.
+    im = Image.open(OUTFIT_SHEET).convert("RGBA")
+    cell = im.crop((0, 590, 320, 850))
+    cell = strip_dark_background(cell, brightness_thresh=55, feather=1.0)
+    cell = keep_largest_component(cell)
+    return autocrop_alpha(cell, pad_frac=0.02)
+
+
 def to_webp_datauri(im, target_long_edge, quality=85):
     w, h = im.size
     scale = target_long_edge / max(w, h)
@@ -85,9 +98,11 @@ def main():
         "export const COMMANDER_PORTRAITS: Record<string, string> = {",
     ]
     for commander_id, (col, row) in CELLS.items():
-        cell = grid_cell(SHEET, col, row)
+        cell = grid_cell(PORTRAIT_SHEET, col, row)
         uri = to_webp_datauri(cell, 320)
         lines.append(f'  {commander_id}:\n    "{uri}",')
+    uri = to_webp_datauri(wren_cell(), 320)
+    lines.append(f'  wren:\n    "{uri}",')
     lines.append("};")
     lines.append("")
     OUT.write_text("\n".join(lines))

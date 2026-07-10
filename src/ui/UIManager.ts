@@ -20,6 +20,7 @@ import { weaponIcon, relicIcon, gearIcon, signatureIcon, glyphIcon } from "./ico
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import { BOSS_RASTER } from "../game/render/bossRaster";
 import { COMMANDER_PORTRAITS } from "../game/render/commanderRaster";
+import { ACHIEVEMENT_RASTER } from "../game/render/achievementRaster";
 import {
   SLOTS,
   SLOT_META,
@@ -2061,7 +2062,9 @@ export class UIManager {
         slabSeed++,
         "rgba(15,12,28,0.9)",
       );
-      const icon = this.iconEl("div", "ach-icon", glyphIcon(got ? a.icon : "lock", 45));
+      const painted = ACHIEVEMENT_RASTER[a.id];
+      const iconSrc = got && painted ? painted : glyphIcon(got ? a.icon : "lock", 45);
+      const icon = this.iconEl("div", "ach-icon", iconSrc);
       const body = this.el("div", "ach-body");
       body.append(
         this.el("div", "ach-name", a.name),

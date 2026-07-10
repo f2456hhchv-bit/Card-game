@@ -300,7 +300,7 @@ export class Scene3D {
     this.heroAnchor.position.y = PLATFORM_TOP_Y + Math.sin(this.heroBob * 2.4) * 0.02;
     this.heroAnchor.rotation.z = -this.heroAttackT * 0.18;
     this.heroAnchor.position.x = HERO_X + this.heroAttackT * 0.1;
-    this.applyFlash(this.hero, this.heroFlashT, "#ffffff");
+    this.applyFlash(this.hero, this.heroFlashT);
 
     // Enemy: idle bob + pop-in scale + death fade.
     if (this.enemy) {
@@ -311,7 +311,7 @@ export class Scene3D {
       this.enemy.group.scale.setScalar(scale);
       this.enemyAnchor.position.y = PLATFORM_TOP_Y + Math.sin(this.enemyBob * 2.1 + 1.4) * 0.02;
       this.setOpacity(this.enemy, clamp01(deathFade));
-      this.applyFlash(this.enemy, this.enemyFlashT, "#ffffff");
+      this.applyFlash(this.enemy, this.enemyFlashT);
     }
 
     // Labels: float up and fade.
@@ -344,36 +344,18 @@ export class Scene3D {
     this.particles = this.particles.filter((p) => p.life > 0);
   }
 
-  private applyFlash(rig: Rig, flashT: number, color: string): void {
-    const c = new THREE.Color(color);
-    for (const f of rig.flashables) {
-      if (flashT > 0) {
-        f.material.emissive.copy(f.baseEmissive).lerp(c, Math.min(1, flashT * 1.6));
-        f.material.emissiveIntensity = Math.max(f.baseEmissiveIntensity, flashT * 2.2);
-      } else {
-        f.material.emissive.copy(f.baseEmissive);
-        f.material.emissiveIntensity = f.baseEmissiveIntensity;
-      }
-    }
-    // Painted sprite billboards have no emissive channel to pulse — over-
-    // driving the (tone-mapped) sprite colour blows it toward white instead,
-    // scaled up from the sprite's resting tint rather than a hard reset so a
-    // sector-hue tint survives the flash.
-    if (rig.spriteMaterial && rig.spriteBaseColor) {
-      const boost = 1 + Math.min(1, flashT) * 3;
-      rig.spriteMaterial.color.copy(rig.spriteBaseColor).multiplyScalar(boost);
-    }
+  /** Painted sprite billboards have no emissive channel to pulse — over-
+   * driving the (tone-mapped) sprite colour blows it toward white instead,
+   * scaled up from the sprite's resting tint rather than a hard reset so a
+   * sector-hue tint survives the flash. */
+  private applyFlash(rig: Rig, flashT: number): void {
+    const boost = 1 + Math.min(1, flashT) * 3;
+    rig.spriteMaterial.color.copy(rig.spriteBaseColor).multiplyScalar(boost);
   }
 
   private setOpacity(rig: Rig, alpha: number): void {
     rig.group.traverse((obj) => {
-      if (obj instanceof THREE.Mesh) {
-        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-        for (const m of mats) {
-          m.transparent = alpha < 1 || m.transparent;
-          m.opacity = alpha;
-        }
-      } else if (obj instanceof THREE.Sprite) {
+      if (obj instanceof THREE.Sprite) {
         obj.material.opacity = alpha;
       }
     });
