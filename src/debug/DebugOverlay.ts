@@ -128,6 +128,8 @@ export interface DebugSnapshot {
   aos: string | null;
   /** Afterlight Design Constitution summary: features evaluated, content-test pass count, latest feature's test scores, dominant pillar, reinforcement count (AF-146 §DEBUG). */
   designConstitution: string | null;
+  /** Atlas Core summary: principle/hierarchy counts, features validated, latest feature's principle reinforcement count, dominant principle (AF-145 §DEBUG). */
+  atlasCore: string | null;
 }
 
 export class DebugOverlay {
@@ -225,6 +227,7 @@ export class DebugOverlay {
       `atlas      ${snapshot.atlasFramework ?? "—"}`,
       `aos        ${snapshot.aos ?? "—"}`,
       `constitn   ${snapshot.designConstitution ?? "—"}`,
+      `atlasCore  ${snapshot.atlasCore ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

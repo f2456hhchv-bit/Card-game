@@ -174,6 +174,8 @@ import {
 } from "./game/aos/AosRuntime";
 import { CONTENT_TEST_QUESTIONS, EXPANSION_TEST_REQUIREMENTS } from "./game/designConstitution/designConstitutionData";
 import { FeatureComplianceRegistry, PillarReinforcementLedger } from "./game/designConstitution/DesignConstitutionRuntime";
+import { ATLAS_PRINCIPLES, ATLAS_SYSTEM_HIERARCHY, DESIGN_VALIDATION_QUESTIONS } from "./game/atlasCore/atlasCoreData";
+import { AtlasCoreComplianceRegistry, AtlasPrincipleReinforcementLedger } from "./game/atlasCore/AtlasCoreRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1253,6 +1255,16 @@ featureCompliance.evaluate(
 );
 pillarReinforcement.reinforce("Wonder", "expansion-ocean-worlds");
 pillarReinforcement.reinforce("Discovery", "expansion-ocean-worlds");
+
+// AF-145: the Atlas Core — sent as a follow-up filling the numbering
+// gap AF-146 identified; its own third, separate in-universe charter,
+// never modifying the real docs/CONSTITUTION.md or AF-146's real data
+// (see atlasCoreData.ts for the full relationship notes).
+const atlasCompliance = new AtlasCoreComplianceRegistry();
+const atlasPrincipleReinforcement = new AtlasPrincipleReinforcementLedger();
+atlasCompliance.evaluate("expansion-ocean-worlds", new Set(DESIGN_VALIDATION_QUESTIONS), new Set(["hope-over-despair", "discovery-over-grinding"]));
+atlasPrincipleReinforcement.reinforce("hope-over-despair", "expansion-ocean-worlds");
+atlasPrincipleReinforcement.reinforce("discovery-over-grinding", "expansion-ocean-worlds");
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4973,6 +4985,10 @@ const loop = new GameLoop({
         designConstitution: (() => {
           const latest = featureCompliance.all().at(-1);
           return `features ${featureCompliance.all().length} (${featureCompliance.passedCount()} passed content test) · latest ${latest ? `${latest.featureId} ${latest.contentTest.yesCount}/${latest.contentTest.totalQuestions} · expansion ${latest.expansionTestPassed ? "passed" : "failed"}` : "—"} · dominant pillar ${pillarReinforcement.dominantPillar() ?? "none"} · reinforcements ${pillarReinforcement.all().length}`;
+        })(),
+        atlasCore: (() => {
+          const latest = atlasCompliance.all().at(-1);
+          return `principles ${ATLAS_PRINCIPLES.length} · hierarchy ${ATLAS_SYSTEM_HIERARCHY.length} systems · features ${atlasCompliance.all().length} (${atlasCompliance.passedCount()} validated) · latest reinforced ${latest?.principlesReinforcedCount ?? 0} · dominant principle ${atlasPrincipleReinforcement.dominantPrinciple() ?? "none"}`;
         })(),
       });
     }
