@@ -215,6 +215,7 @@ import { EmotionalContinuityTracker, IdentityRegistry, PersonalGrowthTracker, Va
 import { EarnedTitleTracker, ReputationTracker } from "./game/atlasIdentity/AtlasIdentityRuntime";
 import type { SignatureTraitKind } from "./game/atlasIdentity/atlasIdentityData";
 import { BeautyIndexTracker, CollectiveCharacterTracker, MomentsOfHumanityLog, RitualLog } from "./game/atlasSoul/AtlasSoulRuntime";
+import { ensureNextHorizonOpen, NextGenerationLog } from "./game/atlasLegacyOfTomorrow/AtlasLegacyOfTomorrowRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1813,6 +1814,25 @@ const beautyIndex = new BeautyIndexTracker();
   commanderReputation.recognizeFor("humanity", "Compassion", 20);
   emotionalContinuity.setback("humanity", 30);
   emotionalContinuity.recoverStep("humanity", 5);
+}
+
+// AF-169: the Atlas Legacy of Tomorrow — the explicit capstone of the
+// Atlas architecture. Legacy Projects reuse AF-162's real
+// longTermMissions directly; Commander Legacy's "Students" reuses
+// AF-160's real mentorshipLedger directly; Remembrance composes
+// AF-163's real symbolSignificance/AF-166's real emotionalContinuity
+// directly; Evolving Traditions reuses AF-168's real rituals directly;
+// Galactic Maturity reuses AF-167's real commanderReputation directly
+// at civilisation scale. ensureNextHorizonOpen/NextGenerationLog are
+// the genuinely new pieces (see atlasLegacyOfTomorrowData.ts for the
+// full reuse notes).
+const nextGeneration = new NextGenerationLog();
+{
+  longTermMissions.register("living-library-network", "Establish the Living Library Network", 100);
+  longTermMissions.advance("living-library-network", 100);
+  ensureNextHorizonOpen(longTermMissions, "living-library-network", mysteryLog, "mystery-lost-archive", "Missing artifacts", "A rumoured archive lies beyond the frontier.", 20);
+  commanderReputation.recognizeFor("humanity", "Wisdom", 20);
+  nextGeneration.witness("A new Commander steps aboard the Wayfarer for the first time.", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5679,6 +5699,9 @@ const loop = new GameLoop({
         })(),
         atlasSoul: (() => {
           return `character ${collectiveCharacter.dominantTrait() ?? "none"} · rituals ${rituals.all().length} · humanity moments ${humanityMoments.all().length} · beauty ${beautyIndex.overallBeauty().toFixed(0)} · galactic reputation ${commanderReputation.mostRecognizedQuality("humanity") ?? "none"} · civilisation hope ${emotionalContinuity.hopeLevelOf("humanity")}`;
+        })(),
+        atlasLegacyOfTomorrow: (() => {
+          return `legacy project ${longTermMissions.progressFor("living-library-network") * 100}% complete=${longTermMissions.isComplete("living-library-network")} · horizon open=${mysteryLog.all().some((m) => m.id === "mystery-lost-archive")} unsolved ${mysteryLog.unsolved().length} · students ${mentorshipLedger.menteesOf("commander-thorne-starforged").length} · maturity ${commanderReputation.mostRecognizedQuality("humanity") ?? "none"} · next generation ${nextGeneration.all().length}`;
         })(),
       });
     }

@@ -174,6 +174,8 @@ export interface DebugSnapshot {
   atlasIdentity: string | null;
   /** Atlas Soul Engine summary: the emergent (never assigned) dominant Collective Character trait, a Ritual count, a Moments-of-Humanity count, the averaged Beauty Index, a reused AF-167 Galactic Reputation quality at civilisation scale, and a reused AF-166 civilisation-scale hope level (AF-168 §DEBUG). */
   atlasSoul: string | null;
+  /** Atlas Legacy of Tomorrow summary (capstone): a reused AF-162 Legacy Project's progress/completion, whether the Horizon Principle opened the next reused AF-159 mystery and the unsolved count, a reused AF-160 mentee count, the reused AF-167 Galactic Maturity quality, and the Next-Generation witness count (AF-169 §DEBUG). */
+  atlasLegacyOfTomorrow: string | null;
 }
 
 export class DebugOverlay {
@@ -294,6 +296,7 @@ export class DebugOverlay {
       `conscious  ${snapshot.atlasConsciousness ?? "—"}`,
       `identity   ${snapshot.atlasIdentity ?? "—"}`,
       `soul       ${snapshot.atlasSoul ?? "—"}`,
+      `legacyTmrw ${snapshot.atlasLegacyOfTomorrow ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
