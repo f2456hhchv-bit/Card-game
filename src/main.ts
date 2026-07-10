@@ -190,6 +190,8 @@ import { computeAttentionScore, narrativeGuardrailsRespected, NARRATIVE_GUARDRAI
 import { AttentionTracker, EmergenceOpportunityLog, EmotionalPacingTracker, SimulationTierEngine, allocateSimulationBudget } from "./game/simulationDirector/SimulationDirectorRuntime";
 import { emotionalToneNeedsRebalancing, nextPacingStage, playerJourneyTierRank, resolveByFailsafePriority, PLAYER_JOURNEY_TIERS } from "./game/atlasOrchestrator/atlasOrchestratorData";
 import { ContentRotationTracker, DiscoveryCurveTracker, EngagementMap, LongTermMemoryLog, PacingCycleTracker, PlayerExperienceTracker } from "./game/atlasOrchestrator/AtlasOrchestratorRuntime";
+import { INTELLIGENCE_LAYERS, LEARNING_LOOP_STAGES, knowledgeRichnessScore, rankOptions, suggestUncertaintyResponse } from "./game/atlasIntelligence/atlasIntelligenceData";
+import { CollaborativeProblemLog, CyclicStageTracker, DiscoverySuggestionLog } from "./game/atlasIntelligence/AtlasIntelligenceRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1435,6 +1437,28 @@ const engagementMap = new EngagementMap();
   longTermMemory.record("Major discovery", 20, "First contact with a remote civilisation.");
   engagementMap.setScores("museum", { curiosity: 80, satisfaction: 70, exposure: 15 });
   engagementMap.setScores("weather", { curiosity: 20, satisfaction: 20, exposure: 75 });
+}
+
+// AF-155: the Atlas Intelligence Engine — the reasoning layer. Reuses
+// AF-151's real knowledgeGraph.suggestConnections directly for the
+// "Potential Commander collaborations" Discovery Suggestion kind, and
+// deliberately never lets AF-030's real PersonalityTrait weight the
+// numeric rankOptions score (personality stays dialogue-only, per that
+// module's own "not gameplay balance" design law). CyclicStageTracker/
+// CollaborativeProblemLog/DiscoverySuggestionLog are the genuinely new
+// pieces (see atlasIntelligenceData.ts for the full reuse notes).
+const intelligenceLayers = new CyclicStageTracker(INTELLIGENCE_LAYERS);
+const learningLoop = new CyclicStageTracker(LEARNING_LOOP_STAGES);
+const collaborativeProblems = new CollaborativeProblemLog();
+const discoverySuggestions = new DiscoverySuggestionLog();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  intelligenceLayers.record("Observation", 20);
+  learningLoop.record("Observe", 20);
+  collaborativeProblems.propose("first-contact-anomaly", [commanderIndexId, "commander-thorne-starforged"], "Scientific", 20);
+  for (const suggestion of knowledgeGraph.suggestConnections(commanderIndexId)) {
+    discoverySuggestions.surface("Potential Commander collaborations", `${suggestion} shares a mentor with the sandbox Commander.`, 20);
+  }
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5218,6 +5242,17 @@ const loop = new GameLoop({
           const failsafe = resolveByFailsafePriority(new Set(["Performance", "Player progress"]));
           const journeyTier = PLAYER_JOURNEY_TIERS[playerJourneyTierRank("Experienced Pathfinder")]!;
           return `pacing ${stage} (next ${nextPacingStage(stage)}, stalled=${pacingCycle.isStalled()}) · experience wonder ${playerExperience.latest()?.wonderFrequency ?? 0} · discovery dry=${discoveryCurve.isDryPeriod(60, 30)} · rotation recommend "${contentRotation.leastUsedCategory()}" · memory "${longTermMemory.lastOf("Major discovery")?.description ?? "none"}" · engagement recommend "${engagementMap.recommend() ?? "none"}" · negotiation winner ${negotiation?.winner.systemId ?? "none"} · expansion impact [${impact.affected.join(", ")}] · tone rebalancing=${rebalancing} · failsafe ${failsafe ?? "none"} · journey ${journeyTier} · surprises ${emergenceLog.all().length}`;
+        })(),
+        atlasIntelligence: (() => {
+          const layer = intelligenceLayers.currentStage() ?? "Observation";
+          const loopStage = learningLoop.currentStage() ?? "Observe";
+          const decision = rankOptions([
+            { id: "investigate-signal", scores: { Risk: 20, "Potential reward": 80, "Scientific value": 70 } },
+            { id: "return-to-ship", scores: { Risk: 5, "Potential reward": 10, "Scientific value": 0 } },
+          ]);
+          const uncertainty = decision ? suggestUncertaintyResponse(decision.confidence) : null;
+          const richness = knowledgeRichnessScore({ recentEvents: 3, historicEvents: architectureHistory.all().length, personalMemories: entityMemory.memoriesFor(`commander-${sandboxCommander.id}`).length, sharedMemories: 1, museumRecords: 1, chronicleEntries: 1 });
+          return `layer ${layer} (next ${intelligenceLayers.next(layer)}) · loop ${loopStage} (next ${learningLoop.next(loopStage)}) · decision ${decision?.bestId ?? "none"} confidence ${(decision?.confidence ?? 0).toFixed(2)} (${uncertainty ?? "confident"}) · knowledge richness ${richness} · collaborations ${collaborativeProblems.all().length} · suggestions ${discoverySuggestions.all().length}`;
         })(),
       });
     }

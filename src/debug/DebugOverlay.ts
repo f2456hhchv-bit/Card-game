@@ -146,6 +146,8 @@ export interface DebugSnapshot {
   simulationDirector: string | null;
   /** Atlas Orchestrator summary: pacing-cycle stage and stall status, latest player-experience wonder factor, discovery-curve dry-period status, content-rotation recommendation, longest-term-memory milestone, engagement-map recommendation, reused AF-144 System Negotiation winner, reused AF-149 Expansion Readiness impact, emotional-tone rebalancing status, failsafe priority, player-journey tier, and reused AF-153 Surprise Engine count (AF-154 §DEBUG). */
   atlasOrchestrator: string | null;
+  /** Atlas Intelligence Engine summary: current Intelligence Layer and Learning Loop stage (each with its cyclic next stage), a sample rankOptions decision with confidence and uncertainty response, composed knowledge-richness score, collaborative-problem count, and reused AF-151 Discovery Suggestion count (AF-155 §DEBUG). */
+  atlasIntelligence: string | null;
 }
 
 export class DebugOverlay {
@@ -252,6 +254,7 @@ export class DebugOverlay {
       `worldModel ${snapshot.worldModel ?? "—"}`,
       `simDir     ${snapshot.simulationDirector ?? "—"}`,
       `orchestr   ${snapshot.atlasOrchestrator ?? "—"}`,
+      `intel      ${snapshot.atlasIntelligence ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
