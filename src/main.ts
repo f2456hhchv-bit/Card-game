@@ -184,6 +184,7 @@ import { ATLAS_SCORE_CATEGORIES, FINAL_VALIDATION_QUESTIONS, GREEN_FLAGS, featur
 import { AtlasScoreCard, FeatureLifecycleTracker, IterationCycleTracker } from "./game/atlasProtocol/AtlasProtocolRuntime";
 import { MASTER_CATALOGUE_CATEGORIES } from "./game/masterIndex/masterIndexData";
 import { DependencyMap, MasterIndexRegistry, QualityTracker, RelationshipGraph, VersionHistoryLedger } from "./game/masterIndex/MasterIndexRuntime";
+import { KnowledgeGraph, chronologyViolations } from "./game/knowledgeGraph/KnowledgeGraphRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1357,6 +1358,15 @@ const qualityTracker = new QualityTracker();
   qualityTracker.setScore(indexId, "Accessibility score", 9);
   qualityTracker.setScore(indexId, "Narrative score", 9.5);
 }
+
+// AF-151: the Atlas Knowledge Graph — a semantic edge layer sitting
+// above AF-150's real MasterIndexRegistry/RelationshipGraph, sharing
+// the same node ids rather than a second id space; see
+// knowledgeGraphData.ts for the full overlap notes against AF-144's
+// PredictionEngine and AF-150's own simpler RelationshipGraph.
+const knowledgeGraph = new KnowledgeGraph();
+knowledgeGraph.addEdge({ fromId: `commander-${sandboxCommander.id}`, toId: "commander-voss-pathfinder", kind: "Influenced", strength: 60, confidence: 80, historicalContext: "Shared the First Contact expedition briefing.", dateEstablished: 12 });
+knowledgeGraph.addEdge({ fromId: "commander-voss-pathfinder", toId: "commander-thorne-starforged", kind: "Mentored", strength: 70, confidence: 90, historicalContext: "Guided early engineering research.", dateEstablished: 20 });
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -5110,6 +5120,11 @@ const loop = new GameLoop({
           const indexId = `commander-${sandboxCommander.id}`;
           const order = masterIndex.dependencyOrder();
           return `entries ${masterIndex.all().length}/${MASTER_CATALOGUE_CATEGORIES.length} categories · order ${order ? "resolved" : "CYCLE"} · relationships ${relationshipGraph.relatedTo(indexId).length} · dependency links ${dependencyMap.all().length} · version history ${versionHistory.historyFor(indexId).length} · quality ${qualityTracker.overallFor(indexId).toFixed(1)}`;
+        })(),
+        knowledgeGraph: (() => {
+          const indexId = `commander-${sandboxCommander.id}`;
+          const violations = chronologyViolations(knowledgeGraph.all(), (id) => masterIndex.entryFor(id)?.creationEpoch ?? null);
+          return `edges ${knowledgeGraph.all().length} · isolated=${knowledgeGraph.isIsolated(indexId)} · neighbours ${knowledgeGraph.neighbors(indexId).length} · suggestions [${knowledgeGraph.suggestConnections(indexId).join(", ") || "none"}] · chronology violations ${violations.length}`;
         })(),
       });
     }

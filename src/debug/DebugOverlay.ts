@@ -138,6 +138,8 @@ export interface DebugSnapshot {
   atlasProtocol: string | null;
   /** Afterlight Universe Master Index summary: registered entry count, dependency-order resolution, relationship/dependency/version-history counts, quality score for a sample entry (AF-150 §DEBUG). */
   masterIndex: string | null;
+  /** Atlas Knowledge Graph summary: edge count, isolation check, neighbour count, shared-neighbour connection suggestions, chronology violations for a sample node (AF-151 §DEBUG). */
+  knowledgeGraph: string | null;
 }
 
 export class DebugOverlay {
@@ -240,6 +242,7 @@ export class DebugOverlay {
       `canonEng   ${snapshot.canonEngine ?? "—"}`,
       `protocol   ${snapshot.atlasProtocol ?? "—"}`,
       `masterIdx  ${snapshot.masterIndex ?? "—"}`,
+      `knowGraph  ${snapshot.knowledgeGraph ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
