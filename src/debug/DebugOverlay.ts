@@ -212,6 +212,8 @@ export interface DebugSnapshot {
   atlasEvolution: string | null;
   /** Atlas Emergence Engine summary: the reused AF-167 ReputationTracker's revealed (never assigned) most-recognised quality for Commander Emergence, the reused AF-151 KnowledgeGraph's neighbour count for Scientific/Cultural Emergence, the reused AF-178 RenaissanceTracker's golden-age status for Positive Cascades' culmination, the new CascadeTracker's all-tiers-reached status for The Butterfly Network, the new emergenceValidationMet's all-must-pass result for Emergence Validation, and a live detectOverlap reading against AF-186's real EVOLUTION_DOMAINS (AF-187 §DEBUG). */
   atlasEmergence: string | null;
+  /** Atlas Possibility Realisation Engine summary (distinct from AF-159's locked "Atlas Possibility Engine" and AF-173's locked "Atlas Possibility Space" — see atlasRealisationData.ts's NAMING SCOPE NOTE): the new RealisationTracker's current stage and reached-Wonder status for a sample idea (the first tracker in this codebase to structurally reject out-of-order or skipped-ahead advancement), the reused AF-172 HypothesisTracker's grounded status for Scientific Realisation, the reused AF-160 MentorshipLedger's mentee count for Commander Realisation, the reused AF-177 GenesisRegistry's founder lookup for Institutional Realisation, the new QualityGateScoreCard's score/gate status (the ninth mirrored scoring-rubric shape), and a live detectOverlap reading against AF-178's real RENAISSANCE_DOMAINS (AF-188 §DEBUG). */
+  atlasRealisation: string | null;
 }
 
 export class DebugOverlay {
@@ -351,6 +353,7 @@ export class DebugOverlay {
       `living     ${snapshot.atlasLivingUniverse ?? "—"}`,
       `atlasEvo   ${snapshot.atlasEvolution ?? "—"}`,
       `emergence  ${snapshot.atlasEmergence ?? "—"}`,
+      `realisation ${snapshot.atlasRealisation ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

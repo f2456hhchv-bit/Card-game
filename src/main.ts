@@ -256,6 +256,8 @@ import { EvolutionRecord } from "./game/atlasEvolution/AtlasEvolutionRuntime";
 import { EVOLUTION_CHAIN_STAGES, EVOLUTION_DOMAINS } from "./game/atlasEvolution/atlasEvolutionData";
 import { CascadeTracker } from "./game/atlasEmergence/AtlasEmergenceRuntime";
 import { EMERGENCE_DOMAINS, EMERGENCE_VALIDATION_CRITERIA, emergenceValidationMet } from "./game/atlasEmergence/atlasEmergenceData";
+import { QualityGateScoreCard, RealisationTracker } from "./game/atlasRealisation/AtlasRealisationRuntime";
+import { QUALITY_GATE_CRITERIA, REALISATION_DOMAINS } from "./game/atlasRealisation/atlasRealisationData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2255,6 +2257,33 @@ const cascadeTracker = new CascadeTracker();
   commanderReputation.recognizeFor(commanderIndexId, "Ecological restoration", 20);
   knowledgeGraph.addEdge({ fromId: "scientist-vale", toId: commanderIndexId, kind: "Inspired", strength: 1, confidence: 1, historicalContext: "Music inspired architecture, which inspired education.", dateEstablished: 20 });
   cascadeTracker.recordEffect("action-restored-garden", "Immediate", "Children visit the garden.", 20);
+}
+
+// AF-188: the Atlas Possibility Realisation Engine — governs how ideas
+// transition from imagination into reality. Reuses AF-172's real
+// hypotheses directly for Scientific Realisation, AF-160's real
+// mentorshipLedger directly for Commander Realisation, AF-177's real
+// genesisRegistry directly for Institutional Realisation, AF-159's real
+// culturalTrends directly for Cultural Realisation, AF-162's real
+// longTermMissions directly for Player Realisation, AF-151's real
+// knowledgeGraph directly for The Implementation Network/The Ripple
+// Effect, and AF-159's real mysteryLog with AF-169's real
+// ensureNextHorizonOpen directly for The Feedback Loop.
+// RealisationTracker/QualityGateScoreCard are the genuinely new pieces
+// (see atlasRealisationData.ts for the full reuse notes).
+const realisationTracker = new RealisationTracker();
+const qualityGate = new QualityGateScoreCard();
+{
+  hypotheses.propose("theory-living-city", "A city can restore itself using adaptive materials.", 20);
+  hypotheses.supportWithEvidence("theory-living-city", 20);
+  mentorshipLedger.assign("commander-thorne-starforged", "commander-fen-beastmaster", 20);
+  genesisRegistry.recordOrigin("institution-living-city-academy", "commander-fen-beastmaster", "Community need for adaptive-architecture education.", "settlement-verdance", 20, "A restored garden inspiring curiosity", [], ["scientist-vale"]);
+  culturalTrends.record("Living City Festival", "settlement-verdance", 20);
+  longTermMissions.register("player-ambition-living-city", "Build a self-restoring city", 100);
+  knowledgeGraph.addEdge({ fromId: "idea-living-city", toId: "institution-living-city-academy", kind: "Inspired", strength: 1, confidence: 1, historicalContext: "The realised idea inspired a new academy.", dateEstablished: 20 });
+  realisationTracker.advanceTo("idea-living-city", "Wonder", 20);
+  realisationTracker.advanceTo("idea-living-city", "Question", 20);
+  for (const criterion of QUALITY_GATE_CRITERIA) qualityGate.score(criterion, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6209,6 +6238,10 @@ const loop = new GameLoop({
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           const overlap = detectOverlap(EMERGENCE_DOMAINS, EVOLUTION_DOMAINS);
           return `reputation ${commanderReputation.mostRecognizedQuality(commanderIndexId) ?? "none"} · network neighbours ${knowledgeGraph.neighbors("scientist-vale").length} · golden age=${renaissance.isGoldenAge()} · cascade tiers reached=${cascadeTracker.allTiersReached("action-restored-garden")} · validation met=${emergenceValidationMet(new Set(EMERGENCE_VALIDATION_CRITERIA))} · domain overlap[Emergence,Evolution] ${overlap.shared.length}/${EMERGENCE_DOMAINS.length}`;
+        })(),
+        atlasRealisation: (() => {
+          const overlap = detectOverlap(REALISATION_DOMAINS, RENAISSANCE_DOMAINS);
+          return `stage ${realisationTracker.currentStageOf("idea-living-city") ?? "none"} reached-wonder=${realisationTracker.hasReachedStage("idea-living-city", "Wonder")} · hypothesis grounded=${hypotheses.isGrounded("theory-living-city")} · mentees ${mentorshipLedger.menteesOf("commander-thorne-starforged").length} · genesis founder ${genesisRegistry.originOf("institution-living-city-academy")?.founder ?? "none"} · gate score ${qualityGate.overallScore().toFixed(1)} (${qualityGate.passesGate() ? "passed" : "pending"}) · domain overlap[Realisation,Renaissance] ${overlap.shared.length}/${REALISATION_DOMAINS.length}`;
         })(),
       });
     }
