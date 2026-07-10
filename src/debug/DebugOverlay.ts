@@ -172,6 +172,8 @@ export interface DebugSnapshot {
   atlasConsciousness: string | null;
   /** Atlas Identity Engine summary: a sample Commander's curated Personal Identity signature (via a reused AF-163 generic MeaningCurator), most-recognised external Reputation quality and count, an Earned Title count, and reused AF-159 Cultural Identity / AF-163 Symbolism significance counts (AF-167 §DEBUG). */
   atlasIdentity: string | null;
+  /** Atlas Soul Engine summary: the emergent (never assigned) dominant Collective Character trait, a Ritual count, a Moments-of-Humanity count, the averaged Beauty Index, a reused AF-167 Galactic Reputation quality at civilisation scale, and a reused AF-166 civilisation-scale hope level (AF-168 §DEBUG). */
+  atlasSoul: string | null;
 }
 
 export class DebugOverlay {
@@ -291,6 +293,7 @@ export class DebugOverlay {
       `memory     ${snapshot.atlasMemory ?? "—"}`,
       `conscious  ${snapshot.atlasConsciousness ?? "—"}`,
       `identity   ${snapshot.atlasIdentity ?? "—"}`,
+      `soul       ${snapshot.atlasSoul ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

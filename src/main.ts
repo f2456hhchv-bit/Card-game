@@ -214,6 +214,7 @@ import { hasIdentityGap, lifeStageRank, type Identity } from "./game/atlasConsci
 import { EmotionalContinuityTracker, IdentityRegistry, PersonalGrowthTracker, ValuePriorityTracker } from "./game/atlasConsciousness/AtlasConsciousnessRuntime";
 import { EarnedTitleTracker, ReputationTracker } from "./game/atlasIdentity/AtlasIdentityRuntime";
 import type { SignatureTraitKind } from "./game/atlasIdentity/atlasIdentityData";
+import { BeautyIndexTracker, CollectiveCharacterTracker, MomentsOfHumanityLog, RitualLog } from "./game/atlasSoul/AtlasSoulRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1784,6 +1785,34 @@ const earnedTitles = new EarnedTitleTracker();
   culturalTrends.record("Verdance Harvest Festival", "settlement-verdance", 20);
   symbolSignificance.register("verdance-flag", "The Verdance Flag", 20);
   symbolSignificance.reinforce("verdance-flag", 20);
+}
+
+// AF-168: the Atlas Soul Engine — civilisation-wide collective
+// character above AF-167's Identity Engine. Reuses AF-167's real
+// commanderReputation/earnedTitles directly for Commander Spirit and
+// again at civilisation scale for Galactic Reputation; AF-163's real
+// symbolSignificance directly for Place Spirit and collectiveMemory
+// directly for Collective Memory; AF-159's real culturalTrends
+// directly for Community Spirit; AF-160's real mentorshipLedger
+// directly for Inspiration; AF-166's real emotionalContinuity directly
+// for Soul Through Adversity. CollectiveCharacterTracker/RitualLog/
+// MomentsOfHumanityLog/BeautyIndexTracker are the genuinely new pieces
+// (see atlasSoulData.ts for the full reuse notes).
+const collectiveCharacter = new CollectiveCharacterTracker();
+const rituals = new RitualLog();
+const humanityMoments = new MomentsOfHumanityLog();
+const beautyIndex = new BeautyIndexTracker();
+{
+  collectiveCharacter.witness("Welcoming");
+  collectiveCharacter.witness("Welcoming");
+  collectiveCharacter.witness("Curious");
+  rituals.observe("Lighting the Beacon", ["settlement-verdance"], 20);
+  humanityMoments.witness("A Commander comforted a frightened recruit.", 20);
+  beautyIndex.setLevel("Gardens", 80);
+  beautyIndex.setLevel("Art", 60);
+  commanderReputation.recognizeFor("humanity", "Compassion", 20);
+  emotionalContinuity.setback("humanity", 30);
+  emotionalContinuity.recoverStep("humanity", 5);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5647,6 +5676,9 @@ const loop = new GameLoop({
         atlasIdentity: (() => {
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           return `signature "${personalSignatures.entryFor(commanderIndexId, "Favourite sayings")?.description ?? "none"}" · reputation ${commanderReputation.mostRecognizedQuality(commanderIndexId) ?? "none"} (${commanderReputation.recognitionCountFor(commanderIndexId, "Mentorship")}) · titles ${earnedTitles.titlesFor("settlement-verdance").length} · cultural adopters ${culturalTrends.adoptersFor("Verdance Harvest Festival").length} · symbol significance ${symbolSignificance.significanceOf("verdance-flag")}`;
+        })(),
+        atlasSoul: (() => {
+          return `character ${collectiveCharacter.dominantTrait() ?? "none"} · rituals ${rituals.all().length} · humanity moments ${humanityMoments.all().length} · beauty ${beautyIndex.overallBeauty().toFixed(0)} · galactic reputation ${commanderReputation.mostRecognizedQuality("humanity") ?? "none"} · civilisation hope ${emotionalContinuity.hopeLevelOf("humanity")}`;
         })(),
       });
     }
