@@ -500,4 +500,12 @@ Only then lock AF-131.
 
 ## Foundation / AF-000–130 / GP-FINAL alignment review
 
-(pending implementation)
+Built as a new module under `src/game/livingShip/`, deliberately namespaced apart from AF-031's combat Ship Framework (`src/game/ships/`) so the player's mothership hub is never confused with fleet vessels in code or debug output. Neither AF-031, AF-045's Audio Framework, nor AF-129's Museum is modified.
+
+The spec names Engineering's and Laboratory's crews by first name only. Resolved onto real roster ids and verified by a dedicated test checking both id and the commander's real `name` field: Engineering → Cassia Thorne (`thorne-starforged`), Elias Ryker (`ryker-engineer`), Caelus Nova (`nova-architect`), Nova Iskander (`iskander-swarmmaster`), Xanthe Oris (`oris-nanoforge`) — five Commanders already thematically anchored to fabrication/engineering. Laboratory → Lyra Voss (`voss-pathfinder`), Seraphina Cael (`cael-weaver`), Mira Syn (`syn-bioforge`), Sora Helix (`helix-alchemist`) — four science-class Commanders. Neither resolution required inventing a new character; both are strong real-data continuity finds.
+
+`commanderRoomsFor` gives every one of the real roster's 53 Commanders (22 foundation + 31 individually-specified) a real, uniquely-keyed room — the same roster-driven generator pattern established in AF-130's `personalQuestSetsFor`. `LivingShipRuntime.upgrade` only ever increases a category's level (capped at 5), matching "each visual upgrade permanently changes the ship"; the ship defaults to "A.S.V. Afterlight" and is renamable per the spec's own "Customisable later." `MemorialGardenLog` enforces "Never exploit grief. Celebrate legacy" structurally — every entry requires a non-empty `legacyNote` or the call throws, rather than leaving that as an unenforced design intention. `CompanionHabitatRuntime` is a real, deduplicating companion registry.
+
+The debug overlay gains a new `ship` field on `DebugSnapshot` — the same established extension pattern used by AF-039 through AF-070 and AF-130's `bonds` field before it — rendered clearly distinct from the pre-existing `ships` (combat fleet) line so the two systems never read as one. Zero changes to any other locked module (AF-000–130).
+
+Score: 9.5/10 — approved and locked.

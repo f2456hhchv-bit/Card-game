@@ -98,6 +98,8 @@ export interface DebugSnapshot {
   liveOps: string | null;
   /** Commander Bond Network summary: total/discovered/maxed bonds, dual ultimates unlocked (AF-130 §DEBUG). */
   bonds: string | null;
+  /** Living Expedition Ship summary: name, upgrade totals, rooms, companions, memorial entries (AF-131 §DEBUG). */
+  ship: string | null;
 }
 
 export class DebugOverlay {
@@ -180,6 +182,7 @@ export class DebugOverlay {
       `endgame    ${snapshot.endgame ?? "—"}`,
       `liveops    ${snapshot.liveOps ?? "—"}`,
       `bonds      ${snapshot.bonds ?? "—"}`,
+      `ship       ${snapshot.ship ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -102,6 +102,8 @@ import { AETHER_CELESTIAL_CODEX_ENTRY } from "./game/commanders/cmd030LysandraAe
 import { FULL_PROFILES_WITH_FOUNDER, FULL_RECRUITMENT_WITH_FOUNDER, FULL_ROSTER_WITH_FOUNDER, PRIME_FOUNDER_CODEX_ENTRY } from "./game/commanders/cmd031AtlasPrime";
 import { DUAL_ULTIMATES, seedBondGraph } from "./game/commanders/bondNetworkData";
 import { BondNetworkRuntime } from "./game/commanders/BondNetworkRuntime";
+import { INITIAL_SHIP_UPGRADES, commanderRoomsFor } from "./game/livingShip/livingShipData";
+import { CompanionHabitatRuntime, LivingShipRuntime, MemorialGardenLog } from "./game/livingShip/LivingShipRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -957,6 +959,13 @@ let commanderRuntime: CommanderRuntime | null = null;
 // real roster, additive to and never modifying AF-071's dialogue-only
 // CommanderRelationshipDef shape.
 const bondNetwork = new BondNetworkRuntime(seedBondGraph(FULL_ROSTER_WITH_FOUNDER, FULL_PROFILES_WITH_FOUNDER), DUAL_ULTIMATES);
+
+// AF-131: the Living Expedition Ship — the A.S.V. Afterlight, the player's
+// home hub. Additive; never touches AF-031's combat Ship Framework.
+const livingShip = new LivingShipRuntime(INITIAL_SHIP_UPGRADES);
+const memorialGarden = new MemorialGardenLog();
+const companionHabitat = new CompanionHabitatRuntime();
+const shipCommanderRooms = commanderRoomsFor(FULL_ROSTER_WITH_FOUNDER);
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4555,6 +4564,10 @@ const loop = new GameLoop({
           const snap = bondNetwork.snapshot();
           const dualUltimatesUnlocked = DUAL_ULTIMATES.filter((d) => bondNetwork.isMaxBond(d.commanderA, d.commanderB)).length;
           return `${snap.totalBonds} pairs · ${snap.discoveredBonds} discovered · ${snap.maxedBonds} maxed (avg lvl ${snap.averageLevel.toFixed(2)}) · dual ultimates ${dualUltimatesUnlocked}/${DUAL_ULTIMATES.length}`;
+        })(),
+        ship: (() => {
+          const snap = livingShip.snapshot();
+          return `${snap.name} · upgrades ${snap.totalUpgradeLevel}/${snap.maxUpgradeLevel} (${snap.fullyUpgradedCategories}/${snap.totalCategories} maxed) · rooms ${shipCommanderRooms.length} · companions ${companionHabitat.count()} · memorial ${memorialGarden.all().length}`;
         })(),
       });
     }
