@@ -124,6 +124,8 @@ export interface DebugSnapshot {
   moduleUniverse: string | null;
   /** Atlas Development Framework summary: design score gate, commander/world completeness checklist coverage, post-launch tracking count, knowledge base size (AF-143 §DEBUG). */
   atlasFramework: string | null;
+  /** Afterlight Operating System summary: responsibilities count, bus event telemetry, world-state stability, synchronised clocks, priority tier, decision routing, prediction, performance throttle recommendations, recovery count, dialogue context (AF-144 §DEBUG). */
+  aos: string | null;
 }
 
 export class DebugOverlay {
@@ -219,6 +221,7 @@ export class DebugOverlay {
       `creator    ${snapshot.galacticCreator ?? "—"}`,
       `universe   ${snapshot.moduleUniverse ?? "—"}`,
       `atlas      ${snapshot.atlasFramework ?? "—"}`,
+      `aos        ${snapshot.aos ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

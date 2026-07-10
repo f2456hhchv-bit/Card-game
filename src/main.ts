@@ -160,6 +160,18 @@ import { CONTENT_DISCOVERY_KINDS, MODULE_CATEGORIES } from "./game/moduleUnivers
 import { ContentDiscoveryFeed, ModuleRegistry, moduleQaReport } from "./game/moduleUniverse/ModuleUniverseRuntime";
 import { COMMANDER_VALIDATION_CHECKLIST, DESIGN_SCORE_CATEGORIES, WORLD_VALIDATION_CHECKLIST } from "./game/atlasFramework/atlasFrameworkData";
 import { DesignScoreCard, KnowledgeBaseRegistry, PostLaunchSupportTracker, commanderCompletenessFor, worldCompletenessFor } from "./game/atlasFramework/AtlasFrameworkRuntime";
+import { AOS_RESPONSIBILITIES, type AosEventMap } from "./game/aos/aosData";
+import {
+  DecisionRouter,
+  PerformanceBudgetTracker,
+  PredictionEngine,
+  PriorityEngine,
+  RecoveryLog,
+  SimulationClockRegistry,
+  TelemetryCollector,
+  WorldStateStore,
+  buildDialogueContext,
+} from "./game/aos/AosRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1199,6 +1211,31 @@ const postLaunchSupport = new PostLaunchSupportTracker();
 const knowledgeBase = new KnowledgeBaseRegistry();
 knowledgeBase.contribute("Engineering patterns", "Decoupled composition", "Pass plain signal values instead of importing modules directly — AF-137's tierWeightsFor, reused through AF-143.");
 postLaunchSupport.record("Performance", "60fps sustained across the sandbox mission.", 0);
+
+// AF-144: the Afterlight Operating System — reuses AF-001's real,
+// generic EventBus (System Bus) and AF-133's real NpcMemoryLog (Memory
+// Manager) directly rather than building competing classes; the rest
+// (World State/Simulation Clock/Priority Engine/Decision Router/
+// Prediction Engine/Performance Orchestrator/Recovery System/Live
+// Telemetry) are confirmed genuinely new (see aosData.ts).
+const aosBus = new EventBus<AosEventMap>();
+const aosTelemetry = new TelemetryCollector();
+for (const kind of ["PlanetRestored", "CommanderRecruited", "ResearchCompleted"] as const) {
+  aosBus.on(kind, () => aosTelemetry.record(kind));
+}
+const aosWorldState = new WorldStateStore<{ settlementCount: number; averagePopulation: number }>();
+const aosClocks = new SimulationClockRegistry();
+const aosPriority = new PriorityEngine();
+aosPriority.register("player", "High");
+aosPriority.register("nearby-colonies", "Medium");
+aosPriority.register("remote-galaxy-sim", "Low");
+const aosDecisionRouter = new DecisionRouter();
+const aosPrediction = new PredictionEngine();
+const aosPerformanceBudget = new PerformanceBudgetTracker();
+const aosRecoveryLog = new RecoveryLog();
+aosBus.emit("PlanetRestored", { planetId: SEEDED_SETTLEMENTS[0]!.settlementId });
+aosWorldState.setCurrent({ settlementCount: civilisation.allSettlements.length, averagePopulation: 0 }, 0);
+aosRecoveryLog.record("Save migration", "Legacy save slice upgraded to the current schema on load.", 0);
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4893,6 +4930,28 @@ const loop = new GameLoop({
               })
             : null;
           return `design gate ${designScoreCard.passesGate() ? "passed" : "pending"} · commander checklist ${Object.values(commanderReport.checks).filter(Boolean).length}/${COMMANDER_VALIDATION_CHECKLIST.length} · world checklist ${worldReport ? Object.values(worldReport.checks).filter(Boolean).length : 0}/${WORLD_VALIDATION_CHECKLIST.length} · post-launch ${postLaunchSupport.all().length} · knowledge base ${knowledgeBase.all().length}`;
+        })(),
+        aos: (() => {
+          aosClocks.report("Civilisation Time", civilisation.epochCount);
+          aosClocks.report("Real Time", sessionMs / 1000);
+          aosPerformanceBudget.reportUsage("Rendering", 40);
+          aosPerformanceBudget.reportUsage("Simulation depth", 55);
+          const decision = aosDecisionRouter.resolve([
+            { systemId: "living-galaxy", targetId: "settlement-verdance", tier: "Medium", fromPlayer: false },
+            { systemId: "weather", targetId: "settlement-verdance", tier: "Low", fromPlayer: false },
+          ]);
+          const forecast = aosPrediction.forecast("Population growth", [40, 44, 48]);
+          const context = buildDialogueContext({
+            playerReputation: 0,
+            currentCommanderId: sandboxCommander.id,
+            planetHistoryCount: architectureHistory.all().length,
+            timeOfDay: "day",
+            relationshipStatus: "neutral",
+            weatherCondition: "clear",
+            nearbyDiscoveryCount: contentDiscovery.all().length,
+            recentConversationCount: chronicleCommanderMemories.all().length,
+          });
+          return `responsibilities ${AOS_RESPONSIBILITIES.length} · bus events ${aosTelemetry.totalEvents()} · world state ${aosWorldState.isEmergency() ? "EMERGENCY" : "stable"} (settlements ${aosWorldState.getCurrent()?.settlementCount ?? 0}) · clocks [civ ${aosClocks.valueFor("Civilisation Time")}] · priority player=${aosPriority.tierFor("player")} · decision→${decision?.winner.systemId ?? "none"} · forecast ${forecast.predictedNext.toFixed(0)} (${(forecast.confidence * 100).toFixed(0)}%) · throttle [${aosPerformanceBudget.recommendedThrottleTargets().join(", ") || "none"}] · recoveries ${aosRecoveryLog.all().length} · dialogue friendly=${context.isFriendly}`;
         })(),
       });
     }
