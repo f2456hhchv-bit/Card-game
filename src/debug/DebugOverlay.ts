@@ -160,6 +160,8 @@ export interface DebugSnapshot {
   atlasWisdom: string | null;
   /** Atlas Philosophy Engine summary: a sample Commander's current belief, an entity's current Academic School adherence, an observed (never labelled) Player Philosophy tally, scheduled philosophical-event count, and reused AF-159 Cultural Reflection / AF-135 Historical Reinterpretation counts (AF-161 §DEBUG). */
   atlasPhilosophy: string | null;
+  /** Atlas Purpose Engine summary: a sample citizen's/Commander's discovered purpose, the player's revealed dominant Player Purpose, real Long-term Mission progress, the Purpose Evolution rank, reused AF-155 Shared Purpose contributor count, reused AF-151 Purpose Network neighbour count, and Purpose Memory count (AF-162 §DEBUG). */
+  atlasPurpose: string | null;
 }
 
 export class DebugOverlay {
@@ -273,6 +275,7 @@ export class DebugOverlay {
       `possible   ${snapshot.atlasPossibility ?? "—"}`,
       `wisdom     ${snapshot.atlasWisdom ?? "—"}`,
       `philosophy ${snapshot.atlasPhilosophy ?? "—"}`,
+      `purpose    ${snapshot.atlasPurpose ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

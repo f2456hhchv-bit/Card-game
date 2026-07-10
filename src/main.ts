@@ -203,6 +203,8 @@ import { CulturalTrendTracker, InnovationMemoryArchive, MysteryLog, PlayerInspir
 import { REFLECTION_LOOP_STAGES, ethicalDeliberationPassed, generationalTransferRank, scientificWisdomReviewed, ETHICAL_DELIBERATION_QUESTIONS, SCIENTIFIC_WISDOM_QUESTIONS } from "./game/atlasWisdom/atlasWisdomData";
 import { CommanderWisdomTracker, MentorshipLedger, WisdomMemoryArchive } from "./game/atlasWisdom/AtlasWisdomRuntime";
 import { AcademicInfluenceTracker, CommanderBeliefTracker, PhilosophicalEventLog, PlayerPhilosophyObserver } from "./game/atlasPhilosophy/AtlasPhilosophyRuntime";
+import { purposeEvolutionRank } from "./game/atlasPurpose/atlasPurposeData";
+import { CommanderPurposeTracker, IndividualPurposeTracker, LongTermMissionTracker, PlayerPurposeObserver, PurposeMemoryArchive } from "./game/atlasPurpose/AtlasPurposeRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1622,6 +1624,30 @@ const philosophicalEvents = new PhilosophicalEventLog();
   philosophicalEvents.schedule("Museum roundtable", "Historians debate the Verdance excavation findings.", 20);
   culturalTrends.record("Post-Contact Realism", "settlement-verdance", 20);
   chroniclePlanets.write("settlement-verdance", "New evidence clarifies the First Contact timeline.", 20, "Military historians");
+}
+
+// AF-162: the Atlas Purpose Engine — sits above AF-161's Philosophy
+// Engine, answering "what are we building toward?" rather than merely
+// asking why. Shared Purpose reuses AF-155's real collaborativeProblems
+// instance directly (the fourth instance of that mechanic); Purpose
+// Network composes AF-151's real knowledgeGraph instance directly.
+// IndividualPurposeTracker/CommanderPurposeTracker/PlayerPurposeObserver/
+// LongTermMissionTracker/PurposeMemoryArchive are the genuinely new
+// pieces (see atlasPurposeData.ts for the full reuse notes).
+const individualPurpose = new IndividualPurposeTracker();
+const commanderPurpose = new CommanderPurposeTracker();
+const playerPurpose = new PlayerPurposeObserver();
+const longTermMissions = new LongTermMissionTracker();
+const purposeMemory = new PurposeMemoryArchive();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  individualPurpose.discover("citizen-vale", "Scientist", 20);
+  commanderPurpose.setFacet(commanderIndexId, "Legacy ambition", "Found a wildlife sanctuary.", 20);
+  playerPurpose.observe("Conservationist");
+  longTermMissions.register("restore-verdance-ecosystem", "Restore every ecosystem", 100);
+  longTermMissions.advance("restore-verdance-ecosystem", 40);
+  collaborativeProblems.propose("galactic-observatory-network", ["settlement-verdance", "settlement-lucent-gate"], "Scientific", 20);
+  knowledgeGraph.addEdge({ fromId: "purpose-restore-ecosystem", toId: commanderIndexId, kind: "Influenced", strength: 1, confidence: 1, historicalContext: "A shared restoration goal.", dateEstablished: 20 });
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5455,6 +5481,10 @@ const loop = new GameLoop({
         atlasPhilosophy: (() => {
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           return `belief "${commanderBeliefs.beliefOf(commanderIndexId) ?? "none"}" · school ${academicInfluence.schoolOf("settlement-verdance") ?? "none"} · observed stewardship ${playerPhilosophy.tallyFor("Environmental stewardship")} · events ${philosophicalEvents.all().length} · cultural adopters ${culturalTrends.adoptersFor("Post-Contact Realism").length} · chronicle versions ${chroniclePlanets.entryFor("settlement-verdance").allVersions().length}`;
+        })(),
+        atlasPurpose: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          return `individual ${individualPurpose.purposeOf("citizen-vale") ?? "none"} · commander legacy "${commanderPurpose.facetOf(commanderIndexId, "Legacy ambition") ?? "none"}" · player dominant ${playerPurpose.dominantPurpose() ?? "none"} (stewardship? ${playerPurpose.tallyFor("Conservationist")}) · mission progress ${(longTermMissions.progressFor("restore-verdance-ecosystem") * 100).toFixed(0)}% complete=${longTermMissions.isComplete("restore-verdance-ecosystem")} · evolution rank ${purposeEvolutionRank("Expand")} · shared contributors ${collaborativeProblems.participantsFor("galactic-observatory-network").length} · network neighbours ${knowledgeGraph.neighbors("purpose-restore-ecosystem").length} · memory ${purposeMemory.all().length}`;
         })(),
       });
     }
