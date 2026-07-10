@@ -130,6 +130,8 @@ export interface DebugSnapshot {
   designConstitution: string | null;
   /** Atlas Core summary: principle/hierarchy counts, features validated, latest feature's principle reinforcement count, dominant principle (AF-145 §DEBUG). */
   atlasCore: string | null;
+  /** Afterlight Franchise Bible summary: current Era, canon tier count and authoritative statement, franchise-project compliance (AF-147 §DEBUG). */
+  franchiseBible: string | null;
 }
 
 export class DebugOverlay {
@@ -228,6 +230,7 @@ export class DebugOverlay {
       `aos        ${snapshot.aos ?? "—"}`,
       `constitn   ${snapshot.designConstitution ?? "—"}`,
       `atlasCore  ${snapshot.atlasCore ?? "—"}`,
+      `franchise  ${snapshot.franchiseBible ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -176,6 +176,8 @@ import { CONTENT_TEST_QUESTIONS, EXPANSION_TEST_REQUIREMENTS } from "./game/desi
 import { FeatureComplianceRegistry, PillarReinforcementLedger } from "./game/designConstitution/DesignConstitutionRuntime";
 import { ATLAS_PRINCIPLES, ATLAS_SYSTEM_HIERARCHY, DESIGN_VALIDATION_QUESTIONS } from "./game/atlasCore/atlasCoreData";
 import { AtlasCoreComplianceRegistry, AtlasPrincipleReinforcementLedger } from "./game/atlasCore/AtlasCoreRuntime";
+import { CANON_TIERS, FRANCHISE_TEST_QUESTIONS, eraFor } from "./game/franchiseBible/franchiseBibleData";
+import { CanonAuthorityResolver, CanonRecordLedger, FranchiseComplianceRegistry } from "./game/franchiseBible/FranchiseBibleRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1265,6 +1267,19 @@ const atlasPrincipleReinforcement = new AtlasPrincipleReinforcementLedger();
 atlasCompliance.evaluate("expansion-ocean-worlds", new Set(DESIGN_VALIDATION_QUESTIONS), new Set(["hope-over-despair", "discovery-over-grinding"]));
 atlasPrincipleReinforcement.reinforce("hope-over-despair", "expansion-ocean-worlds");
 atlasPrincipleReinforcement.reinforce("discovery-over-grinding", "expansion-ocean-worlds");
+
+// AF-147: the Afterlight Franchise Bible — explicitly not a gameplay
+// system per its own text; CanonAuthorityResolver/eraFor are the
+// genuinely new mechanics (a canon-tier conflict resolver and a named
+// timeline), confirmed absent anywhere else in the codebase; see
+// franchiseBibleData.ts for the full overlap notes against the real
+// docs/CONSTITUTION.md and AF-145/146's charters.
+const canonLedger = new CanonRecordLedger();
+const canonResolver = new CanonAuthorityResolver();
+const franchiseCompliance = new FranchiseComplianceRegistry();
+canonLedger.record({ sourceId: "afterlight-1", tier: "Main Games", subject: "first-expedition", claim: "The First Expedition departed from Earth orbit." });
+canonLedger.record({ sourceId: "companion-book-1", tier: "Official Companion Books", subject: "first-expedition", claim: "The First Expedition carried twelve founding commanders." });
+franchiseCompliance.evaluate("expansion-ocean-worlds", new Set(FRANCHISE_TEST_QUESTIONS), new Set(["Hope", "Discovery", "Legacy"]));
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4989,6 +5004,10 @@ const loop = new GameLoop({
         atlasCore: (() => {
           const latest = atlasCompliance.all().at(-1);
           return `principles ${ATLAS_PRINCIPLES.length} · hierarchy ${ATLAS_SYSTEM_HIERARCHY.length} systems · features ${atlasCompliance.all().length} (${atlasCompliance.passedCount()} validated) · latest reinforced ${latest?.principlesReinforcedCount ?? 0} · dominant principle ${atlasPrincipleReinforcement.dominantPrinciple() ?? "none"}`;
+        })(),
+        franchiseBible: (() => {
+          const resolved = canonResolver.resolve(canonLedger.statementsFor("first-expedition"));
+          return `era ${eraFor(civilisation.epochCount).name} · canon tiers ${CANON_TIERS.length} (statements ${canonLedger.all().length}, authoritative "${resolved?.sourceId ?? "none"}") · projects ${franchiseCompliance.all().length} (${franchiseCompliance.passedCount()} compliant)`;
         })(),
       });
     }
