@@ -145,6 +145,17 @@ import {
   MegaDiscoveryLog,
   MegacityLedger,
 } from "./game/endgameEngine/EndgameEngineRuntime";
+import { COMMUNITY_PROJECT_EXAMPLES, CREATOR_COMMANDER_DOMAINS, GARDEN_ELEMENT_KINDS, OBSERVATORY_ELEMENT_KINDS, contributionEligible, heritageStageFor } from "./game/galacticCreator/galacticCreatorData";
+import {
+  CommanderCreativeContributionLog,
+  CommunityProjectTracker,
+  CreationElementStudio,
+  CreationHeritageLedger,
+  ExhibitionCuratorRuntime,
+  ExpeditionFlagRegistry,
+  PhotoAlbumCurator,
+  SoundtrackPlaylistRegistry,
+} from "./game/galacticCreator/GalacticCreatorRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1121,6 +1132,31 @@ const annualEndgameCalendar = new AnnualEndgameCalendar();
     if (megacityThresholdMet(population, seedSettlement.specialisation)) megacities.record(seedSettlement.profile.settlementId, civilisation.epochCount);
   }
   if (industryEmergenceEligible(galacticEconomy.snapshot.economicHealth)) emergentIndustries.emerge("Tourism", civilisation.epochCount);
+}
+
+// AF-141: the Galactic Creator Engine — composes AF-131's real
+// MemorialGardenLog and AF-133's real PhotoAlbum rather than duplicating
+// either; see galacticCreatorData.ts for the naming-adjacency note on
+// Community Projects and the Expedition Flag id-namespace note.
+const photoAlbums = new PhotoAlbumCurator();
+const exhibitionCurator = new ExhibitionCuratorRuntime();
+const expeditionFlags = new ExpeditionFlagRegistry();
+const gardenDesigns = new CreationElementStudio<(typeof GARDEN_ELEMENT_KINDS)[number]>();
+const observatoryDesigns = new CreationElementStudio<(typeof OBSERVATORY_ELEMENT_KINDS)[number]>();
+const soundtrackPlaylists = new SoundtrackPlaylistRegistry();
+const commanderContributions = new CommanderCreativeContributionLog();
+const communityProjects = new CommunityProjectTracker();
+const creationHeritage = new CreationHeritageLedger();
+{
+  const bondAverage = bondNetwork.snapshot().averageLevel;
+  if (contributionEligible(bondAverage)) {
+    for (const [commanderId, domain] of Object.entries(CREATOR_COMMANDER_DOMAINS)) {
+      commanderContributions.contribute(commanderId, `Suggests a ${domain.toLowerCase()} touch for the next creation.`, 0);
+    }
+  }
+  gardenDesigns.select("garden-verdance", "Trees");
+  gardenDesigns.select("garden-verdance", "Water");
+  soundtrackPlaylists.addTrack("Ship", "Drift Among the Ashes");
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -4776,6 +4812,10 @@ const loop = new GameLoop({
           if (!endgame.snapshot.unlocked) return "locked — the endgame begins after the main campaign";
           const knowledge = infiniteResearchProjectFor(researchTree.unlockedNodes.length);
           return `expeditions ${frontierExpeditions.completedCount()}/${GREAT_EXPEDITION_DESTINATIONS.length} · council lean ${expeditionCouncil.dominantPriority() ?? "none"} · legacy successors ${commanderLegacy.all().length} · mega discoveries ${megaDiscoveries.all().length} · museum sectors ${galacticMuseumExpansion.sectorCount()} (artifacts ${galacticMuseumExpansion.artifactCount()}, exhibition ${temporaryExhibitionThemeFor(civilisation.epochCount)}) · megacities ${megacities.all().length} · industries ${emergentIndustries.all().length} · annual ${annualEndgameCalendar.currentEvent()} · knowledge ${knowledge.kind}`;
+        })(),
+        galacticCreator: (() => {
+          creationHeritage.recordTransition("garden-verdance", heritageStageFor(civilisation.epochCount), civilisation.epochCount);
+          return `albums ${photoAlbums.all().length} · exhibitions ${exhibitionCurator.all().length} · flags ${expeditionFlags.all().length} · garden elements ${gardenDesigns.elementsFor("garden-verdance").length} · observatory elements ${observatoryDesigns.elementsFor("observatory-first-light").length} · playlists ${soundtrackPlaylists.tracksFor("Ship").length} · commander ideas ${commanderContributions.all().length} · community ${communityProjects.completedCount()}/${COMMUNITY_PROJECT_EXAMPLES.length} · heritage ${creationHeritage.currentStageFor("garden-verdance") ?? "—"}`;
         })(),
       });
     }

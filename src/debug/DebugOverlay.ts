@@ -118,6 +118,8 @@ export interface DebugSnapshot {
   evolutionEngine: string | null;
   /** Infinite Endgame Engine summary: gated on AF-069's real endgame unlock; frontier expeditions, council lean, commander legacy successors, mega discoveries, galactic museum expansion, megacities, emergent industries, annual event, infinite-research knowledge sample (AF-140 §DEBUG). */
   endgameEngine: string | null;
+  /** Galactic Creator Engine summary: photo albums, curated exhibitions, expedition flags, garden/observatory design elements, playlists, commander creative contributions, community project progress, creation heritage stage (AF-141 §DEBUG). */
+  galacticCreator: string | null;
 }
 
 export class DebugOverlay {
@@ -210,6 +212,7 @@ export class DebugOverlay {
       `civEngine  ${snapshot.civilisationEngine ?? "—"}`,
       `evolution  ${snapshot.evolutionEngine ?? "—"}`,
       `infEndgame ${snapshot.endgameEngine ?? "—"}`,
+      `creator    ${snapshot.galacticCreator ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
