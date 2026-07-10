@@ -140,6 +140,8 @@ export interface DebugSnapshot {
   masterIndex: string | null;
   /** Atlas Knowledge Graph summary: edge count, isolation check, neighbour count, shared-neighbour connection suggestions, chronology violations for a sample node (AF-151 §DEBUG). */
   knowledgeGraph: string | null;
+  /** Atlas World Model summary: entity count, entities needing help, top goal, spatial location, memory count, importance, and reused AF-144 prediction/priority values for a sample entity (AF-152 §DEBUG). */
+  worldModel: string | null;
 }
 
 export class DebugOverlay {
@@ -243,6 +245,7 @@ export class DebugOverlay {
       `protocol   ${snapshot.atlasProtocol ?? "—"}`,
       `masterIdx  ${snapshot.masterIndex ?? "—"}`,
       `knowGraph  ${snapshot.knowledgeGraph ?? "—"}`,
+      `worldModel ${snapshot.worldModel ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

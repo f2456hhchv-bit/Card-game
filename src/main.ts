@@ -106,7 +106,7 @@ import { INITIAL_SHIP_UPGRADES, commanderRoomsFor } from "./game/livingShip/livi
 import { CompanionHabitatRuntime, LivingShipRuntime, MemorialGardenLog } from "./game/livingShip/LivingShipRuntime";
 import { seedEnvironmentalStates } from "./game/livingGalaxy/livingGalaxyData";
 import { CrimeLedger, EnvironmentalRuntime, FestivalCalendar, LivingGalaxyChronicle, PlayerReputationLedger } from "./game/livingGalaxy/LivingGalaxyRuntime";
-import { GalacticHistoryLog, GalacticRecordBoard, GiftLedger, LegacyProgressTracker, PhotoAlbum, PlayerChronicle, PlayerJournalRuntime } from "./game/legacy/LegacyEngineRuntime";
+import { GalacticHistoryLog, GalacticRecordBoard, GiftLedger, LegacyProgressTracker, NpcMemoryLog, PhotoAlbum, PlayerChronicle, PlayerJournalRuntime } from "./game/legacy/LegacyEngineRuntime";
 import { AUDIO_ARCHIVE_KINDS, COMMANDER_DONATION_EXAMPLES, LIBRARY_BOOK_KINDS, THEATER_PROGRAM_KINDS } from "./game/livingMuseum/livingMuseumData";
 import { MuseumCollectionRegistry, MuseumQualityTracker, RestorationLab, VisitorLog, seedCommanderDonations } from "./game/livingMuseum/LivingMuseumRuntime";
 import { ORAL_HISTORY_TOPICS, PLAYER_WRITABLE_ENTRY_KINDS, PUBLISHER_VOICES } from "./game/chronicle/chronicleData";
@@ -185,6 +185,7 @@ import { AtlasScoreCard, FeatureLifecycleTracker, IterationCycleTracker } from "
 import { MASTER_CATALOGUE_CATEGORIES } from "./game/masterIndex/masterIndexData";
 import { DependencyMap, MasterIndexRegistry, QualityTracker, RelationshipGraph, VersionHistoryLedger } from "./game/masterIndex/MasterIndexRuntime";
 import { KnowledgeGraph, chronologyViolations } from "./game/knowledgeGraph/KnowledgeGraphRuntime";
+import { GoalTracker, SpatialAwarenessTracker, WorldModelRegistry } from "./game/worldModel/WorldModelRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1367,6 +1368,25 @@ const qualityTracker = new QualityTracker();
 const knowledgeGraph = new KnowledgeGraph();
 knowledgeGraph.addEdge({ fromId: `commander-${sandboxCommander.id}`, toId: "commander-voss-pathfinder", kind: "Influenced", strength: 60, confidence: 80, historicalContext: "Shared the First Contact expedition briefing.", dateEstablished: 12 });
 knowledgeGraph.addEdge({ fromId: "commander-voss-pathfinder", toId: "commander-thorne-starforged", kind: "Mentored", strength: 70, confidence: 90, historicalContext: "Guided early engineering research.", dateEstablished: 20 });
+
+// AF-152: the Atlas World Model — the third Atlas layer. Reuses
+// AF-133's real NpcMemoryLog (Memory Model) and AF-144's real
+// PredictionEngine/PriorityEngine (Predictive Reasoning/Performance)
+// directly rather than duplicating any of them; WorldModelRegistry/
+// GoalTracker/SpatialAwarenessTracker are the genuinely new core (see
+// worldModelData.ts for the full overlap notes).
+const worldModel = new WorldModelRegistry();
+const entityGoals = new GoalTracker();
+const entitySpatialAwareness = new SpatialAwarenessTracker();
+const entityMemory = new NpcMemoryLog();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  worldModel.register({ entityId: commanderIndexId, identity: sandboxCommander.name, purpose: "Lead the sandbox expedition.", currentState: "On expedition", threats: [], dependencies: ["ship-wayfarer"], futureOpportunities: ["First Contact follow-up"], currentImportance: 70 });
+  entityGoals.setGoal(commanderIndexId, "Protect colony", 5);
+  entityGoals.setGoal(commanderIndexId, "Research anomaly", 9);
+  entitySpatialAwareness.setLocation(commanderIndexId, SEEDED_SETTLEMENTS[0]!.settlementId);
+  entityMemory.remember(commanderIndexId, "encounter", "Led the First Contact expedition.", true);
+}
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -5125,6 +5145,12 @@ const loop = new GameLoop({
           const indexId = `commander-${sandboxCommander.id}`;
           const violations = chronologyViolations(knowledgeGraph.all(), (id) => masterIndex.entryFor(id)?.creationEpoch ?? null);
           return `edges ${knowledgeGraph.all().length} · isolated=${knowledgeGraph.isIsolated(indexId)} · neighbours ${knowledgeGraph.neighbors(indexId).length} · suggestions [${knowledgeGraph.suggestConnections(indexId).join(", ") || "none"}] · chronology violations ${violations.length}`;
+        })(),
+        worldModel: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const context = worldModel.contextFor(commanderIndexId);
+          const forecast = aosPrediction.forecast("Population growth", [40, 44, 48]);
+          return `entities ${worldModel.all().length} · needing help ${worldModel.entitiesWithThreats().length} · top goal "${entityGoals.topGoal(commanderIndexId)?.goal ?? "none"}" · location ${entitySpatialAwareness.locationFor(commanderIndexId) ?? "unknown"} · memories ${entityMemory.memoriesFor(commanderIndexId).length} · importance ${context?.currentImportance ?? 0} · forecast ${forecast.predictedNext.toFixed(0)} · priority ${aosPriority.tierFor("player") ?? "none"}`;
         })(),
       });
     }
