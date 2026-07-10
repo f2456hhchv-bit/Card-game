@@ -205,6 +205,8 @@ import { CommanderWisdomTracker, MentorshipLedger, WisdomMemoryArchive } from ".
 import { AcademicInfluenceTracker, CommanderBeliefTracker, PhilosophicalEventLog, PlayerPhilosophyObserver } from "./game/atlasPhilosophy/AtlasPhilosophyRuntime";
 import { purposeEvolutionRank } from "./game/atlasPurpose/atlasPurposeData";
 import { CommanderPurposeTracker, IndividualPurposeTracker, LongTermMissionTracker, PlayerPurposeObserver, PurposeMemoryArchive } from "./game/atlasPurpose/AtlasPurposeRuntime";
+import { CommunityMeaningTracker, MeaningCurator, QuietMomentLog, SignificanceTracker } from "./game/atlasMeaning/AtlasMeaningRuntime";
+import type { CollectiveMemoryCategory, PersonalMeaningCategory, PlayerMeaningCategory } from "./game/atlasMeaning/atlasMeaningData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1648,6 +1650,29 @@ const purposeMemory = new PurposeMemoryArchive();
   longTermMissions.advance("restore-verdance-ecosystem", 40);
   collaborativeProblems.propose("galactic-observatory-network", ["settlement-verdance", "settlement-lucent-gate"], "Scientific", 20);
   knowledgeGraph.addEdge({ fromId: "purpose-restore-ecosystem", toId: commanderIndexId, kind: "Influenced", strength: 1, confidence: 1, historicalContext: "A shared restoration goal.", dateEstablished: 20 });
+}
+
+// AF-163: the Atlas Meaning Engine — exists above AF-162's Purpose
+// Engine, asking why an accomplishment matters rather than merely what
+// was achieved. One generic MeaningCurator serves Personal Meaning,
+// Player Meaning and Collective Memory; one generic SignificanceTracker
+// serves Symbols and Meaning Through Time (see atlasMeaningData.ts for
+// the full reuse notes).
+const personalMeaning = new MeaningCurator<PersonalMeaningCategory>();
+const playerMeaning = new MeaningCurator<PlayerMeaningCategory>();
+const collectiveMemory = new MeaningCurator<CollectiveMemoryCategory>();
+const symbolSignificance = new SignificanceTracker();
+const communityMeaning = new CommunityMeaningTracker();
+const quietMoments = new QuietMomentLog();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  personalMeaning.curate(commanderIndexId, "Favourite memory", "First contact with the Verdance wildlife.", 20);
+  playerMeaning.curate("player", "Favourite planet", "Verdance", 20);
+  collectiveMemory.curate("civilisation", "Great kindness", "The Verdance famine relief.", 20);
+  symbolSignificance.register("atlas-beacon", "Atlas Beacon", 1);
+  symbolSignificance.reinforce("atlas-beacon", 20);
+  communityMeaning.attachMeaning("museum-verdance", "Museums", "Where the founder's helmet is displayed.", 20);
+  quietMoments.record("Watching the sunrise over the Verdance canopy.", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5485,6 +5510,10 @@ const loop = new GameLoop({
         atlasPurpose: (() => {
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           return `individual ${individualPurpose.purposeOf("citizen-vale") ?? "none"} · commander legacy "${commanderPurpose.facetOf(commanderIndexId, "Legacy ambition") ?? "none"}" · player dominant ${playerPurpose.dominantPurpose() ?? "none"} (stewardship? ${playerPurpose.tallyFor("Conservationist")}) · mission progress ${(longTermMissions.progressFor("restore-verdance-ecosystem") * 100).toFixed(0)}% complete=${longTermMissions.isComplete("restore-verdance-ecosystem")} · evolution rank ${purposeEvolutionRank("Expand")} · shared contributors ${collaborativeProblems.participantsFor("galactic-observatory-network").length} · network neighbours ${knowledgeGraph.neighbors("purpose-restore-ecosystem").length} · memory ${purposeMemory.all().length}`;
+        })(),
+        atlasMeaning: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          return `personal "${personalMeaning.entryFor(commanderIndexId, "Favourite memory")?.description ?? "none"}" · player favourite "${playerMeaning.entryFor("player", "Favourite planet")?.description ?? "none"}" · collective "${collectiveMemory.entryFor("civilisation", "Great kindness")?.description ?? "none"}" · symbol significance ${symbolSignificance.significanceOf("atlas-beacon")} · community meaning "${communityMeaning.meaningOf("museum-verdance")?.description ?? "none"}" · quiet moments ${quietMoments.all().length}`;
         })(),
       });
     }

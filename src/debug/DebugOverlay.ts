@@ -162,6 +162,8 @@ export interface DebugSnapshot {
   atlasPhilosophy: string | null;
   /** Atlas Purpose Engine summary: a sample citizen's/Commander's discovered purpose, the player's revealed dominant Player Purpose, real Long-term Mission progress, the Purpose Evolution rank, reused AF-155 Shared Purpose contributor count, reused AF-151 Purpose Network neighbour count, and Purpose Memory count (AF-162 §DEBUG). */
   atlasPurpose: string | null;
+  /** Atlas Meaning Engine summary: a sample Commander's curated Personal Meaning entry, the player's curated Player Meaning entry, a civilisation's curated Collective Memory entry (all via the shared MeaningCurator), a Symbol's accumulated significance weight, a place's attached Community Meaning, and the Quiet Moment count (AF-163 §DEBUG). */
+  atlasMeaning: string | null;
 }
 
 export class DebugOverlay {
@@ -276,6 +278,7 @@ export class DebugOverlay {
       `wisdom     ${snapshot.atlasWisdom ?? "—"}`,
       `philosophy ${snapshot.atlasPhilosophy ?? "—"}`,
       `purpose    ${snapshot.atlasPurpose ?? "—"}`,
+      `meaning    ${snapshot.atlasMeaning ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
