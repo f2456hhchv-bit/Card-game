@@ -254,6 +254,8 @@ import { LivingPresentTracker } from "./game/atlasLivingUniverse/AtlasLivingUniv
 import { LIVING_DOMAINS } from "./game/atlasLivingUniverse/atlasLivingUniverseData";
 import { EvolutionRecord } from "./game/atlasEvolution/AtlasEvolutionRuntime";
 import { EVOLUTION_CHAIN_STAGES, EVOLUTION_DOMAINS } from "./game/atlasEvolution/atlasEvolutionData";
+import { CascadeTracker } from "./game/atlasEmergence/AtlasEmergenceRuntime";
+import { EMERGENCE_DOMAINS, EMERGENCE_VALIDATION_CRITERIA, emergenceValidationMet } from "./game/atlasEmergence/atlasEmergenceData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2234,6 +2236,25 @@ const evolutionRecord = new EvolutionRecord();
   languageEvolution.coin("phrase-verdance-dawn", "May your dawn find the wild kind.", 20, "Explorers");
   evolutionChain.record("Observation", 20);
   evolutionRecord.transition("practice-open-air-lectures", "Adopted", "Field testing showed strong student engagement.", 20);
+}
+
+// AF-187: the Atlas Emergence Engine — governs meaningful outcomes
+// that arise naturally from system interactions. Reuses AF-167's real
+// commanderReputation directly for Commander Emergence, AF-151's real
+// knowledgeGraph directly for Scientific/Cultural Emergence and
+// Positive Cascades, AF-139's real speciesAdaptation directly for
+// Ecological Emergence, AF-159's real culturalTrends directly for
+// Community/Civilisational Emergence, AF-160's real mentorshipLedger
+// directly for Personal Emergence, and AF-178's real renaissance
+// directly for Positive Cascades' culmination. CascadeTracker/
+// emergenceValidationMet are the genuinely new pieces (see
+// atlasEmergenceData.ts for the full reuse notes).
+const cascadeTracker = new CascadeTracker();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  commanderReputation.recognizeFor(commanderIndexId, "Ecological restoration", 20);
+  knowledgeGraph.addEdge({ fromId: "scientist-vale", toId: commanderIndexId, kind: "Inspired", strength: 1, confidence: 1, historicalContext: "Music inspired architecture, which inspired education.", dateEstablished: 20 });
+  cascadeTracker.recordEffect("action-restored-garden", "Immediate", "Children visit the garden.", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6183,6 +6204,11 @@ const loop = new GameLoop({
         atlasEvolution: (() => {
           const overlap = detectOverlap(EVOLUTION_DOMAINS, EVOLUTION_PILLARS);
           return `species adaptations ${speciesAdaptation.historyFor("system-verdance", "species-verdance-glider").length} · architecture layers ${architectureHistory.layersFor("settlement-verdance").length} · phrase "${languageEvolution.latestFor("phrase-verdance-dawn") ?? "none"}" · chain ${evolutionChain.currentStage() ?? "none"} (next ${evolutionChain.next("New Observation")}) · practice state ${evolutionRecord.currentStateOf("practice-open-air-lectures") ?? "none"} · domain overlap[Evolution,Pillars] ${overlap.shared.length}/${EVOLUTION_DOMAINS.length}`;
+        })(),
+        atlasEmergence: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const overlap = detectOverlap(EMERGENCE_DOMAINS, EVOLUTION_DOMAINS);
+          return `reputation ${commanderReputation.mostRecognizedQuality(commanderIndexId) ?? "none"} · network neighbours ${knowledgeGraph.neighbors("scientist-vale").length} · golden age=${renaissance.isGoldenAge()} · cascade tiers reached=${cascadeTracker.allTiersReached("action-restored-garden")} · validation met=${emergenceValidationMet(new Set(EMERGENCE_VALIDATION_CRITERIA))} · domain overlap[Emergence,Evolution] ${overlap.shared.length}/${EMERGENCE_DOMAINS.length}`;
         })(),
       });
     }

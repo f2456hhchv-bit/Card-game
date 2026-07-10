@@ -210,6 +210,8 @@ export interface DebugSnapshot {
   atlasLivingUniverse: string | null;
   /** Atlas Evolution Engine summary (distinct from AF-139's own locked "Evolution Engine" — see atlasEvolutionData.ts's NAMING SCOPE NOTE): the reused AF-139 SpeciesAdaptationRegistry/HistoricalArchitectureLedger/LanguageEvolutionLog readings for Species/City/Cultural Evolution, the reused AF-155 CyclicStageTracker's current/next Evolution Chain stage, the new EvolutionRecord's current state for a sample reversible practice (the first tracker in this codebase whose state can legitimately regress), and a live detectOverlap reading confirming EVOLUTION_DOMAINS shares zero exact members with AF-139's real EVOLUTION_PILLARS despite conceptual overlap (AF-186 §DEBUG). */
   atlasEvolution: string | null;
+  /** Atlas Emergence Engine summary: the reused AF-167 ReputationTracker's revealed (never assigned) most-recognised quality for Commander Emergence, the reused AF-151 KnowledgeGraph's neighbour count for Scientific/Cultural Emergence, the reused AF-178 RenaissanceTracker's golden-age status for Positive Cascades' culmination, the new CascadeTracker's all-tiers-reached status for The Butterfly Network, the new emergenceValidationMet's all-must-pass result for Emergence Validation, and a live detectOverlap reading against AF-186's real EVOLUTION_DOMAINS (AF-187 §DEBUG). */
+  atlasEmergence: string | null;
 }
 
 export class DebugOverlay {
@@ -348,6 +350,7 @@ export class DebugOverlay {
       `unity      ${snapshot.atlasUnity ?? "—"}`,
       `living     ${snapshot.atlasLivingUniverse ?? "—"}`,
       `atlasEvo   ${snapshot.atlasEvolution ?? "—"}`,
+      `emergence  ${snapshot.atlasEmergence ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
