@@ -220,6 +220,9 @@ import { DESIGN_ARBITER_CRITERIA, FINAL_TEST_QUESTIONS, FUTURE_COMPATIBILITY_TAR
 import { detectOverlap, PrimeDirectiveScoreCard } from "./game/atlasPrimeDirective/AtlasPrimeDirectiveRuntime";
 import { PURPOSE_DOMAINS } from "./game/atlasPurpose/atlasPurposeData";
 import { PHILOSOPHICAL_DOMAINS } from "./game/atlasPhilosophy/atlasPhilosophyData";
+import { CreativeContributionLog, CreativeHeritageArchive } from "./game/atlasCreativeIntelligence/AtlasCreativeIntelligenceRuntime";
+import { CREATIVE_DOMAINS } from "./game/atlasCreativeIntelligence/atlasCreativeIntelligenceData";
+import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1849,6 +1852,32 @@ const nextGeneration = new NextGenerationLog();
 const primeDirectiveScoreCard = new PrimeDirectiveScoreCard();
 {
   for (const criterion of DESIGN_ARBITER_CRITERIA) primeDirectiveScoreCard.score(criterion, 9.6);
+}
+
+// AF-171: the Atlas Creative Intelligence — ensures civilisation never
+// stops creating. Reuses AF-159's real culturalTrends directly for
+// Cultural Creativity/Creative Movements, AF-155's real
+// collaborativeProblems directly for Collaborative Creation, AF-168's
+// real beautyIndex directly for the Beauty Principle, AF-160's real
+// mentorshipLedger directly for Educational Creativity/Creative
+// Network, AF-165's real playerMemory.photograph directly for Player
+// Creativity, AF-159's real mysteryLog directly for Discovery Through
+// Creation, and AF-151's real knowledgeGraph directly for idea
+// propagation. CreativeContributionLog/CreativeHeritageArchive are the
+// genuinely new pieces (see atlasCreativeIntelligenceData.ts for the
+// full reuse notes).
+const creativeContributions = new CreativeContributionLog();
+const creativeHeritage = new CreativeHeritageArchive();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  creativeContributions.contribute(commanderIndexId, "Engineering", "Designed an adaptive wildlife shelter.", 20);
+  creativeHeritage.archive("adaptive-shelter-design", ["Museum exhibits", "Commander inspiration"], 20);
+  culturalTrends.record("Verdance Renaissance", "settlement-verdance", 20);
+  collaborativeProblems.propose("adaptive-shelter-design", ["scientist-vale", commanderIndexId], "Engineering", 20);
+  beautyIndex.setLevel("Art", 80);
+  playerMemory.photograph("observatory-verdance");
+  mysteryLog.open("mystery-ancient-knowledge", "Ancient questions", "The adaptive shelter's foundations reveal older ruins.", 20);
+  knowledgeGraph.addEdge({ fromId: "idea-adaptive-shelter", toId: commanderIndexId, kind: "Inspired", strength: 1, confidence: 1, historicalContext: "An engineering idea inspired by the wild.", dateEstablished: 20 });
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5727,6 +5756,11 @@ const loop = new GameLoop({
           const finalTest = finalTestPassed(new Set(FINAL_TEST_QUESTIONS));
           const overlap = detectOverlap(PURPOSE_DOMAINS, PHILOSOPHICAL_DOMAINS);
           return `directive ${directive ?? "none"} · conflict ${conflict ?? "none"} · design score ${primeDirectiveScoreCard.overallScore().toFixed(1)} (${primeDirectiveScoreCard.passesGate() ? "passed" : "pending"}) · future compat=${futureCompat} · quality lock=${qualityLock} · final test=${finalTest} · system rank ${systemPriorityRank("Simulation Director")} · overlap[Purpose,Philosophy] ${overlap.shared.length}/${PURPOSE_DOMAINS.length}`;
+        })(),
+        atlasCreativeIntelligence: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const overlap = detectOverlap(CREATIVE_DOMAINS, LEGACY_DOMAINS);
+          return `contributions ${creativeContributions.contributionsFor(commanderIndexId).length} (engineering ${creativeContributions.countForDomain("Engineering")}) · heritage ${creativeHeritage.outcomesFor("adaptive-shelter-design").length} · cultural adopters ${culturalTrends.adoptersFor("Verdance Renaissance").length} · collaborators ${collaborativeProblems.participantsFor("adaptive-shelter-design").length} · beauty Art=${beautyIndex.levelFor("Art")} · photos ${playerMemory.photoCountFor("observatory-verdance")} · mysteries unsolved ${mysteryLog.unsolved().length} · idea neighbours ${knowledgeGraph.neighbors("idea-adaptive-shelter").length} · domain overlap[Creative,Legacy] ${overlap.shared.length}/${CREATIVE_DOMAINS.length}`;
         })(),
       });
     }

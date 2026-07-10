@@ -178,6 +178,8 @@ export interface DebugSnapshot {
   atlasLegacyOfTomorrow: string | null;
   /** Atlas Prime Directive summary (permanent governing intelligence, never itself a gameplay system): the highest-priority active Prime Directive and Conflict Resolution priority, a Design Arbiter score/gate status mirroring AF-143/149's real scoring-rubric shape, Future Compatibility/Quality Lock/Final Test all-must-pass statuses, the in-fiction-only System Priority rank, and a live detectOverlap reading confirming AF-162/161's real domain-list overlap (AF-170 §DEBUG). */
   atlasPrimeDirective: string | null;
+  /** Atlas Creative Intelligence summary: a sample Commander's creative-contribution count (via the new CreativeContributionLog), a Creative Heritage outcome count, reused AF-159 Cultural Creativity/AF-155 Collaborative Creation/AF-168 Beauty Principle/AF-165 Photography/AF-159 Discovery-Through-Creation/AF-151 idea-propagation readings, and a live detectOverlap reading confirming a new absolute domain-overlap record against AF-169's real LEGACY_DOMAINS (AF-171 §DEBUG). */
+  atlasCreativeIntelligence: string | null;
 }
 
 export class DebugOverlay {
@@ -300,6 +302,7 @@ export class DebugOverlay {
       `soul       ${snapshot.atlasSoul ?? "—"}`,
       `legacyTmrw ${snapshot.atlasLegacyOfTomorrow ?? "—"}`,
       `primeDir   ${snapshot.atlasPrimeDirective ?? "—"}`,
+      `creative   ${snapshot.atlasCreativeIntelligence ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
