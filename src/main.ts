@@ -202,6 +202,7 @@ import type { Possibility } from "./game/atlasPossibility/atlasPossibilityData";
 import { CulturalTrendTracker, InnovationMemoryArchive, MysteryLog, PlayerInspirationLog, PossibilityRegistry, SerendipityLog } from "./game/atlasPossibility/AtlasPossibilityRuntime";
 import { REFLECTION_LOOP_STAGES, ethicalDeliberationPassed, generationalTransferRank, scientificWisdomReviewed, ETHICAL_DELIBERATION_QUESTIONS, SCIENTIFIC_WISDOM_QUESTIONS } from "./game/atlasWisdom/atlasWisdomData";
 import { CommanderWisdomTracker, MentorshipLedger, WisdomMemoryArchive } from "./game/atlasWisdom/AtlasWisdomRuntime";
+import { AcademicInfluenceTracker, CommanderBeliefTracker, PhilosophicalEventLog, PlayerPhilosophyObserver } from "./game/atlasPhilosophy/AtlasPhilosophyRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1600,6 +1601,27 @@ const wisdomMemory = new WisdomMemoryArchive();
   commanderWisdom.develop(commanderIndexId, "Patience", 15);
   commanderWisdom.develop(commanderIndexId, "Perspective", 10);
   mentorshipLedger.assign("commander-thorne-starforged", commanderIndexId, 20);
+}
+
+// AF-161: the Atlas Philosophy Engine — exists above AF-160's Wisdom
+// Engine, asking why rather than merely judging. Cultural Reflection
+// reuses AF-159's real culturalTrends instance directly; Historical
+// Reinterpretation reuses AF-135's real chroniclePlanets instance
+// directly. CommanderBeliefTracker/AcademicInfluenceTracker/
+// PlayerPhilosophyObserver/PhilosophicalEventLog are the genuinely new
+// pieces (see atlasPhilosophyData.ts for the full reuse notes).
+const commanderBeliefs = new CommanderBeliefTracker();
+const academicInfluence = new AcademicInfluenceTracker();
+const playerPhilosophy = new PlayerPhilosophyObserver();
+const philosophicalEvents = new PhilosophicalEventLog();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  commanderBeliefs.setBelief(commanderIndexId, "Hope through unity.", 20);
+  academicInfluence.recordAdherence("settlement-verdance", "Conservation School", 20);
+  playerPhilosophy.observe("Environmental stewardship");
+  philosophicalEvents.schedule("Museum roundtable", "Historians debate the Verdance excavation findings.", 20);
+  culturalTrends.record("Post-Contact Realism", "settlement-verdance", 20);
+  chroniclePlanets.write("settlement-verdance", "New evidence clarifies the First Contact timeline.", 20, "Military historians");
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5429,6 +5451,10 @@ const loop = new GameLoop({
           const scientificReview = scientificWisdomReviewed(new Set(SCIENTIFIC_WISDOM_QUESTIONS.slice(0, 4)));
           const ethicalReview = ethicalDeliberationPassed(new Set(ETHICAL_DELIBERATION_QUESTIONS));
           return `loop ${stage} (next ${reflectionLoop.next(stage)}) · wisdom ${commanderWisdom.overallWisdom(commanderIndexId).toFixed(1)} (patience ${commanderWisdom.traitScore(commanderIndexId, "Patience").toFixed(0)}) · mentor ${mentorshipLedger.mentorOf(commanderIndexId) ?? "none"} · scientific review=${scientificReview} · ethical review=${ethicalReview} · transfer rank ${generationalTransferRank("Lessons")} · memory ${wisdomMemory.all().length}`;
+        })(),
+        atlasPhilosophy: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          return `belief "${commanderBeliefs.beliefOf(commanderIndexId) ?? "none"}" · school ${academicInfluence.schoolOf("settlement-verdance") ?? "none"} · observed stewardship ${playerPhilosophy.tallyFor("Environmental stewardship")} · events ${philosophicalEvents.all().length} · cultural adopters ${culturalTrends.adoptersFor("Post-Contact Realism").length} · chronicle versions ${chroniclePlanets.entryFor("settlement-verdance").allVersions().length}`;
         })(),
       });
     }

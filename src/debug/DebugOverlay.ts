@@ -158,6 +158,8 @@ export interface DebugSnapshot {
   atlasPossibility: string | null;
   /** Atlas Wisdom Engine summary: current Reflection Loop stage (reused AF-155 CyclicStageTracker, with cyclic next stage), a sample Commander's overall/Patience wisdom scores, mentorship assignment, Scientific/Ethical Deliberation all-must-pass review status, Generational Transfer rank, and Wisdom Memory count (AF-160 §DEBUG). */
   atlasWisdom: string | null;
+  /** Atlas Philosophy Engine summary: a sample Commander's current belief, an entity's current Academic School adherence, an observed (never labelled) Player Philosophy tally, scheduled philosophical-event count, and reused AF-159 Cultural Reflection / AF-135 Historical Reinterpretation counts (AF-161 §DEBUG). */
+  atlasPhilosophy: string | null;
 }
 
 export class DebugOverlay {
@@ -270,6 +272,7 @@ export class DebugOverlay {
       `future     ${snapshot.atlasFuture ?? "—"}`,
       `possible   ${snapshot.atlasPossibility ?? "—"}`,
       `wisdom     ${snapshot.atlasWisdom ?? "—"}`,
+      `philosophy ${snapshot.atlasPhilosophy ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
