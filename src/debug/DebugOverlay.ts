@@ -122,6 +122,8 @@ export interface DebugSnapshot {
   galacticCreator: string | null;
   /** Modular Universe Engine summary: registered module count, computed system compatibility, QA pass/fail, loaded count, dependency load-order resolution, content discovery count (AF-142 §DEBUG). */
   moduleUniverse: string | null;
+  /** Atlas Development Framework summary: design score gate, commander/world completeness checklist coverage, post-launch tracking count, knowledge base size (AF-143 §DEBUG). */
+  atlasFramework: string | null;
 }
 
 export class DebugOverlay {
@@ -216,6 +218,7 @@ export class DebugOverlay {
       `infEndgame ${snapshot.endgameEngine ?? "—"}`,
       `creator    ${snapshot.galacticCreator ?? "—"}`,
       `universe   ${snapshot.moduleUniverse ?? "—"}`,
+      `atlas      ${snapshot.atlasFramework ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

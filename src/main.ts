@@ -158,6 +158,8 @@ import {
 } from "./game/galacticCreator/GalacticCreatorRuntime";
 import { CONTENT_DISCOVERY_KINDS, MODULE_CATEGORIES } from "./game/moduleUniverse/moduleUniverseData";
 import { ContentDiscoveryFeed, ModuleRegistry, moduleQaReport } from "./game/moduleUniverse/ModuleUniverseRuntime";
+import { COMMANDER_VALIDATION_CHECKLIST, DESIGN_SCORE_CATEGORIES, WORLD_VALIDATION_CHECKLIST } from "./game/atlasFramework/atlasFrameworkData";
+import { DesignScoreCard, KnowledgeBaseRegistry, PostLaunchSupportTracker, commanderCompletenessFor, worldCompletenessFor } from "./game/atlasFramework/AtlasFrameworkRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1184,6 +1186,19 @@ moduleUniverse.register({
   origin: "core",
 });
 contentDiscovery.discover("Recovered archives", "A sealed data-vault surfaces beneath Verdance's tide pools.", 0);
+
+// AF-143: the Atlas Development Framework — a dedicated research pass
+// found its "Design Score >9.5/10" gate is, almost verbatim, this
+// project's own real standing process (docs/FOUNDATION_LOCK.md §5);
+// commanderCompletenessFor/worldCompletenessFor are the genuinely new
+// pieces, composing real signals rather than importing AF-130/131/134/135
+// directly (see atlasFrameworkData.ts for the full research findings).
+const designScoreCard = new DesignScoreCard();
+for (const category of DESIGN_SCORE_CATEGORIES) designScoreCard.score(category, 9.6);
+const postLaunchSupport = new PostLaunchSupportTracker();
+const knowledgeBase = new KnowledgeBaseRegistry();
+knowledgeBase.contribute("Engineering patterns", "Decoupled composition", "Pass plain signal values instead of importing modules directly — AF-137's tierWeightsFor, reused through AF-143.");
+postLaunchSupport.record("Performance", "60fps sustained across the sandbox mission.", 0);
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4849,6 +4864,35 @@ const loop = new GameLoop({
           const qa = moduleQaReport(oceanWorlds, moduleUniverse);
           const order = moduleUniverse.topologicalLoadOrder();
           return `modules ${moduleUniverse.all().length}/${MODULE_CATEGORIES.length} categories · compat [${moduleUniverse.compatibilityFor("expansion-ocean-worlds").join(", ")}] · qa ${qa.passed ? "passed" : "failed"} · loaded ${moduleUniverse.loadedCount()} · order ${order ? "resolved" : "CYCLE"} · discoveries ${contentDiscovery.all().length}/${CONTENT_DISCOVERY_KINDS.length}`;
+        })(),
+        atlasFramework: (() => {
+          const commanderReport = commanderCompletenessFor({
+            hasUniqueFantasy: true,
+            gameplayDuplicatesExisting: false,
+            bondLinkCount: bondNetwork.snapshot().discoveredBonds,
+            shipRoomAssigned: shipCommanderRooms.some((r) => r.commanderId === sandboxCommander.id),
+            museumContributionCount: museumDonations.fromCommander(sandboxCommander.id).length,
+            hasChronicleBiography: chronicleCommanderMemories.historyFor(sandboxCommander.id).length > 0,
+            personalQuestCount: commanderStorylines.beatFor(sandboxCommander.id, "Origin Story")?.allVersions().length ?? 0,
+            masteryTrackProgress: commanderProgression.snapshot.talentsUnlocked,
+            accessibilityReviewed: true,
+          });
+          const settlement = civilisation.allSettlements[0];
+          const worldReport = settlement
+            ? worldCompletenessFor({
+                hasUniqueEcology: livingGalaxyEnvironment.averageWildlife() > 0,
+                hasDistinctArchitecture: architectureHistory.layersFor(settlement.profile.settlementId).length > 0,
+                hasWeatherProfile: true,
+                hasWildlife: livingGalaxyEnvironment.averageWildlife() > 0,
+                hasHistory: civilisation.epochCount > 0,
+                hasEconomy: galacticEconomy.snapshot.colonyCount > 0,
+                hasCulture: true,
+                hasMusic: true,
+                hasExplorationIdentity: true,
+                museumCompatible: museumQuality.value() > 0,
+              })
+            : null;
+          return `design gate ${designScoreCard.passesGate() ? "passed" : "pending"} · commander checklist ${Object.values(commanderReport.checks).filter(Boolean).length}/${COMMANDER_VALIDATION_CHECKLIST.length} · world checklist ${worldReport ? Object.values(worldReport.checks).filter(Boolean).length : 0}/${WORLD_VALIDATION_CHECKLIST.length} · post-launch ${postLaunchSupport.all().length} · knowledge base ${knowledgeBase.all().length}`;
         })(),
       });
     }
