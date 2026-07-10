@@ -240,6 +240,8 @@ import { RENAISSANCE_DOMAINS } from "./game/atlasRenaissance/atlasRenaissanceDat
 import { AscensionIndexScoreCard } from "./game/atlasAscension/AtlasAscensionRuntime";
 import { ASCENSION_INDEX_CRITERIA, ASCENSION_PILLARS, ascensionTierRank } from "./game/atlasAscension/atlasAscensionData";
 import { SOUL_DIMENSIONS } from "./game/atlasSoul/atlasSoulData";
+import { TranscendenceIndexScoreCard, UniversalLibrary } from "./game/atlasTranscendence/AtlasTranscendenceRuntime";
+import { STEWARDSHIP_LOOP_STAGES, TRANSCENDENCE_DOMAINS, TRANSCENDENCE_INDEX_CRITERIA, civilisationalShiftRank } from "./game/atlasTranscendence/atlasTranscendenceData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2066,6 +2068,28 @@ const ascensionIndex = new AscensionIndexScoreCard();
   culturalTrends.record("Open Knowledge Movement", "settlement-verdance", 20);
   knowledgeGraph.addEdge({ fromId: "domain-education", toId: "domain-science", kind: "Influenced", strength: 1, confidence: 1, historicalContext: "Educational reform improved scientific literacy.", dateEstablished: 20 });
   for (const criterion of ASCENSION_INDEX_CRITERIA) ascensionIndex.score(criterion, 9.6);
+}
+
+// AF-180: the Atlas Transcendence Engine — the highest layer of the
+// in-fiction Atlas enrichment chain only (never above the real
+// docs/CONSTITUTION.md, see atlasTranscendenceData.ts's CRITICAL
+// SCOPE NOTE). Reuses AF-155's real CyclicStageTracker over the
+// module's own STEWARDSHIP_LOOP_STAGES directly for The Stewardship
+// Loop, AF-163's real quietMoments directly for The Quiet Victory,
+// AF-160's real mentorshipLedger/AF-167's real earnedTitles directly
+// for Commander Transcendence, and AF-168's real beautyIndex directly
+// for The Transcendent City. UniversalLibrary/TranscendenceIndexScoreCard
+// are the genuinely new pieces (see atlasTranscendenceData.ts for the
+// full reuse notes).
+const stewardshipLoop = new CyclicStageTracker(STEWARDSHIP_LOOP_STAGES);
+const universalLibrary = new UniversalLibrary();
+const transcendenceIndex = new TranscendenceIndexScoreCard();
+{
+  stewardshipLoop.record("Discover", 20);
+  quietMoments.record("A restored river now runs clean through Verdance.", 20);
+  earnedTitles.earn("commander-thorne-starforged", "Guardian of the Galaxy", 20);
+  universalLibrary.preserve("language-verdance-old-tongue", "Language", 20);
+  for (const criterion of TRANSCENDENCE_INDEX_CRITERIA) transcendenceIndex.score(criterion, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5985,6 +6009,10 @@ const loop = new GameLoop({
         atlasAscension: (() => {
           const overlap = detectOverlap(ASCENSION_PILLARS, SOUL_DIMENSIONS);
           return `tier rank ${ascensionTierRank("Ascension")} · mentees ${mentorshipLedger.menteesOf("commander-thorne-starforged").length} · beauty Public spaces=${beautyIndex.levelFor("Public spaces")} · cultural adopters ${culturalTrends.adoptersFor("Open Knowledge Movement").length} · network neighbours ${knowledgeGraph.neighbors("domain-education").length} · index score ${ascensionIndex.overallScore().toFixed(1)} (${ascensionIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Ascension,Soul] ${overlap.shared.length}/${ASCENSION_PILLARS.length}`;
+        })(),
+        atlasTranscendence: (() => {
+          const overlap = detectOverlap(TRANSCENDENCE_DOMAINS, ASCENSION_PILLARS);
+          return `shift rank ${civilisationalShiftRank("Transcendence")} · loop ${stewardshipLoop.currentStage() ?? "none"} (next ${stewardshipLoop.next("Discover Again")}) · quiet moments ${quietMoments.all().length} · founder titles ${earnedTitles.titlesFor("commander-thorne-starforged").length} · library preserved=${universalLibrary.isPreserved("language-verdance-old-tongue")} (${universalLibrary.categoryOf("language-verdance-old-tongue") ?? "none"}) · index score ${transcendenceIndex.overallScore().toFixed(1)} (${transcendenceIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Transcendence,Ascension] ${overlap.shared.length}/${TRANSCENDENCE_DOMAINS.length}`;
         })(),
       });
     }

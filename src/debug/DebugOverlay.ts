@@ -196,6 +196,8 @@ export interface DebugSnapshot {
   atlasRenaissance: string | null;
   /** Atlas Ascension Engine summary (a civilisation-wide maturity ladder, unrelated to AF-069/070's per-run endgame "ascensionLevel" — see atlasAscensionData.ts's NAMING SCOPE NOTE): the module's own ascensionTierRank for the highest Ascension Tier, the reused AF-160 MentorshipLedger's mentee count for Commander Ascension, the reused AF-168 BeautyIndexTracker/AF-159 CulturalTrendTracker readings for Cultural Ascension, the reused AF-151 KnowledgeGraph's Influenced-edge neighbour count for the Ascension Network, the new AscensionIndexScoreCard's score/gate status mirroring AF-143/149/170/173's real scoring-rubric shape, and a live detectOverlap reading against AF-168's real SOUL_DIMENSIONS (AF-179 §DEBUG). */
   atlasAscension: string | null;
+  /** Atlas Transcendence Engine summary (the highest layer of the in-fiction Atlas chain only — never above the real docs/CONSTITUTION.md, see atlasTranscendenceData.ts's CRITICAL SCOPE NOTE): the module's own civilisationalShiftRank for the highest shift stage, the reused AF-155 CyclicStageTracker's current/next Stewardship Loop stage, the reused AF-163 QuietMomentLog's count for The Quiet Victory, the reused AF-167 EarnedTitleTracker's title count for Commander Transcendence, the new UniversalLibrary's preserved status/category for The Universal Library, the new TranscendenceIndexScoreCard's score/gate status mirroring AF-143/149/170/173/179's real scoring-rubric shape, and a live detectOverlap reading against AF-179's real ASCENSION_PILLARS (AF-180 §DEBUG). */
+  atlasTranscendence: string | null;
 }
 
 export class DebugOverlay {
@@ -327,6 +329,7 @@ export class DebugOverlay {
       `genesis    ${snapshot.atlasGenesis ?? "—"}`,
       `renaissance ${snapshot.atlasRenaissance ?? "—"}`,
       `ascension  ${snapshot.atlasAscension ?? "—"}`,
+      `transcendence ${snapshot.atlasTranscendence ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
