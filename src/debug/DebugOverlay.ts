@@ -150,6 +150,8 @@ export interface DebugSnapshot {
   atlasIntelligence: string | null;
   /** Atlas Decision Engine summary: current Decision Pyramid level (with cyclic next level), a sample explainDecision outcome with confidence and rejected alternatives, repetitive-choice status, faction ethical-alignment score, capped player-influence share, and long-term-planning horizon rank, reusing AF-155's rankOptions/CyclicStageTracker throughout (AF-156 §DEBUG). */
   atlasDecision: string | null;
+  /** Atlas Planning Engine summary: a sample plan's id/horizon, contingency coverage, dependency-satisfaction status, adaptation and memory counts, and a reused AF-156 explainDecision Plan Negotiation winner (AF-157 §DEBUG). */
+  atlasPlanning: string | null;
 }
 
 export class DebugOverlay {
@@ -258,6 +260,7 @@ export class DebugOverlay {
       `orchestr   ${snapshot.atlasOrchestrator ?? "—"}`,
       `intel      ${snapshot.atlasIntelligence ?? "—"}`,
       `decision   ${snapshot.atlasDecision ?? "—"}`,
+      `planning   ${snapshot.atlasPlanning ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

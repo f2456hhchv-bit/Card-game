@@ -194,6 +194,8 @@ import { INTELLIGENCE_LAYERS, LEARNING_LOOP_STAGES, knowledgeRichnessScore, rank
 import { CollaborativeProblemLog, CyclicStageTracker, DiscoverySuggestionLog } from "./game/atlasIntelligence/AtlasIntelligenceRuntime";
 import { DECISION_PYRAMID_LEVELS, PLAYER_INFLUENCE_CAP, cappedPlayerInfluence, ethicalAlignmentScore, explainDecision, planningHorizonRank } from "./game/atlasDecision/atlasDecisionData";
 import { DecisionLog } from "./game/atlasDecision/AtlasDecisionRuntime";
+import { hasContingencyCoverage, type ContingencySet, type Plan } from "./game/atlasPlanning/atlasPlanningData";
+import { PlanAdaptationLog, PlanMemoryArchive, PlanRegistry } from "./game/atlasPlanning/AtlasPlanningRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1482,6 +1484,46 @@ const decisionLog = new DecisionLog();
     { id: "expand-south", scores: { Expansion: 50 } },
   ]);
   if (explanation) decisionLog.record("Colony", "Expansion", explanation.chosenId, explanation.confidence, 20);
+}
+
+// AF-157: the Atlas Planning Engine — coordinates sequences of AF-156's
+// decisions across hours, days, years and generations. Reuses AF-156's
+// real explainDecision directly for Plan Negotiation and AF-155's real
+// CollaborativeProblemLog directly for Collaborative Planning — the
+// third instance of that identical mechanic in this codebase.
+// PlanRegistry/PlanAdaptationLog/PlanMemoryArchive/ContingencySet are
+// the genuinely new pieces (see atlasPlanningData.ts for the full reuse
+// notes).
+const planRegistry = new PlanRegistry();
+const planAdaptations = new PlanAdaptationLog();
+const planMemory = new PlanMemoryArchive();
+{
+  const reforestContingency: ContingencySet = {
+    primaryApproach: "Direct reforestation drive",
+    alternativeRoute: "Staged reforestation over three seasons",
+    emergencyRecovery: "Emergency seed bank deployment",
+    resourceReserve: "20% material buffer",
+    personnelReplacement: "Trained backup ranger team",
+    scientificBackup: "Secondary soil-analysis lab",
+  };
+  const reforestPlan: Plan = {
+    id: "reforest-verdance",
+    objective: "Restore the Verdance forest canopy",
+    motivation: "Wildlife corridor recovery",
+    requirements: ["seed stock", "ranger team"],
+    resources: ["credits-4000"],
+    participants: [`commander-${sandboxCommander.id}`],
+    dependencies: [],
+    estimatedDuration: 20,
+    riskProfile: 0.2,
+    fallbackStrategies: ["staged rollout"],
+    successCriteria: ["canopy coverage +15%"],
+    historicalImportance: 40,
+    horizon: "Long-Term",
+    contingency: reforestContingency,
+  };
+  planRegistry.register(reforestPlan);
+  planAdaptations.adapt(reforestPlan.id, "Natural disasters", "A wildfire delayed the reforestation timeline.", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5287,6 +5329,14 @@ const loop = new GameLoop({
           const influence = cappedPlayerInfluence(0.9);
           const horizon = planningHorizonRank("One decade");
           return `pyramid ${pyramidLevel} (next ${decisionPyramid.next(pyramidLevel)}) · decision ${explanation?.chosenId ?? "none"} confidence ${(explanation?.confidence ?? 0).toFixed(2)} rejected [${explanation?.rejectedIds.join(", ") ?? ""}] · repetitive=${decisionLog.isRepetitive("Colony")} · ethics ${ethics} · player influence ${influence.toFixed(2)} (cap ${PLAYER_INFLUENCE_CAP}) · horizon rank ${horizon}`;
+        })(),
+        atlasPlanning: (() => {
+          const plan = planRegistry.get("reforest-verdance");
+          const negotiation = explainDecision([
+            { id: "reforest-verdance", scores: { "Environmental impact": 70, Evidence: 60 } },
+            { id: "expand-mining", scores: { "Environmental impact": -20, Evidence: 50 } },
+          ]);
+          return `plan ${plan?.id ?? "none"} horizon ${plan?.horizon ?? "none"} · contingency coverage=${hasContingencyCoverage(plan?.contingency ?? null)} · dependencies satisfied=${plan ? planRegistry.dependenciesSatisfied(plan.id) : false} · adaptations ${planAdaptations.all().length} · memory ${planMemory.all().length} · negotiation winner ${negotiation?.chosenId ?? "none"}`;
         })(),
       });
     }
