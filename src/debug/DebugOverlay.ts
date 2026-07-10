@@ -204,6 +204,8 @@ export interface DebugSnapshot {
   atlasHarmony: string | null;
   /** Atlas Symphony Engine summary (orchestration, not invention — almost entirely direct reuse): the reused AF-151 KnowledgeGraph's Inspired-edge neighbour count for Institutional/Cultural Symphony and The Resonance Model, the reused AF-155 CyclicStageTracker's current/next Civilisation Rhythm stage, the reused AF-163 QuietMomentLog's count for The Silence Principle, the new CampaignJourneyTracker's dominant journey and unified-story status for The Grand Performance, the new thematicConsistencyMet's ANY-of-N gate result for Thematic Consistency, the reused AF-175 GenerationalHandoffLedger's inherited baseline, and a live detectOverlap reading against AF-182's real HARMONY_DOMAINS (AF-183 §DEBUG). */
   atlasSymphony: string | null;
+  /** Atlas Unity Engine summary: the reused AF-151 KnowledgeGraph's neighbour count for The Unity Network/The Civilisation Web/The Knowledge Commons, the reused AF-159 CulturalTrendTracker's adopter count for Unity Through Diversity, the reused AF-176 ThreadRegistry/allThreadsConnected's connected status for Shared Achievements, the new UnityIndexScoreCard's score/gate status mirroring AF-143/149/170/173/179/180/182's real scoring-rubric shape, and a live detectOverlap reading against AF-183's real SYMPHONY_DOMAINS (AF-184 §DEBUG). */
+  atlasUnity: string | null;
 }
 
 export class DebugOverlay {
@@ -339,6 +341,7 @@ export class DebugOverlay {
       `eternity   ${snapshot.atlasEternity ?? "—"}`,
       `harmony    ${snapshot.atlasHarmony ?? "—"}`,
       `symphony   ${snapshot.atlasSymphony ?? "—"}`,
+      `unity      ${snapshot.atlasUnity ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

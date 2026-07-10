@@ -248,6 +248,8 @@ import { HarmonyIndexScoreCard, HarmonyTracker } from "./game/atlasHarmony/Atlas
 import { HARMONY_DOMAINS, HARMONY_INDEX_CRITERIA } from "./game/atlasHarmony/atlasHarmonyData";
 import { CampaignJourneyTracker } from "./game/atlasSymphony/AtlasSymphonyRuntime";
 import { CIVILISATION_RHYTHM_STAGES, SYMPHONY_DOMAINS, thematicConsistencyMet } from "./game/atlasSymphony/atlasSymphonyData";
+import { UnityIndexScoreCard } from "./game/atlasUnity/AtlasUnityRuntime";
+import { UNITY_DOMAINS, UNITY_INDEX_CRITERIA } from "./game/atlasUnity/atlasUnityData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2166,6 +2168,23 @@ const campaignJourney = new CampaignJourneyTracker();
   campaignJourney.contribute("A cultural journey");
   campaignJourney.contribute("An ecological journey");
   campaignJourney.contribute("A human journey");
+}
+
+// AF-184: the Atlas Unity Engine — exists above AF-183's Symphony
+// Engine, ensuring every layer ultimately serves one shared vision.
+// Reuses AF-151's real knowledgeGraph directly for The Unity
+// Network/The Civilisation Web/The Knowledge Commons, AF-159's real
+// culturalTrends directly for Unity Through Diversity, and AF-176's
+// real threads/allThreadsConnected directly for Shared Achievements.
+// UnityIndexScoreCard is the genuinely new piece (see
+// atlasUnityData.ts for the full reuse notes).
+const unityIndex = new UnityIndexScoreCard();
+{
+  knowledgeGraph.addEdge({ fromId: "institution-verdance-academy", toId: "institution-verdance-museum", kind: "Influenced", strength: 1, confidence: 1, historicalContext: "The academy freely shares research with the museum.", dateEstablished: 20 });
+  culturalTrends.record("Verdance Language Preservation", "settlement-verdance", 20);
+  threads.mark("achievement-planetary-restoration", 20);
+  knowledgeGraph.addEdge({ fromId: "achievement-planetary-restoration", toId: "settlement-verdance", kind: "Created", strength: 1, confidence: 1, historicalContext: "Everyone contributed to the restoration.", dateEstablished: 20 });
+  for (const criterion of UNITY_INDEX_CRITERIA) unityIndex.score(criterion, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6101,6 +6120,11 @@ const loop = new GameLoop({
         atlasSymphony: (() => {
           const overlap = detectOverlap(SYMPHONY_DOMAINS, HARMONY_DOMAINS);
           return `resonance neighbours ${knowledgeGraph.neighbors("institution-verdance-museum").length} · rhythm ${civilisationRhythm.currentStage() ?? "none"} (next ${civilisationRhythm.next("Renewed Exploration")}) · quiet moments ${quietMoments.all().length} · journey dominant ${campaignJourney.dominantJourney() ?? "none"} unified=${campaignJourney.isUnifiedStory()} · theme met=${thematicConsistencyMet(new Set(["Wonder"]))} · generation 4 baseline ${generationalHandoff.startingBaselineFor(4)} · domain overlap[Symphony,Harmony] ${overlap.shared.length}/${SYMPHONY_DOMAINS.length}`;
+        })(),
+        atlasUnity: (() => {
+          const overlap = detectOverlap(UNITY_DOMAINS, SYMPHONY_DOMAINS);
+          const threadIds = threads.all().map((t) => t.entityId);
+          return `network neighbours ${knowledgeGraph.neighbors("institution-verdance-academy").length} · cultural adopters ${culturalTrends.adoptersFor("Verdance Language Preservation").length} · shared achievements connected=${allThreadsConnected(threadIds, knowledgeGraph)} · index score ${unityIndex.overallScore().toFixed(1)} (${unityIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Unity,Symphony] ${overlap.shared.length}/${UNITY_DOMAINS.length}`;
         })(),
       });
     }
