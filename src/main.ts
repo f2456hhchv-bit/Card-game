@@ -233,6 +233,8 @@ import { GenerationalHandoffLedger } from "./game/atlasInfinity/AtlasInfinityRun
 import { EVOLUTION_CYCLE_STAGES, INFINITY_DOMAINS } from "./game/atlasInfinity/atlasInfinityData";
 import { ThreadRegistry, allThreadsConnected } from "./game/atlasContinuum/AtlasContinuumRuntime";
 import { CONTINUUM_DOMAINS, CONTINUUM_STAGES } from "./game/atlasContinuum/atlasContinuumData";
+import { GenesisRegistry } from "./game/atlasGenesis/AtlasGenesisRuntime";
+import { GENESIS_DOMAINS, GENESIS_LIFECYCLE_STAGES } from "./game/atlasGenesis/atlasGenesisData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -1998,6 +2000,29 @@ const threads = new ThreadRegistry();
   generationalHandoff.handoff(2, ["Culture", "Questions"], 20);
   threads.mark("thread-verdance-restoration", 20);
   knowledgeGraph.addEdge({ fromId: "thread-verdance-restoration", toId: commanderIndexId, kind: "Influenced", strength: 1, confidence: 1, historicalContext: "The restoration links backward to the original settlement founding.", dateEstablished: 20 });
+}
+
+// AF-177: the Atlas Genesis Engine — ensures every meaningful addition
+// to the universe has a believable birth. Reuses AF-172's real
+// hypotheses tracker directly for Scientific Origins, AF-165's real
+// institutionalMemory directly for Institution Foundations, AF-151's
+// real knowledgeGraph directly (kind "Inspired") for The Spark
+// Network, AF-155's real CyclicStageTracker over the module's own
+// GENESIS_LIFECYCLE_STAGES for Beginning → Legacy, AF-166's real
+// identityRegistry directly for Commander Origins, and AF-167's real
+// earnedTitles directly for The Founders. GenesisRegistry is the
+// genuinely new piece (see atlasGenesisData.ts for the full reuse
+// notes).
+const genesisRegistry = new GenesisRegistry();
+const genesisLifecycle = new CyclicStageTracker(GENESIS_LIFECYCLE_STAGES);
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  genesisRegistry.recordOrigin("institution-verdance-academy", commanderIndexId, "To teach the next generation to protect the wild.", "settlement-verdance", 5, "A child asking too many questions", ["scientist-vale"], ["commander-thorne-starforged"]);
+  hypotheses.propose("discipline-galactic-ecology", "Galactic Ecology may explain cross-system migration patterns.", 20);
+  institutionalMemory.remember("institution-verdance-academy", "Founders", "Commander Fen Beastmaster founded the academy.", 20);
+  knowledgeGraph.addEdge({ fromId: "discipline-galactic-ecology", toId: "institution-verdance-academy", kind: "Inspired", strength: 1, confidence: 1, historicalContext: "The discipline's early findings inspired the academy's founding.", dateEstablished: 20 });
+  genesisLifecycle.record("Origin", 20);
+  earnedTitles.earn(commanderIndexId, "Founder", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5904,6 +5929,11 @@ const loop = new GameLoop({
           const overlap = detectOverlap(CONTINUUM_DOMAINS, INFINITY_DOMAINS);
           const threadIds = threads.all().map((t) => t.entityId);
           return `stage ${continuum.currentStage() ?? "none"} (next ${continuum.next("Past Again")}) · generation 3 baseline ${generationalHandoff.startingBaselineFor(3)} · threads ${threadIds.length} connected=${allThreadsConnected(threadIds, knowledgeGraph)} · domain overlap[Continuum,Infinity] ${overlap.shared.length}/${CONTINUUM_DOMAINS.length}`;
+        })(),
+        atlasGenesis: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const overlap = detectOverlap(GENESIS_DOMAINS, HORIZON_CATEGORIES);
+          return `origin founder ${genesisRegistry.originOf("institution-verdance-academy")?.founder ?? "none"} · hypothesis grounded=${hypotheses.isGrounded("discipline-galactic-ecology")} · institution memories ${institutionalMemory.memoriesFor("institution-verdance-academy").length} · spark neighbours ${knowledgeGraph.neighbors("discipline-galactic-ecology").length} · lifecycle ${genesisLifecycle.currentStage() ?? "none"} · founder titles ${earnedTitles.titlesFor(commanderIndexId).length} · domain overlap[Genesis,Horizon] ${overlap.shared.length}/${GENESIS_DOMAINS.length}`;
         })(),
       });
     }

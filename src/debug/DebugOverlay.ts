@@ -190,6 +190,8 @@ export interface DebugSnapshot {
   atlasInfinity: string | null;
   /** Atlas Continuum summary: the reused AF-155 CyclicStageTracker's current/next stage across the module's own 8-stage Continuum cycle, the reused AF-175 GenerationalHandoffLedger's inherited baseline for a later generation (the same ledger spanning generations and campaigns for Generational/Player Continuity), the new ThreadRegistry's marked-thread count and the new allThreadsConnected's structural "nothing exists in isolation" check against the reused AF-151 KnowledgeGraph, and a live detectOverlap reading confirming CONTINUUM_DOMAINS ties the codebase's 10/12 overlap record against AF-175's real INFINITY_DOMAINS (AF-176 §DEBUG). */
   atlasContinuum: string | null;
+  /** Atlas Genesis Engine summary: the new GenesisRegistry's write-once founder for a sample institution's First Moment, the reused AF-172 HypothesisTracker's grounded status for Scientific Origins, the reused AF-165 InstitutionalMemoryTracker's memory count for Institution Foundations, the reused AF-151 KnowledgeGraph's Inspired-edge neighbour count for The Spark Network, the reused AF-155 CyclicStageTracker's current Beginning-to-Legacy stage, the reused AF-167 EarnedTitleTracker's title count for The Founders, and a live detectOverlap reading confirming GENESIS_DOMAINS ties the codebase's 10/12 overlap record against AF-174's real HORIZON_CATEGORIES (AF-177 §DEBUG). */
+  atlasGenesis: string | null;
 }
 
 export class DebugOverlay {
@@ -318,6 +320,7 @@ export class DebugOverlay {
       `horizon    ${snapshot.atlasHorizon ?? "—"}`,
       `infinity   ${snapshot.atlasInfinity ?? "—"}`,
       `continuum  ${snapshot.atlasContinuum ?? "—"}`,
+      `genesis    ${snapshot.atlasGenesis ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
