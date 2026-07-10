@@ -116,6 +116,8 @@ export interface DebugSnapshot {
   civilisationEngine: string | null;
   /** Evolution Engine summary: technology era, transport tier, architecture layers, commander maturity, player rank, equipment stage, species/companion/language tracking, unified Great Projects progress (AF-139 §DEBUG). */
   evolutionEngine: string | null;
+  /** Infinite Endgame Engine summary: gated on AF-069's real endgame unlock; frontier expeditions, council lean, commander legacy successors, mega discoveries, galactic museum expansion, megacities, emergent industries, annual event, infinite-research knowledge sample (AF-140 §DEBUG). */
+  endgameEngine: string | null;
 }
 
 export class DebugOverlay {
@@ -207,6 +209,7 @@ export class DebugOverlay {
       `events     ${snapshot.eventEngine ?? "—"}`,
       `civEngine  ${snapshot.civilisationEngine ?? "—"}`,
       `evolution  ${snapshot.evolutionEngine ?? "—"}`,
+      `infEndgame ${snapshot.endgameEngine ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

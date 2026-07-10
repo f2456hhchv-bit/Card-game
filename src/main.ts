@@ -47,7 +47,7 @@ import { SaveSlice } from "./core/save/SaveSlice";
 import { LocalStorageAdapter } from "./core/save/SaveStorage";
 import { ResearchTree, type ResearchSaveData } from "./game/research/ResearchTree";
 import { researchEfficiencyFor, scientificProgressFor } from "./game/research/researchFrameworkData";
-import { ROSTER_RESEARCH_TREE } from "./game/research/researchRosterData";
+import { ROSTER_RESEARCH_TREE, infiniteResearchProjectFor } from "./game/research/researchRosterData";
 import { CraftingSystem, type CraftingSaveData } from "./game/crafting/CraftingSystem";
 import {
   DEFAULT_CRAFTING_TUNING,
@@ -134,6 +134,17 @@ import {
   SpeciesAdaptationRegistry,
   greatProjectsProgressSummary,
 } from "./game/evolutionEngine/EvolutionEngineRuntime";
+import { GREAT_EXPEDITION_DESTINATIONS, industryEmergenceEligible, megacityThresholdMet, temporaryExhibitionThemeFor } from "./game/endgameEngine/endgameEngineData";
+import {
+  AnnualEndgameCalendar,
+  CommanderLegacyRuntime,
+  EmergentIndustryLedger,
+  ExpeditionCouncilTracker,
+  FrontierExpeditionRegistry,
+  GalacticMuseumExpansionTracker,
+  MegaDiscoveryLog,
+  MegacityLedger,
+} from "./game/endgameEngine/EndgameEngineRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1088,6 +1099,28 @@ const languageEvolution = new LanguageEvolutionLog();
   const seedSettlement = civilisation.allSettlements[0];
   if (seedSettlement) architectureHistory.record(seedSettlement.profile.settlementId, architecturalStageFor(seedSettlement.developmentStage), civilisation.epochCount);
   languageEvolution.coin("first-light", "The light that never went out.", 0, "Explorers");
+}
+
+// AF-140: the Infinite Endgame Engine — composes AF-069's real
+// EndgameRuntime.unlocked gate, AF-139's real greatProjectsProgressSummary,
+// and AF-082's real infiniteResearchProjectFor directly rather than
+// inventing parallel systems; see endgameEngineData.ts for the Legendary
+// Projects/Colony Specialisation/Annual Events collision notes.
+const frontierExpeditions = new FrontierExpeditionRegistry();
+const commanderLegacy = new CommanderLegacyRuntime();
+const expeditionCouncil = new ExpeditionCouncilTracker();
+const megaDiscoveries = new MegaDiscoveryLog();
+const galacticMuseumExpansion = new GalacticMuseumExpansionTracker();
+const megacities = new MegacityLedger();
+const emergentIndustries = new EmergentIndustryLedger();
+const annualEndgameCalendar = new AnnualEndgameCalendar();
+{
+  const seedSettlement = civilisation.allSettlements[0];
+  if (seedSettlement) {
+    const population = civSim.stateFor(seedSettlement.profile.factionId)?.attributes.population ?? 0;
+    if (megacityThresholdMet(population, seedSettlement.specialisation)) megacities.record(seedSettlement.profile.settlementId, civilisation.epochCount);
+  }
+  if (industryEmergenceEligible(galacticEconomy.snapshot.economicHealth)) emergentIndustries.emerge("Tourism", civilisation.epochCount);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -4738,6 +4771,11 @@ const loop = new GameLoop({
           const firstCompanion = companionHabitat.all()[0];
           const companionStage = firstCompanion ? companionEvolution.stageFor(firstCompanion.id) : "none yet";
           return `${era} · transport ${transportTier} · architecture ${archStage} (${architectureHistory.layersFor(settlement?.profile.settlementId ?? "").length} layers) · commander ${maturityStage} · rank ${rank} · equipment ${equipmentEvolution.stageFor("rail-rifle")} · species records ${speciesAdaptation.all().length} · companion ${companionStage} · phrases ${languageEvolution.all().length} · great projects ${greatProjects.completedProjects}/${greatProjects.totalProjects} (avg ${(greatProjects.averageProgress * 100).toFixed(0)}%)`;
+        })(),
+        endgameEngine: (() => {
+          if (!endgame.snapshot.unlocked) return "locked — the endgame begins after the main campaign";
+          const knowledge = infiniteResearchProjectFor(researchTree.unlockedNodes.length);
+          return `expeditions ${frontierExpeditions.completedCount()}/${GREAT_EXPEDITION_DESTINATIONS.length} · council lean ${expeditionCouncil.dominantPriority() ?? "none"} · legacy successors ${commanderLegacy.all().length} · mega discoveries ${megaDiscoveries.all().length} · museum sectors ${galacticMuseumExpansion.sectorCount()} (artifacts ${galacticMuseumExpansion.artifactCount()}, exhibition ${temporaryExhibitionThemeFor(civilisation.epochCount)}) · megacities ${megacities.all().length} · industries ${emergentIndustries.all().length} · annual ${annualEndgameCalendar.currentEvent()} · knowledge ${knowledge.kind}`;
         })(),
       });
     }
