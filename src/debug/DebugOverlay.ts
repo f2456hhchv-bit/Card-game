@@ -164,6 +164,8 @@ export interface DebugSnapshot {
   atlasPurpose: string | null;
   /** Atlas Meaning Engine summary: a sample Commander's curated Personal Meaning entry, the player's curated Player Meaning entry, a civilisation's curated Collective Memory entry (all via the shared MeaningCurator), a Symbol's accumulated significance weight, a place's attached Community Meaning, and the Quiet Moment count (AF-163 §DEBUG). */
   atlasMeaning: string | null;
+  /** Atlas Experience Engine summary: reused AF-154 Experience Rhythm stage, reused AF-162 Player Expression dominant purpose, reused AF-153 Surprise Management count, First-Time Moment protection status, a sample Experience State snapshot, an Atmospheric Design level, reused AF-155 Shared Experience contributor count, and the Long-Term Experience rank (AF-164 §DEBUG). */
+  atlasExperience: string | null;
 }
 
 export class DebugOverlay {
@@ -279,6 +281,7 @@ export class DebugOverlay {
       `philosophy ${snapshot.atlasPhilosophy ?? "—"}`,
       `purpose    ${snapshot.atlasPurpose ?? "—"}`,
       `meaning    ${snapshot.atlasMeaning ?? "—"}`,
+      `experience ${snapshot.atlasExperience ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

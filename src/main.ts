@@ -207,6 +207,8 @@ import { purposeEvolutionRank } from "./game/atlasPurpose/atlasPurposeData";
 import { CommanderPurposeTracker, IndividualPurposeTracker, LongTermMissionTracker, PlayerPurposeObserver, PurposeMemoryArchive } from "./game/atlasPurpose/AtlasPurposeRuntime";
 import { CommunityMeaningTracker, MeaningCurator, QuietMomentLog, SignificanceTracker } from "./game/atlasMeaning/AtlasMeaningRuntime";
 import type { CollectiveMemoryCategory, PersonalMeaningCategory, PlayerMeaningCategory } from "./game/atlasMeaning/atlasMeaningData";
+import { longTermExperienceRank } from "./game/atlasExperience/atlasExperienceData";
+import { AtmosphereCoordinator, ExperienceStateTracker, FirstTimeMomentTracker } from "./game/atlasExperience/AtlasExperienceRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1673,6 +1675,30 @@ const quietMoments = new QuietMomentLog();
   symbolSignificance.reinforce("atlas-beacon", 20);
   communityMeaning.attachMeaning("museum-verdance", "Museums", "Where the founder's helmet is displayed.", 20);
   quietMoments.record("Watching the sunrise over the Verdance canopy.", 20);
+}
+
+// AF-164: the Atlas Experience Engine — exists above AF-163's Meaning
+// Engine, shaping how the player lives through a moment rather than
+// why it matters. Reuses AF-154's real pacingCycle directly for
+// Experience Rhythm, AF-162's real playerPurpose directly for Player
+// Expression, AF-153's real emergenceLog directly for Surprise
+// Management, AF-163's real personalMeaning/symbolSignificance
+// directly for Emotional Memory/Micro Experiences, and AF-155's real
+// collaborativeProblems directly for Shared Experiences.
+// ExperienceStateTracker/FirstTimeMomentTracker/AtmosphereCoordinator
+// are the genuinely new pieces (see atlasExperienceData.ts for the
+// full reuse notes).
+const experienceStates = new ExperienceStateTracker();
+const firstTimeMoments = new FirstTimeMomentTracker();
+const atmosphere = new AtmosphereCoordinator();
+{
+  experienceStates.record({ curiosity: 70, confidence: 60, stress: 20, comfort: 65, achievement: 55, fatigue: 15, connection: 50, immersion: 80, focus: 60, emotionalMomentum: 45 });
+  firstTimeMoments.markOccurred("First Commander recruited", 20);
+  atmosphere.setLevel("Lighting", 0.6);
+  atmosphere.setLevel("Music", 0.4);
+  symbolSignificance.register("sunrise-restored-verdance", "Sunrise over restored Verdance", 20);
+  symbolSignificance.reinforce("sunrise-restored-verdance", 20);
+  collaborativeProblems.propose("planetary-recovery-festival", ["settlement-verdance", "settlement-lucent-gate"], "Cultural", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5514,6 +5540,10 @@ const loop = new GameLoop({
         atlasMeaning: (() => {
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           return `personal "${personalMeaning.entryFor(commanderIndexId, "Favourite memory")?.description ?? "none"}" · player favourite "${playerMeaning.entryFor("player", "Favourite planet")?.description ?? "none"}" · collective "${collectiveMemory.entryFor("civilisation", "Great kindness")?.description ?? "none"}" · symbol significance ${symbolSignificance.significanceOf("atlas-beacon")} · community meaning "${communityMeaning.meaningOf("museum-verdance")?.description ?? "none"}" · quiet moments ${quietMoments.all().length}`;
+        })(),
+        atlasExperience: (() => {
+          const state = experienceStates.latest();
+          return `rhythm ${pacingCycle.currentStage() ?? "none"} · expression ${playerPurpose.dominantPurpose() ?? "none"} · surprise ${emergenceLog.all().length} · first-time recruited=${firstTimeMoments.hasOccurred("First Commander recruited")} (repeat blocked=${!firstTimeMoments.markOccurred("First Commander recruited", 999)}) · states curiosity=${state?.curiosity ?? 0} immersion=${state?.immersion ?? 0} · atmosphere lighting=${atmosphere.levelFor("Lighting")} · shared festival ${collaborativeProblems.participantsFor("planetary-recovery-festival").length} · long-term rank ${longTermExperienceRank("Mastery")}`;
         })(),
       });
     }
