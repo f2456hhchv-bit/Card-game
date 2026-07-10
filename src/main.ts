@@ -156,6 +156,8 @@ import {
   PhotoAlbumCurator,
   SoundtrackPlaylistRegistry,
 } from "./game/galacticCreator/GalacticCreatorRuntime";
+import { CONTENT_DISCOVERY_KINDS, MODULE_CATEGORIES } from "./game/moduleUniverse/moduleUniverseData";
+import { ContentDiscoveryFeed, ModuleRegistry, moduleQaReport } from "./game/moduleUniverse/ModuleUniverseRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1158,6 +1160,30 @@ const creationHeritage = new CreationHeritageLedger();
   gardenDesigns.select("garden-verdance", "Water");
   soundtrackPlaylists.addTrack("Ship", "Drift Among the Ashes");
 }
+
+// AF-142: the Modular Universe Engine — a dependency-graph/cross-system
+// registry for whole MODULES (a different granularity than AF-070's
+// real per-pack LiveOpsRegistry, which this composes with rather than
+// duplicates for Save Compatibility/Live Event Support — see
+// moduleUniverseData.ts for the full research findings).
+const moduleUniverse = new ModuleRegistry();
+const contentDiscovery = new ContentDiscoveryFeed();
+moduleUniverse.register({
+  id: "expansion-ocean-worlds",
+  name: "Ocean Worlds",
+  category: "Planets",
+  dependencies: [],
+  gameplayTags: ["evolving"],
+  narrativeTags: ["hope"],
+  factionRelationships: ["humanAlliance"],
+  commanderInteractions: ["voss-pathfinder"],
+  museumCompatible: true,
+  chronicleSupport: true,
+  legacySupport: true,
+  accessibilityMetadata: ["highContrast", "narrationReady"],
+  origin: "core",
+});
+contentDiscovery.discover("Recovered archives", "A sealed data-vault surfaces beneath Verdance's tide pools.", 0);
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4816,6 +4842,13 @@ const loop = new GameLoop({
         galacticCreator: (() => {
           creationHeritage.recordTransition("garden-verdance", heritageStageFor(civilisation.epochCount), civilisation.epochCount);
           return `albums ${photoAlbums.all().length} · exhibitions ${exhibitionCurator.all().length} · flags ${expeditionFlags.all().length} · garden elements ${gardenDesigns.elementsFor("garden-verdance").length} · observatory elements ${observatoryDesigns.elementsFor("observatory-first-light").length} · playlists ${soundtrackPlaylists.tracksFor("Ship").length} · commander ideas ${commanderContributions.all().length} · community ${communityProjects.completedCount()}/${COMMUNITY_PROJECT_EXAMPLES.length} · heritage ${creationHeritage.currentStageFor("garden-verdance") ?? "—"}`;
+        })(),
+        moduleUniverse: (() => {
+          const oceanWorlds = moduleUniverse.moduleFor("expansion-ocean-worlds");
+          if (!oceanWorlds) return null;
+          const qa = moduleQaReport(oceanWorlds, moduleUniverse);
+          const order = moduleUniverse.topologicalLoadOrder();
+          return `modules ${moduleUniverse.all().length}/${MODULE_CATEGORIES.length} categories · compat [${moduleUniverse.compatibilityFor("expansion-ocean-worlds").join(", ")}] · qa ${qa.passed ? "passed" : "failed"} · loaded ${moduleUniverse.loadedCount()} · order ${order ? "resolved" : "CYCLE"} · discoveries ${contentDiscovery.all().length}/${CONTENT_DISCOVERY_KINDS.length}`;
         })(),
       });
     }

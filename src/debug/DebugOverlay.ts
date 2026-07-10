@@ -120,6 +120,8 @@ export interface DebugSnapshot {
   endgameEngine: string | null;
   /** Galactic Creator Engine summary: photo albums, curated exhibitions, expedition flags, garden/observatory design elements, playlists, commander creative contributions, community project progress, creation heritage stage (AF-141 §DEBUG). */
   galacticCreator: string | null;
+  /** Modular Universe Engine summary: registered module count, computed system compatibility, QA pass/fail, loaded count, dependency load-order resolution, content discovery count (AF-142 §DEBUG). */
+  moduleUniverse: string | null;
 }
 
 export class DebugOverlay {
@@ -213,6 +215,7 @@ export class DebugOverlay {
       `evolution  ${snapshot.evolutionEngine ?? "—"}`,
       `infEndgame ${snapshot.endgameEngine ?? "—"}`,
       `creator    ${snapshot.galacticCreator ?? "—"}`,
+      `universe   ${snapshot.moduleUniverse ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
