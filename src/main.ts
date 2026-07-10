@@ -125,7 +125,7 @@ import {
   SocialEventCalendar,
   civilisationAttributeSummaryFor,
 } from "./game/civilisationEngine/CivilisationEngineRuntime";
-import { architecturalStageFor, commanderMaturityScore, commanderMaturityStageFor, playerEvolutionRankFor, technologyEraFor, transportTierFor } from "./game/evolutionEngine/evolutionEngineData";
+import { architecturalStageFor, commanderMaturityScore, commanderMaturityStageFor, EVOLUTION_PILLARS, playerEvolutionRankFor, technologyEraFor, transportTierFor } from "./game/evolutionEngine/evolutionEngineData";
 import {
   CompanionEvolutionTracker,
   EquipmentEvolutionTracker,
@@ -252,6 +252,8 @@ import { UnityIndexScoreCard } from "./game/atlasUnity/AtlasUnityRuntime";
 import { UNITY_DOMAINS, UNITY_INDEX_CRITERIA } from "./game/atlasUnity/atlasUnityData";
 import { LivingPresentTracker } from "./game/atlasLivingUniverse/AtlasLivingUniverseRuntime";
 import { LIVING_DOMAINS } from "./game/atlasLivingUniverse/atlasLivingUniverseData";
+import { EvolutionRecord } from "./game/atlasEvolution/AtlasEvolutionRuntime";
+import { EVOLUTION_CHAIN_STAGES, EVOLUTION_DOMAINS } from "./game/atlasEvolution/atlasEvolutionData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2213,6 +2215,25 @@ const livingPresent = new LivingPresentTracker();
   mysteryLog.open("mystery-new-friendship", "Unknown signals", "A new friendship forms between distant colonies.", 20);
   horizonEffect.learn("Deep-space migration routes", 20);
   livingPresent.update(commanderIndexId, "Restoring a wounded ecosystem on Verdance.", 20);
+}
+
+// AF-186: the Atlas Evolution Engine — ensures everything grows for a
+// reason. Distinct from AF-139's own locked "Evolution Engine" (see
+// atlasEvolutionData.ts's NAMING SCOPE NOTE); reuses AF-139's real
+// speciesAdaptation/architectureHistory/languageEvolution/
+// commanderMaturityScore/technologyEraFor directly wherever this
+// module's own sections name the same mechanic, plus AF-155's real
+// CyclicStageTracker over the module's own EVOLUTION_CHAIN_STAGES for
+// The Evolution Chain. EvolutionRecord is the genuinely new piece (see
+// atlasEvolutionData.ts for the full reuse notes).
+const evolutionChain = new CyclicStageTracker(EVOLUTION_CHAIN_STAGES);
+const evolutionRecord = new EvolutionRecord();
+{
+  speciesAdaptation.adapt("system-verdance", "species-verdance-glider", "Climate", "Gliders roost higher after warming.");
+  architectureHistory.record("settlement-verdance", "Modern Cities", 20);
+  languageEvolution.coin("phrase-verdance-dawn", "May your dawn find the wild kind.", 20, "Explorers");
+  evolutionChain.record("Observation", 20);
+  evolutionRecord.transition("practice-open-air-lectures", "Adopted", "Field testing showed strong student engagement.", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6158,6 +6179,10 @@ const loop = new GameLoop({
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           const overlap = detectOverlap(LIVING_DOMAINS, CONTINUUM_DOMAINS);
           return `present "${livingPresent.currentActivityOf(commanderIndexId) ?? "none"}" · chronicle versions ${chroniclePlanets.entryFor("settlement-verdance").allVersions().length} · hypothesis grounded=${hypotheses.isGrounded("theory-migration-patterns")} · mysteries unsolved ${mysteryLog.unsolved().length} · unknown index ${horizonEffect.unknownIndex()} · domain overlap[Living,Continuum] ${overlap.shared.length}/${LIVING_DOMAINS.length}`;
+        })(),
+        atlasEvolution: (() => {
+          const overlap = detectOverlap(EVOLUTION_DOMAINS, EVOLUTION_PILLARS);
+          return `species adaptations ${speciesAdaptation.historyFor("system-verdance", "species-verdance-glider").length} · architecture layers ${architectureHistory.layersFor("settlement-verdance").length} · phrase "${languageEvolution.latestFor("phrase-verdance-dawn") ?? "none"}" · chain ${evolutionChain.currentStage() ?? "none"} (next ${evolutionChain.next("New Observation")}) · practice state ${evolutionRecord.currentStateOf("practice-open-air-lectures") ?? "none"} · domain overlap[Evolution,Pillars] ${overlap.shared.length}/${EVOLUTION_DOMAINS.length}`;
         })(),
       });
     }

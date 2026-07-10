@@ -208,6 +208,8 @@ export interface DebugSnapshot {
   atlasUnity: string | null;
   /** Atlas Living Universe Engine summary (unrelated to AF-132's locked Living Galaxy module — see atlasLivingUniverseData.ts's NAMING NOTE): the new LivingPresentTracker's current activity for a sample Commander (the only overwriting tracker in this codebase, by design), the reused AF-135 PlanetaryChronicle's version count for Living Cities/Planets, the reused AF-172 HypothesisTracker's grounded status for Living Knowledge, the reused AF-159 MysteryLog's unsolved count for Living Science/The Living Future, the reused AF-174 HorizonEffectTracker's unknown index, and a live detectOverlap reading against AF-176's real CONTINUUM_DOMAINS (AF-185 §DEBUG). */
   atlasLivingUniverse: string | null;
+  /** Atlas Evolution Engine summary (distinct from AF-139's own locked "Evolution Engine" — see atlasEvolutionData.ts's NAMING SCOPE NOTE): the reused AF-139 SpeciesAdaptationRegistry/HistoricalArchitectureLedger/LanguageEvolutionLog readings for Species/City/Cultural Evolution, the reused AF-155 CyclicStageTracker's current/next Evolution Chain stage, the new EvolutionRecord's current state for a sample reversible practice (the first tracker in this codebase whose state can legitimately regress), and a live detectOverlap reading confirming EVOLUTION_DOMAINS shares zero exact members with AF-139's real EVOLUTION_PILLARS despite conceptual overlap (AF-186 §DEBUG). */
+  atlasEvolution: string | null;
 }
 
 export class DebugOverlay {
@@ -345,6 +347,7 @@ export class DebugOverlay {
       `symphony   ${snapshot.atlasSymphony ?? "—"}`,
       `unity      ${snapshot.atlasUnity ?? "—"}`,
       `living     ${snapshot.atlasLivingUniverse ?? "—"}`,
+      `atlasEvo   ${snapshot.atlasEvolution ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
