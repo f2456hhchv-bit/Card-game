@@ -184,6 +184,8 @@ export interface DebugSnapshot {
   atlasImagination: string | null;
   /** Atlas Possibility Space summary: the reused AF-159 Possibility Network's registered-possibility count, the reused AF-158 Multiple-Futures forecast's current highest-confidence branch, the reused AF-172 HypothesisTracker's evidence-grounded status for a sample Scientific Possibility, the new SandboxScenarioRegistry's commitment status for a sample scenario, the reused AF-159 InnovationMemoryArchive's Failed-Possibility outcome count, the new InnovationFilterScoreCard's score/gate status mirroring AF-143/149/170's real scoring-rubric shape, and a live detectOverlap reading confirming POSSIBILITY_CATEGORIES ties the 8/12 overlap record against the real DISCOVERY_CATEGORIES (AF-173 §DEBUG). */
   atlasPossibilitySpace: string | null;
+  /** Atlas Horizon Engine summary: a sample Commander's evolving Horizon (via the reused AF-161 CommanderBeliefTracker), the reused AF-159 MysteryLog's unsolved count for Living Frontiers/The Unknown Index, the reused AF-151 KnowledgeGraph's neighbour count for the Horizon Network, the reused AF-155 CyclicStageTracker's current Civilisation Horizon stage, the new HorizonEffectTracker's unknown index/knowledge count for The Horizon Effect, and a live detectOverlap reading confirming HORIZON_CATEGORIES ties the codebase's 8/12 overlap record against AF-173's real POSSIBILITY_CATEGORIES (AF-174 §DEBUG). */
+  atlasHorizon: string | null;
 }
 
 export class DebugOverlay {
@@ -309,6 +311,7 @@ export class DebugOverlay {
       `creative   ${snapshot.atlasCreativeIntelligence ?? "—"}`,
       `imagination ${snapshot.atlasImagination ?? "—"}`,
       `possibility ${snapshot.atlasPossibilitySpace ?? "—"}`,
+      `horizon    ${snapshot.atlasHorizon ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

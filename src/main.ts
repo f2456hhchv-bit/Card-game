@@ -227,6 +227,8 @@ import { HypothesisTracker } from "./game/atlasImagination/AtlasImaginationRunti
 import { DREAM_NETWORK_STAGES, IMAGINATION_DOMAINS } from "./game/atlasImagination/atlasImaginationData";
 import { InnovationFilterScoreCard, SandboxScenarioRegistry } from "./game/atlasPossibilitySpace/AtlasPossibilitySpaceRuntime";
 import { INNOVATION_FILTER_CRITERIA, POSSIBILITY_CATEGORIES } from "./game/atlasPossibilitySpace/atlasPossibilitySpaceData";
+import { HorizonEffectTracker } from "./game/atlasHorizon/AtlasHorizonRuntime";
+import { CIVILISATION_HORIZON_STAGES, HORIZON_CATEGORIES } from "./game/atlasHorizon/atlasHorizonData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -1933,6 +1935,28 @@ const innovationFilter = new InnovationFilterScoreCard();
   hypotheses.propose("possibility-alt-ecosystem", "An alternative ecosystem may thrive in low gravity.", 20);
   innovationMemory.archive("possibility-failed-reactor", ["Academic disciplines", "Museum exhibits"], 20);
   for (const criterion of INNOVATION_FILTER_CRITERIA) innovationFilter.score(criterion, 9.6);
+}
+
+// AF-174: the Atlas Horizon Engine — governs humanity's relationship
+// with the unknown, formalising the "horizon" concept AF-169's real
+// ensureNextHorizonOpen first introduced. Reuses AF-161's real
+// commanderBeliefs directly for Commander Horizons, AF-159's real
+// mysteryLog directly for Living Frontiers/The Unknown Index, AF-151's
+// real knowledgeGraph directly for the Horizon Network, AF-169's real
+// ensureNextHorizonOpen directly for Beyond the Map/Legacy Horizons,
+// and AF-155's real CyclicStageTracker over the module's own
+// CIVILISATION_HORIZON_STAGES for Civilisation Horizons.
+// HorizonEffectTracker is the genuinely new piece (see
+// atlasHorizonData.ts for the full reuse notes).
+const horizonEffect = new HorizonEffectTracker();
+const civilisationHorizon = new CyclicStageTracker(CIVILISATION_HORIZON_STAGES);
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  commanderBeliefs.setBelief(commanderIndexId, "I want to map the unexplored region beyond Verdance.", 20);
+  mysteryLog.open("mystery-unknown-signal", "Unknown signals", "Signals with unknown origins arrive from beyond the frontier.", 20);
+  knowledgeGraph.addEdge({ fromId: "horizon-living-ring", toId: commanderIndexId, kind: "Influenced", strength: 1, confidence: 1, historicalContext: "A new horizon opened by the living ring project.", dateEstablished: 20 });
+  civilisationHorizon.record("Discover", 20);
+  horizonEffect.learn("Xenobiology", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5825,6 +5849,11 @@ const loop = new GameLoop({
         atlasPossibilitySpace: (() => {
           const overlap = detectOverlap(POSSIBILITY_CATEGORIES, DISCOVERY_CATEGORIES);
           return `network possibilities ${possibilityRegistry.all().length} · future ${mostLikelyFutureState(verdanceFutureForecast)} · scientific grounded=${hypotheses.isGrounded("possibility-alt-ecosystem")} · sandbox committed=${sandboxScenarios.isCommitted("scenario-living-ring")} · failed outcomes ${innovationMemory.outcomesFor("possibility-failed-reactor").length} · filter score ${innovationFilter.overallScore().toFixed(1)} (${innovationFilter.passesGate() ? "passed" : "pending"}) · domain overlap[Possibility,Discovery] ${overlap.shared.length}/${POSSIBILITY_CATEGORIES.length}`;
+        })(),
+        atlasHorizon: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const overlap = detectOverlap(HORIZON_CATEGORIES, POSSIBILITY_CATEGORIES);
+          return `vision "${commanderBeliefs.beliefOf(commanderIndexId) ?? "none"}" · mysteries unsolved ${mysteryLog.unsolved().length} · network neighbours ${knowledgeGraph.neighbors("horizon-living-ring").length} · civilisation stage ${civilisationHorizon.currentStage() ?? "none"} · unknown index ${horizonEffect.unknownIndex()} (knowledge ${horizonEffect.knowledgeCount()}) · domain overlap[Horizon,Possibility] ${overlap.shared.length}/${HORIZON_CATEGORIES.length}`;
         })(),
       });
     }
