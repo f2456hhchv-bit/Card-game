@@ -246,6 +246,8 @@ import { EternalArchive } from "./game/atlasEternity/AtlasEternityRuntime";
 import { ETERNITY_DOMAINS, PRESERVATION_CYCLE_STAGES } from "./game/atlasEternity/atlasEternityData";
 import { HarmonyIndexScoreCard, HarmonyTracker } from "./game/atlasHarmony/AtlasHarmonyRuntime";
 import { HARMONY_DOMAINS, HARMONY_INDEX_CRITERIA } from "./game/atlasHarmony/atlasHarmonyData";
+import { CampaignJourneyTracker } from "./game/atlasSymphony/AtlasSymphonyRuntime";
+import { CIVILISATION_RHYTHM_STAGES, SYMPHONY_DOMAINS, thematicConsistencyMet } from "./game/atlasSymphony/atlasSymphonyData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2141,6 +2143,29 @@ const harmonyIndex = new HarmonyIndexScoreCard();
   beautyIndex.setLevel("Public spaces", 75);
   for (const domain of HARMONY_DOMAINS) harmonyTracker.adjustToward(domain, 60);
   for (const criterion of HARMONY_INDEX_CRITERIA) harmonyIndex.score(criterion, 9.6);
+}
+
+// AF-183: the Atlas Symphony Engine — orchestration, not invention:
+// almost entirely direct reuse of instruments this codebase already
+// built. Reuses AF-151's real knowledgeGraph directly (kind
+// "Inspired") for Institutional/Cultural Symphony and The Resonance
+// Model, AF-155's real CyclicStageTracker over the module's own
+// CIVILISATION_RHYTHM_STAGES for Civilisation Rhythm, AF-163's real
+// quietMoments directly for The Silence Principle, and AF-175's real
+// generationalHandoff directly for The Resonance Model's "echoes
+// across generations." CampaignJourneyTracker/thematicConsistencyMet
+// are the genuinely new pieces (see atlasSymphonyData.ts for the full
+// reuse notes).
+const civilisationRhythm = new CyclicStageTracker(CIVILISATION_RHYTHM_STAGES);
+const campaignJourney = new CampaignJourneyTracker();
+{
+  knowledgeGraph.addEdge({ fromId: "institution-verdance-museum", toId: "institution-verdance-academy", kind: "Inspired", strength: 1, confidence: 1, historicalContext: "The museum's collection inspired the academy's founding.", dateEstablished: 20 });
+  civilisationRhythm.record("Exploration", 20);
+  quietMoments.record("A quiet sunrise over the restored Verdance forest.", 20);
+  campaignJourney.contribute("A scientific journey");
+  campaignJourney.contribute("A cultural journey");
+  campaignJourney.contribute("An ecological journey");
+  campaignJourney.contribute("A human journey");
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6072,6 +6097,10 @@ const loop = new GameLoop({
         atlasHarmony: (() => {
           const overlap = detectOverlap(HARMONY_DOMAINS, CREATIVE_DOMAINS);
           return `dominant ${harmonyTracker.mostDominantDomain() ?? "none"} · neglected ${harmonyTracker.mostNeglectedDomain() ?? "none"} · balanced=${harmonyTracker.isBalanced()} · network neighbours ${knowledgeGraph.neighbors("domain-education").length} · cultural adopters ${culturalTrends.adoptersFor("Balanced Progress Movement").length} · beauty Public spaces=${beautyIndex.levelFor("Public spaces")} · index score ${harmonyIndex.overallScore().toFixed(1)} (${harmonyIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Harmony,Creative] ${overlap.shared.length}/${HARMONY_DOMAINS.length}`;
+        })(),
+        atlasSymphony: (() => {
+          const overlap = detectOverlap(SYMPHONY_DOMAINS, HARMONY_DOMAINS);
+          return `resonance neighbours ${knowledgeGraph.neighbors("institution-verdance-museum").length} · rhythm ${civilisationRhythm.currentStage() ?? "none"} (next ${civilisationRhythm.next("Renewed Exploration")}) · quiet moments ${quietMoments.all().length} · journey dominant ${campaignJourney.dominantJourney() ?? "none"} unified=${campaignJourney.isUnifiedStory()} · theme met=${thematicConsistencyMet(new Set(["Wonder"]))} · generation 4 baseline ${generationalHandoff.startingBaselineFor(4)} · domain overlap[Symphony,Harmony] ${overlap.shared.length}/${SYMPHONY_DOMAINS.length}`;
         })(),
       });
     }
