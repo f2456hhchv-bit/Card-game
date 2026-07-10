@@ -114,6 +114,8 @@ export interface DebugSnapshot {
   eventEngine: string | null;
   /** Civilisation Engine summary: sample settlement's stage/attributes, megaproject/landmark/immigration counts, social event, government lean, public opinion (AF-138 §DEBUG). */
   civilisationEngine: string | null;
+  /** Evolution Engine summary: technology era, transport tier, architecture layers, commander maturity, player rank, equipment stage, species/companion/language tracking, unified Great Projects progress (AF-139 §DEBUG). */
+  evolutionEngine: string | null;
 }
 
 export class DebugOverlay {
@@ -204,6 +206,7 @@ export class DebugOverlay {
       `story      ${snapshot.storyEngine ?? "—"}`,
       `events     ${snapshot.eventEngine ?? "—"}`,
       `civEngine  ${snapshot.civilisationEngine ?? "—"}`,
+      `evolution  ${snapshot.evolutionEngine ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

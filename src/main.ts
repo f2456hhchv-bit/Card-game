@@ -125,6 +125,15 @@ import {
   SocialEventCalendar,
   civilisationAttributeSummaryFor,
 } from "./game/civilisationEngine/CivilisationEngineRuntime";
+import { architecturalStageFor, commanderMaturityScore, commanderMaturityStageFor, playerEvolutionRankFor, technologyEraFor, transportTierFor } from "./game/evolutionEngine/evolutionEngineData";
+import {
+  CompanionEvolutionTracker,
+  EquipmentEvolutionTracker,
+  HistoricalArchitectureLedger,
+  LanguageEvolutionLog,
+  SpeciesAdaptationRegistry,
+  greatProjectsProgressSummary,
+} from "./game/evolutionEngine/EvolutionEngineRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1064,6 +1073,22 @@ const civilisationSocialCalendar = new SocialEventCalendar();
 const civilisationGovernment = new GovernmentPriorityTracker();
 const civilisationPublicOpinion = new PublicOpinionTracker();
 const civilisationCareers = new CareerPipeline();
+
+// AF-139: the Evolution Engine — every class here composes with real
+// locked state via plain ids/values (equipment families, settlement
+// stages, research/talent/bond counts) rather than duplicating any of
+// it; see evolutionEngineData.ts for the Great Projects naming-collision
+// note (composes AF-090/AF-138's real rosters instead of a third one).
+const equipmentEvolution = new EquipmentEvolutionTracker();
+const architectureHistory = new HistoricalArchitectureLedger();
+const speciesAdaptation = new SpeciesAdaptationRegistry();
+const companionEvolution = new CompanionEvolutionTracker();
+const languageEvolution = new LanguageEvolutionLog();
+{
+  const seedSettlement = civilisation.allSettlements[0];
+  if (seedSettlement) architectureHistory.record(seedSettlement.profile.settlementId, architecturalStageFor(seedSettlement.developmentStage), civilisation.epochCount);
+  languageEvolution.coin("first-light", "The light that never went out.", 0, "Explorers");
+}
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4697,6 +4722,22 @@ const loop = new GameLoop({
           const summary = civilisationAttributeSummaryFor(settlement.profile.settlementId, civilisation, civSim, civilisationAttributes);
           if (!summary) return null;
           return `${settlement.profile.name} stage ${summary.stage} · pop ${summary.values.Population.toFixed(0)} · culture ${summary.values.Culture.toFixed(0)} · megaprojects ${civilisationMegaprojects.completedCount()}/${CIVILISATION_MEGAPROJECTS.length} · landmarks ${civilisationLandmarks.all().length} · immigration ${civilisationImmigration.all().length} · social ${civilisationSocialCalendar.currentEvent()} · gov lean ${civilisationGovernment.dominantPriority() ?? "none"} · opinion ${civilisationPublicOpinion.overallOpinion().toFixed(1)} · careers ${civilisationCareers.totalPromotions()}`;
+        })(),
+        evolutionEngine: (() => {
+          const settlement = civilisation.allSettlements[0];
+          const archStage = settlement ? architecturalStageFor(settlement.developmentStage) : "—";
+          const prog = commanderProgression.snapshot;
+          const maturityScore = commanderMaturityScore(prog.talentsUnlocked, prog.missionBeatIndex, bondNetwork.snapshot().averageLevel);
+          const maturityStage = commanderMaturityStageFor(maturityScore);
+          const unlockedNodes = researchTree.unlockedNodes;
+          const averageTier = unlockedNodes.length > 0 ? unlockedNodes.reduce((sum, n) => sum + n.tier, 0) / unlockedNodes.length : 0;
+          const era = technologyEraFor(unlockedNodes.length, averageTier);
+          const transportTier = transportTierFor(civilisation.epochCount, researchTree.isUnlocked("warp-charting"));
+          const rank = playerEvolutionRankFor(meta.snapshot.accountLevel);
+          const greatProjects = greatProjectsProgressSummary(civilisation, civilisationMegaprojects);
+          const firstCompanion = companionHabitat.all()[0];
+          const companionStage = firstCompanion ? companionEvolution.stageFor(firstCompanion.id) : "none yet";
+          return `${era} · transport ${transportTier} · architecture ${archStage} (${architectureHistory.layersFor(settlement?.profile.settlementId ?? "").length} layers) · commander ${maturityStage} · rank ${rank} · equipment ${equipmentEvolution.stageFor("rail-rifle")} · species records ${speciesAdaptation.all().length} · companion ${companionStage} · phrases ${languageEvolution.all().length} · great projects ${greatProjects.completedProjects}/${greatProjects.totalProjects} (avg ${(greatProjects.averageProgress * 100).toFixed(0)}%)`;
         })(),
       });
     }
