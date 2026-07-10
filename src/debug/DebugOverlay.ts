@@ -110,6 +110,8 @@ export interface DebugSnapshot {
   chronicle: string | null;
   /** Dynamic Story Engine summary: dominant pillars, pacing bias, campaign theme, reputation title, callbacks (AF-136 §DEBUG). */
   storyEngine: string | null;
+  /** Galactic Event Engine summary: tier weights, logged events, mining-boom chain progress (AF-137 §DEBUG). */
+  eventEngine: string | null;
 }
 
 export class DebugOverlay {
@@ -198,6 +200,7 @@ export class DebugOverlay {
       `museumLife ${snapshot.livingMuseum ?? "—"}`,
       `chronicle  ${snapshot.chronicle ?? "—"}`,
       `story      ${snapshot.storyEngine ?? "—"}`,
+      `events     ${snapshot.eventEngine ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

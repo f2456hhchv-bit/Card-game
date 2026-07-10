@@ -112,6 +112,8 @@ import { MuseumCollectionRegistry, MuseumQualityTracker, RestorationLab, Visitor
 import { ORAL_HISTORY_TOPICS, PLAYER_WRITABLE_ENTRY_KINDS, PUBLISHER_VOICES } from "./game/chronicle/chronicleData";
 import { PlanetaryChronicle, generateFinalChronicle } from "./game/chronicle/ChronicleRuntime";
 import { CommanderStorylineLog, NarrativeCallbackLog, StoryBranchTracker, StoryDirector, StoryPillarTracker, deriveCampaignTheme, reputationTitleFor } from "./game/storyEngine/StoryEngineRuntime";
+import { EVENT_CHAIN_EXAMPLE, EVENT_TIERS, EVENT_TIER_EXAMPLES, tierWeightsFor } from "./game/eventEngine/eventEngineData";
+import { EventChainRuntime, GalacticEventLog, rollTier } from "./game/eventEngine/EventEngineRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1024,6 +1026,19 @@ const storyDirector = new StoryDirector();
 const commanderStorylines = new CommanderStorylineLog();
 const storyBranches = new StoryBranchTracker();
 const narrativeCallbacks = new NarrativeCallbackLog();
+
+// AF-137: the Galactic Event Engine — a new scale-tier classification
+// alongside AF-041's real WorldEventRuntime (type-based categories);
+// the two never share state, per the spec's own instruction to compose
+// with AF-130/132/133/136 rather than duplicate any of them.
+const galacticEventLog = new GalacticEventLog();
+const miningBoomChain = new EventChainRuntime(EVENT_CHAIN_EXAMPLE);
+const eventEngineRng = new Rng(Date.now()).fork("event-engine");
+{
+  const openingTier = rollTier({ economyHealth: 0, averagePollution: 20, averageWildlife: 60, reputationTotal: 0, strongestBondLevel: 0, dominantPillarCount: 0 }, eventEngineRng.next());
+  const example = EVENT_TIER_EXAMPLES[openingTier][0] ?? "A quiet day.";
+  galacticEventLog.record(openingTier, example, 0);
+}
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4639,6 +4654,17 @@ const loop = new GameLoop({
           const branchAxisSample = storyBranches.leaningFor("Curiosity vs Caution");
           const commanderStoryBeats = commanderStorylines.beatFor(sandboxCommander.id, "Origin Story")?.allVersions().length ?? 0;
           return `pillars [${storyPillars.dominantPillars(2).join(", ") || "none yet"}] · theme ${deriveCampaignTheme(storyPillars)} · rep ${reputationTitleFor(legacyProgress)} · pacing combat ${(bias.combat * 100).toFixed(0)}%/explore ${(bias.exploration * 100).toFixed(0)}%/downtime ${(bias.downtime * 100).toFixed(0)}% · callbacks ${narrativeCallbacks.all().length} · branch lean ${branchAxisSample} · commander story beats ${commanderStoryBeats}`;
+        })(),
+        eventEngine: (() => {
+          const weights = tierWeightsFor({
+            economyHealth: meta.stat(CREDITS_KEY) * 0.01,
+            averagePollution: livingGalaxyEnvironment.averagePollution(),
+            averageWildlife: livingGalaxyEnvironment.averageWildlife(),
+            reputationTotal: livingGalaxyReputation.grandTotal(),
+            strongestBondLevel: bondNetwork.snapshot().averageLevel,
+            dominantPillarCount: storyPillars.dominantPillars(2).length,
+          });
+          return `weights [${EVENT_TIERS.map((t) => `${t} ${weights[t].toFixed(1)}`).join(", ")}] · logged ${galacticEventLog.all().length} · mining-boom chain ${miningBoomChain.stepsCompleted()}/${miningBoomChain.totalSteps()} (${miningBoomChain.currentStep() ?? "complete"})`;
         })(),
       });
     }
