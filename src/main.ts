@@ -198,6 +198,7 @@ import { hasContingencyCoverage, type ContingencySet, type Plan } from "./game/a
 import { PlanAdaptationLog, PlanMemoryArchive, PlanRegistry } from "./game/atlasPlanning/AtlasPlanningRuntime";
 import { mostLikelyFutureState, type FutureStateForecast } from "./game/atlasFuture/atlasFutureData";
 import { FutureMemoryArchive, OpportunityLog, RiskLog } from "./game/atlasFuture/AtlasFutureRuntime";
+import { DISCOVERY_CATEGORIES } from "./game/atlasPossibility/atlasPossibilityData";
 import type { Possibility } from "./game/atlasPossibility/atlasPossibilityData";
 import { CulturalTrendTracker, InnovationMemoryArchive, MysteryLog, PlayerInspirationLog, PossibilityRegistry, SerendipityLog } from "./game/atlasPossibility/AtlasPossibilityRuntime";
 import { REFLECTION_LOOP_STAGES, ethicalDeliberationPassed, generationalTransferRank, scientificWisdomReviewed, ETHICAL_DELIBERATION_QUESTIONS, SCIENTIFIC_WISDOM_QUESTIONS } from "./game/atlasWisdom/atlasWisdomData";
@@ -224,6 +225,8 @@ import { CreativeContributionLog, CreativeHeritageArchive } from "./game/atlasCr
 import { CREATIVE_DOMAINS } from "./game/atlasCreativeIntelligence/atlasCreativeIntelligenceData";
 import { HypothesisTracker } from "./game/atlasImagination/AtlasImaginationRuntime";
 import { DREAM_NETWORK_STAGES, IMAGINATION_DOMAINS } from "./game/atlasImagination/atlasImaginationData";
+import { InnovationFilterScoreCard, SandboxScenarioRegistry } from "./game/atlasPossibilitySpace/AtlasPossibilitySpaceRuntime";
+import { INNOVATION_FILTER_CRITERIA, POSSIBILITY_CATEGORIES } from "./game/atlasPossibilitySpace/atlasPossibilitySpaceData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -1899,6 +1902,37 @@ const dreamNetwork = new CyclicStageTracker(DREAM_NETWORK_STAGES);
   commanderBeliefs.setBelief(commanderIndexId, "I dream of a living city that restores itself.", 20);
   longTermMissions.register("living-architecture-verdance", "Grow a self-restoring city on Verdance", 100);
   dreamNetwork.record("Imagine", 20);
+}
+
+// AF-173: the Atlas Possibility Space — evaluates which of AF-172's
+// imagined futures are realistically achievable, without ever
+// committing the universe to one outcome. Reuses AF-159's real
+// possibilityRegistry directly for the Possibility Network, AF-158's
+// real verdanceFutureForecast/mostLikelyFutureState directly for
+// Multiple Futures, AF-172's real hypotheses tracker directly for
+// Scientific Possibility's evidence gate, and AF-159's real
+// innovationMemory directly for Failed Possibilities.
+// SandboxScenarioRegistry/InnovationFilterScoreCard are the genuinely
+// new pieces (see atlasPossibilitySpaceData.ts for the full reuse
+// notes).
+const sandboxScenarios = new SandboxScenarioRegistry();
+const innovationFilter = new InnovationFilterScoreCard();
+{
+  possibilityRegistry.register({
+    id: "possibility-living-city",
+    discoveryCategory: "Engineering",
+    requiredKnowledge: ["Adaptive materials science"],
+    requiredPeople: ["scientist-vale"],
+    requiredLocations: ["settlement-verdance"],
+    potentialRisks: ["Structural instability during early growth"],
+    potentialRewards: ["A self-restoring settlement"],
+    historicalSignificance: 60,
+    futureImplications: ["Planetary engineering becomes routine"],
+  });
+  sandboxScenarios.propose("scenario-living-ring", "Future technologies", "A ring habitat that grows with its population.", 20);
+  hypotheses.propose("possibility-alt-ecosystem", "An alternative ecosystem may thrive in low gravity.", 20);
+  innovationMemory.archive("possibility-failed-reactor", ["Academic disciplines", "Museum exhibits"], 20);
+  for (const criterion of INNOVATION_FILTER_CRITERIA) innovationFilter.score(criterion, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5787,6 +5821,10 @@ const loop = new GameLoop({
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           const overlap = detectOverlap(IMAGINATION_DOMAINS, CREATIVE_DOMAINS);
           return `vision "${commanderBeliefs.beliefOf(commanderIndexId) ?? "none"}" · hypothesis grounded=${hypotheses.isGrounded("hypothesis-ancient-precursor-tech")} · engineering idea ${(longTermMissions.progressFor("living-architecture-verdance") * 100).toFixed(0)}% · dream stage ${dreamNetwork.currentStage() ?? "none"} · mysteries unsolved ${mysteryLog.unsolved().length} · domain overlap[Imagination,Creative] ${overlap.shared.length}/${IMAGINATION_DOMAINS.length}`;
+        })(),
+        atlasPossibilitySpace: (() => {
+          const overlap = detectOverlap(POSSIBILITY_CATEGORIES, DISCOVERY_CATEGORIES);
+          return `network possibilities ${possibilityRegistry.all().length} · future ${mostLikelyFutureState(verdanceFutureForecast)} · scientific grounded=${hypotheses.isGrounded("possibility-alt-ecosystem")} · sandbox committed=${sandboxScenarios.isCommitted("scenario-living-ring")} · failed outcomes ${innovationMemory.outcomesFor("possibility-failed-reactor").length} · filter score ${innovationFilter.overallScore().toFixed(1)} (${innovationFilter.passesGate() ? "passed" : "pending"}) · domain overlap[Possibility,Discovery] ${overlap.shared.length}/${POSSIBILITY_CATEGORIES.length}`;
         })(),
       });
     }

@@ -182,6 +182,8 @@ export interface DebugSnapshot {
   atlasCreativeIntelligence: string | null;
   /** Atlas Imagination Engine summary: a sample Commander's evolving Vision (via the reused AF-161 CommanderBeliefTracker), the new HypothesisTracker's grounded status for a sample speculative idea, a reused AF-162 Engineering Imagination project's progress, the reused AF-155 CyclicStageTracker's current Dream Network stage, the reused AF-159 mystery-unsolved count for Historical Imagination, and a live detectOverlap reading confirming IMAGINATION_DOMAINS ties AF-171's real CREATIVE_DOMAINS overlap record (AF-172 §DEBUG). */
   atlasImagination: string | null;
+  /** Atlas Possibility Space summary: the reused AF-159 Possibility Network's registered-possibility count, the reused AF-158 Multiple-Futures forecast's current highest-confidence branch, the reused AF-172 HypothesisTracker's evidence-grounded status for a sample Scientific Possibility, the new SandboxScenarioRegistry's commitment status for a sample scenario, the reused AF-159 InnovationMemoryArchive's Failed-Possibility outcome count, the new InnovationFilterScoreCard's score/gate status mirroring AF-143/149/170's real scoring-rubric shape, and a live detectOverlap reading confirming POSSIBILITY_CATEGORIES ties the 8/12 overlap record against the real DISCOVERY_CATEGORIES (AF-173 §DEBUG). */
+  atlasPossibilitySpace: string | null;
 }
 
 export class DebugOverlay {
@@ -306,6 +308,7 @@ export class DebugOverlay {
       `primeDir   ${snapshot.atlasPrimeDirective ?? "—"}`,
       `creative   ${snapshot.atlasCreativeIntelligence ?? "—"}`,
       `imagination ${snapshot.atlasImagination ?? "—"}`,
+      `possibility ${snapshot.atlasPossibilitySpace ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
