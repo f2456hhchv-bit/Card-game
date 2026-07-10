@@ -101,7 +101,7 @@ import { NOCTIS_VOIDWALKER_CODEX_ENTRY } from "./game/commanders/cmd029VegaNocti
 import { AETHER_CELESTIAL_CODEX_ENTRY } from "./game/commanders/cmd030LysandraAether";
 import { FULL_PROFILES_WITH_FOUNDER, FULL_RECRUITMENT_WITH_FOUNDER, FULL_ROSTER_WITH_FOUNDER, PRIME_FOUNDER_CODEX_ENTRY } from "./game/commanders/cmd031AtlasPrime";
 import { DUAL_ULTIMATES, seedBondGraph } from "./game/commanders/bondNetworkData";
-import { BondNetworkRuntime } from "./game/commanders/BondNetworkRuntime";
+import { BondNetworkRuntime, EmotionalMemoryLog } from "./game/commanders/BondNetworkRuntime";
 import { INITIAL_SHIP_UPGRADES, commanderRoomsFor } from "./game/livingShip/livingShipData";
 import { CompanionHabitatRuntime, LivingShipRuntime, MemorialGardenLog } from "./game/livingShip/LivingShipRuntime";
 import { seedEnvironmentalStates } from "./game/livingGalaxy/livingGalaxyData";
@@ -109,6 +109,8 @@ import { CrimeLedger, EnvironmentalRuntime, FestivalCalendar, LivingGalaxyChroni
 import { GalacticHistoryLog, GalacticRecordBoard, GiftLedger, LegacyProgressTracker, PhotoAlbum, PlayerChronicle, PlayerJournalRuntime } from "./game/legacy/LegacyEngineRuntime";
 import { AUDIO_ARCHIVE_KINDS, COMMANDER_DONATION_EXAMPLES, LIBRARY_BOOK_KINDS, THEATER_PROGRAM_KINDS } from "./game/livingMuseum/livingMuseumData";
 import { MuseumCollectionRegistry, MuseumQualityTracker, RestorationLab, VisitorLog, seedCommanderDonations } from "./game/livingMuseum/LivingMuseumRuntime";
+import { ORAL_HISTORY_TOPICS, PLAYER_WRITABLE_ENTRY_KINDS, PUBLISHER_VOICES } from "./game/chronicle/chronicleData";
+import { PlanetaryChronicle, generateFinalChronicle } from "./game/chronicle/ChronicleRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1003,6 +1005,15 @@ const museumQuality = new MuseumQualityTracker();
 const museumTheater = new MuseumCollectionRegistry<(typeof THEATER_PROGRAM_KINDS)[number]>();
 const museumLibrary = new MuseumCollectionRegistry<(typeof LIBRARY_BOOK_KINDS)[number]>();
 const museumAudioArchive = new MuseumCollectionRegistry<(typeof AUDIO_ARCHIVE_KINDS)[number]>();
+
+// AF-135: the Chronicle of Humanity — real composition over AF-130's
+// EmotionalMemoryLog/BondNetworkRuntime and AF-133/134's trackers;
+// EvolvingEntry is the one genuinely new primitive.
+const chronicleCommanderMemories = new EmotionalMemoryLog();
+const chroniclePlanets = new PlanetaryChronicle();
+const chronicleOralHistory = new MuseumCollectionRegistry<(typeof ORAL_HISTORY_TOPICS)[number]>();
+const chronicleBooks = new MuseumCollectionRegistry<(typeof PUBLISHER_VOICES)[number]>();
+const chronicleWritableEntries = new MuseumCollectionRegistry<(typeof PLAYER_WRITABLE_ENTRY_KINDS)[number]>();
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4609,6 +4620,10 @@ const loop = new GameLoop({
         livingGalaxy: `pollution ${livingGalaxyEnvironment.averagePollution().toFixed(0)} · wildlife ${livingGalaxyEnvironment.averageWildlife().toFixed(0)} · rep ${livingGalaxyReputation.grandTotal()} · chronicle ${livingGalaxyChronicle.all().length} · festival ${livingGalaxyFestivals.currentFestival()} · unresolved crime ${livingGalaxyCrime.unresolvedCount()}`,
         legacy: `xp ${legacyProgress.totalXp()} (${legacyProgress.topCategory()}) · records ${legacyRecords.all().length}/9 · history ${legacyHistory.all().length} · favourite planet ${legacyChronicle.favouritePlanet() ?? "—"} · journal ${legacyJournal.all().length} · gifts ${legacyGifts.all().length} · photos ${legacyPhotos.all().length}`,
         livingMuseum: `quality ${museumQuality.value().toFixed(0)} · restoration ${museumRestoration.completedCount()}/${museumRestoration.allProjects().length} · donations ${museumDonations.all().length} · visitors ${museumVisitors.totalVisitors()} · theater ${museumTheater.all().length} · library ${museumLibrary.all().length} · audio ${museumAudioArchive.all().length}`,
+        chronicle: (() => {
+          const finalChronicle = generateFinalChronicle(legacyHistory, legacyChronicle, legacyProgress);
+          return `planets ${chroniclePlanets.all().length} · oral history ${chronicleOralHistory.all().length} · books ${chronicleBooks.all().length} · writable ${chronicleWritableEntries.all().length} · commander memories ${chronicleCommanderMemories.all().length} · final chronicle records ${finalChronicle.totalHistoricalRecords}`;
+        })(),
       });
     }
   },

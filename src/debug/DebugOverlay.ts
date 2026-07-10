@@ -106,6 +106,8 @@ export interface DebugSnapshot {
   legacy: string | null;
   /** Living Museum summary: quality, restoration projects, donations, visitors, theater/library/audio counts (AF-134 §DEBUG). */
   livingMuseum: string | null;
+  /** Chronicle of Humanity summary: planet entries, oral history, books, writable entries, final chronicle preview (AF-135 §DEBUG). */
+  chronicle: string | null;
 }
 
 export class DebugOverlay {
@@ -192,6 +194,7 @@ export class DebugOverlay {
       `galaxyLife ${snapshot.livingGalaxy ?? "—"}`,
       `legacy     ${snapshot.legacy ?? "—"}`,
       `museumLife ${snapshot.livingMuseum ?? "—"}`,
+      `chronicle  ${snapshot.chronicle ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

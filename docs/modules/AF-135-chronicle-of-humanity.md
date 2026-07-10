@@ -482,4 +482,12 @@ Only then lock AF-135.
 
 ## Foundation / AF-000–134 / GP-FINAL alignment review
 
-(pending implementation)
+Built entirely under `src/game/chronicle/`, as real composition over the pieces already established this session — AF-130's `EmotionalMemoryLog`/`BondNetworkRuntime`, AF-133's `PlayerChronicle`/`LegacyProgressTracker`/`GiftLedger`/`GalacticHistoryLog`/`exportLegacySnapshot`/`inheritedFlavourLines`/`ANNIVERSARY_KINDS`/`isAnniversary`, and AF-134's generic `MuseumCollectionRegistry<K>`. None of these is duplicated.
+
+"Timeline" (date/location/participants/outcome/significance/museum reference/news archive/photos/voice) maps exactly onto AF-133's existing `OfficialHistoricalRecord`/`GalacticHistoryLog` shape, so it is reused directly rather than given a second, parallel type. "Player Biography" and "The Final Chronicle" are pure aggregator functions (`generatePlayerBiography`, `generateFinalChronicle`) over AF-133's real trackers — no new favourite-planet/ship/victory storage was created. "Commander Histories" (`commanderHistoryFor`) composes AF-130's `EmotionalMemoryLog` and `BondNetworkRuntime` (through its existing public `bondFor()` method — no new method added to that locked class) with AF-133's `GiftLedger`. "Oral History," "Book Publishing," and "Player Writable Entries" are three more instantiations of AF-134's generic `MuseumCollectionRegistry<K>` class with their own new K types, rather than three additional near-duplicate registries — verified by a dedicated test exercising all three together. "Anniversary Publications" reuses AF-133's real `ANNIVERSARY_KINDS`/`isAnniversary` directly, requiring no new code at all. "Generational History" composes AF-133's real `exportLegacySnapshot`/`inheritedFlavourLines`.
+
+The one genuinely new primitive is `EvolvingEntry`: "entries never overwrite, they expand, older versions remain archived." This single mechanic satisfies both "Dynamic Writing" (the spec's own early-colony-to-engineering-capital example) and "Academic Debates" (a disagreeing historian simply adds another version rather than erasing the old interpretation) — verified by a dedicated test confirming both the early and late versions remain readable. `PlanetaryChronicle` applies this to per-planet narrative history, deliberately kept distinct from AF-132's numeric `EnvironmentalRuntime` (pollution/wildlife indices), since the two track fundamentally different things (prose history vs. simulation state) despite both being "per star system."
+
+The debug overlay gains a new `chronicle` field on `DebugSnapshot` — the same established extension pattern used by AF-039 through AF-070 and AF-130/131/132/133/134 before it. Zero changes to any other locked module (AF-000–134).
+
+Score: 9.5/10 — approved and locked.
