@@ -156,6 +156,8 @@ export interface DebugSnapshot {
   atlasFuture: string | null;
   /** Atlas Possibility Engine summary: registered possibility count and sample discovery category, player-inspiration and serendipity counts (the latter composable from reused AF-151 suggestConnections), unsolved/total mystery counts, cultural-trend adopter count, and innovation-memory count (AF-159 §DEBUG). */
   atlasPossibility: string | null;
+  /** Atlas Wisdom Engine summary: current Reflection Loop stage (reused AF-155 CyclicStageTracker, with cyclic next stage), a sample Commander's overall/Patience wisdom scores, mentorship assignment, Scientific/Ethical Deliberation all-must-pass review status, Generational Transfer rank, and Wisdom Memory count (AF-160 §DEBUG). */
+  atlasWisdom: string | null;
 }
 
 export class DebugOverlay {
@@ -267,6 +269,7 @@ export class DebugOverlay {
       `planning   ${snapshot.atlasPlanning ?? "—"}`,
       `future     ${snapshot.atlasFuture ?? "—"}`,
       `possible   ${snapshot.atlasPossibility ?? "—"}`,
+      `wisdom     ${snapshot.atlasWisdom ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

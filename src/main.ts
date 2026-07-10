@@ -200,6 +200,8 @@ import { mostLikelyFutureState, type FutureStateForecast } from "./game/atlasFut
 import { FutureMemoryArchive, OpportunityLog, RiskLog } from "./game/atlasFuture/AtlasFutureRuntime";
 import type { Possibility } from "./game/atlasPossibility/atlasPossibilityData";
 import { CulturalTrendTracker, InnovationMemoryArchive, MysteryLog, PlayerInspirationLog, PossibilityRegistry, SerendipityLog } from "./game/atlasPossibility/AtlasPossibilityRuntime";
+import { REFLECTION_LOOP_STAGES, ethicalDeliberationPassed, generationalTransferRank, scientificWisdomReviewed, ETHICAL_DELIBERATION_QUESTIONS, SCIENTIFIC_WISDOM_QUESTIONS } from "./game/atlasWisdom/atlasWisdomData";
+import { CommanderWisdomTracker, MentorshipLedger, WisdomMemoryArchive } from "./game/atlasWisdom/AtlasWisdomRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1580,6 +1582,24 @@ const innovationMemory = new InnovationMemoryArchive();
   for (const suggestion of knowledgeGraph.suggestConnections(`commander-${sandboxCommander.id}`)) {
     serendipityLog.record(`${suggestion} independently reached the same conclusion.`, [`commander-${sandboxCommander.id}`, suggestion], 20);
   }
+}
+
+// AF-160: the Atlas Wisdom Engine — sits above AF-155-159, asking
+// whether something should be done rather than merely how. Reflection
+// Loop progression reuses AF-155's real generic CyclicStageTracker
+// directly. CommanderWisdomTracker/MentorshipLedger/WisdomMemoryArchive
+// are the genuinely new pieces (see atlasWisdomData.ts for the full
+// reuse notes).
+const reflectionLoop = new CyclicStageTracker(REFLECTION_LOOP_STAGES);
+const commanderWisdom = new CommanderWisdomTracker();
+const mentorshipLedger = new MentorshipLedger();
+const wisdomMemory = new WisdomMemoryArchive();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  reflectionLoop.record("Experience", 20);
+  commanderWisdom.develop(commanderIndexId, "Patience", 15);
+  commanderWisdom.develop(commanderIndexId, "Perspective", 10);
+  mentorshipLedger.assign("commander-thorne-starforged", commanderIndexId, 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5402,6 +5422,13 @@ const loop = new GameLoop({
         atlasPossibility: (() => {
           const possibility = possibilityRegistry.get("quantum-signal-decoding");
           return `possibilities ${possibilityRegistry.all().length} (${possibility?.discoveryCategory ?? "none"}) · inspiration ${playerInspiration.all().length} · serendipity ${serendipityLog.all().length} · mysteries unsolved ${mysteryLog.unsolved().length}/${mysteryLog.all().length} · cultural adopters ${culturalTrends.adoptersFor("Solar Minimalism").length} · innovation memory ${innovationMemory.all().length}`;
+        })(),
+        atlasWisdom: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const stage = reflectionLoop.currentStage() ?? "Experience";
+          const scientificReview = scientificWisdomReviewed(new Set(SCIENTIFIC_WISDOM_QUESTIONS.slice(0, 4)));
+          const ethicalReview = ethicalDeliberationPassed(new Set(ETHICAL_DELIBERATION_QUESTIONS));
+          return `loop ${stage} (next ${reflectionLoop.next(stage)}) · wisdom ${commanderWisdom.overallWisdom(commanderIndexId).toFixed(1)} (patience ${commanderWisdom.traitScore(commanderIndexId, "Patience").toFixed(0)}) · mentor ${mentorshipLedger.mentorOf(commanderIndexId) ?? "none"} · scientific review=${scientificReview} · ethical review=${ethicalReview} · transfer rank ${generationalTransferRank("Lessons")} · memory ${wisdomMemory.all().length}`;
         })(),
       });
     }
