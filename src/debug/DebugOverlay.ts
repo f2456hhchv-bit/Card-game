@@ -102,6 +102,8 @@ export interface DebugSnapshot {
   ship: string | null;
   /** Living Galaxy summary: environmental averages, reputation total, chronicle length, current festival, unresolved crime (AF-132 §DEBUG). */
   livingGalaxy: string | null;
+  /** Legacy Engine summary: total legacy XP, top category, galactic records set, journal/gift/photo counts (AF-133 §DEBUG). */
+  legacy: string | null;
 }
 
 export class DebugOverlay {
@@ -186,6 +188,7 @@ export class DebugOverlay {
       `bonds      ${snapshot.bonds ?? "—"}`,
       `ship       ${snapshot.ship ?? "—"}`,
       `galaxyLife ${snapshot.livingGalaxy ?? "—"}`,
+      `legacy     ${snapshot.legacy ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -106,6 +106,7 @@ import { INITIAL_SHIP_UPGRADES, commanderRoomsFor } from "./game/livingShip/livi
 import { CompanionHabitatRuntime, LivingShipRuntime, MemorialGardenLog } from "./game/livingShip/LivingShipRuntime";
 import { seedEnvironmentalStates } from "./game/livingGalaxy/livingGalaxyData";
 import { CrimeLedger, EnvironmentalRuntime, FestivalCalendar, LivingGalaxyChronicle, PlayerReputationLedger } from "./game/livingGalaxy/LivingGalaxyRuntime";
+import { GalacticHistoryLog, GalacticRecordBoard, GiftLedger, LegacyProgressTracker, PhotoAlbum, PlayerChronicle, PlayerJournalRuntime } from "./game/legacy/LegacyEngineRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -978,6 +979,17 @@ const livingGalaxyReputation = new PlayerReputationLedger();
 const livingGalaxyChronicle = new LivingGalaxyChronicle();
 const livingGalaxyFestivals = new FestivalCalendar();
 const livingGalaxyCrime = new CrimeLedger();
+
+// AF-133: the Legacy Engine — additive over MetaProgression, the real
+// GalacticHistoryRuntime, and AF-130's EmotionalMemoryLog (reused
+// directly for Commander Memories rather than duplicated).
+const legacyProgress = new LegacyProgressTracker();
+const legacyHistory = new GalacticHistoryLog();
+const legacyRecords = new GalacticRecordBoard();
+const legacyChronicle = new PlayerChronicle();
+const legacyJournal = new PlayerJournalRuntime();
+const legacyGifts = new GiftLedger();
+const legacyPhotos = new PhotoAlbum();
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4582,6 +4594,7 @@ const loop = new GameLoop({
           return `${snap.name} · upgrades ${snap.totalUpgradeLevel}/${snap.maxUpgradeLevel} (${snap.fullyUpgradedCategories}/${snap.totalCategories} maxed) · rooms ${shipCommanderRooms.length} · companions ${companionHabitat.count()} · memorial ${memorialGarden.all().length}`;
         })(),
         livingGalaxy: `pollution ${livingGalaxyEnvironment.averagePollution().toFixed(0)} · wildlife ${livingGalaxyEnvironment.averageWildlife().toFixed(0)} · rep ${livingGalaxyReputation.grandTotal()} · chronicle ${livingGalaxyChronicle.all().length} · festival ${livingGalaxyFestivals.currentFestival()} · unresolved crime ${livingGalaxyCrime.unresolvedCount()}`,
+        legacy: `xp ${legacyProgress.totalXp()} (${legacyProgress.topCategory()}) · records ${legacyRecords.all().length}/9 · history ${legacyHistory.all().length} · favourite planet ${legacyChronicle.favouritePlanet() ?? "—"} · journal ${legacyJournal.all().length} · gifts ${legacyGifts.all().length} · photos ${legacyPhotos.all().length}`,
       });
     }
   },
