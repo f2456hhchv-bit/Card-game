@@ -231,6 +231,8 @@ import { HorizonEffectTracker } from "./game/atlasHorizon/AtlasHorizonRuntime";
 import { CIVILISATION_HORIZON_STAGES, HORIZON_CATEGORIES } from "./game/atlasHorizon/atlasHorizonData";
 import { GenerationalHandoffLedger } from "./game/atlasInfinity/AtlasInfinityRuntime";
 import { EVOLUTION_CYCLE_STAGES, INFINITY_DOMAINS } from "./game/atlasInfinity/atlasInfinityData";
+import { ThreadRegistry, allThreadsConnected } from "./game/atlasContinuum/AtlasContinuumRuntime";
+import { CONTINUUM_DOMAINS, CONTINUUM_STAGES } from "./game/atlasContinuum/atlasContinuumData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -1977,6 +1979,25 @@ const generationalHandoff = new GenerationalHandoffLedger();
 {
   evolutionCycle.record("Knowledge", 20);
   generationalHandoff.handoff(1, ["Knowledge", "Culture", "Infrastructure"], 20);
+}
+
+// AF-176: the Atlas Continuum — the permanent continuity framework
+// ensuring every past, present and future remain connected. Reuses
+// AF-155's real CyclicStageTracker over the module's own
+// CONTINUUM_STAGES directly for The Continuum, AF-151's real
+// knowledgeGraph directly for Time Continuity/The Threads, and
+// AF-175's real generationalHandoff directly for Generational/Player
+// Continuity — the same ledger spans generations and campaigns.
+// ThreadRegistry/allThreadsConnected are the genuinely new pieces (see
+// atlasContinuumData.ts for the full reuse notes).
+const continuum = new CyclicStageTracker(CONTINUUM_STAGES);
+const threads = new ThreadRegistry();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  continuum.record("Past", 20);
+  generationalHandoff.handoff(2, ["Culture", "Questions"], 20);
+  threads.mark("thread-verdance-restoration", 20);
+  knowledgeGraph.addEdge({ fromId: "thread-verdance-restoration", toId: commanderIndexId, kind: "Influenced", strength: 1, confidence: 1, historicalContext: "The restoration links backward to the original settlement founding.", dateEstablished: 20 });
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5878,6 +5899,11 @@ const loop = new GameLoop({
         atlasInfinity: (() => {
           const overlap = detectOverlap(INFINITY_DOMAINS, IMAGINATION_DOMAINS);
           return `cycle ${evolutionCycle.currentStage() ?? "none"} (next ${evolutionCycle.next("New Questions")}) · generation 2 baseline ${generationalHandoff.startingBaselineFor(2)} · cumulative contributions ${generationalHandoff.cumulativeContributionCount()} · mentees ${mentorshipLedger.menteesOf("commander-thorne-starforged").length} · civilisation hope ${emotionalContinuity.hopeLevelOf("humanity")} · domain overlap[Infinity,Imagination] ${overlap.shared.length}/${INFINITY_DOMAINS.length}`;
+        })(),
+        atlasContinuum: (() => {
+          const overlap = detectOverlap(CONTINUUM_DOMAINS, INFINITY_DOMAINS);
+          const threadIds = threads.all().map((t) => t.entityId);
+          return `stage ${continuum.currentStage() ?? "none"} (next ${continuum.next("Past Again")}) · generation 3 baseline ${generationalHandoff.startingBaselineFor(3)} · threads ${threadIds.length} connected=${allThreadsConnected(threadIds, knowledgeGraph)} · domain overlap[Continuum,Infinity] ${overlap.shared.length}/${CONTINUUM_DOMAINS.length}`;
         })(),
       });
     }

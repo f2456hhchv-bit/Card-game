@@ -188,6 +188,8 @@ export interface DebugSnapshot {
   atlasHorizon: string | null;
   /** Atlas Infinity Engine summary (the highest layer of the in-fiction Atlas chain only — never above the real docs/CONSTITUTION.md, see atlasInfinityData.ts's CRITICAL SCOPE NOTE): the reused AF-155 CyclicStageTracker's current/next Evolution Cycle stage, the new GenerationalHandoffLedger's inherited starting baseline and cumulative contribution count for Generational Handoff, the reused AF-160 MentorshipLedger's mentee count and AF-166 EmotionalContinuityTracker's civilisation-scale hope level for The Expanding Heart, and a live detectOverlap reading confirming INFINITY_DOMAINS sets a new absolute 10/12 overlap record against AF-172's real IMAGINATION_DOMAINS (AF-175 §DEBUG). */
   atlasInfinity: string | null;
+  /** Atlas Continuum summary: the reused AF-155 CyclicStageTracker's current/next stage across the module's own 8-stage Continuum cycle, the reused AF-175 GenerationalHandoffLedger's inherited baseline for a later generation (the same ledger spanning generations and campaigns for Generational/Player Continuity), the new ThreadRegistry's marked-thread count and the new allThreadsConnected's structural "nothing exists in isolation" check against the reused AF-151 KnowledgeGraph, and a live detectOverlap reading confirming CONTINUUM_DOMAINS ties the codebase's 10/12 overlap record against AF-175's real INFINITY_DOMAINS (AF-176 §DEBUG). */
+  atlasContinuum: string | null;
 }
 
 export class DebugOverlay {
@@ -315,6 +317,7 @@ export class DebugOverlay {
       `possibility ${snapshot.atlasPossibilitySpace ?? "—"}`,
       `horizon    ${snapshot.atlasHorizon ?? "—"}`,
       `infinity   ${snapshot.atlasInfinity ?? "—"}`,
+      `continuum  ${snapshot.atlasContinuum ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
