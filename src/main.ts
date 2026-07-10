@@ -104,6 +104,8 @@ import { DUAL_ULTIMATES, seedBondGraph } from "./game/commanders/bondNetworkData
 import { BondNetworkRuntime } from "./game/commanders/BondNetworkRuntime";
 import { INITIAL_SHIP_UPGRADES, commanderRoomsFor } from "./game/livingShip/livingShipData";
 import { CompanionHabitatRuntime, LivingShipRuntime, MemorialGardenLog } from "./game/livingShip/LivingShipRuntime";
+import { seedEnvironmentalStates } from "./game/livingGalaxy/livingGalaxyData";
+import { CrimeLedger, EnvironmentalRuntime, FestivalCalendar, LivingGalaxyChronicle, PlayerReputationLedger } from "./game/livingGalaxy/LivingGalaxyRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -966,6 +968,16 @@ const livingShip = new LivingShipRuntime(INITIAL_SHIP_UPGRADES);
 const memorialGarden = new MemorialGardenLog();
 const companionHabitat = new CompanionHabitatRuntime();
 const shipCommanderRooms = commanderRoomsFor(FULL_ROSTER_WITH_FOUNDER);
+
+// AF-132: the Living Galaxy — additive over the real AF-041/086/089/090
+// simulation stack; adds the fields nothing else already tracks
+// (pollution/wildlife/healthcare/crime/weather) plus news, discoveries,
+// festivals, and a stateful player-reputation ledger.
+const livingGalaxyEnvironment = new EnvironmentalRuntime(seedEnvironmentalStates(SANDBOX_GALAXY.systems));
+const livingGalaxyReputation = new PlayerReputationLedger();
+const livingGalaxyChronicle = new LivingGalaxyChronicle();
+const livingGalaxyFestivals = new FestivalCalendar();
+const livingGalaxyCrime = new CrimeLedger();
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4569,6 +4581,7 @@ const loop = new GameLoop({
           const snap = livingShip.snapshot();
           return `${snap.name} · upgrades ${snap.totalUpgradeLevel}/${snap.maxUpgradeLevel} (${snap.fullyUpgradedCategories}/${snap.totalCategories} maxed) · rooms ${shipCommanderRooms.length} · companions ${companionHabitat.count()} · memorial ${memorialGarden.all().length}`;
         })(),
+        livingGalaxy: `pollution ${livingGalaxyEnvironment.averagePollution().toFixed(0)} · wildlife ${livingGalaxyEnvironment.averageWildlife().toFixed(0)} · rep ${livingGalaxyReputation.grandTotal()} · chronicle ${livingGalaxyChronicle.all().length} · festival ${livingGalaxyFestivals.currentFestival()} · unresolved crime ${livingGalaxyCrime.unresolvedCount()}`,
       });
     }
   },

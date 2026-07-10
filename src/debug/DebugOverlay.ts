@@ -100,6 +100,8 @@ export interface DebugSnapshot {
   bonds: string | null;
   /** Living Expedition Ship summary: name, upgrade totals, rooms, companions, memorial entries (AF-131 §DEBUG). */
   ship: string | null;
+  /** Living Galaxy summary: environmental averages, reputation total, chronicle length, current festival, unresolved crime (AF-132 §DEBUG). */
+  livingGalaxy: string | null;
 }
 
 export class DebugOverlay {
@@ -183,6 +185,7 @@ export class DebugOverlay {
       `liveops    ${snapshot.liveOps ?? "—"}`,
       `bonds      ${snapshot.bonds ?? "—"}`,
       `ship       ${snapshot.ship ?? "—"}`,
+      `galaxyLife ${snapshot.livingGalaxy ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
