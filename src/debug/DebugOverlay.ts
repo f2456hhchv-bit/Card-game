@@ -186,6 +186,8 @@ export interface DebugSnapshot {
   atlasPossibilitySpace: string | null;
   /** Atlas Horizon Engine summary: a sample Commander's evolving Horizon (via the reused AF-161 CommanderBeliefTracker), the reused AF-159 MysteryLog's unsolved count for Living Frontiers/The Unknown Index, the reused AF-151 KnowledgeGraph's neighbour count for the Horizon Network, the reused AF-155 CyclicStageTracker's current Civilisation Horizon stage, the new HorizonEffectTracker's unknown index/knowledge count for The Horizon Effect, and a live detectOverlap reading confirming HORIZON_CATEGORIES ties the codebase's 8/12 overlap record against AF-173's real POSSIBILITY_CATEGORIES (AF-174 §DEBUG). */
   atlasHorizon: string | null;
+  /** Atlas Infinity Engine summary (the highest layer of the in-fiction Atlas chain only — never above the real docs/CONSTITUTION.md, see atlasInfinityData.ts's CRITICAL SCOPE NOTE): the reused AF-155 CyclicStageTracker's current/next Evolution Cycle stage, the new GenerationalHandoffLedger's inherited starting baseline and cumulative contribution count for Generational Handoff, the reused AF-160 MentorshipLedger's mentee count and AF-166 EmotionalContinuityTracker's civilisation-scale hope level for The Expanding Heart, and a live detectOverlap reading confirming INFINITY_DOMAINS sets a new absolute 10/12 overlap record against AF-172's real IMAGINATION_DOMAINS (AF-175 §DEBUG). */
+  atlasInfinity: string | null;
 }
 
 export class DebugOverlay {
@@ -312,6 +314,7 @@ export class DebugOverlay {
       `imagination ${snapshot.atlasImagination ?? "—"}`,
       `possibility ${snapshot.atlasPossibilitySpace ?? "—"}`,
       `horizon    ${snapshot.atlasHorizon ?? "—"}`,
+      `infinity   ${snapshot.atlasInfinity ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

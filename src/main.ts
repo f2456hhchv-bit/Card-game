@@ -229,6 +229,8 @@ import { InnovationFilterScoreCard, SandboxScenarioRegistry } from "./game/atlas
 import { INNOVATION_FILTER_CRITERIA, POSSIBILITY_CATEGORIES } from "./game/atlasPossibilitySpace/atlasPossibilitySpaceData";
 import { HorizonEffectTracker } from "./game/atlasHorizon/AtlasHorizonRuntime";
 import { CIVILISATION_HORIZON_STAGES, HORIZON_CATEGORIES } from "./game/atlasHorizon/atlasHorizonData";
+import { GenerationalHandoffLedger } from "./game/atlasInfinity/AtlasInfinityRuntime";
+import { EVOLUTION_CYCLE_STAGES, INFINITY_DOMAINS } from "./game/atlasInfinity/atlasInfinityData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -1957,6 +1959,24 @@ const civilisationHorizon = new CyclicStageTracker(CIVILISATION_HORIZON_STAGES);
   knowledgeGraph.addEdge({ fromId: "horizon-living-ring", toId: commanderIndexId, kind: "Influenced", strength: 1, confidence: 1, historicalContext: "A new horizon opened by the living ring project.", dateEstablished: 20 });
   civilisationHorizon.record("Discover", 20);
   horizonEffect.learn("Xenobiology", 20);
+}
+
+// AF-175: the Atlas Infinity Engine — the highest layer of the
+// in-fiction Atlas enrichment chain (never above the real
+// docs/CONSTITUTION.md, see atlasInfinityData.ts's CRITICAL SCOPE
+// NOTE), ensuring there is always another future. Reuses AF-155's
+// real CyclicStageTracker over the module's own EVOLUTION_CYCLE_STAGES
+// directly for Evolution Cycles, AF-159's real mysteryLog and AF-169's
+// real ensureNextHorizonOpen directly for The Expanding Questions/
+// Self-Renewal, and AF-160's real mentorshipLedger/AF-166's real
+// emotionalContinuity directly for The Expanding Heart.
+// GenerationalHandoffLedger is the genuinely new piece (see
+// atlasInfinityData.ts for the full reuse notes).
+const evolutionCycle = new CyclicStageTracker(EVOLUTION_CYCLE_STAGES);
+const generationalHandoff = new GenerationalHandoffLedger();
+{
+  evolutionCycle.record("Knowledge", 20);
+  generationalHandoff.handoff(1, ["Knowledge", "Culture", "Infrastructure"], 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5854,6 +5874,10 @@ const loop = new GameLoop({
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           const overlap = detectOverlap(HORIZON_CATEGORIES, POSSIBILITY_CATEGORIES);
           return `vision "${commanderBeliefs.beliefOf(commanderIndexId) ?? "none"}" · mysteries unsolved ${mysteryLog.unsolved().length} · network neighbours ${knowledgeGraph.neighbors("horizon-living-ring").length} · civilisation stage ${civilisationHorizon.currentStage() ?? "none"} · unknown index ${horizonEffect.unknownIndex()} (knowledge ${horizonEffect.knowledgeCount()}) · domain overlap[Horizon,Possibility] ${overlap.shared.length}/${HORIZON_CATEGORIES.length}`;
+        })(),
+        atlasInfinity: (() => {
+          const overlap = detectOverlap(INFINITY_DOMAINS, IMAGINATION_DOMAINS);
+          return `cycle ${evolutionCycle.currentStage() ?? "none"} (next ${evolutionCycle.next("New Questions")}) · generation 2 baseline ${generationalHandoff.startingBaselineFor(2)} · cumulative contributions ${generationalHandoff.cumulativeContributionCount()} · mentees ${mentorshipLedger.menteesOf("commander-thorne-starforged").length} · civilisation hope ${emotionalContinuity.hopeLevelOf("humanity")} · domain overlap[Infinity,Imagination] ${overlap.shared.length}/${INFINITY_DOMAINS.length}`;
         })(),
       });
     }
