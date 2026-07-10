@@ -186,6 +186,8 @@ import { MASTER_CATALOGUE_CATEGORIES } from "./game/masterIndex/masterIndexData"
 import { DependencyMap, MasterIndexRegistry, QualityTracker, RelationshipGraph, VersionHistoryLedger } from "./game/masterIndex/MasterIndexRuntime";
 import { KnowledgeGraph, chronologyViolations } from "./game/knowledgeGraph/KnowledgeGraphRuntime";
 import { GoalTracker, SpatialAwarenessTracker, WorldModelRegistry } from "./game/worldModel/WorldModelRuntime";
+import { computeAttentionScore, narrativeGuardrailsRespected, NARRATIVE_GUARDRAILS } from "./game/simulationDirector/simulationDirectorData";
+import { AttentionTracker, EmergenceOpportunityLog, EmotionalPacingTracker, SimulationTierEngine, allocateSimulationBudget } from "./game/simulationDirector/SimulationDirectorRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1386,6 +1388,27 @@ const entityMemory = new NpcMemoryLog();
   entityGoals.setGoal(commanderIndexId, "Research anomaly", 9);
   entitySpatialAwareness.setLocation(commanderIndexId, SEEDED_SETTLEMENTS[0]!.settlementId);
   entityMemory.remember(commanderIndexId, "encounter", "Led the First Contact expedition.", true);
+}
+
+// AF-153: the Atlas Simulation Director — reuses AF-144's real
+// DecisionRouter/PerformanceBudgetTracker (aosDecisionRouter/
+// aosPerformanceBudget) directly for System Synchronisation/Event
+// Prioritisation and Simulation Budget/Load Balancing rather than
+// duplicating either; SimulationTierEngine/AttentionTracker/
+// EmotionalPacingTracker/EmergenceOpportunityLog are the genuinely new
+// pieces (see simulationDirectorData.ts for the full reuse notes).
+const simulationTiers = new SimulationTierEngine();
+const attentionTracker = new AttentionTracker();
+const emotionalPacing = new EmotionalPacingTracker();
+const emergenceLog = new EmergenceOpportunityLog();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  simulationTiers.register(commanderIndexId, "Immediate");
+  simulationTiers.register("remote-civilisation", "Galactic");
+  const attention = computeAttentionScore({ playerProximity: 90, narrativeImportance: 70, historicalImportance: 60, commanderRelevance: 80, urgency: 40, populationImpact: 30, currentMission: 90, emotionalSignificance: 60 });
+  attentionTracker.setScore(commanderIndexId, attention);
+  emotionalPacing.record("Discovery", 12);
+  emergenceLog.surface("Commander reunions", [commanderIndexId, "commander-thorne-starforged"], "A shared mentor reconnects them.", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5151,6 +5174,12 @@ const loop = new GameLoop({
           const context = worldModel.contextFor(commanderIndexId);
           const forecast = aosPrediction.forecast("Population growth", [40, 44, 48]);
           return `entities ${worldModel.all().length} · needing help ${worldModel.entitiesWithThreats().length} · top goal "${entityGoals.topGoal(commanderIndexId)?.goal ?? "none"}" · location ${entitySpatialAwareness.locationFor(commanderIndexId) ?? "unknown"} · memories ${entityMemory.memoriesFor(commanderIndexId).length} · importance ${context?.currentImportance ?? 0} · forecast ${forecast.predictedNext.toFixed(0)} · priority ${aosPriority.tierFor("player") ?? "none"}`;
+        })(),
+        simulationDirector: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const budgetShares = allocateSimulationBudget(100, new Map(attentionTracker.topEntities(5).map((r) => [r.entityId, r.score])));
+          const guardrails = narrativeGuardrailsRespected(new Set(NARRATIVE_GUARDRAILS));
+          return `tier ${simulationTiers.tierFor(commanderIndexId) ?? "none"} · attention ${attentionTracker.scoreFor(commanderIndexId).toFixed(0)} (budget ${(budgetShares.get(commanderIndexId) ?? 0).toFixed(0)}%) · pacing imbalance ${emotionalPacing.imbalancedCategory() ?? "none"} · guardrails ${guardrails ? "respected" : "at risk"} · emergence ${emergenceLog.all().length} · throttle [${aosPerformanceBudget.recommendedThrottleTargets().join(", ") || "none"}]`;
         })(),
       });
     }

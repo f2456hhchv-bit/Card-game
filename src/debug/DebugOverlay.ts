@@ -142,6 +142,8 @@ export interface DebugSnapshot {
   knowledgeGraph: string | null;
   /** Atlas World Model summary: entity count, entities needing help, top goal, spatial location, memory count, importance, and reused AF-144 prediction/priority values for a sample entity (AF-152 §DEBUG). */
   worldModel: string | null;
+  /** Atlas Simulation Director summary: simulation tier, attention score and budget share, emotional-pacing imbalance, narrative guardrail status, emergence opportunities surfaced, reused AF-144 throttle recommendations (AF-153 §DEBUG). */
+  simulationDirector: string | null;
 }
 
 export class DebugOverlay {
@@ -246,6 +248,7 @@ export class DebugOverlay {
       `masterIdx  ${snapshot.masterIndex ?? "—"}`,
       `knowGraph  ${snapshot.knowledgeGraph ?? "—"}`,
       `worldModel ${snapshot.worldModel ?? "—"}`,
+      `simDir     ${snapshot.simulationDirector ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
