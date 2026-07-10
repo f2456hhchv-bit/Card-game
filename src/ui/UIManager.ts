@@ -19,8 +19,6 @@ import { galaxyArt } from "./galaxyArt";
 import { weaponIcon, relicIcon, gearIcon, signatureIcon, glyphIcon } from "./iconArt";
 import { PICKUP_RASTER } from "../game/render/pickupRaster";
 import { BOSS_RASTER } from "../game/render/bossRaster";
-import { COMMANDER_PORTRAITS } from "../game/render/commanderRaster";
-import { ACHIEVEMENT_RASTER } from "../game/render/achievementRaster";
 import {
   SLOTS,
   SLOT_META,
@@ -1359,19 +1357,6 @@ export class UIManager {
       this.inkCard(card, `hsl(${def.hue} 80% 65%)`, slabSeed++, "rgba(15,12,28,0.9)");
       if (selected) card.classList.add("selected");
 
-      // Painted Commander portrait (user character-sheet delivery) when one
-      // exists for this id; no procedural fallback yet, so the slot is
-      // simply omitted for Commanders without a matching portrait.
-      const portrait = COMMANDER_PORTRAITS[def.id];
-      if (portrait) {
-        const art = this.el("div", "ship-art");
-        const img = document.createElement("img");
-        img.src = portrait;
-        img.alt = def.name;
-        art.appendChild(img);
-        card.appendChild(art);
-      }
-
       const head = this.el("div", "shop-card-head");
       head.append(
         this.el("div", "shop-name", def.name),
@@ -2062,9 +2047,7 @@ export class UIManager {
         slabSeed++,
         "rgba(15,12,28,0.9)",
       );
-      const painted = ACHIEVEMENT_RASTER[a.id];
-      const iconSrc = got && painted ? painted : glyphIcon(got ? a.icon : "lock", 45);
-      const icon = this.iconEl("div", "ach-icon", iconSrc);
+      const icon = this.iconEl("div", "ach-icon", glyphIcon(got ? a.icon : "lock", 45));
       const body = this.el("div", "ach-body");
       body.append(
         this.el("div", "ach-name", a.name),

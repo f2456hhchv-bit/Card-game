@@ -14,6 +14,7 @@ import {
   type GearSlot,
 } from "../game/data/gearDefs";
 import { PRESTIGE } from "../game/data/prestigeDefs";
+import { LIGHT_MOTE_ICON, AFTERGLOW_ICON } from "./currencyIcons";
 
 type TabId = "battle" | "hero" | "gear" | "shop" | "prestige";
 const TABS: { id: TabId; label: string }[] = [
@@ -95,14 +96,24 @@ export class UIManager {
 
   // ---- Construction ---------------------------------------------------
 
+  /** Painted currency icon (see tools/vanguardCurrency.py) in a chip's glyph slot. */
+  private glyphImg(src: string): HTMLImageElement {
+    const img = document.createElement("img");
+    img.className = "glyph";
+    img.src = src;
+    img.alt = "";
+    img.draggable = false;
+    return img;
+  }
+
   private buildTopBar(): void {
     const bar = el("div", "top-bar");
     const gold = el("div", "stat-chip gold");
-    gold.append(el("span", "glyph", "✦"), (this.goldEl = el("span", undefined, "0")));
+    gold.append(this.glyphImg(LIGHT_MOTE_ICON), (this.goldEl = el("span", undefined, "0")));
     const dust = el("div", "stat-chip dust");
     dust.append(el("span", "glyph", "⚙"), (this.dustEl = el("span", undefined, "0")));
     const afterglow = el("div", "stat-chip afterglow");
-    afterglow.append(el("span", "glyph", "🌠"), (this.afterglowEl = el("span", undefined, "0")));
+    afterglow.append(this.glyphImg(AFTERGLOW_ICON), (this.afterglowEl = el("span", undefined, "0")));
     bar.append(gold, dust, afterglow);
 
     const stageRow = el("div", "stage-row");
