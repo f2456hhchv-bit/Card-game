@@ -355,6 +355,14 @@ export class Scene3D {
         f.material.emissiveIntensity = f.baseEmissiveIntensity;
       }
     }
+    // Painted sprite billboards have no emissive channel to pulse — over-
+    // driving the (tone-mapped) sprite colour blows it toward white instead,
+    // scaled up from the sprite's resting tint rather than a hard reset so a
+    // sector-hue tint survives the flash.
+    if (rig.spriteMaterial && rig.spriteBaseColor) {
+      const boost = 1 + Math.min(1, flashT) * 3;
+      rig.spriteMaterial.color.copy(rig.spriteBaseColor).multiplyScalar(boost);
+    }
   }
 
   private setOpacity(rig: Rig, alpha: number): void {
@@ -365,6 +373,8 @@ export class Scene3D {
           m.transparent = alpha < 1 || m.transparent;
           m.opacity = alpha;
         }
+      } else if (obj instanceof THREE.Sprite) {
+        obj.material.opacity = alpha;
       }
     });
   }

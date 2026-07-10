@@ -14,6 +14,7 @@
 import * as THREE from "three";
 import type { EnemyShape } from "../../data/enemyDefs";
 import type { BossArchetype } from "../../data/enemyDefs";
+import { HERO_PORTRAIT, BOSS_SPRITES, type PaintedSprite } from "./paintedArt";
 
 export interface FlashableMaterial {
   material: THREE.MeshStandardMaterial | THREE.MeshPhysicalMaterial;
@@ -27,6 +28,12 @@ export interface Rig {
   flashables: FlashableMaterial[];
   /** Approximate half-height, used to place HP bars / ground the rig. */
   height: number;
+  /** Set instead of `flashables` for painted sprite-billboard rigs (see
+   * buildHeroSprite/buildBossSprite) — Scene3D brightens this on a hit. */
+  spriteMaterial?: THREE.SpriteMaterial;
+  /** The sprite's resting tint, so a hit-flash can brighten from it and
+   * reset back to it (rather than wiping a sector-hue tint to pure white). */
+  spriteBaseColor?: THREE.Color;
 }
 
 function hsl(hue: number, s: number, l: number): THREE.Color {
@@ -70,68 +77,44 @@ function newRig(): Rig {
   return { group, flashables: [], height: 1 };
 }
 
-// ---- Hero: a chibi Warden-class light-fighter -----------------------------
+// ---- Painted sprite billboards (real art, not primitives) -----------------
+
+const textureCache = new Map<string, THREE.Texture>();
+function loadTexture(uri: string): THREE.Texture {
+  let tex = textureCache.get(uri);
+  if (!tex) {
+    tex = new THREE.TextureLoader().load(uri);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    textureCache.set(uri, tex);
+  }
+  return tex;
+}
+
+/** A camera-facing painted-art billboard (THREE.Sprite auto-faces the
+ * camera), wrapped in the same `Rig` shape the primitive builders return so
+ * Scene3D doesn't need to special-case painted vs. procedural rigs. `tintHue`
+ * applies a faint colour tint for per-sector variety without muddying the art. */
+function buildSpriteRig(sprite: PaintedSprite, worldHeight: number, tintHue?: number): Rig {
+  const rig = newRig();
+  const mat = new THREE.SpriteMaterial({
+    map: loadTexture(sprite.uri),
+    transparent: true,
+    color: tintHue === undefined ? 0xffffff : hsl(tintHue, 0.15, 0.92),
+  });
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(worldHeight * sprite.aspect, worldHeight, 1);
+  spr.position.y = worldHeight / 2;
+  rig.group.add(spr);
+  rig.height = worldHeight;
+  rig.spriteMaterial = mat;
+  rig.spriteBaseColor = mat.color.clone();
+  return rig;
+}
+
+// ---- Hero: the Vanguard, a painted chibi Warden-class pilot ---------------
 
 export function buildHero(): Rig {
-  const rig = newRig();
-
-  // Rounded fuselage — a squashed egg shape, the classic chibi-vehicle body.
-  const hullMat = standardMat(212, 0.55, 0.78, { roughness: 0.32, metalness: 0.12 });
-  const hull = new THREE.Mesh(new THREE.SphereGeometry(0.42, 24, 18), hullMat);
-  hull.scale.set(1, 0.72, 1.35);
-  hull.position.y = 0.02;
-  hull.castShadow = true;
-  hull.receiveShadow = true;
-  trackable(rig, hull, hullMat);
-
-  // Belly accent stripe.
-  const stripeMat = standardMat(228, 0.65, 0.55, { roughness: 0.4 });
-  const stripe = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.14, 20, 1, true), stripeMat);
-  stripe.rotation.z = Math.PI / 2;
-  stripe.position.set(0, -0.08, 0.05);
-  trackable(rig, stripe, stripeMat);
-
-  // Glassy cockpit canopy (physical material: clearcoat for a glossy PBR
-  // highlight, the "clean hand-painted" glint on a toy-like hull).
-  const canopyMat = new THREE.MeshPhysicalMaterial({
-    color: "#0c1420",
-    roughness: 0.1,
-    metalness: 0.0,
-    clearcoat: 1,
-    clearcoatRoughness: 0.08,
-    emissive: hsl(200, 0.9, 0.4),
-    emissiveIntensity: 0.35,
-  });
-  const canopy = new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 16), canopyMat);
-  canopy.position.set(0, 0.14, 0.28);
-  canopy.scale.set(1, 0.85, 1);
-  trackable(rig, canopy, canopyMat);
-
-  // Stubby swept wings.
-  const wingMat = standardMat(226, 0.6, 0.62, { roughness: 0.45 });
-  for (const side of [-1, 1]) {
-    const wing = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.5, 4), wingMat);
-    wing.rotation.z = side * 1.15;
-    wing.rotation.y = Math.PI / 4;
-    wing.position.set(side * 0.4, -0.02, -0.05);
-    wing.scale.set(0.5, 1, 0.9);
-    wing.castShadow = true;
-    trackable(rig, wing, wingMat);
-  }
-
-  // Engine glow (pure emissive, not flash-tracked — it should stay lit).
-  const engineMat = new THREE.MeshStandardMaterial({
-    color: "#0a1622",
-    emissive: hsl(195, 1, 0.6),
-    emissiveIntensity: 2.2,
-    roughness: 0.4,
-  });
-  const engine = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), engineMat);
-  engine.position.set(0, -0.02, -0.62);
-  rig.group.add(engine);
-
-  rig.height = 0.55;
-  return rig;
+  return buildSpriteRig(HERO_PORTRAIT, 0.85);
 }
 
 // ---- Hollow creatures -------------------------------------------------
@@ -277,41 +260,14 @@ export function buildEnemy(shape: EnemyShape, hue: number): Rig {
   return ENEMY_BUILDERS[shape](hue);
 }
 
-// ---- Bosses ----------------------------------------------------------------
+// ---- Bosses: painted art billboards, faintly tinted per sector hue --------
 
 function buildMaw(hue: number): Rig {
-  const rig = newRig();
-  const mat = standardMat(hue, 0.5, 0.3, { roughness: 0.55, flatShading: true });
-  const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.62, 0), mat);
-  core.castShadow = true;
-  trackable(rig, core, mat);
-  eyeDot(rig, 0, 0.05, 0.5, 0.12, hue + 30);
-  rig.height = 1.0;
-  return rig;
+  return buildSpriteRig(BOSS_SPRITES.maw, 1.3, hue);
 }
 
 function buildChoir(hue: number): Rig {
-  const rig = newRig();
-  const ringMat = standardMat(hue, 0.5, 0.32, { roughness: 0.55, metalness: 0.15 });
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.16, 14, 28), ringMat);
-  ring.rotation.x = Math.PI / 2.4;
-  ring.castShadow = true;
-  trackable(rig, ring, ringMat);
-  const coreMat = new THREE.MeshStandardMaterial({
-    color: "#120a1a",
-    emissive: hsl(hue, 0.9, 0.6),
-    emissiveIntensity: 1.2,
-    roughness: 0.4,
-  });
-  const core = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12), coreMat);
-  rig.group.add(core);
-  const eyeCount = 6;
-  for (let i = 0; i < eyeCount; i++) {
-    const a = (i / eyeCount) * Math.PI * 2;
-    eyeDot(rig, Math.cos(a) * 0.5, Math.sin(a) * 0.5 * 0.4 + 0.05, Math.sin(a) * 0.5 * 0.9, 0.06, hue + 18);
-  }
-  rig.height = 0.9;
-  return rig;
+  return buildSpriteRig(BOSS_SPRITES.choir, 1.15, hue);
 }
 
 const BOSS_BUILDERS: Record<BossArchetype["shape"], (hue: number) => Rig> = {

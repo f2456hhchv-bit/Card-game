@@ -24,3 +24,5 @@ coverage/
 # Stray local scratch
 scratchpad/
 smoke*.mjs
+__pycache__/
+*.pyc
