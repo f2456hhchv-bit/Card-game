@@ -180,6 +180,8 @@ import { CANON_TIERS, FRANCHISE_TEST_QUESTIONS, eraFor } from "./game/franchiseB
 import { CanonAuthorityResolver, CanonRecordLedger, FranchiseComplianceRegistry } from "./game/franchiseBible/FranchiseBibleRuntime";
 import { LORE_VALIDATION_CHECK_KINDS, loreValidationReport } from "./game/canonEngine/canonEngineData";
 import { ArtifactAuthenticityRegistry, CanonEventLedger, CommanderContinuityLedger, KnowledgeStateTracker, recordPlanetContinuityFact } from "./game/canonEngine/CanonEngineRuntime";
+import { ATLAS_SCORE_CATEGORIES, FINAL_VALIDATION_QUESTIONS, GREEN_FLAGS, featureFlagAssessment, finalValidationPassed, systemImpactReportFor } from "./game/atlasProtocol/atlasProtocolData";
+import { AtlasScoreCard, FeatureLifecycleTracker, IterationCycleTracker } from "./game/atlasProtocol/AtlasProtocolRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1307,6 +1309,20 @@ const artifactAuthenticity = new ArtifactAuthenticityRegistry();
   artifactAuthenticity.register({ artifactId: "artifact-beacon-fragment", provenance: `Recovered from ${seedSettlementId}.`, ownershipChain: ["First Expedition"], restorationHistory: ["Initial cleaning"], scientificAnalysis: "Pre-Collapse alloy signature.", museumLocation: null, authenticityConfidence: 40, publicInterpretation: "Believed to be precursor technology." });
   recordPlanetContinuityFact(chroniclePlanets, seedSettlementId, "Discovery", "First surveyed during the Atlas Initiative.", 10, "Explorers");
 }
+
+// AF-149: the Atlas Protocol — execution workflow, distinct from
+// AF-145's philosophy. FeatureLifecycleTracker/AtlasScoreCard/
+// IterationCycleTracker are the genuinely new pieces (see
+// atlasProtocolData.ts for the full overlap notes against AF-094/095/
+//097's real pipelines and AF-143's real DesignScoreCard).
+const featureLifecycle = new FeatureLifecycleTracker();
+const atlasScoreCard = new AtlasScoreCard();
+const iterationCycles = new IterationCycleTracker();
+featureLifecycle.register("expansion-ocean-worlds", 0);
+featureLifecycle.advance("expansion-ocean-worlds", 1);
+for (const category of ATLAS_SCORE_CATEGORIES) atlasScoreCard.score(category, 9.7);
+iterationCycles.recordCycle("expansion-ocean-worlds", 0);
+iterationCycles.recordCycle("expansion-ocean-worlds", 5);
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -5049,6 +5065,12 @@ const loop = new GameLoop({
             expansionDependenciesResolved: true,
           });
           return `events ${canonEvents.all().length} · knowledge diverged=${knowledgeStates.hasDiverged("event-first-contact")} · lore ${Object.values(lore.checks).filter(Boolean).length}/${LORE_VALIDATION_CHECK_KINDS.length} (${lore.passed ? "passed" : "failed"}) · continuity facts ${commanderContinuity.all().length} · artifacts ${artifactAuthenticity.all().length}`;
+        })(),
+        atlasProtocol: (() => {
+          const impact = systemImpactReportFor({ Gameplay: true, Civilisation: true, History: true });
+          const flags = featureFlagAssessment(new Set(), new Set(GREEN_FLAGS.slice(0, 3)));
+          const finalValidation = finalValidationPassed(new Set(FINAL_VALIDATION_QUESTIONS));
+          return `stage ${featureLifecycle.stageFor("expansion-ocean-worlds") ?? "—"} · impact [${impact.affected.join(", ")}] · flags reject=${flags.shouldReject} green=${flags.greenFlagStrength} · atlas score ${atlasScoreCard.overallScore().toFixed(1)} (${atlasScoreCard.passesGate() ? "passed" : "pending"}) · cycles ${iterationCycles.cycleCountFor("expansion-ocean-worlds")} ready=${iterationCycles.readyToShip("expansion-ocean-worlds")} · final validation ${finalValidation ? "passed" : "iterating"}`;
         })(),
       });
     }

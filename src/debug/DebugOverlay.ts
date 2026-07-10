@@ -134,6 +134,8 @@ export interface DebugSnapshot {
   franchiseBible: string | null;
   /** Atlas Canon Engine summary: canon event count, knowledge-state divergence, lore validation pass rate, commander continuity facts, artifact authenticity records (AF-148 §DEBUG). */
   canonEngine: string | null;
+  /** Atlas Protocol summary: current Seven-Stages position, system impact report, red/green flag assessment, Atlas Score, iteration cycle count, final validation (AF-149 §DEBUG). */
+  atlasProtocol: string | null;
 }
 
 export class DebugOverlay {
@@ -234,6 +236,7 @@ export class DebugOverlay {
       `atlasCore  ${snapshot.atlasCore ?? "—"}`,
       `franchise  ${snapshot.franchiseBible ?? "—"}`,
       `canonEng   ${snapshot.canonEngine ?? "—"}`,
+      `protocol   ${snapshot.atlasProtocol ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
