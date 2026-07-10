@@ -144,6 +144,8 @@ export interface DebugSnapshot {
   worldModel: string | null;
   /** Atlas Simulation Director summary: simulation tier, attention score and budget share, emotional-pacing imbalance, narrative guardrail status, emergence opportunities surfaced, reused AF-144 throttle recommendations (AF-153 §DEBUG). */
   simulationDirector: string | null;
+  /** Atlas Orchestrator summary: pacing-cycle stage and stall status, latest player-experience wonder factor, discovery-curve dry-period status, content-rotation recommendation, longest-term-memory milestone, engagement-map recommendation, reused AF-144 System Negotiation winner, reused AF-149 Expansion Readiness impact, emotional-tone rebalancing status, failsafe priority, player-journey tier, and reused AF-153 Surprise Engine count (AF-154 §DEBUG). */
+  atlasOrchestrator: string | null;
 }
 
 export class DebugOverlay {
@@ -249,6 +251,7 @@ export class DebugOverlay {
       `knowGraph  ${snapshot.knowledgeGraph ?? "—"}`,
       `worldModel ${snapshot.worldModel ?? "—"}`,
       `simDir     ${snapshot.simulationDirector ?? "—"}`,
+      `orchestr   ${snapshot.atlasOrchestrator ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

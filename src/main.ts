@@ -188,6 +188,8 @@ import { KnowledgeGraph, chronologyViolations } from "./game/knowledgeGraph/Know
 import { GoalTracker, SpatialAwarenessTracker, WorldModelRegistry } from "./game/worldModel/WorldModelRuntime";
 import { computeAttentionScore, narrativeGuardrailsRespected, NARRATIVE_GUARDRAILS } from "./game/simulationDirector/simulationDirectorData";
 import { AttentionTracker, EmergenceOpportunityLog, EmotionalPacingTracker, SimulationTierEngine, allocateSimulationBudget } from "./game/simulationDirector/SimulationDirectorRuntime";
+import { emotionalToneNeedsRebalancing, nextPacingStage, playerJourneyTierRank, resolveByFailsafePriority, PLAYER_JOURNEY_TIERS } from "./game/atlasOrchestrator/atlasOrchestratorData";
+import { ContentRotationTracker, DiscoveryCurveTracker, EngagementMap, LongTermMemoryLog, PacingCycleTracker, PlayerExperienceTracker } from "./game/atlasOrchestrator/AtlasOrchestratorRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1409,6 +1411,30 @@ const emergenceLog = new EmergenceOpportunityLog();
   attentionTracker.setScore(commanderIndexId, attention);
   emotionalPacing.record("Discovery", 12);
   emergenceLog.surface("Commander reunions", [commanderIndexId, "commander-thorne-starforged"], "A shared mentor reconnects them.", 20);
+}
+
+// AF-154: the Atlas Orchestrator — the experience-management layer above
+// AF-153's Simulation Director. Reuses AF-144's real aosDecisionRouter
+// directly for "System Negotiation", AF-149's real systemImpactReportFor
+// directly for "Expansion Readiness", and AF-153's real emergenceLog
+// directly for the "Surprise Engine" (see atlasOrchestratorData.ts for
+// the full reuse notes). PacingCycleTracker/PlayerExperienceTracker/
+// DiscoveryCurveTracker/ContentRotationTracker/LongTermMemoryLog/
+// EngagementMap are the genuinely new pieces.
+const pacingCycle = new PacingCycleTracker();
+const playerExperience = new PlayerExperienceTracker();
+const discoveryCurve = new DiscoveryCurveTracker();
+const contentRotation = new ContentRotationTracker();
+const longTermMemory = new LongTermMemoryLog();
+const engagementMap = new EngagementMap();
+{
+  pacingCycle.record("Discovery", 20);
+  playerExperience.record({ excitement: 65, mentalWorkload: 30, explorationFatigue: 20, combatFatigue: 10, narrativeEngagement: 75, curiosity: 85, senseOfProgress: 70, emotionalInvestment: 60, wonderFrequency: 55 });
+  discoveryCurve.record("Commander interaction", 20);
+  contentRotation.recordUsage("Commander conversations");
+  longTermMemory.record("Major discovery", 20, "First contact with a remote civilisation.");
+  engagementMap.setScores("museum", { curiosity: 80, satisfaction: 70, exposure: 15 });
+  engagementMap.setScores("weather", { curiosity: 20, satisfaction: 20, exposure: 75 });
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5180,6 +5206,18 @@ const loop = new GameLoop({
           const budgetShares = allocateSimulationBudget(100, new Map(attentionTracker.topEntities(5).map((r) => [r.entityId, r.score])));
           const guardrails = narrativeGuardrailsRespected(new Set(NARRATIVE_GUARDRAILS));
           return `tier ${simulationTiers.tierFor(commanderIndexId) ?? "none"} · attention ${attentionTracker.scoreFor(commanderIndexId).toFixed(0)} (budget ${(budgetShares.get(commanderIndexId) ?? 0).toFixed(0)}%) · pacing imbalance ${emotionalPacing.imbalancedCategory() ?? "none"} · guardrails ${guardrails ? "respected" : "at risk"} · emergence ${emergenceLog.all().length} · throttle [${aosPerformanceBudget.recommendedThrottleTargets().join(", ") || "none"}]`;
+        })(),
+        atlasOrchestrator: (() => {
+          const stage = pacingCycle.currentStage() ?? "Discovery";
+          const negotiation = aosDecisionRouter.resolve([
+            { systemId: "weather", targetId: "settlement-verdance", tier: "Medium", fromPlayer: false },
+            { systemId: "player-input", targetId: "settlement-verdance", tier: "Low", fromPlayer: true },
+          ]);
+          const impact = systemImpactReportFor({ Gameplay: true, Narrative: true, Accessibility: true });
+          const rebalancing = emotionalToneNeedsRebalancing(new Set(["Fatigue", "Stress"]), new Set());
+          const failsafe = resolveByFailsafePriority(new Set(["Performance", "Player progress"]));
+          const journeyTier = PLAYER_JOURNEY_TIERS[playerJourneyTierRank("Experienced Pathfinder")]!;
+          return `pacing ${stage} (next ${nextPacingStage(stage)}, stalled=${pacingCycle.isStalled()}) · experience wonder ${playerExperience.latest()?.wonderFrequency ?? 0} · discovery dry=${discoveryCurve.isDryPeriod(60, 30)} · rotation recommend "${contentRotation.leastUsedCategory()}" · memory "${longTermMemory.lastOf("Major discovery")?.description ?? "none"}" · engagement recommend "${engagementMap.recommend() ?? "none"}" · negotiation winner ${negotiation?.winner.systemId ?? "none"} · expansion impact [${impact.affected.join(", ")}] · tone rebalancing=${rebalancing} · failsafe ${failsafe ?? "none"} · journey ${journeyTier} · surprises ${emergenceLog.all().length}`;
         })(),
       });
     }
