@@ -172,6 +172,8 @@ import {
   WorldStateStore,
   buildDialogueContext,
 } from "./game/aos/AosRuntime";
+import { CONTENT_TEST_QUESTIONS, EXPANSION_TEST_REQUIREMENTS } from "./game/designConstitution/designConstitutionData";
+import { FeatureComplianceRegistry, PillarReinforcementLedger } from "./game/designConstitution/DesignConstitutionRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1236,6 +1238,21 @@ const aosRecoveryLog = new RecoveryLog();
 aosBus.emit("PlanetRestored", { planetId: SEEDED_SETTLEMENTS[0]!.settlementId });
 aosWorldState.setCurrent({ settlementCount: civilisation.allSettlements.length, averagePopulation: 0 }, 0);
 aosRecoveryLog.record("Save migration", "Legacy save slice upgraded to the current schema on load.", 0);
+
+// AF-146: the Afterlight Design Constitution — a new, separate
+// in-universe charter, never modifying or superseding the project's
+// real docs/CONSTITUTION.md; see designConstitutionData.ts for the
+// full relationship notes (the real Constitution's own gates,
+// AF-136's real StoryPillarTracker, and the AF-145 numbering gap).
+const featureCompliance = new FeatureComplianceRegistry();
+const pillarReinforcement = new PillarReinforcementLedger();
+featureCompliance.evaluate(
+  "expansion-ocean-worlds",
+  Object.fromEntries(CONTENT_TEST_QUESTIONS.map((q) => [q, true])) as Record<(typeof CONTENT_TEST_QUESTIONS)[number], boolean>,
+  new Set(EXPANSION_TEST_REQUIREMENTS),
+);
+pillarReinforcement.reinforce("Wonder", "expansion-ocean-worlds");
+pillarReinforcement.reinforce("Discovery", "expansion-ocean-worlds");
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4952,6 +4969,10 @@ const loop = new GameLoop({
             recentConversationCount: chronicleCommanderMemories.all().length,
           });
           return `responsibilities ${AOS_RESPONSIBILITIES.length} · bus events ${aosTelemetry.totalEvents()} · world state ${aosWorldState.isEmergency() ? "EMERGENCY" : "stable"} (settlements ${aosWorldState.getCurrent()?.settlementCount ?? 0}) · clocks [civ ${aosClocks.valueFor("Civilisation Time")}] · priority player=${aosPriority.tierFor("player")} · decision→${decision?.winner.systemId ?? "none"} · forecast ${forecast.predictedNext.toFixed(0)} (${(forecast.confidence * 100).toFixed(0)}%) · throttle [${aosPerformanceBudget.recommendedThrottleTargets().join(", ") || "none"}] · recoveries ${aosRecoveryLog.all().length} · dialogue friendly=${context.isFriendly}`;
+        })(),
+        designConstitution: (() => {
+          const latest = featureCompliance.all().at(-1);
+          return `features ${featureCompliance.all().length} (${featureCompliance.passedCount()} passed content test) · latest ${latest ? `${latest.featureId} ${latest.contentTest.yesCount}/${latest.contentTest.totalQuestions} · expansion ${latest.expansionTestPassed ? "passed" : "failed"}` : "—"} · dominant pillar ${pillarReinforcement.dominantPillar() ?? "none"} · reinforcements ${pillarReinforcement.all().length}`;
         })(),
       });
     }

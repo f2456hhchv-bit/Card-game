@@ -126,6 +126,8 @@ export interface DebugSnapshot {
   atlasFramework: string | null;
   /** Afterlight Operating System summary: responsibilities count, bus event telemetry, world-state stability, synchronised clocks, priority tier, decision routing, prediction, performance throttle recommendations, recovery count, dialogue context (AF-144 §DEBUG). */
   aos: string | null;
+  /** Afterlight Design Constitution summary: features evaluated, content-test pass count, latest feature's test scores, dominant pillar, reinforcement count (AF-146 §DEBUG). */
+  designConstitution: string | null;
 }
 
 export class DebugOverlay {
@@ -222,6 +224,7 @@ export class DebugOverlay {
       `universe   ${snapshot.moduleUniverse ?? "—"}`,
       `atlas      ${snapshot.atlasFramework ?? "—"}`,
       `aos        ${snapshot.aos ?? "—"}`,
+      `constitn   ${snapshot.designConstitution ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
