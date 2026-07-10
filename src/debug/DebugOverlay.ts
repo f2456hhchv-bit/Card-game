@@ -152,6 +152,8 @@ export interface DebugSnapshot {
   atlasDecision: string | null;
   /** Atlas Planning Engine summary: a sample plan's id/horizon, contingency coverage, dependency-satisfaction status, adaptation and memory counts, and a reused AF-156 explainDecision Plan Negotiation winner (AF-157 §DEBUG). */
   atlasPlanning: string | null;
+  /** Atlas Future Engine summary: a reused AF-144 PredictionEngine numeric forecast with confidence, the most-likely branching Future State, latest flagged risk severity, and Opportunity/Future-Memory counts (AF-158 §DEBUG). */
+  atlasFuture: string | null;
 }
 
 export class DebugOverlay {
@@ -261,6 +263,7 @@ export class DebugOverlay {
       `intel      ${snapshot.atlasIntelligence ?? "—"}`,
       `decision   ${snapshot.atlasDecision ?? "—"}`,
       `planning   ${snapshot.atlasPlanning ?? "—"}`,
+      `future     ${snapshot.atlasFuture ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

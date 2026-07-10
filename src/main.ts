@@ -196,6 +196,8 @@ import { DECISION_PYRAMID_LEVELS, PLAYER_INFLUENCE_CAP, cappedPlayerInfluence, e
 import { DecisionLog } from "./game/atlasDecision/AtlasDecisionRuntime";
 import { hasContingencyCoverage, type ContingencySet, type Plan } from "./game/atlasPlanning/atlasPlanningData";
 import { PlanAdaptationLog, PlanMemoryArchive, PlanRegistry } from "./game/atlasPlanning/AtlasPlanningRuntime";
+import { mostLikelyFutureState, type FutureStateForecast } from "./game/atlasFuture/atlasFutureData";
+import { FutureMemoryArchive, OpportunityLog, RiskLog } from "./game/atlasFuture/AtlasFutureRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1524,6 +1526,25 @@ const planMemory = new PlanMemoryArchive();
   };
   planRegistry.register(reforestPlan);
   planAdaptations.adapt(reforestPlan.id, "Natural disasters", "A wildfire delayed the reforestation timeline.", 20);
+}
+
+// AF-158: the Atlas Future Engine — transforms AF-157's planning into
+// vision. Reuses AF-144's real aosPrediction.forecast directly for
+// numeric point-forecasts ("Population growth" is a verbatim shared
+// member between COLONY_FORECASTING_KINDS and AF-144's real
+// PREDICTION_KINDS). FutureStateForecast/RiskLog/OpportunityLog/
+// FutureMemoryArchive are the genuinely new pieces (see
+// atlasFutureData.ts for the full reuse notes).
+const riskLog = new RiskLog();
+const opportunityLog = new OpportunityLog();
+const futureMemory = new FutureMemoryArchive();
+const verdanceFutureForecast: FutureStateForecast = {
+  entityId: "settlement-verdance",
+  confidences: { "Most Likely Future": 0.6, "Optimistic Future": 0.2, "Conservative Future": 0.5, "High-Risk Future": 0.1, "Unknown Future": 0.05 },
+};
+{
+  riskLog.flag("settlement-verdance", "Resource shortages", 0.4, 20);
+  opportunityLog.surface("Scientific partnerships", "Two labs propose a joint anomaly study.", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5337,6 +5358,11 @@ const loop = new GameLoop({
             { id: "expand-mining", scores: { "Environmental impact": -20, Evidence: 50 } },
           ]);
           return `plan ${plan?.id ?? "none"} horizon ${plan?.horizon ?? "none"} · contingency coverage=${hasContingencyCoverage(plan?.contingency ?? null)} · dependencies satisfied=${plan ? planRegistry.dependenciesSatisfied(plan.id) : false} · adaptations ${planAdaptations.all().length} · memory ${planMemory.all().length} · negotiation winner ${negotiation?.chosenId ?? "none"}`;
+        })(),
+        atlasFuture: (() => {
+          const forecast = aosPrediction.forecast("Population growth", [40, 44, 48]);
+          const bestState = mostLikelyFutureState(verdanceFutureForecast);
+          return `forecast ${forecast.predictedNext.toFixed(0)} (confidence ${(forecast.confidence * 100).toFixed(0)}%) · likely state ${bestState} · risk ${riskLog.severityFor("settlement-verdance", "Resource shortages").toFixed(2)} · opportunities ${opportunityLog.all().length} · future memory ${futureMemory.all().length}`;
         })(),
       });
     }
