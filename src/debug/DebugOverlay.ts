@@ -132,6 +132,8 @@ export interface DebugSnapshot {
   atlasCore: string | null;
   /** Afterlight Franchise Bible summary: current Era, canon tier count and authoritative statement, franchise-project compliance (AF-147 §DEBUG). */
   franchiseBible: string | null;
+  /** Atlas Canon Engine summary: canon event count, knowledge-state divergence, lore validation pass rate, commander continuity facts, artifact authenticity records (AF-148 §DEBUG). */
+  canonEngine: string | null;
 }
 
 export class DebugOverlay {
@@ -231,6 +233,7 @@ export class DebugOverlay {
       `constitn   ${snapshot.designConstitution ?? "—"}`,
       `atlasCore  ${snapshot.atlasCore ?? "—"}`,
       `franchise  ${snapshot.franchiseBible ?? "—"}`,
+      `canonEng   ${snapshot.canonEngine ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

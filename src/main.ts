@@ -178,6 +178,8 @@ import { ATLAS_PRINCIPLES, ATLAS_SYSTEM_HIERARCHY, DESIGN_VALIDATION_QUESTIONS }
 import { AtlasCoreComplianceRegistry, AtlasPrincipleReinforcementLedger } from "./game/atlasCore/AtlasCoreRuntime";
 import { CANON_TIERS, FRANCHISE_TEST_QUESTIONS, eraFor } from "./game/franchiseBible/franchiseBibleData";
 import { CanonAuthorityResolver, CanonRecordLedger, FranchiseComplianceRegistry } from "./game/franchiseBible/FranchiseBibleRuntime";
+import { LORE_VALIDATION_CHECK_KINDS, loreValidationReport } from "./game/canonEngine/canonEngineData";
+import { ArtifactAuthenticityRegistry, CanonEventLedger, CommanderContinuityLedger, KnowledgeStateTracker, recordPlanetContinuityFact } from "./game/canonEngine/CanonEngineRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1280,6 +1282,31 @@ const franchiseCompliance = new FranchiseComplianceRegistry();
 canonLedger.record({ sourceId: "afterlight-1", tier: "Main Games", subject: "first-expedition", claim: "The First Expedition departed from Earth orbit." });
 canonLedger.record({ sourceId: "companion-book-1", tier: "Official Companion Books", subject: "first-expedition", claim: "The First Expedition carried twelve founding commanders." });
 franchiseCompliance.evaluate("expansion-ocean-worlds", new Set(FRANCHISE_TEST_QUESTIONS), new Set(["Hope", "Discovery", "Legacy"]));
+
+// AF-148: the Atlas Canon Engine — composes AF-133's real
+// GalacticHistoryLog (via CanonEventLedger's optional forward) and
+// AF-135's real EvolvingEntry/AuthorVoice/PlanetaryChronicle directly
+// rather than duplicating any of them; KnowledgeStateTracker,
+// CommanderContinuityLedger, ArtifactAuthenticityRegistry, and the
+// Timeline Protection gate are the confirmed genuinely new pieces (see
+// canonEngineData.ts for the full research findings).
+const canonEvents = new CanonEventLedger(legacyHistory);
+const knowledgeStates = new KnowledgeStateTracker();
+const commanderContinuity = new CommanderContinuityLedger();
+const artifactAuthenticity = new ArtifactAuthenticityRegistry();
+{
+  const seedSettlementId = SEEDED_SETTLEMENTS[0]!.settlementId;
+  canonEvents.record(
+    { id: "event-first-contact", date: 12, participants: [sandboxCommander.id], planetId: seedSettlementId, galaxyRegion: "core", commanderIds: [sandboxCommander.id], witnesses: [], evidence: ["recovered-beacon-log"], museumReferences: [], chronicleReferences: [], relationshipImpact: null, futureCallbacks: [] },
+    { title: "First Contact", epoch: 12, planetId: seedSettlementId, commanderIds: [sandboxCommander.id], description: "Humanity's first confirmed contact with precursor technology.", hasPhoto: false, hasDialogue: false, hasNewsCoverage: true, hasMuseumEntry: false },
+  );
+  knowledgeStates.setObjectiveReality("event-first-contact", "The beacon was ancient precursor technology.");
+  knowledgeStates.revealHistoricalUnderstanding("event-first-contact", "Scholars believe it predates recorded history.", 5, "Scientists");
+  knowledgeStates.setPublicKnowledge("event-first-contact", "People say it's an alien artifact.");
+  commanderContinuity.recordFact(sandboxCommander.id, "Led the First Contact expedition.", 12);
+  artifactAuthenticity.register({ artifactId: "artifact-beacon-fragment", provenance: `Recovered from ${seedSettlementId}.`, ownershipChain: ["First Expedition"], restorationHistory: ["Initial cleaning"], scientificAnalysis: "Pre-Collapse alloy signature.", museumLocation: null, authenticityConfidence: 40, publicInterpretation: "Believed to be precursor technology." });
+  recordPlanetContinuityFact(chroniclePlanets, seedSettlementId, "Discovery", "First surveyed during the Atlas Initiative.", 10, "Explorers");
+}
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -5008,6 +5035,20 @@ const loop = new GameLoop({
         franchiseBible: (() => {
           const resolved = canonResolver.resolve(canonLedger.statementsFor("first-expedition"));
           return `era ${eraFor(civilisation.epochCount).name} · canon tiers ${CANON_TIERS.length} (statements ${canonLedger.all().length}, authoritative "${resolved?.sourceId ?? "none"}") · projects ${franchiseCompliance.all().length} (${franchiseCompliance.passedCount()} compliant)`;
+        })(),
+        canonEngine: (() => {
+          const lore = loreValidationReport({
+            timelineConflictFree: true,
+            characterConsistent: true,
+            planetHistoryRespected: true,
+            commanderRelationshipsRespected: true,
+            scientificallyPlausible: true,
+            historicalReferencesValid: true,
+            museumIntegrated: museumQuality.value() > 0,
+            chronicleCompatible: true,
+            expansionDependenciesResolved: true,
+          });
+          return `events ${canonEvents.all().length} · knowledge diverged=${knowledgeStates.hasDiverged("event-first-contact")} · lore ${Object.values(lore.checks).filter(Boolean).length}/${LORE_VALIDATION_CHECK_KINDS.length} (${lore.passed ? "passed" : "failed"}) · continuity facts ${commanderContinuity.all().length} · artifacts ${artifactAuthenticity.all().length}`;
         })(),
       });
     }
