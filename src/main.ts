@@ -107,6 +107,8 @@ import { CompanionHabitatRuntime, LivingShipRuntime, MemorialGardenLog } from ".
 import { seedEnvironmentalStates } from "./game/livingGalaxy/livingGalaxyData";
 import { CrimeLedger, EnvironmentalRuntime, FestivalCalendar, LivingGalaxyChronicle, PlayerReputationLedger } from "./game/livingGalaxy/LivingGalaxyRuntime";
 import { GalacticHistoryLog, GalacticRecordBoard, GiftLedger, LegacyProgressTracker, PhotoAlbum, PlayerChronicle, PlayerJournalRuntime } from "./game/legacy/LegacyEngineRuntime";
+import { AUDIO_ARCHIVE_KINDS, COMMANDER_DONATION_EXAMPLES, LIBRARY_BOOK_KINDS, THEATER_PROGRAM_KINDS } from "./game/livingMuseum/livingMuseumData";
+import { MuseumCollectionRegistry, MuseumQualityTracker, RestorationLab, VisitorLog, seedCommanderDonations } from "./game/livingMuseum/LivingMuseumRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -990,6 +992,17 @@ const legacyChronicle = new PlayerChronicle();
 const legacyJournal = new PlayerJournalRuntime();
 const legacyGifts = new GiftLedger();
 const legacyPhotos = new PhotoAlbum();
+
+// AF-134: the Living Museum — additive over AF-130's BondNetworkRuntime
+// (Commander Hall rooms expand with bond level, via its existing public
+// API) and AF-133's GiftLedger (commander donations reuse it directly).
+const museumRestoration = new RestorationLab();
+const museumDonations = seedCommanderDonations(COMMANDER_DONATION_EXAMPLES);
+const museumVisitors = new VisitorLog();
+const museumQuality = new MuseumQualityTracker();
+const museumTheater = new MuseumCollectionRegistry<(typeof THEATER_PROGRAM_KINDS)[number]>();
+const museumLibrary = new MuseumCollectionRegistry<(typeof LIBRARY_BOOK_KINDS)[number]>();
+const museumAudioArchive = new MuseumCollectionRegistry<(typeof AUDIO_ARCHIVE_KINDS)[number]>();
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4595,6 +4608,7 @@ const loop = new GameLoop({
         })(),
         livingGalaxy: `pollution ${livingGalaxyEnvironment.averagePollution().toFixed(0)} · wildlife ${livingGalaxyEnvironment.averageWildlife().toFixed(0)} · rep ${livingGalaxyReputation.grandTotal()} · chronicle ${livingGalaxyChronicle.all().length} · festival ${livingGalaxyFestivals.currentFestival()} · unresolved crime ${livingGalaxyCrime.unresolvedCount()}`,
         legacy: `xp ${legacyProgress.totalXp()} (${legacyProgress.topCategory()}) · records ${legacyRecords.all().length}/9 · history ${legacyHistory.all().length} · favourite planet ${legacyChronicle.favouritePlanet() ?? "—"} · journal ${legacyJournal.all().length} · gifts ${legacyGifts.all().length} · photos ${legacyPhotos.all().length}`,
+        livingMuseum: `quality ${museumQuality.value().toFixed(0)} · restoration ${museumRestoration.completedCount()}/${museumRestoration.allProjects().length} · donations ${museumDonations.all().length} · visitors ${museumVisitors.totalVisitors()} · theater ${museumTheater.all().length} · library ${museumLibrary.all().length} · audio ${museumAudioArchive.all().length}`,
       });
     }
   },

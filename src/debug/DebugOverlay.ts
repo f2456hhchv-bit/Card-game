@@ -104,6 +104,8 @@ export interface DebugSnapshot {
   livingGalaxy: string | null;
   /** Legacy Engine summary: total legacy XP, top category, galactic records set, journal/gift/photo counts (AF-133 §DEBUG). */
   legacy: string | null;
+  /** Living Museum summary: quality, restoration projects, donations, visitors, theater/library/audio counts (AF-134 §DEBUG). */
+  livingMuseum: string | null;
 }
 
 export class DebugOverlay {
@@ -189,6 +191,7 @@ export class DebugOverlay {
       `ship       ${snapshot.ship ?? "—"}`,
       `galaxyLife ${snapshot.livingGalaxy ?? "—"}`,
       `legacy     ${snapshot.legacy ?? "—"}`,
+      `museumLife ${snapshot.livingMuseum ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

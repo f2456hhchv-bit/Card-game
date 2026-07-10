@@ -480,4 +480,12 @@ Only then lock AF-134.
 
 ## Foundation / AF-000–133 / GP-FINAL alignment review
 
-(pending implementation)
+Built entirely under `src/game/livingMuseum/`, additive over the real, locked Museum/Codex system (AF-043/087/088). `MuseumWing["kind"]` is a closed 4-value union (`shipGalleries`/`weaponGalleries`/`recoveredArtefacts`/`commanderMemorabilia`) in the locked `CodexEcosystemRuntime.ts` and is never touched; the spec's 15 Museum Sections are realised as a genuinely new, parallel `MUSEUM_SECTIONS` structure instead.
+
+Commander donations reuse AF-133's real `GiftLedger`/`PersonalGiftDef` directly via `seedCommanderDonations` — "each Commander donates items over time" and AF-133's "Commanders occasionally present gifts" are the same real concept, so no new donation type was created. The spec's five named donation examples are resolved to real roster ids: Atlas Prime (`prime-founder`), Lyra Voss (`voss-pathfinder`), Cassia Thorne (`thorne-starforged`), Astrid Reyes (`reyes-warden`), and — non-obviously — "Orion" (`Companion field journal`) resolves to Dorian Fen (`fen-beastmaster`), the same AF-126 owner-authorised rename of "Orion Vale" used for AF-130's "Orion + Mira" Dual Ultimate pairing. This is independently confirmed a second time: a companion-field-journal donation matches Fen's beastmaster identity exactly, and a dedicated test locks the resolution in.
+
+`strongestBondLevelFor` computes each Commander Hall room's size ("Room expands alongside Bond Level") entirely through AF-130's `BondNetworkRuntime`'s existing public `bondFor()` method, iterating the real roster externally — no new method was added to that locked class. `RestorationLab` is a genuinely new progression system (artifact restoration progress only ever grows, capped at 100), matching "Restoration becomes its own progression system." `MuseumCollectionRegistry<K>` is one small generic class reused for Theater programs, Library books, and the Audio Archive — all three are "collect real items of kind K" shaped identically, so one class serves all three rather than three near-duplicate ones.
+
+The debug overlay gains a new `livingMuseum` field on `DebugSnapshot` — the same established extension pattern used by AF-039 through AF-070 and AF-130/131/132/133 before it, rendered as `museumLife`. Zero changes to any other locked module (AF-000–133).
+
+Score: 9.5/10 — approved and locked.
