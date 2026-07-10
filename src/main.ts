@@ -192,6 +192,8 @@ import { emotionalToneNeedsRebalancing, nextPacingStage, playerJourneyTierRank, 
 import { ContentRotationTracker, DiscoveryCurveTracker, EngagementMap, LongTermMemoryLog, PacingCycleTracker, PlayerExperienceTracker } from "./game/atlasOrchestrator/AtlasOrchestratorRuntime";
 import { INTELLIGENCE_LAYERS, LEARNING_LOOP_STAGES, knowledgeRichnessScore, rankOptions, suggestUncertaintyResponse } from "./game/atlasIntelligence/atlasIntelligenceData";
 import { CollaborativeProblemLog, CyclicStageTracker, DiscoverySuggestionLog } from "./game/atlasIntelligence/AtlasIntelligenceRuntime";
+import { DECISION_PYRAMID_LEVELS, PLAYER_INFLUENCE_CAP, cappedPlayerInfluence, ethicalAlignmentScore, explainDecision, planningHorizonRank } from "./game/atlasDecision/atlasDecisionData";
+import { DecisionLog } from "./game/atlasDecision/AtlasDecisionRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1459,6 +1461,27 @@ const discoverySuggestions = new DiscoverySuggestionLog();
   for (const suggestion of knowledgeGraph.suggestConnections(commanderIndexId)) {
     discoverySuggestions.surface("Potential Commander collaborations", `${suggestion} shares a mentor with the sandbox Commander.`, 20);
   }
+}
+
+// AF-156: the Atlas Decision Engine — transforms AF-155's reasoning
+// into action. Reuses AF-155's real rankOptions (via explainDecision),
+// suggestUncertaintyResponse, CyclicStageTracker, and
+// CollaborativeProblemLog directly for the Decision Pyramid's
+// Knowledge/Possibilities/Evaluation/Choice levels, the Uncertainty
+// section, the Decision Pyramid's own progression, and Group Decisions
+// respectively — no second scoring/confidence/stage-tracker/consensus
+// mechanism. DecisionLog, ethicalAlignmentScore, and
+// cappedPlayerInfluence are the genuinely new pieces (see
+// atlasDecisionData.ts for the full reuse notes).
+const decisionPyramid = new CyclicStageTracker(DECISION_PYRAMID_LEVELS);
+const decisionLog = new DecisionLog();
+{
+  decisionPyramid.record("Need", 20);
+  const explanation = explainDecision([
+    { id: "expand-north", scores: { Expansion: 80 } },
+    { id: "expand-south", scores: { Expansion: 50 } },
+  ]);
+  if (explanation) decisionLog.record("Colony", "Expansion", explanation.chosenId, explanation.confidence, 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5253,6 +5276,17 @@ const loop = new GameLoop({
           const uncertainty = decision ? suggestUncertaintyResponse(decision.confidence) : null;
           const richness = knowledgeRichnessScore({ recentEvents: 3, historicEvents: architectureHistory.all().length, personalMemories: entityMemory.memoriesFor(`commander-${sandboxCommander.id}`).length, sharedMemories: 1, museumRecords: 1, chronicleEntries: 1 });
           return `layer ${layer} (next ${intelligenceLayers.next(layer)}) · loop ${loopStage} (next ${learningLoop.next(loopStage)}) · decision ${decision?.bestId ?? "none"} confidence ${(decision?.confidence ?? 0).toFixed(2)} (${uncertainty ?? "confident"}) · knowledge richness ${richness} · collaborations ${collaborativeProblems.all().length} · suggestions ${discoverySuggestions.all().length}`;
+        })(),
+        atlasDecision: (() => {
+          const pyramidLevel = decisionPyramid.currentStage() ?? "Need";
+          const explanation = explainDecision([
+            { id: "expand-north", scores: { Expansion: 80 } },
+            { id: "expand-south", scores: { Expansion: 50 } },
+          ]);
+          const ethics = ethicalAlignmentScore({ Preservation: 10, "Environmental stewardship": 8 }, new Set(["Preservation", "Environmental stewardship"]));
+          const influence = cappedPlayerInfluence(0.9);
+          const horizon = planningHorizonRank("One decade");
+          return `pyramid ${pyramidLevel} (next ${decisionPyramid.next(pyramidLevel)}) · decision ${explanation?.chosenId ?? "none"} confidence ${(explanation?.confidence ?? 0).toFixed(2)} rejected [${explanation?.rejectedIds.join(", ") ?? ""}] · repetitive=${decisionLog.isRepetitive("Colony")} · ethics ${ethics} · player influence ${influence.toFixed(2)} (cap ${PLAYER_INFLUENCE_CAP}) · horizon rank ${horizon}`;
         })(),
       });
     }

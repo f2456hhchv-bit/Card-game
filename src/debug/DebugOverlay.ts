@@ -148,6 +148,8 @@ export interface DebugSnapshot {
   atlasOrchestrator: string | null;
   /** Atlas Intelligence Engine summary: current Intelligence Layer and Learning Loop stage (each with its cyclic next stage), a sample rankOptions decision with confidence and uncertainty response, composed knowledge-richness score, collaborative-problem count, and reused AF-151 Discovery Suggestion count (AF-155 §DEBUG). */
   atlasIntelligence: string | null;
+  /** Atlas Decision Engine summary: current Decision Pyramid level (with cyclic next level), a sample explainDecision outcome with confidence and rejected alternatives, repetitive-choice status, faction ethical-alignment score, capped player-influence share, and long-term-planning horizon rank, reusing AF-155's rankOptions/CyclicStageTracker throughout (AF-156 §DEBUG). */
+  atlasDecision: string | null;
 }
 
 export class DebugOverlay {
@@ -255,6 +257,7 @@ export class DebugOverlay {
       `simDir     ${snapshot.simulationDirector ?? "—"}`,
       `orchestr   ${snapshot.atlasOrchestrator ?? "—"}`,
       `intel      ${snapshot.atlasIntelligence ?? "—"}`,
+      `decision   ${snapshot.atlasDecision ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
