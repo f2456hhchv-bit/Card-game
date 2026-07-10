@@ -250,6 +250,8 @@ import { CampaignJourneyTracker } from "./game/atlasSymphony/AtlasSymphonyRuntim
 import { CIVILISATION_RHYTHM_STAGES, SYMPHONY_DOMAINS, thematicConsistencyMet } from "./game/atlasSymphony/atlasSymphonyData";
 import { UnityIndexScoreCard } from "./game/atlasUnity/AtlasUnityRuntime";
 import { UNITY_DOMAINS, UNITY_INDEX_CRITERIA } from "./game/atlasUnity/atlasUnityData";
+import { LivingPresentTracker } from "./game/atlasLivingUniverse/AtlasLivingUniverseRuntime";
+import { LIVING_DOMAINS } from "./game/atlasLivingUniverse/atlasLivingUniverseData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2185,6 +2187,32 @@ const unityIndex = new UnityIndexScoreCard();
   threads.mark("achievement-planetary-restoration", 20);
   knowledgeGraph.addEdge({ fromId: "achievement-planetary-restoration", toId: "settlement-verdance", kind: "Created", strength: 1, confidence: 1, historicalContext: "Everyone contributed to the restoration.", dateEstablished: 20 });
   for (const criterion of UNITY_INDEX_CRITERIA) unityIndex.score(criterion, 9.6);
+}
+
+// AF-185: the Atlas Living Universe Engine — the permanent heartbeat
+// ensuring every prior Atlas system continuously evolves together.
+// Unrelated to AF-132's locked "Living Galaxy" module (see
+// atlasLivingUniverseData.ts's NAMING NOTE). Reuses AF-166's real
+// identityRegistry directly for Living People, AF-159's real
+// culturalTrends directly for Living Communities/Culture, AF-135's
+// real chroniclePlanets directly for Living Cities/Planets/
+// Knowledge/History, AF-172's real hypotheses directly for new
+// evidence, AF-159's real mysteryLog/AF-169's real
+// ensureNextHorizonOpen directly for Living Science/The Living
+// Future, AF-160's real mentorshipLedger directly for Living
+// Relationships, AF-175's real generationalHandoff directly for
+// Living Civilisation, AF-151's real knowledgeGraph directly for
+// Living Feedback, and AF-174's real horizonEffect directly for The
+// Living Future. LivingPresentTracker is the genuinely new piece (see
+// atlasLivingUniverseData.ts for the full reuse notes).
+const livingPresent = new LivingPresentTracker();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  chroniclePlanets.write("settlement-verdance", "The skyline gains a new observatory wing.", 20, "Explorers");
+  hypotheses.propose("theory-migration-patterns", "Species migration may follow ancient precursor routes.", 20);
+  mysteryLog.open("mystery-new-friendship", "Unknown signals", "A new friendship forms between distant colonies.", 20);
+  horizonEffect.learn("Deep-space migration routes", 20);
+  livingPresent.update(commanderIndexId, "Restoring a wounded ecosystem on Verdance.", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6125,6 +6153,11 @@ const loop = new GameLoop({
           const overlap = detectOverlap(UNITY_DOMAINS, SYMPHONY_DOMAINS);
           const threadIds = threads.all().map((t) => t.entityId);
           return `network neighbours ${knowledgeGraph.neighbors("institution-verdance-academy").length} · cultural adopters ${culturalTrends.adoptersFor("Verdance Language Preservation").length} · shared achievements connected=${allThreadsConnected(threadIds, knowledgeGraph)} · index score ${unityIndex.overallScore().toFixed(1)} (${unityIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Unity,Symphony] ${overlap.shared.length}/${UNITY_DOMAINS.length}`;
+        })(),
+        atlasLivingUniverse: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const overlap = detectOverlap(LIVING_DOMAINS, CONTINUUM_DOMAINS);
+          return `present "${livingPresent.currentActivityOf(commanderIndexId) ?? "none"}" · chronicle versions ${chroniclePlanets.entryFor("settlement-verdance").allVersions().length} · hypothesis grounded=${hypotheses.isGrounded("theory-migration-patterns")} · mysteries unsolved ${mysteryLog.unsolved().length} · unknown index ${horizonEffect.unknownIndex()} · domain overlap[Living,Continuum] ${overlap.shared.length}/${LIVING_DOMAINS.length}`;
         })(),
       });
     }

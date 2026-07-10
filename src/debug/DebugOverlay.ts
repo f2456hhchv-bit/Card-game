@@ -206,6 +206,8 @@ export interface DebugSnapshot {
   atlasSymphony: string | null;
   /** Atlas Unity Engine summary: the reused AF-151 KnowledgeGraph's neighbour count for The Unity Network/The Civilisation Web/The Knowledge Commons, the reused AF-159 CulturalTrendTracker's adopter count for Unity Through Diversity, the reused AF-176 ThreadRegistry/allThreadsConnected's connected status for Shared Achievements, the new UnityIndexScoreCard's score/gate status mirroring AF-143/149/170/173/179/180/182's real scoring-rubric shape, and a live detectOverlap reading against AF-183's real SYMPHONY_DOMAINS (AF-184 §DEBUG). */
   atlasUnity: string | null;
+  /** Atlas Living Universe Engine summary (unrelated to AF-132's locked Living Galaxy module — see atlasLivingUniverseData.ts's NAMING NOTE): the new LivingPresentTracker's current activity for a sample Commander (the only overwriting tracker in this codebase, by design), the reused AF-135 PlanetaryChronicle's version count for Living Cities/Planets, the reused AF-172 HypothesisTracker's grounded status for Living Knowledge, the reused AF-159 MysteryLog's unsolved count for Living Science/The Living Future, the reused AF-174 HorizonEffectTracker's unknown index, and a live detectOverlap reading against AF-176's real CONTINUUM_DOMAINS (AF-185 §DEBUG). */
+  atlasLivingUniverse: string | null;
 }
 
 export class DebugOverlay {
@@ -342,6 +344,7 @@ export class DebugOverlay {
       `harmony    ${snapshot.atlasHarmony ?? "—"}`,
       `symphony   ${snapshot.atlasSymphony ?? "—"}`,
       `unity      ${snapshot.atlasUnity ?? "—"}`,
+      `living     ${snapshot.atlasLivingUniverse ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
