@@ -242,6 +242,8 @@ import { ASCENSION_INDEX_CRITERIA, ASCENSION_PILLARS, ascensionTierRank } from "
 import { SOUL_DIMENSIONS } from "./game/atlasSoul/atlasSoulData";
 import { TranscendenceIndexScoreCard, UniversalLibrary } from "./game/atlasTranscendence/AtlasTranscendenceRuntime";
 import { STEWARDSHIP_LOOP_STAGES, TRANSCENDENCE_DOMAINS, TRANSCENDENCE_INDEX_CRITERIA, civilisationalShiftRank } from "./game/atlasTranscendence/atlasTranscendenceData";
+import { EternalArchive } from "./game/atlasEternity/AtlasEternityRuntime";
+import { ETERNITY_DOMAINS, PRESERVATION_CYCLE_STAGES } from "./game/atlasEternity/atlasEternityData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2090,6 +2092,34 @@ const transcendenceIndex = new TranscendenceIndexScoreCard();
   earnedTitles.earn("commander-thorne-starforged", "Guardian of the Galaxy", 20);
   universalLibrary.preserve("language-verdance-old-tongue", "Language", 20);
   for (const criterion of TRANSCENDENCE_INDEX_CRITERIA) transcendenceIndex.score(criterion, 9.6);
+}
+
+// AF-181: the Atlas Eternity Engine — ensures civilisation's greatest
+// achievements continue to inspire forever. Reuses AF-135's real
+// chroniclePlanets directly for The Eternal Library/Living
+// Restoration, AF-165's real institutionalMemory directly for The
+// Eternal Museum, AF-159's real culturalTrends directly for Cultural
+// Preservation, AF-163's real symbolSignificance directly for
+// Planetary Heritage, AF-151's real knowledgeGraph directly for The
+// Memory Constellation, AF-155's real CyclicStageTracker over the
+// module's own PRESERVATION_CYCLE_STAGES for The Cycle of
+// Preservation, and AF-175's real generationalHandoff directly for
+// The Future Curators. EternalArchive/eternalStandardMet are the
+// genuinely new pieces (see atlasEternityData.ts for the full reuse
+// notes).
+const preservationCycle = new CyclicStageTracker(PRESERVATION_CYCLE_STAGES);
+const eternalArchive = new EternalArchive();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  chroniclePlanets.write("settlement-verdance", "A new translation clarifies the original survey's intent.", 20, "Military historians");
+  institutionalMemory.remember("institution-verdance-academy", "Artifacts", "The founding charter remains on public display.", 20);
+  culturalTrends.record("Old Verdance Tongue", "settlement-verdance", 20);
+  symbolSignificance.register("planet-verdance-heritage", "Verdance's recovered heritage", 20);
+  symbolSignificance.reinforce("planet-verdance-heritage", 20);
+  knowledgeGraph.addEdge({ fromId: "achievement-verdance-restoration", toId: commanderIndexId, kind: "Created", strength: 1, confidence: 1, historicalContext: "The restoration's primary creator.", dateEstablished: 20 });
+  preservationCycle.record("Discover", 20);
+  eternalArchive.preserve("record-first-contact-speech", "Historic speeches", 20);
+  generationalHandoff.handoff(3, ["Culture"], 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6013,6 +6043,10 @@ const loop = new GameLoop({
         atlasTranscendence: (() => {
           const overlap = detectOverlap(TRANSCENDENCE_DOMAINS, ASCENSION_PILLARS);
           return `shift rank ${civilisationalShiftRank("Transcendence")} · loop ${stewardshipLoop.currentStage() ?? "none"} (next ${stewardshipLoop.next("Discover Again")}) · quiet moments ${quietMoments.all().length} · founder titles ${earnedTitles.titlesFor("commander-thorne-starforged").length} · library preserved=${universalLibrary.isPreserved("language-verdance-old-tongue")} (${universalLibrary.categoryOf("language-verdance-old-tongue") ?? "none"}) · index score ${transcendenceIndex.overallScore().toFixed(1)} (${transcendenceIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Transcendence,Ascension] ${overlap.shared.length}/${TRANSCENDENCE_DOMAINS.length}`;
+        })(),
+        atlasEternity: (() => {
+          const overlap = detectOverlap(ETERNITY_DOMAINS, CONTINUUM_DOMAINS);
+          return `chronicle versions ${chroniclePlanets.entryFor("settlement-verdance").allVersions().length} · institution memories ${institutionalMemory.memoriesFor("institution-verdance-academy").length} · cultural adopters ${culturalTrends.adoptersFor("Old Verdance Tongue").length} · heritage significance ${symbolSignificance.significanceOf("planet-verdance-heritage")} · constellation neighbours ${knowledgeGraph.neighbors("achievement-verdance-restoration").length} · preservation cycle ${preservationCycle.currentStage() ?? "none"} · archive preserved=${eternalArchive.isPreserved("record-first-contact-speech")} (${eternalArchive.categoryOf("record-first-contact-speech") ?? "none"}) · generation 3 baseline ${generationalHandoff.startingBaselineFor(4)} · domain overlap[Eternity,Continuum] ${overlap.shared.length}/${ETERNITY_DOMAINS.length}`;
         })(),
       });
     }

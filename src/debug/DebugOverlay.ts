@@ -198,6 +198,8 @@ export interface DebugSnapshot {
   atlasAscension: string | null;
   /** Atlas Transcendence Engine summary (the highest layer of the in-fiction Atlas chain only — never above the real docs/CONSTITUTION.md, see atlasTranscendenceData.ts's CRITICAL SCOPE NOTE): the module's own civilisationalShiftRank for the highest shift stage, the reused AF-155 CyclicStageTracker's current/next Stewardship Loop stage, the reused AF-163 QuietMomentLog's count for The Quiet Victory, the reused AF-167 EarnedTitleTracker's title count for Commander Transcendence, the new UniversalLibrary's preserved status/category for The Universal Library, the new TranscendenceIndexScoreCard's score/gate status mirroring AF-143/149/170/173/179's real scoring-rubric shape, and a live detectOverlap reading against AF-179's real ASCENSION_PILLARS (AF-180 §DEBUG). */
   atlasTranscendence: string | null;
+  /** Atlas Eternity Engine summary: the reused AF-135 PlanetaryChronicle's version count for The Eternal Library, the reused AF-165 InstitutionalMemoryTracker's memory count for The Eternal Museum, the reused AF-159 CulturalTrendTracker's adopter count for Cultural Preservation, the reused AF-163 SignificanceTracker's reading for Planetary Heritage, the reused AF-151 KnowledgeGraph's neighbour count for The Memory Constellation, the reused AF-155 CyclicStageTracker's current Preservation Cycle stage, the new EternalArchive's preserved status/category, the reused AF-175 GenerationalHandoffLedger's inherited baseline for The Future Curators, and a live detectOverlap reading against AF-176's real CONTINUUM_DOMAINS (AF-181 §DEBUG). */
+  atlasEternity: string | null;
 }
 
 export class DebugOverlay {
@@ -330,6 +332,7 @@ export class DebugOverlay {
       `renaissance ${snapshot.atlasRenaissance ?? "—"}`,
       `ascension  ${snapshot.atlasAscension ?? "—"}`,
       `transcendence ${snapshot.atlasTranscendence ?? "—"}`,
+      `eternity   ${snapshot.atlasEternity ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
