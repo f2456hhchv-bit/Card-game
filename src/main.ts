@@ -111,6 +111,7 @@ import { AUDIO_ARCHIVE_KINDS, COMMANDER_DONATION_EXAMPLES, LIBRARY_BOOK_KINDS, T
 import { MuseumCollectionRegistry, MuseumQualityTracker, RestorationLab, VisitorLog, seedCommanderDonations } from "./game/livingMuseum/LivingMuseumRuntime";
 import { ORAL_HISTORY_TOPICS, PLAYER_WRITABLE_ENTRY_KINDS, PUBLISHER_VOICES } from "./game/chronicle/chronicleData";
 import { PlanetaryChronicle, generateFinalChronicle } from "./game/chronicle/ChronicleRuntime";
+import { CommanderStorylineLog, NarrativeCallbackLog, StoryBranchTracker, StoryDirector, StoryPillarTracker, deriveCampaignTheme, reputationTitleFor } from "./game/storyEngine/StoryEngineRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1014,6 +1015,15 @@ const chroniclePlanets = new PlanetaryChronicle();
 const chronicleOralHistory = new MuseumCollectionRegistry<(typeof ORAL_HISTORY_TOPICS)[number]>();
 const chronicleBooks = new MuseumCollectionRegistry<(typeof PUBLISHER_VOICES)[number]>();
 const chronicleWritableEntries = new MuseumCollectionRegistry<(typeof PLAYER_WRITABLE_ENTRY_KINDS)[number]>();
+
+// AF-136: the Dynamic Story Engine — real new narrative tracking,
+// composing with AF-133's LegacyProgressTracker and AF-135's
+// EvolvingEntry/generateFinalChronicle rather than duplicating them.
+const storyPillars = new StoryPillarTracker();
+const storyDirector = new StoryDirector();
+const commanderStorylines = new CommanderStorylineLog();
+const storyBranches = new StoryBranchTracker();
+const narrativeCallbacks = new NarrativeCallbackLog();
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4623,6 +4633,12 @@ const loop = new GameLoop({
         chronicle: (() => {
           const finalChronicle = generateFinalChronicle(legacyHistory, legacyChronicle, legacyProgress);
           return `planets ${chroniclePlanets.all().length} · oral history ${chronicleOralHistory.all().length} · books ${chronicleBooks.all().length} · writable ${chronicleWritableEntries.all().length} · commander memories ${chronicleCommanderMemories.all().length} · final chronicle records ${finalChronicle.totalHistoricalRecords}`;
+        })(),
+        storyEngine: (() => {
+          const bias = storyDirector.pacingBias();
+          const branchAxisSample = storyBranches.leaningFor("Curiosity vs Caution");
+          const commanderStoryBeats = commanderStorylines.beatFor(sandboxCommander.id, "Origin Story")?.allVersions().length ?? 0;
+          return `pillars [${storyPillars.dominantPillars(2).join(", ") || "none yet"}] · theme ${deriveCampaignTheme(storyPillars)} · rep ${reputationTitleFor(legacyProgress)} · pacing combat ${(bias.combat * 100).toFixed(0)}%/explore ${(bias.exploration * 100).toFixed(0)}%/downtime ${(bias.downtime * 100).toFixed(0)}% · callbacks ${narrativeCallbacks.all().length} · branch lean ${branchAxisSample} · commander story beats ${commanderStoryBeats}`;
         })(),
       });
     }

@@ -108,6 +108,8 @@ export interface DebugSnapshot {
   livingMuseum: string | null;
   /** Chronicle of Humanity summary: planet entries, oral history, books, writable entries, final chronicle preview (AF-135 §DEBUG). */
   chronicle: string | null;
+  /** Dynamic Story Engine summary: dominant pillars, pacing bias, campaign theme, reputation title, callbacks (AF-136 §DEBUG). */
+  storyEngine: string | null;
 }
 
 export class DebugOverlay {
@@ -195,6 +197,7 @@ export class DebugOverlay {
       `legacy     ${snapshot.legacy ?? "—"}`,
       `museumLife ${snapshot.livingMuseum ?? "—"}`,
       `chronicle  ${snapshot.chronicle ?? "—"}`,
+      `story      ${snapshot.storyEngine ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
