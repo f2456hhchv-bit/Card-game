@@ -166,6 +166,8 @@ export interface DebugSnapshot {
   atlasMeaning: string | null;
   /** Atlas Experience Engine summary: reused AF-154 Experience Rhythm stage, reused AF-162 Player Expression dominant purpose, reused AF-153 Surprise Management count, First-Time Moment protection status, a sample Experience State snapshot, an Atmospheric Design level, reused AF-155 Shared Experience contributor count, and the Long-Term Experience rank (AF-164 §DEBUG). */
   atlasExperience: string | null;
+  /** Atlas Memory Engine summary: a sample memory's untouched objective description alongside its drifted subjective version, the player's most-visited planet/visit count/photo count, an institution's memory count, a sample Commander's real AF-133 personal-memory count, and a reused AF-151 Memory Network neighbour count (AF-165 §DEBUG). */
+  atlasMemory: string | null;
 }
 
 export class DebugOverlay {
@@ -282,6 +284,7 @@ export class DebugOverlay {
       `purpose    ${snapshot.atlasPurpose ?? "—"}`,
       `meaning    ${snapshot.atlasMeaning ?? "—"}`,
       `experience ${snapshot.atlasExperience ?? "—"}`,
+      `memory     ${snapshot.atlasMemory ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

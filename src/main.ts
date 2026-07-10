@@ -209,6 +209,7 @@ import { CommunityMeaningTracker, MeaningCurator, QuietMomentLog, SignificanceTr
 import type { CollectiveMemoryCategory, PersonalMeaningCategory, PlayerMeaningCategory } from "./game/atlasMeaning/atlasMeaningData";
 import { longTermExperienceRank } from "./game/atlasExperience/atlasExperienceData";
 import { AtmosphereCoordinator, ExperienceStateTracker, FirstTimeMomentTracker } from "./game/atlasExperience/AtlasExperienceRuntime";
+import { InstitutionalMemoryTracker, MemoryDistortionTracker, PlayerMemoryTracker } from "./game/atlasMemory/AtlasMemoryRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1699,6 +1700,32 @@ const atmosphere = new AtmosphereCoordinator();
   symbolSignificance.register("sunrise-restored-verdance", "Sunrise over restored Verdance", 20);
   symbolSignificance.reinforce("sunrise-restored-verdance", 20);
   collaborativeProblems.propose("planetary-recovery-festival", ["settlement-verdance", "settlement-lucent-gate"], "Cultural", 20);
+}
+
+// AF-165: the Atlas Memory Engine — the taxonomy layer over memory
+// machinery already real elsewhere. Reuses AF-133's real entityMemory
+// (NpcMemoryLog) directly for raw Personal Memory (its bounded
+// minorCapacity already IS "Forgetting"), AF-163's real
+// personalMeaning/playerMeaning MeaningCurator instances directly for
+// curated superlatives, AF-155's real collaborativeProblems directly
+// for Shared Memory (the sixth instance of that mechanic), AF-159's
+// real culturalTrends directly for Cultural Memory, AF-151's real
+// knowledgeGraph directly for the Memory Network, and AF-163's real
+// symbolSignificance directly for Nostalgia. MemoryDistortionTracker/
+// PlayerMemoryTracker/InstitutionalMemoryTracker are the genuinely new
+// pieces (see atlasMemoryData.ts for the full reuse notes).
+const memoryDistortion = new MemoryDistortionTracker();
+const playerMemory = new PlayerMemoryTracker();
+const institutionalMemory = new InstitutionalMemoryTracker();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  memoryDistortion.remember("memory-first-contact", "The expedition made peaceful first contact.", 20);
+  memoryDistortion.drift("memory-first-contact", "I remember it as far more dangerous than it really was.");
+  playerMemory.visit("planet-verdance");
+  playerMemory.visit("planet-verdance");
+  playerMemory.photograph("observatory-verdance");
+  institutionalMemory.remember("museum-verdance", "Artifacts", "The founder's helmet.", 20);
+  knowledgeGraph.addEdge({ fromId: "memory-first-expedition", toId: commanderIndexId, kind: "Influenced", strength: 1, confidence: 1, historicalContext: "A defining early memory.", dateEstablished: 20 });
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5544,6 +5571,10 @@ const loop = new GameLoop({
         atlasExperience: (() => {
           const state = experienceStates.latest();
           return `rhythm ${pacingCycle.currentStage() ?? "none"} · expression ${playerPurpose.dominantPurpose() ?? "none"} · surprise ${emergenceLog.all().length} · first-time recruited=${firstTimeMoments.hasOccurred("First Commander recruited")} (repeat blocked=${!firstTimeMoments.markOccurred("First Commander recruited", 999)}) · states curiosity=${state?.curiosity ?? 0} immersion=${state?.immersion ?? 0} · atmosphere lighting=${atmosphere.levelFor("Lighting")} · shared festival ${collaborativeProblems.participantsFor("planetary-recovery-festival").length} · long-term rank ${longTermExperienceRank("Mastery")}`;
+        })(),
+        atlasMemory: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          return `distortion objective "${memoryDistortion.objectiveOf("memory-first-contact") ?? "none"}" subjective "${memoryDistortion.subjectiveOf("memory-first-contact") ?? "none"}" · most visited ${playerMemory.mostVisitedPlanet() ?? "none"} (${playerMemory.visitsFor("planet-verdance")} visits) · photos ${playerMemory.photoCountFor("observatory-verdance")} · institution memories ${institutionalMemory.memoriesFor("museum-verdance").length} · personal memories ${entityMemory.memoriesFor(commanderIndexId).length} · network neighbours ${knowledgeGraph.neighbors("memory-first-expedition").length}`;
         })(),
       });
     }
