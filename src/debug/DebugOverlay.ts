@@ -154,6 +154,8 @@ export interface DebugSnapshot {
   atlasPlanning: string | null;
   /** Atlas Future Engine summary: a reused AF-144 PredictionEngine numeric forecast with confidence, the most-likely branching Future State, latest flagged risk severity, and Opportunity/Future-Memory counts (AF-158 §DEBUG). */
   atlasFuture: string | null;
+  /** Atlas Possibility Engine summary: registered possibility count and sample discovery category, player-inspiration and serendipity counts (the latter composable from reused AF-151 suggestConnections), unsolved/total mystery counts, cultural-trend adopter count, and innovation-memory count (AF-159 §DEBUG). */
+  atlasPossibility: string | null;
 }
 
 export class DebugOverlay {
@@ -264,6 +266,7 @@ export class DebugOverlay {
       `decision   ${snapshot.atlasDecision ?? "—"}`,
       `planning   ${snapshot.atlasPlanning ?? "—"}`,
       `future     ${snapshot.atlasFuture ?? "—"}`,
+      `possible   ${snapshot.atlasPossibility ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -198,6 +198,8 @@ import { hasContingencyCoverage, type ContingencySet, type Plan } from "./game/a
 import { PlanAdaptationLog, PlanMemoryArchive, PlanRegistry } from "./game/atlasPlanning/AtlasPlanningRuntime";
 import { mostLikelyFutureState, type FutureStateForecast } from "./game/atlasFuture/atlasFutureData";
 import { FutureMemoryArchive, OpportunityLog, RiskLog } from "./game/atlasFuture/AtlasFutureRuntime";
+import type { Possibility } from "./game/atlasPossibility/atlasPossibilityData";
+import { CulturalTrendTracker, InnovationMemoryArchive, MysteryLog, PlayerInspirationLog, PossibilityRegistry, SerendipityLog } from "./game/atlasPossibility/AtlasPossibilityRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1545,6 +1547,39 @@ const verdanceFutureForecast: FutureStateForecast = {
 {
   riskLog.flag("settlement-verdance", "Resource shortages", 0.4, 20);
   opportunityLog.surface("Scientific partnerships", "Two labs propose a joint anomaly study.", 20);
+}
+
+// AF-159: the Atlas Possibility Engine — sits above AF-158's Future
+// Engine, imagining opportunities nobody has considered yet rather than
+// predicting likely outcomes. Serendipity moments should compose AF-151's
+// real knowledgeGraph.suggestConnections directly. PossibilityRegistry/
+// PlayerInspirationLog/SerendipityLog/MysteryLog/CulturalTrendTracker/
+// InnovationMemoryArchive are the genuinely new pieces (see
+// atlasPossibilityData.ts for the full reuse notes).
+const possibilityRegistry = new PossibilityRegistry();
+const playerInspiration = new PlayerInspirationLog();
+const serendipityLog = new SerendipityLog();
+const mysteryLog = new MysteryLog();
+const culturalTrends = new CulturalTrendTracker();
+const innovationMemory = new InnovationMemoryArchive();
+{
+  const quantumSignalPossibility: Possibility = {
+    id: "quantum-signal-decoding",
+    discoveryCategory: "Scientific",
+    requiredKnowledge: ["quantum theory"],
+    requiredPeople: ["scientist-vale"],
+    requiredLocations: ["laboratory-verdance"],
+    potentialRisks: ["equipment overload"],
+    potentialRewards: ["new communication method"],
+    historicalSignificance: 60,
+    futureImplications: ["faster deep-space contact"],
+  };
+  possibilityRegistry.register(quantumSignalPossibility);
+  playerInspiration.surface("Commander synergies", "Two commanders share a rare tactical style.", 20);
+  mysteryLog.open("signal-alpha", "Unknown signals", "A repeating signal from beyond the frontier.", 20);
+  for (const suggestion of knowledgeGraph.suggestConnections(`commander-${sandboxCommander.id}`)) {
+    serendipityLog.record(`${suggestion} independently reached the same conclusion.`, [`commander-${sandboxCommander.id}`, suggestion], 20);
+  }
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5363,6 +5398,10 @@ const loop = new GameLoop({
           const forecast = aosPrediction.forecast("Population growth", [40, 44, 48]);
           const bestState = mostLikelyFutureState(verdanceFutureForecast);
           return `forecast ${forecast.predictedNext.toFixed(0)} (confidence ${(forecast.confidence * 100).toFixed(0)}%) · likely state ${bestState} · risk ${riskLog.severityFor("settlement-verdance", "Resource shortages").toFixed(2)} · opportunities ${opportunityLog.all().length} · future memory ${futureMemory.all().length}`;
+        })(),
+        atlasPossibility: (() => {
+          const possibility = possibilityRegistry.get("quantum-signal-decoding");
+          return `possibilities ${possibilityRegistry.all().length} (${possibility?.discoveryCategory ?? "none"}) · inspiration ${playerInspiration.all().length} · serendipity ${serendipityLog.all().length} · mysteries unsolved ${mysteryLog.unsolved().length}/${mysteryLog.all().length} · cultural adopters ${culturalTrends.adoptersFor("Solar Minimalism").length} · innovation memory ${innovationMemory.all().length}`;
         })(),
       });
     }
