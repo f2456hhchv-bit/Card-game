@@ -170,6 +170,8 @@ export interface DebugSnapshot {
   atlasMemory: string | null;
   /** Atlas Consciousness Engine summary: a sample Commander's current professional identity and self-image/reputation gap status, reused AF-160 Reflection Loop stage composed with a reused AF-163 curated reflection topic, a capped-delta Value Priority, a Personal Growth area score and overall average, a bounded Emotional-Continuity hope level, a reused AF-155 Moral Reasoning choice, and the Life Stage rank (AF-166 §DEBUG). */
   atlasConsciousness: string | null;
+  /** Atlas Identity Engine summary: a sample Commander's curated Personal Identity signature (via a reused AF-163 generic MeaningCurator), most-recognised external Reputation quality and count, an Earned Title count, and reused AF-159 Cultural Identity / AF-163 Symbolism significance counts (AF-167 §DEBUG). */
+  atlasIdentity: string | null;
 }
 
 export class DebugOverlay {
@@ -288,6 +290,7 @@ export class DebugOverlay {
       `experience ${snapshot.atlasExperience ?? "—"}`,
       `memory     ${snapshot.atlasMemory ?? "—"}`,
       `conscious  ${snapshot.atlasConsciousness ?? "—"}`,
+      `identity   ${snapshot.atlasIdentity ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

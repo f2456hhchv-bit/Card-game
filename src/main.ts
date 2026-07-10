@@ -212,6 +212,8 @@ import { AtmosphereCoordinator, ExperienceStateTracker, FirstTimeMomentTracker }
 import { InstitutionalMemoryTracker, MemoryDistortionTracker, PlayerMemoryTracker } from "./game/atlasMemory/AtlasMemoryRuntime";
 import { hasIdentityGap, lifeStageRank, type Identity } from "./game/atlasConsciousness/atlasConsciousnessData";
 import { EmotionalContinuityTracker, IdentityRegistry, PersonalGrowthTracker, ValuePriorityTracker } from "./game/atlasConsciousness/AtlasConsciousnessRuntime";
+import { EarnedTitleTracker, ReputationTracker } from "./game/atlasIdentity/AtlasIdentityRuntime";
+import type { SignatureTraitKind } from "./game/atlasIdentity/atlasIdentityData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1759,6 +1761,29 @@ const emotionalContinuity = new EmotionalContinuityTracker();
   personalGrowth.develop(commanderIndexId, "Decision quality", 40);
   emotionalContinuity.setback(commanderIndexId, 40);
   emotionalContinuity.recoverStep(commanderIndexId, 10);
+}
+
+// AF-167: the Atlas Identity Engine — exists above AF-166's
+// Consciousness Engine. Consciousness is internal self-belief;
+// identity is external, earned recognition. Personal Identity reuses
+// AF-163's real generic personalMeaning-shaped MeaningCurator directly
+// (a new instance typed to SignatureTraitKind); Cultural Identity
+// reuses AF-159's real culturalTrends directly; Symbolism composes
+// AF-163's real symbolSignificance directly. ReputationTracker/
+// EarnedTitleTracker are the genuinely new pieces (see
+// atlasIdentityData.ts for the full reuse notes).
+const personalSignatures = new MeaningCurator<SignatureTraitKind>();
+const commanderReputation = new ReputationTracker();
+const earnedTitles = new EarnedTitleTracker();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  personalSignatures.curate(commanderIndexId, "Favourite sayings", '"The wild remembers kindness."', 20);
+  commanderReputation.recognizeFor(commanderIndexId, "Mentorship", 20);
+  commanderReputation.recognizeFor(commanderIndexId, "Mentorship", 25);
+  earnedTitles.earn("settlement-verdance", "The city that rebuilt the oceans.", 20);
+  culturalTrends.record("Verdance Harvest Festival", "settlement-verdance", 20);
+  symbolSignificance.register("verdance-flag", "The Verdance Flag", 20);
+  symbolSignificance.reinforce("verdance-flag", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5618,6 +5643,10 @@ const loop = new GameLoop({
             { id: "cover-it-up", scores: { Evidence: 10, "Professional ethics": 5 } },
           ]);
           return `identity "${identity?.professionalIdentity ?? "none"}" gap=${identity ? hasIdentityGap(identity) : false} · reflection ${reflectionStage} (topic "${personalMeaning.entryFor(commanderIndexId, "Quiet regret")?.description ?? "none"}") · value Exploration=${valuePriorities.priorityOf(commanderIndexId, "Exploration")} · growth "Decision quality"=${personalGrowth.areaScore(commanderIndexId, "Decision quality").toFixed(0)} (overall ${personalGrowth.overallGrowth(commanderIndexId).toFixed(1)}) · hope ${emotionalContinuity.hopeLevelOf(commanderIndexId)} · moral choice ${moralChoice?.bestId ?? "none"} · life stage rank ${lifeStageRank("Mid Career")}`;
+        })(),
+        atlasIdentity: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          return `signature "${personalSignatures.entryFor(commanderIndexId, "Favourite sayings")?.description ?? "none"}" · reputation ${commanderReputation.mostRecognizedQuality(commanderIndexId) ?? "none"} (${commanderReputation.recognitionCountFor(commanderIndexId, "Mentorship")}) · titles ${earnedTitles.titlesFor("settlement-verdance").length} · cultural adopters ${culturalTrends.adoptersFor("Verdance Harvest Festival").length} · symbol significance ${symbolSignificance.significanceOf("verdance-flag")}`;
         })(),
       });
     }
