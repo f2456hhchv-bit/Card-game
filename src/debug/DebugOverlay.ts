@@ -168,6 +168,8 @@ export interface DebugSnapshot {
   atlasExperience: string | null;
   /** Atlas Memory Engine summary: a sample memory's untouched objective description alongside its drifted subjective version, the player's most-visited planet/visit count/photo count, an institution's memory count, a sample Commander's real AF-133 personal-memory count, and a reused AF-151 Memory Network neighbour count (AF-165 §DEBUG). */
   atlasMemory: string | null;
+  /** Atlas Consciousness Engine summary: a sample Commander's current professional identity and self-image/reputation gap status, reused AF-160 Reflection Loop stage composed with a reused AF-163 curated reflection topic, a capped-delta Value Priority, a Personal Growth area score and overall average, a bounded Emotional-Continuity hope level, a reused AF-155 Moral Reasoning choice, and the Life Stage rank (AF-166 §DEBUG). */
+  atlasConsciousness: string | null;
 }
 
 export class DebugOverlay {
@@ -285,6 +287,7 @@ export class DebugOverlay {
       `meaning    ${snapshot.atlasMeaning ?? "—"}`,
       `experience ${snapshot.atlasExperience ?? "—"}`,
       `memory     ${snapshot.atlasMemory ?? "—"}`,
+      `conscious  ${snapshot.atlasConsciousness ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

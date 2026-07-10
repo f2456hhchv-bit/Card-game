@@ -210,6 +210,8 @@ import type { CollectiveMemoryCategory, PersonalMeaningCategory, PlayerMeaningCa
 import { longTermExperienceRank } from "./game/atlasExperience/atlasExperienceData";
 import { AtmosphereCoordinator, ExperienceStateTracker, FirstTimeMomentTracker } from "./game/atlasExperience/AtlasExperienceRuntime";
 import { InstitutionalMemoryTracker, MemoryDistortionTracker, PlayerMemoryTracker } from "./game/atlasMemory/AtlasMemoryRuntime";
+import { hasIdentityGap, lifeStageRank, type Identity } from "./game/atlasConsciousness/atlasConsciousnessData";
+import { EmotionalContinuityTracker, IdentityRegistry, PersonalGrowthTracker, ValuePriorityTracker } from "./game/atlasConsciousness/AtlasConsciousnessRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1726,6 +1728,37 @@ const institutionalMemory = new InstitutionalMemoryTracker();
   playerMemory.photograph("observatory-verdance");
   institutionalMemory.remember("museum-verdance", "Artifacts", "The founder's helmet.", 20);
   knowledgeGraph.addEdge({ fromId: "memory-first-expedition", toId: commanderIndexId, kind: "Influenced", strength: 1, confidence: 1, historicalContext: "A defining early memory.", dateEstablished: 20 });
+}
+
+// AF-166: the Atlas Consciousness Engine — continuity of self across
+// years of gameplay. Self Reflection is driven directly by AF-160's
+// real reflectionLoop, composed with AF-163's real personalMeaning for
+// what gets reflected upon; Moral Reasoning reuses AF-155's real
+// rankOptions directly. IdentityRegistry/ValuePriorityTracker/
+// PersonalGrowthTracker/EmotionalContinuityTracker/hasIdentityGap are
+// the genuinely new pieces (see atlasConsciousnessData.ts for the full
+// reuse notes).
+const identityRegistry = new IdentityRegistry();
+const valuePriorities = new ValuePriorityTracker();
+const personalGrowth = new PersonalGrowthTracker();
+const emotionalContinuity = new EmotionalContinuityTracker();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  const fenIdentity: Identity = {
+    personalHistory: "Grew up on Verdance.",
+    currentSelfImage: "A steady, dependable leader.",
+    professionalIdentity: "Wildlife Commander",
+    privateAspirations: "Found a sanctuary.",
+    publicReputation: "A steady, dependable leader.",
+    relationships: ["commander-thorne-starforged"],
+    lifeMilestones: ["First expedition"],
+    personalGrowth: "Learning patience.",
+  };
+  identityRegistry.record(commanderIndexId, fenIdentity, 20);
+  valuePriorities.shiftToward(commanderIndexId, "Exploration", 100);
+  personalGrowth.develop(commanderIndexId, "Decision quality", 40);
+  emotionalContinuity.setback(commanderIndexId, 40);
+  emotionalContinuity.recoverStep(commanderIndexId, 10);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5575,6 +5608,16 @@ const loop = new GameLoop({
         atlasMemory: (() => {
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           return `distortion objective "${memoryDistortion.objectiveOf("memory-first-contact") ?? "none"}" subjective "${memoryDistortion.subjectiveOf("memory-first-contact") ?? "none"}" · most visited ${playerMemory.mostVisitedPlanet() ?? "none"} (${playerMemory.visitsFor("planet-verdance")} visits) · photos ${playerMemory.photoCountFor("observatory-verdance")} · institution memories ${institutionalMemory.memoriesFor("museum-verdance").length} · personal memories ${entityMemory.memoriesFor(commanderIndexId).length} · network neighbours ${knowledgeGraph.neighbors("memory-first-expedition").length}`;
+        })(),
+        atlasConsciousness: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const identity = identityRegistry.currentIdentityOf(commanderIndexId);
+          const reflectionStage = reflectionLoop.currentStage() ?? "Experience";
+          const moralChoice = rankOptions([
+            { id: "report-the-anomaly", scores: { Evidence: 80, "Professional ethics": 70 } },
+            { id: "cover-it-up", scores: { Evidence: 10, "Professional ethics": 5 } },
+          ]);
+          return `identity "${identity?.professionalIdentity ?? "none"}" gap=${identity ? hasIdentityGap(identity) : false} · reflection ${reflectionStage} (topic "${personalMeaning.entryFor(commanderIndexId, "Quiet regret")?.description ?? "none"}") · value Exploration=${valuePriorities.priorityOf(commanderIndexId, "Exploration")} · growth "Decision quality"=${personalGrowth.areaScore(commanderIndexId, "Decision quality").toFixed(0)} (overall ${personalGrowth.overallGrowth(commanderIndexId).toFixed(1)}) · hope ${emotionalContinuity.hopeLevelOf(commanderIndexId)} · moral choice ${moralChoice?.bestId ?? "none"} · life stage rank ${lifeStageRank("Mid Career")}`;
         })(),
       });
     }
