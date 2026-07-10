@@ -192,6 +192,8 @@ export interface DebugSnapshot {
   atlasContinuum: string | null;
   /** Atlas Genesis Engine summary: the new GenesisRegistry's write-once founder for a sample institution's First Moment, the reused AF-172 HypothesisTracker's grounded status for Scientific Origins, the reused AF-165 InstitutionalMemoryTracker's memory count for Institution Foundations, the reused AF-151 KnowledgeGraph's Inspired-edge neighbour count for The Spark Network, the reused AF-155 CyclicStageTracker's current Beginning-to-Legacy stage, the reused AF-167 EarnedTitleTracker's title count for The Founders, and a live detectOverlap reading confirming GENESIS_DOMAINS ties the codebase's 10/12 overlap record against AF-174's real HORIZON_CATEGORIES (AF-177 §DEBUG). */
   atlasGenesis: string | null;
+  /** Atlas Renaissance Engine summary: the new RenaissanceTracker's golden-age status and distinct-trigger count (compounding, never from a single repeated trigger), the reused AF-168 BeautyIndexTracker's Architecture level for Architectural Renaissance, the reused AF-159 CulturalTrendTracker's adopter count for Cultural Renaissance, the reused AF-151 KnowledgeGraph's Inspired-edge neighbour count for The Renaissance Network, and a live detectOverlap reading confirming RENAISSANCE_DOMAINS sets a new absolute 11/12 overlap record against AF-171's real CREATIVE_DOMAINS (AF-178 §DEBUG). */
+  atlasRenaissance: string | null;
 }
 
 export class DebugOverlay {
@@ -321,6 +323,7 @@ export class DebugOverlay {
       `infinity   ${snapshot.atlasInfinity ?? "—"}`,
       `continuum  ${snapshot.atlasContinuum ?? "—"}`,
       `genesis    ${snapshot.atlasGenesis ?? "—"}`,
+      `renaissance ${snapshot.atlasRenaissance ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

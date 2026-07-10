@@ -235,6 +235,8 @@ import { ThreadRegistry, allThreadsConnected } from "./game/atlasContinuum/Atlas
 import { CONTINUUM_DOMAINS, CONTINUUM_STAGES } from "./game/atlasContinuum/atlasContinuumData";
 import { GenesisRegistry } from "./game/atlasGenesis/AtlasGenesisRuntime";
 import { GENESIS_DOMAINS, GENESIS_LIFECYCLE_STAGES } from "./game/atlasGenesis/atlasGenesisData";
+import { RenaissanceTracker } from "./game/atlasRenaissance/AtlasRenaissanceRuntime";
+import { RENAISSANCE_DOMAINS } from "./game/atlasRenaissance/atlasRenaissanceData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2023,6 +2025,26 @@ const genesisLifecycle = new CyclicStageTracker(GENESIS_LIFECYCLE_STAGES);
   knowledgeGraph.addEdge({ fromId: "discipline-galactic-ecology", toId: "institution-verdance-academy", kind: "Inspired", strength: 1, confidence: 1, historicalContext: "The discipline's early findings inspired the academy's founding.", dateEstablished: 20 });
   genesisLifecycle.record("Origin", 20);
   earnedTitles.earn(commanderIndexId, "Founder", 20);
+}
+
+// AF-178: the Atlas Renaissance Engine — governs periods of
+// extraordinary advancement. Reuses AF-168's real beautyIndex directly
+// for Architectural Renaissance, AF-159's real culturalTrends directly
+// for Cultural Renaissance, AF-151's real knowledgeGraph directly
+// (kind "Inspired") for The Renaissance Network, and AF-175's real
+// generationalHandoff directly for The End of an Age's "achievements
+// become the foundations of the next era." RenaissanceTracker is the
+// genuinely new piece (see atlasRenaissanceData.ts for the full reuse
+// notes).
+const renaissance = new RenaissanceTracker();
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  renaissance.recordTrigger("Historic scientific discovery", 20);
+  renaissance.recordTrigger("Legendary Commander", 20);
+  renaissance.recordTrigger("Educational revolution", 20);
+  beautyIndex.setLevel("Architecture", 85);
+  culturalTrends.record("Verdance Renaissance Festival", "settlement-verdance", 20);
+  knowledgeGraph.addEdge({ fromId: "scientist-vale", toId: commanderIndexId, kind: "Inspired", strength: 1, confidence: 1, historicalContext: "The scientist's breakthrough inspired a Commander's new academy.", dateEstablished: 20 });
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5934,6 +5956,10 @@ const loop = new GameLoop({
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           const overlap = detectOverlap(GENESIS_DOMAINS, HORIZON_CATEGORIES);
           return `origin founder ${genesisRegistry.originOf("institution-verdance-academy")?.founder ?? "none"} · hypothesis grounded=${hypotheses.isGrounded("discipline-galactic-ecology")} · institution memories ${institutionalMemory.memoriesFor("institution-verdance-academy").length} · spark neighbours ${knowledgeGraph.neighbors("discipline-galactic-ecology").length} · lifecycle ${genesisLifecycle.currentStage() ?? "none"} · founder titles ${earnedTitles.titlesFor(commanderIndexId).length} · domain overlap[Genesis,Horizon] ${overlap.shared.length}/${GENESIS_DOMAINS.length}`;
+        })(),
+        atlasRenaissance: (() => {
+          const overlap = detectOverlap(RENAISSANCE_DOMAINS, CREATIVE_DOMAINS);
+          return `golden age=${renaissance.isGoldenAge()} distinct triggers ${renaissance.distinctTriggerKindsSinceLastConclusion()} · beauty Architecture=${beautyIndex.levelFor("Architecture")} · cultural adopters ${culturalTrends.adoptersFor("Verdance Renaissance Festival").length} · network neighbours ${knowledgeGraph.neighbors("scientist-vale").length} · domain overlap[Renaissance,Creative] ${overlap.shared.length}/${RENAISSANCE_DOMAINS.length}`;
         })(),
       });
     }
