@@ -114,6 +114,17 @@ import { PlanetaryChronicle, generateFinalChronicle } from "./game/chronicle/Chr
 import { CommanderStorylineLog, NarrativeCallbackLog, StoryBranchTracker, StoryDirector, StoryPillarTracker, deriveCampaignTheme, reputationTitleFor } from "./game/storyEngine/StoryEngineRuntime";
 import { EVENT_CHAIN_EXAMPLE, EVENT_TIERS, EVENT_TIER_EXAMPLES, tierWeightsFor } from "./game/eventEngine/eventEngineData";
 import { EventChainRuntime, GalacticEventLog, rollTier } from "./game/eventEngine/EventEngineRuntime";
+import { CIVILISATION_LANDMARK_KINDS, CIVILISATION_MEGAPROJECTS } from "./game/civilisationEngine/civilisationEngineData";
+import {
+  CareerPipeline,
+  CivilisationAttributeExtension,
+  GovernmentPriorityTracker,
+  ImmigrationLedger,
+  MegaprojectTracker,
+  PublicOpinionTracker,
+  SocialEventCalendar,
+  civilisationAttributeSummaryFor,
+} from "./game/civilisationEngine/CivilisationEngineRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1039,6 +1050,20 @@ const eventEngineRng = new Rng(Date.now()).fork("event-engine");
   const example = EVENT_TIER_EXAMPLES[openingTier][0] ?? "A quiet day.";
   galacticEventLog.record(openingTier, example, 0);
 }
+
+// AF-138: the Civilisation Engine — this module's own genuinely new
+// per-settlement attributes and 6-stage ladder, composed with AF-090's
+// real CivilisationFrameworkRuntime rather than re-tracking what it
+// already tracks (see civilisationEngineData.ts for the full,
+// research-confirmed overlap map).
+const civilisationAttributes = new CivilisationAttributeExtension();
+const civilisationMegaprojects = new MegaprojectTracker();
+const civilisationLandmarks = new MuseumCollectionRegistry<(typeof CIVILISATION_LANDMARK_KINDS)[number]>();
+const civilisationImmigration = new ImmigrationLedger();
+const civilisationSocialCalendar = new SocialEventCalendar();
+const civilisationGovernment = new GovernmentPriorityTracker();
+const civilisationPublicOpinion = new PublicOpinionTracker();
+const civilisationCareers = new CareerPipeline();
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4665,6 +4690,13 @@ const loop = new GameLoop({
             dominantPillarCount: storyPillars.dominantPillars(2).length,
           });
           return `weights [${EVENT_TIERS.map((t) => `${t} ${weights[t].toFixed(1)}`).join(", ")}] · logged ${galacticEventLog.all().length} · mining-boom chain ${miningBoomChain.stepsCompleted()}/${miningBoomChain.totalSteps()} (${miningBoomChain.currentStep() ?? "complete"})`;
+        })(),
+        civilisationEngine: (() => {
+          const settlement = civilisation.allSettlements[0];
+          if (!settlement) return null;
+          const summary = civilisationAttributeSummaryFor(settlement.profile.settlementId, civilisation, civSim, civilisationAttributes);
+          if (!summary) return null;
+          return `${settlement.profile.name} stage ${summary.stage} · pop ${summary.values.Population.toFixed(0)} · culture ${summary.values.Culture.toFixed(0)} · megaprojects ${civilisationMegaprojects.completedCount()}/${CIVILISATION_MEGAPROJECTS.length} · landmarks ${civilisationLandmarks.all().length} · immigration ${civilisationImmigration.all().length} · social ${civilisationSocialCalendar.currentEvent()} · gov lean ${civilisationGovernment.dominantPriority() ?? "none"} · opinion ${civilisationPublicOpinion.overallOpinion().toFixed(1)} · careers ${civilisationCareers.totalPromotions()}`;
         })(),
       });
     }

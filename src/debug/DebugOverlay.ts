@@ -112,6 +112,8 @@ export interface DebugSnapshot {
   storyEngine: string | null;
   /** Galactic Event Engine summary: tier weights, logged events, mining-boom chain progress (AF-137 §DEBUG). */
   eventEngine: string | null;
+  /** Civilisation Engine summary: sample settlement's stage/attributes, megaproject/landmark/immigration counts, social event, government lean, public opinion (AF-138 §DEBUG). */
+  civilisationEngine: string | null;
 }
 
 export class DebugOverlay {
@@ -201,6 +203,7 @@ export class DebugOverlay {
       `chronicle  ${snapshot.chronicle ?? "—"}`,
       `story      ${snapshot.storyEngine ?? "—"}`,
       `events     ${snapshot.eventEngine ?? "—"}`,
+      `civEngine  ${snapshot.civilisationEngine ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
