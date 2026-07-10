@@ -237,6 +237,9 @@ import { GenesisRegistry } from "./game/atlasGenesis/AtlasGenesisRuntime";
 import { GENESIS_DOMAINS, GENESIS_LIFECYCLE_STAGES } from "./game/atlasGenesis/atlasGenesisData";
 import { RenaissanceTracker } from "./game/atlasRenaissance/AtlasRenaissanceRuntime";
 import { RENAISSANCE_DOMAINS } from "./game/atlasRenaissance/atlasRenaissanceData";
+import { AscensionIndexScoreCard } from "./game/atlasAscension/AtlasAscensionRuntime";
+import { ASCENSION_INDEX_CRITERIA, ASCENSION_PILLARS, ascensionTierRank } from "./game/atlasAscension/atlasAscensionData";
+import { SOUL_DIMENSIONS } from "./game/atlasSoul/atlasSoulData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2045,6 +2048,24 @@ const renaissance = new RenaissanceTracker();
   beautyIndex.setLevel("Architecture", 85);
   culturalTrends.record("Verdance Renaissance Festival", "settlement-verdance", 20);
   knowledgeGraph.addEdge({ fromId: "scientist-vale", toId: commanderIndexId, kind: "Inspired", strength: 1, confidence: 1, historicalContext: "The scientist's breakthrough inspired a Commander's new academy.", dateEstablished: 20 });
+}
+
+// AF-179: the Atlas Ascension Engine — measures how humanity matures,
+// never how powerful it becomes. Lives entirely separate from AF-069/
+// AF-070's unrelated per-run "ascensionLevel" endgame prestige counter
+// (see atlasAscensionData.ts's NAMING SCOPE NOTE). Reuses AF-160's
+// real mentorshipLedger directly for Commander Ascension, AF-168's
+// real beautyIndex and AF-159's real culturalTrends directly for
+// Cultural Ascension, and AF-151's real knowledgeGraph directly (kind
+// "Influenced") for the Ascension Network. AscensionIndexScoreCard is
+// the genuinely new piece (see atlasAscensionData.ts for the full
+// reuse notes).
+const ascensionIndex = new AscensionIndexScoreCard();
+{
+  beautyIndex.setLevel("Public spaces", 80);
+  culturalTrends.record("Open Knowledge Movement", "settlement-verdance", 20);
+  knowledgeGraph.addEdge({ fromId: "domain-education", toId: "domain-science", kind: "Influenced", strength: 1, confidence: 1, historicalContext: "Educational reform improved scientific literacy.", dateEstablished: 20 });
+  for (const criterion of ASCENSION_INDEX_CRITERIA) ascensionIndex.score(criterion, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5960,6 +5981,10 @@ const loop = new GameLoop({
         atlasRenaissance: (() => {
           const overlap = detectOverlap(RENAISSANCE_DOMAINS, CREATIVE_DOMAINS);
           return `golden age=${renaissance.isGoldenAge()} distinct triggers ${renaissance.distinctTriggerKindsSinceLastConclusion()} · beauty Architecture=${beautyIndex.levelFor("Architecture")} · cultural adopters ${culturalTrends.adoptersFor("Verdance Renaissance Festival").length} · network neighbours ${knowledgeGraph.neighbors("scientist-vale").length} · domain overlap[Renaissance,Creative] ${overlap.shared.length}/${RENAISSANCE_DOMAINS.length}`;
+        })(),
+        atlasAscension: (() => {
+          const overlap = detectOverlap(ASCENSION_PILLARS, SOUL_DIMENSIONS);
+          return `tier rank ${ascensionTierRank("Ascension")} · mentees ${mentorshipLedger.menteesOf("commander-thorne-starforged").length} · beauty Public spaces=${beautyIndex.levelFor("Public spaces")} · cultural adopters ${culturalTrends.adoptersFor("Open Knowledge Movement").length} · network neighbours ${knowledgeGraph.neighbors("domain-education").length} · index score ${ascensionIndex.overallScore().toFixed(1)} (${ascensionIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Ascension,Soul] ${overlap.shared.length}/${ASCENSION_PILLARS.length}`;
         })(),
       });
     }

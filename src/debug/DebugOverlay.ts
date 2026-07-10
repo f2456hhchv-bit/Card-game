@@ -194,6 +194,8 @@ export interface DebugSnapshot {
   atlasGenesis: string | null;
   /** Atlas Renaissance Engine summary: the new RenaissanceTracker's golden-age status and distinct-trigger count (compounding, never from a single repeated trigger), the reused AF-168 BeautyIndexTracker's Architecture level for Architectural Renaissance, the reused AF-159 CulturalTrendTracker's adopter count for Cultural Renaissance, the reused AF-151 KnowledgeGraph's Inspired-edge neighbour count for The Renaissance Network, and a live detectOverlap reading confirming RENAISSANCE_DOMAINS sets a new absolute 11/12 overlap record against AF-171's real CREATIVE_DOMAINS (AF-178 §DEBUG). */
   atlasRenaissance: string | null;
+  /** Atlas Ascension Engine summary (a civilisation-wide maturity ladder, unrelated to AF-069/070's per-run endgame "ascensionLevel" — see atlasAscensionData.ts's NAMING SCOPE NOTE): the module's own ascensionTierRank for the highest Ascension Tier, the reused AF-160 MentorshipLedger's mentee count for Commander Ascension, the reused AF-168 BeautyIndexTracker/AF-159 CulturalTrendTracker readings for Cultural Ascension, the reused AF-151 KnowledgeGraph's Influenced-edge neighbour count for the Ascension Network, the new AscensionIndexScoreCard's score/gate status mirroring AF-143/149/170/173's real scoring-rubric shape, and a live detectOverlap reading against AF-168's real SOUL_DIMENSIONS (AF-179 §DEBUG). */
+  atlasAscension: string | null;
 }
 
 export class DebugOverlay {
@@ -324,6 +326,7 @@ export class DebugOverlay {
       `continuum  ${snapshot.atlasContinuum ?? "—"}`,
       `genesis    ${snapshot.atlasGenesis ?? "—"}`,
       `renaissance ${snapshot.atlasRenaissance ?? "—"}`,
+      `ascension  ${snapshot.atlasAscension ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
