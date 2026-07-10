@@ -11,11 +11,20 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "dev:idle": "vite --config idle-game/vite.config.ts",
+    "build:idle": "tsc -p idle-game/tsconfig.json --noEmit && vite build --config idle-game/vite.config.ts",
+    "build:idle:single": "tsc -p idle-game/tsconfig.json --noEmit && VANGUARD_SINGLE=1 vite build --config idle-game/vite.config.ts",
+    "preview:idle": "vite preview --config idle-game/vite.config.ts",
+    "typecheck:idle": "tsc -p idle-game/tsconfig.json --noEmit",
+    "test:idle": "vitest run --config idle-game/vitest.config.ts",
+    "test:idle:watch": "vitest --config idle-game/vitest.config.ts"
   },
   "devDependencies": {
     "@types/node": "^26.0.1",
+    "@types/three": "^0.185.1",
     "playwright": "^1.61.1",
+    "three": "^0.185.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
     "vite-plugin-singlefile": "^2.3.3",

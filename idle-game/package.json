@@ -1,0 +1,7 @@
+{
+  "name": "vanguard",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "VANGUARD — an offline, single-player idle chronicle set in the AFTERLIGHT universe. Hold the line, one sector at a time."
+}

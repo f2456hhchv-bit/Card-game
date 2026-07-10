@@ -101,6 +101,16 @@ assets** in the repository. The look and sound are generated at runtime.
 
 ---
 
+## Companion project: VANGUARD
+
+[`idle-game/`](idle-game/) holds **VANGUARD**, an offline idle chronicle set
+in this same universe — your Vanguard vessel patrols sectors and fights the
+Hollow automatically, rendered in real WebGL 3D (chibi PBR-lit rigs via
+Three.js) rather than AFTERLIGHT's baked Canvas2D sprites. See
+[`idle-game/README.md`](idle-game/README.md) for how to run it.
+
+---
+
 ## Documentation
 
 The `docs/` folder is the living source of truth. Start with the
