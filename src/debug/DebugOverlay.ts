@@ -214,6 +214,8 @@ export interface DebugSnapshot {
   atlasEmergence: string | null;
   /** Atlas Possibility Realisation Engine summary (distinct from AF-159's locked "Atlas Possibility Engine" and AF-173's locked "Atlas Possibility Space" — see atlasRealisationData.ts's NAMING SCOPE NOTE): the new RealisationTracker's current stage and reached-Wonder status for a sample idea (the first tracker in this codebase to structurally reject out-of-order or skipped-ahead advancement), the reused AF-172 HypothesisTracker's grounded status for Scientific Realisation, the reused AF-160 MentorshipLedger's mentee count for Commander Realisation, the reused AF-177 GenesisRegistry's founder lookup for Institutional Realisation, the new QualityGateScoreCard's score/gate status (the ninth mirrored scoring-rubric shape), and a live detectOverlap reading against AF-178's real RENAISSANCE_DOMAINS (AF-188 §DEBUG). */
   atlasRealisation: string | null;
+  /** Atlas Civilisation Operating System summary — the third "operating system"-shaped module in this codebase, after AF-144's locked "Afterlight Operating System" (foundation layer) and AF-154's locked "Atlas Orchestrator" (player-experience layer); this one coordinates the Atlas-enrichment modules (see atlasCivilisationOSData.ts's NAMING SCOPE NOTE): the reused AF-144 WorldStateStore's current Population reading for State Management, the reused AF-144 PriorityEngine's registered tier for Priority Management, the reused AF-144 TelemetryCollector's total event count for Civilisation Telemetry, the new CivilisationHealthTracker's weakest domain for Continuous Diagnostics, the new ResourcePoolCoordinator's available Researchers for Resource Coordination, the reused AF-151 KnowledgeGraph's neighbour count for Service Dependencies, the new resolveByCivilisationFailsafePriority's resolved concern for Failsafe Services, the new adaptiveCoordinationTierRank for Adaptive Coordination, and the new CivilisationHeartbeat's latest answer for The Civilisation Heartbeat (AF-189 §DEBUG). */
+  atlasCivilisationOS: string | null;
 }
 
 export class DebugOverlay {
@@ -354,6 +356,7 @@ export class DebugOverlay {
       `atlasEvo   ${snapshot.atlasEvolution ?? "—"}`,
       `emergence  ${snapshot.atlasEmergence ?? "—"}`,
       `realisation ${snapshot.atlasRealisation ?? "—"}`,
+      `civOS      ${snapshot.atlasCivilisationOS ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

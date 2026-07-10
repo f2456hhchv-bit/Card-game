@@ -114,7 +114,7 @@ import { PlanetaryChronicle, generateFinalChronicle } from "./game/chronicle/Chr
 import { CommanderStorylineLog, NarrativeCallbackLog, StoryBranchTracker, StoryDirector, StoryPillarTracker, deriveCampaignTheme, reputationTitleFor } from "./game/storyEngine/StoryEngineRuntime";
 import { EVENT_CHAIN_EXAMPLE, EVENT_TIERS, EVENT_TIER_EXAMPLES, tierWeightsFor } from "./game/eventEngine/eventEngineData";
 import { EventChainRuntime, GalacticEventLog, rollTier } from "./game/eventEngine/EventEngineRuntime";
-import { CIVILISATION_LANDMARK_KINDS, CIVILISATION_MEGAPROJECTS } from "./game/civilisationEngine/civilisationEngineData";
+import { CIVILISATION_LANDMARK_KINDS, CIVILISATION_MEGAPROJECTS, type CivilisationAttribute } from "./game/civilisationEngine/civilisationEngineData";
 import {
   CareerPipeline,
   CivilisationAttributeExtension,
@@ -258,6 +258,8 @@ import { CascadeTracker } from "./game/atlasEmergence/AtlasEmergenceRuntime";
 import { EMERGENCE_DOMAINS, EMERGENCE_VALIDATION_CRITERIA, emergenceValidationMet } from "./game/atlasEmergence/atlasEmergenceData";
 import { QualityGateScoreCard, RealisationTracker } from "./game/atlasRealisation/AtlasRealisationRuntime";
 import { QUALITY_GATE_CRITERIA, REALISATION_DOMAINS } from "./game/atlasRealisation/atlasRealisationData";
+import { CivilisationHeartbeat, CivilisationHealthTracker, ResourcePoolCoordinator, resolveByCivilisationFailsafePriority } from "./game/atlasCivilisationOS/AtlasCivilisationOSRuntime";
+import { ADAPTIVE_COORDINATION_TIERS, type CivilisationBusEventMap, adaptiveCoordinationTierRank } from "./game/atlasCivilisationOS/atlasCivilisationOSData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2284,6 +2286,41 @@ const qualityGate = new QualityGateScoreCard();
   realisationTracker.advanceTo("idea-living-city", "Wonder", 20);
   realisationTracker.advanceTo("idea-living-city", "Question", 20);
   for (const criterion of QUALITY_GATE_CRITERIA) qualityGate.score(criterion, 9.6);
+}
+
+// AF-189: the Atlas Civilisation Operating System — coordinates every
+// Atlas-XXX module into one continuously functioning civilisation, the
+// THIRD "operating system"-shaped module after AF-144's foundation-layer
+// AOS and AF-154's player-experience Orchestrator (see
+// atlasCivilisationOSData.ts's NAMING SCOPE NOTE). Reuses AF-001's real
+// EventBus directly for The Civilisation Bus, AF-144's real
+// WorldStateStore directly for State Management (over the real
+// CivilisationAttribute union), AF-144's real PriorityEngine/
+// TelemetryCollector directly for Priority Management/Civilisation
+// Telemetry, AF-162's real longTermMissions directly for Task
+// Orchestration, and AF-151's real knowledgeGraph directly for Service
+// Dependencies. resolveByCivilisationFailsafePriority/
+// CivilisationHealthTracker/ResourcePoolCoordinator/CivilisationHeartbeat
+// are the genuinely new pieces (see atlasCivilisationOSData.ts for the
+// full reuse notes).
+const civilisationBus = new EventBus<CivilisationBusEventMap>();
+const civilisationState = new WorldStateStore<Partial<Record<CivilisationAttribute, number>>>();
+const civilisationPriority = new PriorityEngine();
+const civilisationTelemetry = new TelemetryCollector();
+const civilisationHealth = new CivilisationHealthTracker();
+const resourcePools = new ResourcePoolCoordinator();
+const civilisationHeartbeat = new CivilisationHeartbeat();
+{
+  civilisationBus.on("UniversityFounded", (payload) => civilisationTelemetry.record("UniversityFounded" + payload.institutionId));
+  civilisationBus.emit("UniversityFounded", { institutionId: "institution-living-city-academy" });
+  civilisationState.setCurrent({ Population: 500, Education: 70, Health: 65, Research: 80 }, 20);
+  civilisationPriority.register("emergency-recovery", "High");
+  civilisationHealth.reportHealth("Commander workload", 65);
+  civilisationHealth.reportHealth("Community wellbeing", 40);
+  resourcePools.registerPool("Researchers", 10);
+  resourcePools.allocate("Researchers", 6);
+  knowledgeGraph.addEdge({ fromId: "service-education", toId: "service-research", kind: "Influenced", strength: 1, confidence: 1, historicalContext: "Education outputs feed Research inputs.", dateEstablished: 20 });
+  civilisationHeartbeat.tick(20, { "What has changed?": "A new university opened.", "Who needs help?": "The frontier settlement needs teachers." });
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6242,6 +6279,10 @@ const loop = new GameLoop({
         atlasRealisation: (() => {
           const overlap = detectOverlap(REALISATION_DOMAINS, RENAISSANCE_DOMAINS);
           return `stage ${realisationTracker.currentStageOf("idea-living-city") ?? "none"} reached-wonder=${realisationTracker.hasReachedStage("idea-living-city", "Wonder")} · hypothesis grounded=${hypotheses.isGrounded("theory-living-city")} · mentees ${mentorshipLedger.menteesOf("commander-thorne-starforged").length} · genesis founder ${genesisRegistry.originOf("institution-living-city-academy")?.founder ?? "none"} · gate score ${qualityGate.overallScore().toFixed(1)} (${qualityGate.passesGate() ? "passed" : "pending"}) · domain overlap[Realisation,Renaissance] ${overlap.shared.length}/${REALISATION_DOMAINS.length}`;
+        })(),
+        atlasCivilisationOS: (() => {
+          const failsafe = resolveByCivilisationFailsafePriority(new Set(["Commander burnout", "Knowledge loss"]));
+          return `state population ${civilisationState.getCurrent()?.Population ?? 0} · priority emergency-recovery=${civilisationPriority.tierFor("emergency-recovery") ?? "none"} · telemetry events ${civilisationTelemetry.totalEvents()} · weakest health ${civilisationHealth.weakestDomains()[0] ?? "none"} · researchers available ${resourcePools.availableFor("Researchers")} · network neighbours ${knowledgeGraph.neighbors("service-education").length} · failsafe ${failsafe ?? "none"} · coordination tier rank ${adaptiveCoordinationTierRank(ADAPTIVE_COORDINATION_TIERS[0]!)} · heartbeat "${civilisationHeartbeat.latest()?.answers["What has changed?"] ?? "none"}"`;
         })(),
       });
     }
