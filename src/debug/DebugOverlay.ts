@@ -176,6 +176,8 @@ export interface DebugSnapshot {
   atlasSoul: string | null;
   /** Atlas Legacy of Tomorrow summary (capstone): a reused AF-162 Legacy Project's progress/completion, whether the Horizon Principle opened the next reused AF-159 mystery and the unsolved count, a reused AF-160 mentee count, the reused AF-167 Galactic Maturity quality, and the Next-Generation witness count (AF-169 §DEBUG). */
   atlasLegacyOfTomorrow: string | null;
+  /** Atlas Prime Directive summary (permanent governing intelligence, never itself a gameplay system): the highest-priority active Prime Directive and Conflict Resolution priority, a Design Arbiter score/gate status mirroring AF-143/149's real scoring-rubric shape, Future Compatibility/Quality Lock/Final Test all-must-pass statuses, the in-fiction-only System Priority rank, and a live detectOverlap reading confirming AF-162/161's real domain-list overlap (AF-170 §DEBUG). */
+  atlasPrimeDirective: string | null;
 }
 
 export class DebugOverlay {
@@ -297,6 +299,7 @@ export class DebugOverlay {
       `identity   ${snapshot.atlasIdentity ?? "—"}`,
       `soul       ${snapshot.atlasSoul ?? "—"}`,
       `legacyTmrw ${snapshot.atlasLegacyOfTomorrow ?? "—"}`,
+      `primeDir   ${snapshot.atlasPrimeDirective ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

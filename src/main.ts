@@ -216,6 +216,10 @@ import { EarnedTitleTracker, ReputationTracker } from "./game/atlasIdentity/Atla
 import type { SignatureTraitKind } from "./game/atlasIdentity/atlasIdentityData";
 import { BeautyIndexTracker, CollectiveCharacterTracker, MomentsOfHumanityLog, RitualLog } from "./game/atlasSoul/AtlasSoulRuntime";
 import { ensureNextHorizonOpen, NextGenerationLog } from "./game/atlasLegacyOfTomorrow/AtlasLegacyOfTomorrowRuntime";
+import { DESIGN_ARBITER_CRITERIA, FINAL_TEST_QUESTIONS, FUTURE_COMPATIBILITY_TARGETS, QUALITY_LOCK_CRITERIA, finalTestPassed, futureCompatibilityValidated, qualityLockPassed, resolveConflictPriority, resolvePrimeDirectivePriority, systemPriorityRank } from "./game/atlasPrimeDirective/atlasPrimeDirectiveData";
+import { detectOverlap, PrimeDirectiveScoreCard } from "./game/atlasPrimeDirective/AtlasPrimeDirectiveRuntime";
+import { PURPOSE_DOMAINS } from "./game/atlasPurpose/atlasPurposeData";
+import { PHILOSOPHICAL_DOMAINS } from "./game/atlasPhilosophy/atlasPhilosophyData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1833,6 +1837,18 @@ const nextGeneration = new NextGenerationLog();
   ensureNextHorizonOpen(longTermMissions, "living-library-network", mysteryLog, "mystery-lost-archive", "Missing artifacts", "A rumoured archive lies beyond the frontier.", 20);
   commanderReputation.recognizeFor("humanity", "Wisdom", 20);
   nextGeneration.witness("A new Commander steps aboard the Wayfarer for the first time.", 20);
+}
+
+// AF-170: the Atlas Prime Directive — permanent governing intelligence
+// over every future mechanic, never a gameplay system itself. Ranks
+// only in-fiction AF-XXX modules; never claims authority over the real
+// docs/CONSTITUTION.md (see atlasPrimeDirectiveData.ts CRITICAL SCOPE
+// NOTE). PrimeDirectiveScoreCard mirrors AF-143/149's real scoring-
+// rubric shape; detectOverlap formalises this session's own manual
+// overlap-checking discipline (see the module's reuse notes).
+const primeDirectiveScoreCard = new PrimeDirectiveScoreCard();
+{
+  for (const criterion of DESIGN_ARBITER_CRITERIA) primeDirectiveScoreCard.score(criterion, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5702,6 +5718,15 @@ const loop = new GameLoop({
         })(),
         atlasLegacyOfTomorrow: (() => {
           return `legacy project ${longTermMissions.progressFor("living-library-network") * 100}% complete=${longTermMissions.isComplete("living-library-network")} · horizon open=${mysteryLog.all().some((m) => m.id === "mystery-lost-archive")} unsolved ${mysteryLog.unsolved().length} · students ${mentorshipLedger.menteesOf("commander-thorne-starforged").length} · maturity ${commanderReputation.mostRecognizedQuality("humanity") ?? "none"} · next generation ${nextGeneration.all().length}`;
+        })(),
+        atlasPrimeDirective: (() => {
+          const directive = resolvePrimeDirectivePriority(new Set(["Protect Wonder", "Protect Hope", "Protect Tomorrow"]));
+          const conflict = resolveConflictPriority(new Set(["Performance", "Player agency", "Legacy"]));
+          const futureCompat = futureCompatibilityValidated(new Set(FUTURE_COMPATIBILITY_TARGETS));
+          const qualityLock = qualityLockPassed(new Set(QUALITY_LOCK_CRITERIA));
+          const finalTest = finalTestPassed(new Set(FINAL_TEST_QUESTIONS));
+          const overlap = detectOverlap(PURPOSE_DOMAINS, PHILOSOPHICAL_DOMAINS);
+          return `directive ${directive ?? "none"} · conflict ${conflict ?? "none"} · design score ${primeDirectiveScoreCard.overallScore().toFixed(1)} (${primeDirectiveScoreCard.passesGate() ? "passed" : "pending"}) · future compat=${futureCompat} · quality lock=${qualityLock} · final test=${finalTest} · system rank ${systemPriorityRank("Simulation Director")} · overlap[Purpose,Philosophy] ${overlap.shared.length}/${PURPOSE_DOMAINS.length}`;
         })(),
       });
     }
