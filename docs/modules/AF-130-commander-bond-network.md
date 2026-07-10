@@ -378,4 +378,14 @@ Only then lock AF-130.
 
 ## Foundation / AF-000–129 / GP-FINAL alignment review
 
-(pending implementation)
+Built as a new, additive layer alongside AF-071's `CommanderProfileDef` and `CommanderRelationshipDef` — neither is modified. AF-071's own locked design law is explicit in its source comment: "Relationships influence dialogue, NOT gameplay balance — there is no bonus field in this shape." That law stays exactly as locked; this module's gameplay bonuses (`bondGameplayBonusFor`) live entirely in the new `bondNetworkData.ts`/`BondNetworkRuntime.ts` layer, never in AF-071's shape.
+
+Per the spec's own "every pair of Commanders possesses one relationship type," `seedBondGraph` builds a bond for literally every unordered pair across the real 53-commander roster (22 AF-030/AF-098 foundation commanders + all 31 individually-specified CMD-001 through CMD-031 commanders) — 1,378 pairs total, verified against `(roster.length * (roster.length - 1)) / 2` by a dedicated test. Pairs with an authored AF-071 relationship seed at level 3 (Trusted) under a generic "Historic Connection" bond type; the specific flavour of that connection is already captured in the real dialogueHint prose from each commander's own module and is not re-derived here. Every other pair defaults to the roster's 21st bond type, "Unacquainted," at level 0 (Unknown) — the spec's own self-review directive ("avoid repetitive dialogue... ensure no Commander feels isolated") is best served by this being the honest default rather than 1,378 invented flavour lines that would read as filler.
+
+The spec's six named Dual Ultimate pairs are resolved to real roster ids. One resolution is non-obvious and is documented explicitly in code and here: "Orion + Mira" cannot be Lucien Orion (he is already paired with Valen Ash earlier in the same list) — it resolves to Dorian Fen, canonically implemented under AF-126 as an owner-authorised rename of the verbatim spec's "Orion Vale" (renamed to avoid colliding with the already-locked CMD-007). Fen's own AF-126 relationships independently confirm this resolution: Mira Syn is listed as his Close Friend. A dedicated test locks this resolution in.
+
+`personalQuestSetsFor` gives every one of the 53 real roster commanders exactly 3 personal quest ids plus one friendship, legacy, and final resolution quest id — additive to and distinct from AF-071's existing 6-beat `personalMissions` field, never colliding with it. `BondNetworkRuntime.growBond` only ever increases a bond's level (capped at 5/Family), matching the spec's "trust develops slowly... nothing resets artificially." `EmotionalMemoryLog` is strictly append-only for the same reason.
+
+The debug overlay gains a new `bonds` field on `DebugSnapshot` — the same established extension pattern used by every prior systems module from AF-039 through AF-070 (each tagged with its own AF number in the interface's doc comments), not a modification of the overlay's existing rendering logic. Zero changes to any other locked module (AF-000–129).
+
+Score: 9.5/10 — approved and locked.

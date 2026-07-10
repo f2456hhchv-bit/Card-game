@@ -96,6 +96,8 @@ export interface DebugSnapshot {
   endgame: string | null;
   /** Live-ops summary: live version, content packs, season state, compatibility (AF-070 §DEBUG). */
   liveOps: string | null;
+  /** Commander Bond Network summary: total/discovered/maxed bonds, dual ultimates unlocked (AF-130 §DEBUG). */
+  bonds: string | null;
 }
 
 export class DebugOverlay {
@@ -177,6 +179,7 @@ export class DebugOverlay {
       `campaign   ${snapshot.campaign ?? "—"}`,
       `endgame    ${snapshot.endgame ?? "—"}`,
       `liveops    ${snapshot.liveOps ?? "—"}`,
+      `bonds      ${snapshot.bonds ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

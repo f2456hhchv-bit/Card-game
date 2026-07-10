@@ -99,7 +99,9 @@ import { HELIX_ALCHEMIST_CODEX_ENTRY } from "./game/commanders/cmd027SoraHelix";
 import { FEN_BEASTMASTER_CODEX_ENTRY } from "./game/commanders/cmd028DorianFen";
 import { NOCTIS_VOIDWALKER_CODEX_ENTRY } from "./game/commanders/cmd029VegaNoctis";
 import { AETHER_CELESTIAL_CODEX_ENTRY } from "./game/commanders/cmd030LysandraAether";
-import { FULL_RECRUITMENT_WITH_FOUNDER, PRIME_FOUNDER_CODEX_ENTRY } from "./game/commanders/cmd031AtlasPrime";
+import { FULL_PROFILES_WITH_FOUNDER, FULL_RECRUITMENT_WITH_FOUNDER, FULL_ROSTER_WITH_FOUNDER, PRIME_FOUNDER_CODEX_ENTRY } from "./game/commanders/cmd031AtlasPrime";
+import { DUAL_ULTIMATES, seedBondGraph } from "./game/commanders/bondNetworkData";
+import { BondNetworkRuntime } from "./game/commanders/BondNetworkRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -950,6 +952,11 @@ const commanderProgression = new CommanderProgressionRuntime(sandboxCommanderPro
 // usage recorded per expedition so statistics can inform future balancing.
 const roster = new RosterRuntime(FULL_RECRUITMENT_WITH_FOUNDER, STARTING_COMMANDER_IDS);
 let commanderRuntime: CommanderRuntime | null = null;
+
+// AF-130: the Commander Bond Network — one bond per unordered pair in the
+// real roster, additive to and never modifying AF-071's dialogue-only
+// CommanderRelationshipDef shape.
+const bondNetwork = new BondNetworkRuntime(seedBondGraph(FULL_ROSTER_WITH_FOUNDER, FULL_PROFILES_WITH_FOUNDER), DUAL_ULTIMATES);
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -4543,6 +4550,11 @@ const loop = new GameLoop({
         liveOps: (() => {
           const snap = liveOps.snapshot;
           return `v${snap.liveVersion} · packs ${snap.packCount} (${snap.contentCount} additions) · season ${snap.activeSeason ?? "—"} · retired ${snap.retiredTemporaryCount} · compat ok`;
+        })(),
+        bonds: (() => {
+          const snap = bondNetwork.snapshot();
+          const dualUltimatesUnlocked = DUAL_ULTIMATES.filter((d) => bondNetwork.isMaxBond(d.commanderA, d.commanderB)).length;
+          return `${snap.totalBonds} pairs · ${snap.discoveredBonds} discovered · ${snap.maxedBonds} maxed (avg lvl ${snap.averageLevel.toFixed(2)}) · dual ultimates ${dualUltimatesUnlocked}/${DUAL_ULTIMATES.length}`;
         })(),
       });
     }
