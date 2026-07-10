@@ -182,6 +182,8 @@ import { LORE_VALIDATION_CHECK_KINDS, loreValidationReport } from "./game/canonE
 import { ArtifactAuthenticityRegistry, CanonEventLedger, CommanderContinuityLedger, KnowledgeStateTracker, recordPlanetContinuityFact } from "./game/canonEngine/CanonEngineRuntime";
 import { ATLAS_SCORE_CATEGORIES, FINAL_VALIDATION_QUESTIONS, GREEN_FLAGS, featureFlagAssessment, finalValidationPassed, systemImpactReportFor } from "./game/atlasProtocol/atlasProtocolData";
 import { AtlasScoreCard, FeatureLifecycleTracker, IterationCycleTracker } from "./game/atlasProtocol/AtlasProtocolRuntime";
+import { MASTER_CATALOGUE_CATEGORIES } from "./game/masterIndex/masterIndexData";
+import { DependencyMap, MasterIndexRegistry, QualityTracker, RelationshipGraph, VersionHistoryLedger } from "./game/masterIndex/MasterIndexRuntime";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
 import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./game/relics/relicRosterData";
@@ -1323,6 +1325,38 @@ featureLifecycle.advance("expansion-ocean-worlds", 1);
 for (const category of ATLAS_SCORE_CATEGORIES) atlasScoreCard.score(category, 9.7);
 iterationCycles.recordCycle("expansion-ocean-worlds", 0);
 iterationCycles.recordCycle("expansion-ocean-worlds", 5);
+
+// AF-150: the Afterlight Universe Master Index — a meta-registry over
+// individual game objects, a different granularity than AF-142's real
+// ModuleRegistry (whole modules); MasterIndexRegistry reuses AF-142's
+// real adjacency-list dependency-graph algorithm rather than
+// regressing to the slower approach that bug once was (see
+// masterIndexData.ts for the full overlap notes).
+const masterIndex = new MasterIndexRegistry();
+const relationshipGraph = new RelationshipGraph();
+const dependencyMap = new DependencyMap();
+const versionHistory = new VersionHistoryLedger();
+const qualityTracker = new QualityTracker();
+{
+  const indexId = `commander-${sandboxCommander.id}`;
+  masterIndex.register({
+    id: indexId,
+    category: "Commanders",
+    moduleOrigin: "AF-030",
+    creationEpoch: 0,
+    canonStatus: "Core Timeline",
+    dependencies: [],
+    relatedSystems: ["bond-network", "living-ship"],
+    museumLinks: [],
+    chronicleLinks: [],
+    expansionCompatibility: ["AF-141", "AF-148"],
+  });
+  relationshipGraph.link(indexId, "Related Species", "species-wolf");
+  dependencyMap.record(indexId, "Optional systems", "galactic-creator-engine");
+  versionHistory.recordChange(indexId, "session-dev", "Registered in the Master Index.", ["indexing"], 0);
+  qualityTracker.setScore(indexId, "Accessibility score", 9);
+  qualityTracker.setScore(indexId, "Narrative score", 9.5);
+}
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
 const sandboxShip = SANDBOX_SHIPS[0]!;
@@ -5071,6 +5105,11 @@ const loop = new GameLoop({
           const flags = featureFlagAssessment(new Set(), new Set(GREEN_FLAGS.slice(0, 3)));
           const finalValidation = finalValidationPassed(new Set(FINAL_VALIDATION_QUESTIONS));
           return `stage ${featureLifecycle.stageFor("expansion-ocean-worlds") ?? "—"} · impact [${impact.affected.join(", ")}] · flags reject=${flags.shouldReject} green=${flags.greenFlagStrength} · atlas score ${atlasScoreCard.overallScore().toFixed(1)} (${atlasScoreCard.passesGate() ? "passed" : "pending"}) · cycles ${iterationCycles.cycleCountFor("expansion-ocean-worlds")} ready=${iterationCycles.readyToShip("expansion-ocean-worlds")} · final validation ${finalValidation ? "passed" : "iterating"}`;
+        })(),
+        masterIndex: (() => {
+          const indexId = `commander-${sandboxCommander.id}`;
+          const order = masterIndex.dependencyOrder();
+          return `entries ${masterIndex.all().length}/${MASTER_CATALOGUE_CATEGORIES.length} categories · order ${order ? "resolved" : "CYCLE"} · relationships ${relationshipGraph.relatedTo(indexId).length} · dependency links ${dependencyMap.all().length} · version history ${versionHistory.historyFor(indexId).length} · quality ${qualityTracker.overallFor(indexId).toFixed(1)}`;
         })(),
       });
     }

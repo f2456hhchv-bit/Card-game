@@ -136,6 +136,8 @@ export interface DebugSnapshot {
   canonEngine: string | null;
   /** Atlas Protocol summary: current Seven-Stages position, system impact report, red/green flag assessment, Atlas Score, iteration cycle count, final validation (AF-149 §DEBUG). */
   atlasProtocol: string | null;
+  /** Afterlight Universe Master Index summary: registered entry count, dependency-order resolution, relationship/dependency/version-history counts, quality score for a sample entry (AF-150 §DEBUG). */
+  masterIndex: string | null;
 }
 
 export class DebugOverlay {
@@ -237,6 +239,7 @@ export class DebugOverlay {
       `franchise  ${snapshot.franchiseBible ?? "—"}`,
       `canonEng   ${snapshot.canonEngine ?? "—"}`,
       `protocol   ${snapshot.atlasProtocol ?? "—"}`,
+      `masterIdx  ${snapshot.masterIndex ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
