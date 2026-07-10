@@ -222,6 +222,8 @@ import { PURPOSE_DOMAINS } from "./game/atlasPurpose/atlasPurposeData";
 import { PHILOSOPHICAL_DOMAINS } from "./game/atlasPhilosophy/atlasPhilosophyData";
 import { CreativeContributionLog, CreativeHeritageArchive } from "./game/atlasCreativeIntelligence/AtlasCreativeIntelligenceRuntime";
 import { CREATIVE_DOMAINS } from "./game/atlasCreativeIntelligence/atlasCreativeIntelligenceData";
+import { HypothesisTracker } from "./game/atlasImagination/AtlasImaginationRuntime";
+import { DREAM_NETWORK_STAGES, IMAGINATION_DOMAINS } from "./game/atlasImagination/atlasImaginationData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -1878,6 +1880,25 @@ const creativeHeritage = new CreativeHeritageArchive();
   playerMemory.photograph("observatory-verdance");
   mysteryLog.open("mystery-ancient-knowledge", "Ancient questions", "The adaptive shelter's foundations reveal older ruins.", 20);
   knowledgeGraph.addEdge({ fromId: "idea-adaptive-shelter", toId: commanderIndexId, kind: "Inspired", strength: 1, confidence: 1, historicalContext: "An engineering idea inspired by the wild.", dateEstablished: 20 });
+}
+
+// AF-172: the Atlas Imagination Engine — explores realities that do not
+// yet exist. Reuses AF-161's real commanderBeliefs directly for
+// Commander Visions, AF-162's real longTermMissions directly for
+// Engineering Imagination/Collective Dreams, AF-159's real mysteryLog
+// directly for Historical Imagination, AF-155's real generic
+// CyclicStageTracker over the module's own DREAM_NETWORK_STAGES for
+// the Dream Network, and AF-169's real ensureNextHorizonOpen directly
+// for the Horizon Effect. HypothesisTracker is the genuinely new piece
+// (see atlasImaginationData.ts for the full reuse notes).
+const hypotheses = new HypothesisTracker();
+const dreamNetwork = new CyclicStageTracker(DREAM_NETWORK_STAGES);
+{
+  const commanderIndexId = `commander-${sandboxCommander.id}`;
+  hypotheses.propose("hypothesis-ancient-precursor-tech", "The Verdance ruins may be precursor technology.", 20);
+  commanderBeliefs.setBelief(commanderIndexId, "I dream of a living city that restores itself.", 20);
+  longTermMissions.register("living-architecture-verdance", "Grow a self-restoring city on Verdance", 100);
+  dreamNetwork.record("Imagine", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -5761,6 +5782,11 @@ const loop = new GameLoop({
           const commanderIndexId = `commander-${sandboxCommander.id}`;
           const overlap = detectOverlap(CREATIVE_DOMAINS, LEGACY_DOMAINS);
           return `contributions ${creativeContributions.contributionsFor(commanderIndexId).length} (engineering ${creativeContributions.countForDomain("Engineering")}) · heritage ${creativeHeritage.outcomesFor("adaptive-shelter-design").length} · cultural adopters ${culturalTrends.adoptersFor("Verdance Renaissance").length} · collaborators ${collaborativeProblems.participantsFor("adaptive-shelter-design").length} · beauty Art=${beautyIndex.levelFor("Art")} · photos ${playerMemory.photoCountFor("observatory-verdance")} · mysteries unsolved ${mysteryLog.unsolved().length} · idea neighbours ${knowledgeGraph.neighbors("idea-adaptive-shelter").length} · domain overlap[Creative,Legacy] ${overlap.shared.length}/${CREATIVE_DOMAINS.length}`;
+        })(),
+        atlasImagination: (() => {
+          const commanderIndexId = `commander-${sandboxCommander.id}`;
+          const overlap = detectOverlap(IMAGINATION_DOMAINS, CREATIVE_DOMAINS);
+          return `vision "${commanderBeliefs.beliefOf(commanderIndexId) ?? "none"}" · hypothesis grounded=${hypotheses.isGrounded("hypothesis-ancient-precursor-tech")} · engineering idea ${(longTermMissions.progressFor("living-architecture-verdance") * 100).toFixed(0)}% · dream stage ${dreamNetwork.currentStage() ?? "none"} · mysteries unsolved ${mysteryLog.unsolved().length} · domain overlap[Imagination,Creative] ${overlap.shared.length}/${IMAGINATION_DOMAINS.length}`;
         })(),
       });
     }

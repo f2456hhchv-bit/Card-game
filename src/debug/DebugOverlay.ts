@@ -180,6 +180,8 @@ export interface DebugSnapshot {
   atlasPrimeDirective: string | null;
   /** Atlas Creative Intelligence summary: a sample Commander's creative-contribution count (via the new CreativeContributionLog), a Creative Heritage outcome count, reused AF-159 Cultural Creativity/AF-155 Collaborative Creation/AF-168 Beauty Principle/AF-165 Photography/AF-159 Discovery-Through-Creation/AF-151 idea-propagation readings, and a live detectOverlap reading confirming a new absolute domain-overlap record against AF-169's real LEGACY_DOMAINS (AF-171 §DEBUG). */
   atlasCreativeIntelligence: string | null;
+  /** Atlas Imagination Engine summary: a sample Commander's evolving Vision (via the reused AF-161 CommanderBeliefTracker), the new HypothesisTracker's grounded status for a sample speculative idea, a reused AF-162 Engineering Imagination project's progress, the reused AF-155 CyclicStageTracker's current Dream Network stage, the reused AF-159 mystery-unsolved count for Historical Imagination, and a live detectOverlap reading confirming IMAGINATION_DOMAINS ties AF-171's real CREATIVE_DOMAINS overlap record (AF-172 §DEBUG). */
+  atlasImagination: string | null;
 }
 
 export class DebugOverlay {
@@ -303,6 +305,7 @@ export class DebugOverlay {
       `legacyTmrw ${snapshot.atlasLegacyOfTomorrow ?? "—"}`,
       `primeDir   ${snapshot.atlasPrimeDirective ?? "—"}`,
       `creative   ${snapshot.atlasCreativeIntelligence ?? "—"}`,
+      `imagination ${snapshot.atlasImagination ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
