@@ -18,12 +18,16 @@ interface Star {
 
 const stars: Star[] = buildStarfield();
 
-function buildStarfield(): Star[] {
-  let seed = 1337;
-  const rand = () => {
-    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-    return (seed >>> 8) / 0x7fffff;
+function makeRng(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    return (s >>> 8) / 0x7fffff;
   };
+}
+
+function buildStarfield(): Star[] {
+  const rand = makeRng(1337);
   const list: Star[] = [];
   for (let i = 0; i < STAR_COUNT; i++) {
     list.push({
@@ -36,10 +40,130 @@ function buildStarfield(): Star[] {
   return list;
 }
 
+// --------------------------------------------------------------- nebula
+
+const NEBULA_TILE_SIZE = 2600;
+const NEBULA_PALETTE = ["#5c2ce0", "#1c6fa8", "#8a1fb0", "#0e3a6b", "#3a0e6b", "#2c7e8a"];
+
+interface NebulaBlob {
+  x: number;
+  y: number;
+  r: number;
+  color: string;
+  alpha: number;
+}
+
+const nebulaBlobs: NebulaBlob[] = buildNebulaBlobs();
+
+function buildNebulaBlobs(): NebulaBlob[] {
+  const rand = makeRng(4242);
+  const list: NebulaBlob[] = [];
+  for (let i = 0; i < 8; i++) {
+    list.push({
+      x: rand() * NEBULA_TILE_SIZE - NEBULA_TILE_SIZE / 2,
+      y: rand() * NEBULA_TILE_SIZE - NEBULA_TILE_SIZE / 2,
+      r: rand() * 500 + 350,
+      color: NEBULA_PALETTE[Math.floor(rand() * NEBULA_PALETTE.length)],
+      alpha: rand() * 0.14 + 0.07,
+    });
+  }
+  return list;
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function drawNebula(ctx: CanvasRenderingContext2D, camera: Camera, renderer: Renderer): void {
+  const tileX = Math.floor(camera.x / NEBULA_TILE_SIZE);
+  const tileY = Math.floor(camera.y / NEBULA_TILE_SIZE);
+  for (let ty = tileY - 1; ty <= tileY + 1; ty++) {
+    for (let tx = tileX - 1; tx <= tileX + 1; tx++) {
+      for (const b of nebulaBlobs) {
+        const wx = b.x + tx * NEBULA_TILE_SIZE;
+        const wy = b.y + ty * NEBULA_TILE_SIZE;
+        const sx = camera.worldToScreenX(wx);
+        const sy = camera.worldToScreenY(wy);
+        if (sx < -b.r || sx > renderer.width + b.r || sy < -b.r || sy > renderer.height + b.r) continue;
+        const [r, g, bch] = hexToRgb(b.color);
+        const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, b.r);
+        grad.addColorStop(0, `rgba(${r},${g},${bch},${b.alpha})`);
+        grad.addColorStop(1, `rgba(${r},${g},${bch},0)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(sx - b.r, sy - b.r, b.r * 2, b.r * 2);
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------- bg asteroids
+
+const BG_ASTEROID_TILE_SIZE = 1900;
+
+interface BgAsteroid {
+  x: number;
+  y: number;
+  r: number;
+  sides: number;
+  rot: number;
+}
+
+const bgAsteroids: BgAsteroid[] = buildBgAsteroids();
+
+function buildBgAsteroids(): BgAsteroid[] {
+  const rand = makeRng(909);
+  const list: BgAsteroid[] = [];
+  for (let i = 0; i < 6; i++) {
+    list.push({
+      x: rand() * BG_ASTEROID_TILE_SIZE - BG_ASTEROID_TILE_SIZE / 2,
+      y: rand() * BG_ASTEROID_TILE_SIZE - BG_ASTEROID_TILE_SIZE / 2,
+      r: rand() * 70 + 40,
+      sides: 5 + Math.floor(rand() * 3),
+      rot: rand() * Math.PI * 2,
+    });
+  }
+  return list;
+}
+
+function drawBgAsteroids(ctx: CanvasRenderingContext2D, camera: Camera, renderer: Renderer): void {
+  const tileX = Math.floor(camera.x / BG_ASTEROID_TILE_SIZE);
+  const tileY = Math.floor(camera.y / BG_ASTEROID_TILE_SIZE);
+  ctx.fillStyle = "rgba(24,22,34,0.6)";
+  for (let ty = tileY - 1; ty <= tileY + 1; ty++) {
+    for (let tx = tileX - 1; tx <= tileX + 1; tx++) {
+      for (const a of bgAsteroids) {
+        const wx = a.x + tx * BG_ASTEROID_TILE_SIZE;
+        const wy = a.y + ty * BG_ASTEROID_TILE_SIZE;
+        const sx = camera.worldToScreenX(wx);
+        const sy = camera.worldToScreenY(wy);
+        if (sx < -a.r || sx > renderer.width + a.r || sy < -a.r || sy > renderer.height + a.r) continue;
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(a.rot);
+        ctx.beginPath();
+        for (let i = 0; i < a.sides; i++) {
+          const ang = (i / a.sides) * Math.PI * 2;
+          const rr = a.r * (0.8 + 0.2 * Math.sin(i * 2.1 + a.sides));
+          const px = Math.cos(ang) * rr;
+          const py = Math.sin(ang) * rr;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+}
+
 export function renderWorld(renderer: Renderer, camera: Camera, world: World, input: Input): void {
   const ctx = renderer.ctx;
   renderer.begin("#05060f");
 
+  drawNebula(ctx, camera, renderer);
+  drawBgAsteroids(ctx, camera, renderer);
   drawStarfield(ctx, camera, renderer);
 
   for (const pickup of world.pickups) drawPickup(ctx, camera, pickup);

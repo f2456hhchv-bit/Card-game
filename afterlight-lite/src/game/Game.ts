@@ -11,8 +11,12 @@ import { getUpgradeDef } from "./data/upgradeDefs";
 import { rollUpgradeChoices } from "./systems/LevelSystem";
 import { purchaseTier } from "./systems/ShopSystem";
 import { loadSave, writeSave, type SaveData } from "./save/SaveManager";
+import { isSuper } from "./systems/StatEngine";
+import type { AbilityBadge, MinimapBlip } from "../ui/UIManager";
 
-type Screen = "shipSelect" | "playing" | "levelUp" | "gameOver" | "shop";
+const MINIMAP_QUERY_RANGE = 900;
+
+type Screen = "shipSelect" | "playing" | "levelUp" | "gameOver" | "shop" | "paused";
 
 export class Game {
   private renderer: Renderer;
@@ -78,22 +82,51 @@ export class Game {
     if (this.world) {
       this.camera.snapTo(this.world.player.x, this.world.player.y);
       renderWorld(this.renderer, this.camera, this.world, this.input);
-      if (this.screen === "playing" || this.screen === "levelUp") {
+      if (this.screen === "playing" || this.screen === "levelUp" || this.screen === "paused") {
+        const world = this.world;
+        const ship = world.ship;
         this.ui.updateHud({
-          hp: this.world.player.hp,
-          maxHp: this.world.stats.maxHp,
-          xp: this.world.player.xp,
-          xpToNext: this.world.player.xpToNext,
-          level: this.world.player.level,
-          wave: this.world.spawn.wave,
+          hp: world.player.hp,
+          maxHp: world.stats.maxHp,
+          xp: world.player.xp,
+          xpToNext: world.player.xpToNext,
+          level: world.player.level,
+          wave: world.spawn.wave,
+          kills: world.killCount,
           motes: this.save.motes,
-          shieldCharges: this.world.player.shieldCharges,
-          shieldMax: this.world.stats.shieldMax,
+          shieldCharges: world.player.shieldCharges,
+          shieldMax: world.stats.shieldMax,
+          shipArtId: `ship.${ship.id}`,
+          shipShape: ship.shape,
+          abilities: this.buildAbilityBadges(),
+          minimapBlips: this.buildMinimapBlips(),
         });
       }
     } else {
       this.renderer.begin("#05060f");
     }
+  }
+
+  private buildAbilityBadges(): AbilityBadge[] {
+    if (!this.world) return [];
+    const badges: AbilityBadge[] = [];
+    for (const w of this.world.player.weapons) {
+      const def = getUpgradeDef(w.upgradeId);
+      badges.push({ id: def.id, icon: def.icon, stackCount: w.stackCount, isSuper: isSuper(w.stackCount) });
+    }
+    for (const [id, stack] of Object.entries(this.world.player.passiveStacks)) {
+      const def = getUpgradeDef(id);
+      badges.push({ id: def.id, icon: def.icon, stackCount: stack, isSuper: isSuper(stack) });
+    }
+    return badges;
+  }
+
+  private buildMinimapBlips(): MinimapBlip[] {
+    if (!this.world) return [];
+    const world = this.world;
+    return world
+      .enemiesWithinRadius(world.player.x, world.player.y, MINIMAP_QUERY_RANGE)
+      .map((e) => ({ dx: e.x - world.player.x, dy: e.y - world.player.y, kind: e.tier }));
   }
 
   // ------------------------------------------------------------ ship select
@@ -122,8 +155,28 @@ export class Game {
     world.events.on("gameOver", (stats) => this.onGameOver(stats));
 
     this.ui.hideAll();
-    this.ui.showHud();
+    this.ui.showHud(() => this.pause());
     this.screen = "playing";
+  }
+
+  private pause(): void {
+    if (this.screen !== "playing") return;
+    this.screen = "paused";
+    this.ui.showPause(
+      () => this.resume(),
+      () => this.quitRun(),
+    );
+  }
+
+  private resume(): void {
+    if (this.screen !== "paused") return;
+    this.screen = "playing";
+    this.ui.hidePause();
+  }
+
+  private quitRun(): void {
+    this.ui.hidePause();
+    this.goToShipSelect();
   }
 
   private onLevelUp(): void {

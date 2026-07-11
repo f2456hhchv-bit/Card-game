@@ -1,8 +1,21 @@
-import type { AttachmentSlot, ShipDef, UpgradeDef } from "../game/types";
+import type { AttachmentSlot, PlaceholderShape, ShipDef, UpgradeDef } from "../game/types";
 import { ATTACHMENT_DEFS } from "../game/data/attachmentDefs";
 import { nextTier } from "../game/systems/ShopSystem";
 import type { SaveData } from "../game/save/SaveManager";
 import { drawEntitySprite, drawPlaceholderShape } from "../game/render/PlaceholderArt";
+
+export interface AbilityBadge {
+  id: string;
+  icon: PlaceholderShape;
+  stackCount: number;
+  isSuper: boolean;
+}
+
+export interface MinimapBlip {
+  dx: number;
+  dy: number;
+  kind: "grunt" | "elite" | "miniboss" | "boss";
+}
 
 export interface HudState {
   hp: number;
@@ -11,10 +24,25 @@ export interface HudState {
   xpToNext: number;
   level: number;
   wave: number;
+  kills: number;
   motes: number;
   shieldCharges: number;
   shieldMax: number;
+  shipArtId: string;
+  shipShape: PlaceholderShape;
+  abilities: AbilityBadge[];
+  minimapBlips: MinimapBlip[];
 }
+
+const MINIMAP_RANGE = 900;
+const MINIMAP_RADIUS_PX = 34;
+
+const BLIP_STYLE: Record<MinimapBlip["kind"], { color: string; r: number }> = {
+  grunt: { color: "#ff8a8a", r: 2 },
+  elite: { color: "#ff9f3c", r: 2.6 },
+  miniboss: { color: "#ff9f3c", r: 3.4 },
+  boss: { color: "#ff4d4d", r: 4 },
+};
 
 export interface GameOverStats {
   wave: number;
@@ -50,16 +78,23 @@ export class UIManager {
   private shipSelectEl: HTMLElement;
   private hudEl: HTMLElement;
   private hudHpFill: HTMLElement;
-  private hudXpFill: HTMLElement;
+  private hudShieldRow: HTMLElement;
+  private hudShieldFill: HTMLElement;
   private hudWaveLabel: HTMLElement;
-  private hudLevelLabel: HTMLElement;
+  private hudKillsLabel: HTMLElement;
   private hudMotesLabel: HTMLElement;
-  private hudShieldLabel: HTMLElement;
+  private hudAbilitiesEl: HTMLElement;
+  private hudLevelNum: HTMLElement;
+  private minimapCanvas: HTMLCanvasElement;
+  private levelRingCanvas: HTMLCanvasElement;
+  private pauseBtn: HTMLButtonElement;
   private waveBannerEl: HTMLElement;
   private waveBannerTimeout: number | undefined;
   private levelUpEl: HTMLElement;
   private gameOverEl: HTMLElement;
   private shopEl: HTMLElement;
+  private pauseEl: HTMLElement;
+  private lastAbilitySignature = "";
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -69,14 +104,19 @@ export class UIManager {
     this.levelUpEl = this.createScreen("al-level-up");
     this.gameOverEl = this.createScreen("al-game-over");
     this.shopEl = this.createScreen("al-shop");
+    this.pauseEl = this.createScreen("al-pause");
 
-    const hudTop = this.hudEl.querySelector(".al-hud-top")!;
-    this.hudHpFill = hudTop.querySelector(".al-hp") as HTMLElement;
-    this.hudXpFill = hudTop.querySelector(".al-xp") as HTMLElement;
-    this.hudWaveLabel = hudTop.querySelector(".al-hud-wave") as HTMLElement;
-    this.hudLevelLabel = hudTop.querySelector(".al-hud-level") as HTMLElement;
-    this.hudShieldLabel = hudTop.querySelector(".al-hud-shield") as HTMLElement;
+    this.hudHpFill = this.hudEl.querySelector(".al-hp") as HTMLElement;
+    this.hudShieldRow = this.hudEl.querySelector(".al-shield-row") as HTMLElement;
+    this.hudShieldFill = this.hudEl.querySelector(".al-shield") as HTMLElement;
+    this.hudWaveLabel = this.hudEl.querySelector(".al-hud-wave") as HTMLElement;
+    this.hudKillsLabel = this.hudEl.querySelector(".al-kills-num") as HTMLElement;
     this.hudMotesLabel = this.hudEl.querySelector(".al-hud-motes") as HTMLElement;
+    this.hudAbilitiesEl = this.hudEl.querySelector(".al-hud-abilities") as HTMLElement;
+    this.hudLevelNum = this.hudEl.querySelector(".al-level-num") as HTMLElement;
+    this.minimapCanvas = this.hudEl.querySelector(".al-minimap-canvas") as HTMLCanvasElement;
+    this.levelRingCanvas = this.hudEl.querySelector(".al-level-ring-canvas") as HTMLCanvasElement;
+    this.pauseBtn = this.hudEl.querySelector(".al-pause-btn") as HTMLButtonElement;
     this.waveBannerEl = this.hudEl.querySelector(".al-wave-banner") as HTMLElement;
 
     this.hideAll();
@@ -95,16 +135,32 @@ export class UIManager {
     el.id = "al-hud";
     el.className = "al-hidden";
     el.innerHTML = `
-      <div class="al-hud-top">
-        <div class="al-bar-track"><div class="al-bar-fill al-hp" style="width:100%"></div></div>
-        <div class="al-hud-row">
-          <span class="al-hud-wave">Wave 1</span>
-          <span class="al-hud-shield"></span>
-          <span class="al-hud-level">Lv 1</span>
+      <div class="al-hud-topleft">
+        <div class="al-minimap-frame"><canvas class="al-minimap-canvas" width="76" height="76"></canvas></div>
+        <div class="al-wave-panel al-glow-panel">
+          <div class="al-hud-wave">Wave 1</div>
+          <div class="al-hud-kills">☠ <span class="al-kills-num">0</span></div>
         </div>
-        <div class="al-bar-track" style="height:8px"><div class="al-bar-fill al-xp" style="width:0%"></div></div>
       </div>
-      <div class="al-hud-motes">✦ 0</div>
+      <div class="al-hud-topright">
+        <div class="al-resource-pill al-glow-panel"><span class="al-resource-icon">✦</span><span class="al-hud-motes">0</span></div>
+        <button class="al-pause-btn" aria-label="Pause">⏸</button>
+      </div>
+      <div class="al-hud-stats">
+        <div class="al-stat-row">
+          <span class="al-stat-icon al-icon-hp">♥</span>
+          <div class="al-bar-track"><div class="al-bar-fill al-hp" style="width:100%"></div></div>
+        </div>
+        <div class="al-stat-row al-shield-row al-stat-hidden">
+          <span class="al-stat-icon al-icon-shield">⛨</span>
+          <div class="al-bar-track"><div class="al-bar-fill al-shield" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="al-hud-abilities"></div>
+      <div class="al-level-ring-wrap">
+        <canvas class="al-level-ring-canvas" width="74" height="74"></canvas>
+        <div class="al-level-num">Lv 1</div>
+      </div>
       <div class="al-wave-banner"></div>
     `;
     this.root.appendChild(el);
@@ -112,7 +168,7 @@ export class UIManager {
   }
 
   hideAll(): void {
-    for (const el of [this.shipSelectEl, this.hudEl, this.levelUpEl, this.gameOverEl, this.shopEl]) {
+    for (const el of [this.shipSelectEl, this.hudEl, this.levelUpEl, this.gameOverEl, this.shopEl, this.pauseEl]) {
       el.classList.add("al-hidden");
     }
   }
@@ -158,8 +214,9 @@ export class UIManager {
 
   // -------------------------------------------------------------------- hud
 
-  showHud(): void {
+showHud(onPause: () => void): void {
     this.hudEl.classList.remove("al-hidden");
+    this.pauseBtn.onclick = onPause;
   }
 
   hideHud(): void {
@@ -168,11 +225,100 @@ export class UIManager {
 
   updateHud(state: HudState): void {
     this.hudHpFill.style.width = `${Math.max(0, (state.hp / state.maxHp) * 100)}%`;
-    this.hudXpFill.style.width = `${Math.max(0, (state.xp / state.xpToNext) * 100)}%`;
     this.hudWaveLabel.textContent = `Wave ${state.wave}`;
-    this.hudLevelLabel.textContent = `Lv ${state.level}`;
-    this.hudShieldLabel.textContent = state.shieldMax > 0 ? `Shield ${state.shieldCharges}/${state.shieldMax}` : "";
-    this.hudMotesLabel.textContent = `✦ ${Math.floor(state.motes)}`;
+    this.hudKillsLabel.textContent = `${state.kills}`;
+    this.hudMotesLabel.textContent = `${Math.floor(state.motes)}`;
+    this.hudLevelNum.textContent = `Lv ${state.level}`;
+
+    if (state.shieldMax > 0) {
+      this.hudShieldRow.classList.remove("al-stat-hidden");
+      this.hudShieldFill.style.width = `${Math.max(0, (state.shieldCharges / state.shieldMax) * 100)}%`;
+    } else {
+      this.hudShieldRow.classList.add("al-stat-hidden");
+    }
+
+    this.drawMinimap(state.minimapBlips);
+    this.drawLevelRing(state.xp / state.xpToNext, state.shipArtId, state.shipShape);
+    this.updateAbilities(state.abilities);
+  }
+
+  private drawMinimap(blips: MinimapBlip[]): void {
+    const ctx = this.minimapCanvas.getContext("2d");
+    if (!ctx) return;
+    const cx = this.minimapCanvas.width / 2;
+    const cy = this.minimapCanvas.height / 2;
+    ctx.clearRect(0, 0, this.minimapCanvas.width, this.minimapCanvas.height);
+
+    for (const blip of blips) {
+      const px = cx + (blip.dx / MINIMAP_RANGE) * MINIMAP_RADIUS_PX;
+      const py = cy + (blip.dy / MINIMAP_RANGE) * MINIMAP_RADIUS_PX;
+      const clampedDist = Math.hypot(px - cx, py - cy);
+      const finalX = clampedDist > MINIMAP_RADIUS_PX ? cx + ((px - cx) / clampedDist) * MINIMAP_RADIUS_PX : px;
+      const finalY = clampedDist > MINIMAP_RADIUS_PX ? cy + ((py - cy) / clampedDist) * MINIMAP_RADIUS_PX : py;
+      const style = BLIP_STYLE[blip.kind];
+      ctx.fillStyle = style.color;
+      ctx.shadowColor = style.color;
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      ctx.arc(finalX, finalY, style.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Player marker, always centred.
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#8fe3ff";
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 5);
+    ctx.lineTo(cx + 4, cy + 4);
+    ctx.lineTo(cx - 4, cy + 4);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  private drawLevelRing(frac: number, shipArtId: string, shipShape: PlaceholderShape): void {
+    const ctx = this.levelRingCanvas.getContext("2d");
+    if (!ctx) return;
+    const size = this.levelRingCanvas.width;
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = size / 2 - 5;
+    ctx.clearRect(0, 0, size, size);
+
+    ctx.strokeStyle = "rgba(111, 215, 255, 0.18)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = "#8fe3ff";
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    ctx.shadowColor = "#8fe3ff";
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, Math.min(1, frac)));
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    drawEntitySprite(ctx, shipArtId, { ...shipShape, radius: size * 0.28 }, cx, cy, 0);
+  }
+
+  private updateAbilities(abilities: AbilityBadge[]): void {
+    const signature = abilities.map((a) => `${a.id}:${a.stackCount}:${a.isSuper ? 1 : 0}`).join(",");
+    if (signature === this.lastAbilitySignature) return;
+    this.lastAbilitySignature = signature;
+
+    this.hudAbilitiesEl.innerHTML = "";
+    for (const ability of abilities) {
+      const hex = document.createElement("div");
+      hex.className = ability.isSuper ? "al-hex al-hex-super" : "al-hex";
+      hex.appendChild(iconCanvas(ability.icon, 26));
+      const pip = document.createElement("div");
+      pip.className = "al-hex-pip";
+      pip.textContent = ability.isSuper ? "★" : `${ability.stackCount}`;
+      hex.appendChild(pip);
+      this.hudAbilitiesEl.appendChild(hex);
+    }
   }
 
   showWaveBanner(text: string): void {
@@ -180,6 +326,33 @@ export class UIManager {
     this.waveBannerEl.classList.add("al-show");
     if (this.waveBannerTimeout) window.clearTimeout(this.waveBannerTimeout);
     this.waveBannerTimeout = window.setTimeout(() => this.waveBannerEl.classList.remove("al-show"), 2200);
+  }
+
+  // ----------------------------------------------------------------- pause
+
+  showPause(onResume: () => void, onQuit: () => void): void {
+    this.pauseEl.innerHTML = "";
+    this.pauseEl.classList.remove("al-hidden");
+
+    const title = document.createElement("div");
+    title.className = "al-title";
+    title.textContent = "Paused";
+
+    const resumeBtn = document.createElement("button");
+    resumeBtn.className = "al-btn";
+    resumeBtn.textContent = "Resume";
+    resumeBtn.addEventListener("click", onResume);
+
+    const quitBtn = document.createElement("button");
+    quitBtn.className = "al-btn al-secondary";
+    quitBtn.textContent = "Quit Run";
+    quitBtn.addEventListener("click", onQuit);
+
+    this.pauseEl.append(title, resumeBtn, quitBtn);
+  }
+
+  hidePause(): void {
+    this.pauseEl.classList.add("al-hidden");
   }
 
   // ---------------------------------------------------------------- level up

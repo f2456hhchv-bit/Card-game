@@ -50,6 +50,7 @@ export class World {
   gameOver = false;
   pendingLevelUp = false;
   motesRetainedFromLastRun = 0;
+  killCount = 0;
 
   constructor(shipId: string, attachmentLevels: Record<AttachmentSlot, number>, seed?: number) {
     this.shipId = shipId;
@@ -450,6 +451,7 @@ export class World {
     if (enemy.behavior === "kamikaze") explodeEnemy(enemy, this.behaviorContext());
     enemy.dead = true;
     enemy.active = false;
+    this.killCount += 1;
     this.spawnPickup(enemy.x, enemy.y, enemy.xpValue);
     if (enemy.isBoss) {
       this.bossActive = null;
