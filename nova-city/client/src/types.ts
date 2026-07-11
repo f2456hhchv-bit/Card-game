@@ -44,6 +44,38 @@ export interface Character {
   tradesCompleted: number;
   tradeRank: string;
   navigatorRank: string;
+  dailyBonusAvailable: boolean;
+}
+
+export interface Bounty {
+  id: string;
+  targetCharacterId: string;
+  targetCallsign: string;
+  placedByCharacterId: string;
+  placedByCallsign: string;
+  amount: number;
+  createdAt: number;
+}
+
+export interface AchievementView {
+  id: string;
+  name: string;
+  description: string;
+  reward: number;
+  unlocked: boolean;
+  claimed: boolean;
+}
+
+export interface SlotResult {
+  reels: [string, string, string];
+  multiplier: number;
+  payout: number;
+}
+
+export interface CoinFlipResult {
+  result: 'heads' | 'tails';
+  won: boolean;
+  payout: number;
 }
 
 export interface PublicCharacter {

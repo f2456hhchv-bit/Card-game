@@ -5,7 +5,7 @@ import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
 import { Timer } from '../components/Timer';
 import { Icon } from '../icons/Icon';
-import type { Character, CombatTarget, NpcTarget, PlayerTarget } from '../types';
+import type { Bounty, Character, CombatTarget, NpcTarget, PlayerTarget } from '../types';
 
 interface AttackResult {
   character: Character;
@@ -13,6 +13,7 @@ interface AttackResult {
   hospitalMinutes: number;
   outcome: { log: string[] };
   salvage?: number;
+  bountyPayout?: number;
   reward?: number;
   npc?: { name: string };
 }
@@ -21,16 +22,23 @@ export function Combat() {
   const { character, setCharacter } = useAuth();
   const { pushToast } = useToast();
   const [targets, setTargets] = useState<CombatTarget[]>([]);
+  const [bounties, setBounties] = useState<Bounty[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<AttackResult | null>(null);
 
-  const load = () => api.get<{ targets: CombatTarget[] }>('/combat/targets').then((d) => setTargets(d.targets));
+  const load = () => {
+    api.get<{ targets: CombatTarget[] }>('/combat/targets').then((d) => setTargets(d.targets));
+    api.get<{ bounties: Bounty[] }>('/bounties').then((d) => setBounties(d.bounties));
+  };
 
   useEffect(() => {
     load();
     const id = setInterval(load, 10000);
     return () => clearInterval(id);
   }, [character?.locationId]);
+
+  const bountyOn = (targetCharacterId: string) =>
+    bounties.filter((b) => b.targetCharacterId === targetCharacterId).reduce((sum, b) => sum + b.amount, 0);
 
   if (!character) return null;
   const locked = character.status !== 'ok';
@@ -41,8 +49,11 @@ export function Combat() {
       const data = await api.post<AttackResult>(`/combat/${target.id}/attack`);
       setCharacter(data.character);
       setLastResult(data);
+      const bountyNote = data.won && data.bountyPayout ? ` +${data.bountyPayout} credits bounty!` : '';
       pushToast(
-        data.won ? `You beat ${target.callsign}! +${data.salvage} credits salvage.` : `You lost to ${target.callsign}.`,
+        data.won
+          ? `You beat ${target.callsign}! +${data.salvage} credits salvage.${bountyNote}`
+          : `You lost to ${target.callsign}.`,
         data.won ? 'success' : 'danger',
       );
       load();
@@ -119,6 +130,11 @@ export function Combat() {
         {playerTargets.map((target) => (
           <Card key={target.id} title={target.callsign}>
             <p>Level {target.level}</p>
+            {bountyOn(target.id) > 0 && (
+              <p className="small warn">
+                <Icon name="bounty" size={13} /> {bountyOn(target.id).toLocaleString()} cr bounty
+              </p>
+            )}
             <button
               className="btn-primary"
               disabled={locked || busy !== null || character.resources.resolve < 20}

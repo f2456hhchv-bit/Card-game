@@ -489,6 +489,48 @@ a {
   flex-wrap: wrap;
 }
 
+.slot-reels {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.75rem 0;
+}
+
+.slot-reel {
+  flex: 1;
+  text-align: center;
+  font-size: 2.4rem;
+  padding: 0.8rem 0;
+  border-radius: 10px;
+  background: var(--bg-panel-raised);
+  border: 1px solid var(--border-soft);
+}
+
+.bet-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0.6rem 0;
+  flex-wrap: wrap;
+}
+
+.bet-row input,
+.bet-row select {
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  background: var(--bg-panel-raised);
+  color: var(--text-primary);
+}
+
+.bet-row input {
+  width: 7rem;
+}
+
+.bet-row select {
+  flex: 1;
+  min-width: 10rem;
+}
+
 /* Banners & toasts */
 .banner {
   border-radius: 10px;

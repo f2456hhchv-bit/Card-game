@@ -33,7 +33,10 @@ export type IconName =
   | 'galaxy'
   | 'station'
   | 'alignment'
-  | 'enemy';
+  | 'enemy'
+  | 'casino'
+  | 'bounty'
+  | 'achievement';
 
 const PATHS: Record<IconName, ReactNode> = {
   fuel: (
@@ -260,6 +263,29 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M11 3c-4.4 0-7.5 3.2-7.5 7.3v2.7c0 1.1.6 2.1 1.7 2.6l1 1.4h2v-2h1.1v2h3.4v-2h1.1v2h2l1-1.4c1.1-.5 1.7-1.5 1.7-2.6v-2.7C18.5 6.2 15.4 3 11 3z" />
       <circle cx="8" cy="10.5" r="1.3" fill="currentColor" stroke="none" />
       <circle cx="14" cy="10.5" r="1.3" fill="currentColor" stroke="none" />
+    </>
+  ),
+  casino: (
+    <>
+      <rect x="3" y="3" width="16" height="16" rx="2.5" />
+      <circle cx="7.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="14.5" cy="7.5" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="11" cy="11" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="7.5" cy="14.5" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="14.5" cy="14.5" r="1.2" fill="currentColor" stroke="none" />
+    </>
+  ),
+  bounty: (
+    <>
+      <path d="M11 2 3 6.5v6c0 5 3.5 7.5 8 9.5 4.5-2 8-4.5 8-9.5v-6z" />
+      <path d="M8.5 11 10.5 13 14 8.5" />
+    </>
+  ),
+  achievement: (
+    <>
+      <circle cx="11" cy="8.5" r="5.5" />
+      <path d="M8 13.2 6.5 20l4.5-2.5 4.5 2.5-1.5-6.8" />
+      <path d="M8.7 8.5 10 9.8l3-3.4" />
     </>
   ),
 };

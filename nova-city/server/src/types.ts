@@ -51,6 +51,10 @@ export interface Character {
   exploredSectorIds: string[];
   /** total market buy+sell transactions — drives Trade License rank */
   tradesCompleted: number;
+  /** achievement ids already claimed — prevents re-claiming a one-time reward */
+  claimedAchievementIds: string[];
+  /** UTC yyyy-mm-dd of the last Daily Bonus claim, or null if never claimed */
+  lastDailyBonusDate: string | null;
   createdAt: number;
 }
 
@@ -207,6 +211,18 @@ export interface Station {
   /** accrued but not yet collected, settled lazily on read */
   credits: number;
   lastCollectedAt: number;
+}
+
+export interface Bounty {
+  id: string;
+  targetCharacterId: string;
+  targetCallsign: string;
+  placedByCharacterId: string;
+  placedByCallsign: string;
+  amount: number;
+  createdAt: number;
+  claimedByCharacterId: string | null;
+  claimedAt: number | null;
 }
 
 export interface SalvageEvent {

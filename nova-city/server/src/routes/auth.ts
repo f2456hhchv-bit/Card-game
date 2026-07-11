@@ -34,6 +34,8 @@ function createStarterCharacter(userId: string, callsign: string): Character {
     alignment: 0,
     exploredSectorIds: [],
     tradesCompleted: 0,
+    claimedAchievementIds: [],
+    lastDailyBonusDate: null,
     createdAt: now,
   };
 }

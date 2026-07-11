@@ -194,6 +194,17 @@ friends" above.
     station tiers behind fleet firepower — your fleet garrisons what it builds
   - **Navigator Rating** — Novice → Charted → Veteran → Master Navigator
     ranks up from sectors scouted, discounting future scouting Fuel cost
+- **Casino** — Reels of the Hollow (a 3-reel slot pull) and Double or Nothing
+  (a coin flip), pure games of chance for burning spare credits — no
+  progression gated behind them
+- **Bounty Board** — place a credit bounty on any pilot; whoever beats them
+  in Combat collects every active bounty on that target automatically, on
+  top of the normal salvage cut
+- **Achievements** — 15 one-time milestones spanning every system (training,
+  trading, exploring, building, fighting, alignment), each claimable once for
+  a credit reward
+- **Daily Bonus** — a small credits/Fuel/Resolve gift claimable once per UTC
+  calendar day — a reason to check back in, not a timer to wait out
 - All of the above push **real-time WebSocket notifications** (attacked,
   sprung, mail, faction chat, war updates, salvage events)
 

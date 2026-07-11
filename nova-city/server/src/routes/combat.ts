@@ -2,7 +2,7 @@ import { Router } from 'express';
 import type { AuthedRequest } from '../auth/middleware.js';
 import { requireAuth } from '../auth/middleware.js';
 import { requireCharacter, characterView, characterEffectiveStats, publicCharacterView } from './helpers.js';
-import { characters, combatLogs, npcEnemies } from '../store/collections.js';
+import { characters, combatLogs, npcEnemies, bounties } from '../store/collections.js';
 import { hospitalMinutesFor, resolveCombat, salvageCredits } from '../domain/combat.js';
 import { isNpcDefeated } from '../domain/npc.js';
 import { applyXp } from '../domain/leveling.js';
@@ -135,12 +135,21 @@ combatRouter.post('/:characterId/attack', (req: AuthedRequest, res) => {
 
   const leveled = applyXp(attacker.level, attacker.xp, ATTACK_XP);
 
+  let bountyPayout = 0;
+  if (winnerIsAttacker) {
+    const claimedBounties = bounties.filter((b) => b.targetCharacterId === defender.id && b.claimedByCharacterId === null);
+    for (const bounty of claimedBounties) {
+      bountyPayout += bounty.amount;
+      bounties.put({ ...bounty, claimedByCharacterId: attacker.id, claimedAt: now });
+    }
+  }
+
   const updatedAttacker = {
     ...attacker,
     xp: leveled.xp,
     level: leveled.level,
     resources: { ...attacker.resources, resolve: attacker.resources.resolve - ATTACK_RESOLVE_COST },
-    credits: winnerIsAttacker ? attacker.credits + salvage : attacker.credits,
+    credits: winnerIsAttacker ? attacker.credits + salvage + bountyPayout : attacker.credits,
     status: winnerIsAttacker ? attacker.status : ('hospital' as const),
     statusUntil: winnerIsAttacker ? attacker.statusUntil : now + hospitalMinutes * 60_000,
   };
@@ -180,6 +189,7 @@ combatRouter.post('/:characterId/attack', (req: AuthedRequest, res) => {
     outcome,
     won: winnerIsAttacker,
     salvage,
+    bountyPayout,
     hospitalMinutes,
     combatLogId: log.id,
   });

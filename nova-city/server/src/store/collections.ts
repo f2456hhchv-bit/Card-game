@@ -17,6 +17,7 @@ import type {
   Sector,
   Station,
   NpcEnemy,
+  Bounty,
 } from '../types.js';
 
 function loadJson<T>(relativePath: string): T {
@@ -52,6 +53,7 @@ export const ships = new Collection<Ship>('ships');
 export const sectors = new Collection<Sector>('sectors', sectorSeed);
 export const stations = new Collection<Station>('stations');
 export const npcEnemies = new Collection<NpcEnemy>('npc_enemies', npcSeed);
+export const bounties = new Collection<Bounty>('bounties');
 
 export const HOME_LOCATION_ID = 'nova-city';
 export const STARTER_SHIP_CLASS_ID = 'ship-scout-skiff';

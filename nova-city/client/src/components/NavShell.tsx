@@ -21,6 +21,9 @@ const NAV_ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: '/travel', label: 'Travel', icon: 'travel' },
   { to: '/galaxy', label: 'Galaxy', icon: 'galaxy' },
   { to: '/faction', label: 'Faction', icon: 'faction' },
+  { to: '/casino', label: 'Casino', icon: 'casino' },
+  { to: '/bounties', label: 'Bounties', icon: 'bounty' },
+  { to: '/achievements', label: 'Achievements', icon: 'achievement' },
   { to: '/mail', label: 'Mail', icon: 'mail' },
   { to: '/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
 ];

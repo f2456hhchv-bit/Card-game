@@ -87,6 +87,39 @@ function SalvageEventCard() {
   );
 }
 
+function DailyBonusCard() {
+  const { character, setCharacter } = useAuth();
+  const { pushToast } = useToast();
+  const [busy, setBusy] = useState(false);
+  if (!character) return null;
+
+  const claim = async () => {
+    setBusy(true);
+    try {
+      const data = await api.post<{ character: Character; reward: { credits: number; fuel: number; resolve: number } }>(
+        '/character/daily-bonus',
+      );
+      setCharacter(data.character);
+      pushToast(`Daily Bonus claimed: +${data.reward.credits} cr, +${data.reward.fuel} Fuel, +${data.reward.resolve} Resolve.`, 'success');
+    } catch (err) {
+      pushToast(err instanceof ApiError ? err.message : 'Could not claim', 'danger');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!character.dailyBonusAvailable) return null;
+
+  return (
+    <Card title="Daily Bonus">
+      <p className="muted small">A free bonus for checking in — available once per day.</p>
+      <button className="btn-primary" disabled={busy} onClick={claim}>
+        {busy ? 'Claiming…' : 'Claim Daily Bonus'}
+      </button>
+    </Card>
+  );
+}
+
 export function Dashboard() {
   const { character, refresh } = useAuth();
   const { locationName } = useReferenceData();
@@ -98,6 +131,7 @@ export function Dashboard() {
   return (
     <div className="screen">
       <h1 className="screen-title">Welcome back, {character.callsign}</h1>
+      <DailyBonusCard />
       <div className="grid two-col">
         <Card title="Pilot Status">
           <div className="location-header">

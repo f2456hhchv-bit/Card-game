@@ -6,6 +6,7 @@ import { commandRank } from '../domain/commandRank.js';
 import { alignmentLabel } from '../domain/alignment.js';
 import { tradeRank } from '../domain/trade.js';
 import { navigatorRank } from '../domain/scouting.js';
+import { canClaimDailyBonus } from '../domain/dailyBonus.js';
 import type { Character } from '../types.js';
 
 export function getCharacterByUserId(userId: string): Character | undefined {
@@ -22,6 +23,8 @@ export function hydrateCharacter(character: Character): Character {
     alignment: character.alignment ?? 0,
     exploredSectorIds: character.exploredSectorIds ?? [],
     tradesCompleted: character.tradesCompleted ?? 0,
+    claimedAchievementIds: character.claimedAchievementIds ?? [],
+    lastDailyBonusDate: character.lastDailyBonusDate ?? null,
   };
 }
 
@@ -103,6 +106,23 @@ export function characterView(character: Character) {
     tradesCompleted: character.tradesCompleted,
     tradeRank: tradeRank(character.tradesCompleted).name,
     navigatorRank: navigatorRank(character.exploredSectorIds.length).name,
+    dailyBonusAvailable: canClaimDailyBonus(character.lastDailyBonusDate, Date.now()),
+  };
+}
+
+export function achievementInput(character: Character) {
+  const command = characterCommandSummary(character);
+  return {
+    level: character.level,
+    totalTrainedStats:
+      character.stats.strength + character.stats.defense + character.stats.speed + character.stats.dexterity,
+    tradesCompleted: character.tradesCompleted,
+    sectorsExplored: character.exploredSectorIds.length,
+    shipCount: command.shipCount,
+    stationCount: command.stationCount,
+    sectorsControlled: command.sectorsControlled,
+    alignment: character.alignment,
+    credits: character.credits,
   };
 }
 

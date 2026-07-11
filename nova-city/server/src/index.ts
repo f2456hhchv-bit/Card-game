@@ -23,6 +23,9 @@ import { salvageRouter } from './routes/salvage.js';
 import { fleetRouter } from './routes/fleet.js';
 import { galaxyRouter } from './routes/galaxy.js';
 import { stationsRouter } from './routes/stations.js';
+import { casinoRouter } from './routes/casino.js';
+import { bountyRouter } from './routes/bounty.js';
+import { achievementsRouter } from './routes/achievements.js';
 
 const app = express();
 app.use(cors());
@@ -46,6 +49,9 @@ app.use('/api/salvage', salvageRouter);
 app.use('/api/fleet', fleetRouter);
 app.use('/api/galaxy', galaxyRouter);
 app.use('/api/stations', stationsRouter);
+app.use('/api/casino', casinoRouter);
+app.use('/api/bounties', bountyRouter);
+app.use('/api/achievements', achievementsRouter);
 
 // If a built client (client/dist) is present alongside this checkout, serve it —
 // this lets a single deployed process host both the API/WebSocket and the SPA

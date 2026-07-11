@@ -18,6 +18,9 @@ import { Galaxy } from './screens/Galaxy';
 import { Faction } from './screens/Faction';
 import { Mail } from './screens/Mail';
 import { Leaderboard } from './screens/Leaderboard';
+import { Casino } from './screens/Casino';
+import { Bounties } from './screens/Bounties';
+import { Achievements } from './screens/Achievements';
 
 function ProtectedArea() {
   const { character, ready } = useAuth();
@@ -56,6 +59,9 @@ export default function App() {
             <Route path="/travel" element={<Travel />} />
             <Route path="/galaxy" element={<Galaxy />} />
             <Route path="/faction" element={<Faction />} />
+            <Route path="/casino" element={<Casino />} />
+            <Route path="/bounties" element={<Bounties />} />
+            <Route path="/achievements" element={<Achievements />} />
             <Route path="/mail" element={<Mail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
           </Route>
