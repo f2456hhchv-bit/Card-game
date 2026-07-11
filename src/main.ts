@@ -275,6 +275,7 @@ import { COHERENCE_DOMAINS, COHERENCE_STANDARD_QUESTIONS } from "./game/atlasCoh
 import { truthStandardMet } from "./game/atlasVerification/AtlasVerificationRuntime";
 import { TRUTH_STANDARD_QUESTIONS, VERIFICATION_DOMAINS, confidenceLevelRank, verificationChainRank } from "./game/atlasVerification/atlasVerificationData";
 import { REASONING_DOMAINS, reasoningCycleRank } from "./game/atlasReasoning/atlasReasoningData";
+import { JUDGEMENT_DOMAINS, judgementCycleRank } from "./game/atlasJudgement/atlasJudgementData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2506,6 +2507,25 @@ const possibilityIndex = new PossibilityIndexScoreCard();
     { id: "hypothesis-natural-phenomenon", scores: { "Evidence quality": 0.3 } },
   ]);
   if (reasoningExplanation) decisionLog.record("Science", "Hypothesis selection", reasoningExplanation.chosenId, reasoningExplanation.confidence, 20);
+}
+
+// AF-198: the Atlas Judgement Engine — AF-197's direct sibling; the
+// Reasoning Engine determines how intelligent entities think, the
+// Judgement Engine determines how they ultimately decide. Reuses
+// AF-156's real ethicalAlignmentScore directly for balancing evidence
+// with humanity, AF-155's real rankOptions/collaborativeProblems
+// directly, and AF-156's real explainDecision/decisionLog directly for
+// Judgement Record. judgementCycleRank is the module's sole genuinely
+// new piece (see atlasJudgementData.ts for the full reuse notes; this
+// module intentionally has no Runtime.ts either).
+{
+  ethicalAlignmentScore({ Preservation: 10, "Environmental stewardship": 8 }, new Set(["Preservation", "Environmental stewardship"]));
+  const judgementExplanation = explainDecision([
+    { id: "option-restore-ecosystem", scores: { "Public benefit": 0.7 } },
+    { id: "option-defer-restoration", scores: { "Public benefit": 0.2 } },
+  ]);
+  if (judgementExplanation) decisionLog.record("Ecology", "Restoration priority", judgementExplanation.chosenId, judgementExplanation.confidence, 20);
+  collaborativeProblems.propose("problem-restoration-priority-panel", ["scientist-vale", "commander-fen-beastmaster"], "Ecology", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6507,6 +6527,11 @@ const loop = new GameLoop({
             { id: "hypothesis-natural-phenomenon", scores: { "Evidence quality": 0.3, Replication: 0.2 } },
           ]);
           return `collaborators ${collaborativeProblems.participantsFor("problem-open-frontier-signal-origin").length} · best hypothesis ${outcome?.bestId ?? "none"} · uncertainty response ${outcome ? suggestUncertaintyResponse(outcome.confidence) ?? "none" : "none"} · reasoning record entries ${decisionLog.forDomain("Science").length} · cycle rank ${reasoningCycleRank("Evaluation")} · domain overlap[Reasoning,Verification] ${domainOverlap.shared.length}/${REASONING_DOMAINS.length}`;
+        })(),
+        atlasJudgement: (() => {
+          const domainOverlap = detectOverlap(JUDGEMENT_DOMAINS, REASONING_DOMAINS);
+          const ethics = ethicalAlignmentScore({ Preservation: 10, "Environmental stewardship": 8 }, new Set(["Preservation", "Environmental stewardship"]));
+          return `ethical alignment score ${ethics} · collective panel size ${collaborativeProblems.participantsFor("problem-restoration-priority-panel").length} · judgement record entries ${decisionLog.forDomain("Ecology").length} · cycle rank ${judgementCycleRank("Consultation")} · domain overlap[Judgement,Reasoning] ${domainOverlap.shared.length}/${JUDGEMENT_DOMAINS.length}`;
         })(),
       });
     }

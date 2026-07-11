@@ -232,6 +232,8 @@ export interface DebugSnapshot {
   atlasVerification: string | null;
   /** Atlas Reasoning Engine summary — overlaps almost entirely with AF-155's own already-locked "Atlas Intelligence Engine" and AF-156's own already-locked "Atlas Decision Engine" (see atlasReasoningData.ts's module doc comment): the reused AF-155 collaborativeProblems' participant count for Collaborative Reasoning, the reused AF-155 rankOptions/suggestUncertaintyResponse for the Commander/Scientific/Engineering Reasoning mechanism and Uncertainty, the reused AF-156 decisionLog's entry count for Reasoning Record, the new reasoningCycleRank's ordered (non-cyclic) rank for The Reasoning Cycle, and a live detectOverlap reading against AF-196's real VERIFICATION_DOMAINS (AF-197 §DEBUG). */
   atlasReasoning: string | null;
+  /** Atlas Judgement Engine summary — AF-197's direct sibling; the Reasoning Engine determines how intelligent entities think, the Judgement Engine determines how they ultimately decide: the reused AF-156 ethicalAlignmentScore's result for balancing evidence with humanity, the reused AF-155 collaborativeProblems' participant count for Collective Judgement, the reused AF-156 decisionLog's entry count for Judgement Record, the new judgementCycleRank's ordered (non-cyclic) rank for The Judgement Cycle, and a live detectOverlap reading against AF-197's real REASONING_DOMAINS (AF-198 §DEBUG). */
+  atlasJudgement: string | null;
 }
 
 export class DebugOverlay {
@@ -381,6 +383,7 @@ export class DebugOverlay {
       `coherence  ${snapshot.atlasCoherence ?? "—"}`,
       `verify     ${snapshot.atlasVerification ?? "—"}`,
       `reasoning  ${snapshot.atlasReasoning ?? "—"}`,
+      `judgement  ${snapshot.atlasJudgement ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
