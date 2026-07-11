@@ -216,6 +216,8 @@ export interface DebugSnapshot {
   atlasRealisation: string | null;
   /** Atlas Civilisation Operating System summary — the third "operating system"-shaped module in this codebase, after AF-144's locked "Afterlight Operating System" (foundation layer) and AF-154's locked "Atlas Orchestrator" (player-experience layer); this one coordinates the Atlas-enrichment modules (see atlasCivilisationOSData.ts's NAMING SCOPE NOTE): the reused AF-144 WorldStateStore's current Population reading for State Management, the reused AF-144 PriorityEngine's registered tier for Priority Management, the reused AF-144 TelemetryCollector's total event count for Civilisation Telemetry, the new CivilisationHealthTracker's weakest domain for Continuous Diagnostics, the new ResourcePoolCoordinator's available Researchers for Resource Coordination, the reused AF-151 KnowledgeGraph's neighbour count for Service Dependencies, the new resolveByCivilisationFailsafePriority's resolved concern for Failsafe Services, the new adaptiveCoordinationTierRank for Adaptive Coordination, and the new CivilisationHeartbeat's latest answer for The Civilisation Heartbeat (AF-189 §DEBUG). */
   atlasCivilisationOS: string | null;
+  /** Atlas Meta Evolution Engine summary — governs how the Afterlight PROJECT itself evolves across real-world development, never any in-fiction mechanic (distinct from AF-139's and AF-186's own locked "Evolution Engine" modules — see atlasMetaEvolutionData.ts's NAMING SCOPE NOTE): the new UpdateLifecycleTracker's current stage for a sample feature (mirroring AF-149's real FeatureLifecycleTracker shape a second time), the reused AF-149 IterationCycleTracker's ready-to-ship status, the new DesignHistoryLedger's latest recorded technical complexity, the new TechnicalDebtLog's record count, the reused AF-144 TelemetryCollector's total event count for Player Evolution, the reused AF-159 CulturalTrendTracker's adopter count for Community Evolution, the new updateQualityAssessment's reject/improvement result (mirroring AF-149's real featureFlagAssessment shape a second time), the new AtlasScorecardCard's score/gate status (the tenth mirrored scoring-rubric shape), and a live detectOverlap reading against AF-149's real SYSTEM_IMPACT_CATEGORIES (AF-190 §DEBUG). */
+  atlasMetaEvolution: string | null;
 }
 
 export class DebugOverlay {
@@ -357,6 +359,7 @@ export class DebugOverlay {
       `emergence  ${snapshot.atlasEmergence ?? "—"}`,
       `realisation ${snapshot.atlasRealisation ?? "—"}`,
       `civOS      ${snapshot.atlasCivilisationOS ?? "—"}`,
+      `metaEvo    ${snapshot.atlasMetaEvolution ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

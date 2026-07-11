@@ -180,7 +180,7 @@ import { CANON_TIERS, FRANCHISE_TEST_QUESTIONS, eraFor } from "./game/franchiseB
 import { CanonAuthorityResolver, CanonRecordLedger, FranchiseComplianceRegistry } from "./game/franchiseBible/FranchiseBibleRuntime";
 import { LORE_VALIDATION_CHECK_KINDS, loreValidationReport } from "./game/canonEngine/canonEngineData";
 import { ArtifactAuthenticityRegistry, CanonEventLedger, CommanderContinuityLedger, KnowledgeStateTracker, recordPlanetContinuityFact } from "./game/canonEngine/CanonEngineRuntime";
-import { ATLAS_SCORE_CATEGORIES, FINAL_VALIDATION_QUESTIONS, GREEN_FLAGS, featureFlagAssessment, finalValidationPassed, systemImpactReportFor } from "./game/atlasProtocol/atlasProtocolData";
+import { ATLAS_SCORE_CATEGORIES, FINAL_VALIDATION_QUESTIONS, GREEN_FLAGS, SYSTEM_IMPACT_CATEGORIES, featureFlagAssessment, finalValidationPassed, systemImpactReportFor } from "./game/atlasProtocol/atlasProtocolData";
 import { AtlasScoreCard, FeatureLifecycleTracker, IterationCycleTracker } from "./game/atlasProtocol/AtlasProtocolRuntime";
 import { MASTER_CATALOGUE_CATEGORIES } from "./game/masterIndex/masterIndexData";
 import { DependencyMap, MasterIndexRegistry, QualityTracker, RelationshipGraph, VersionHistoryLedger } from "./game/masterIndex/MasterIndexRuntime";
@@ -260,6 +260,8 @@ import { QualityGateScoreCard, RealisationTracker } from "./game/atlasRealisatio
 import { QUALITY_GATE_CRITERIA, REALISATION_DOMAINS } from "./game/atlasRealisation/atlasRealisationData";
 import { CivilisationHeartbeat, CivilisationHealthTracker, ResourcePoolCoordinator, resolveByCivilisationFailsafePriority } from "./game/atlasCivilisationOS/AtlasCivilisationOSRuntime";
 import { ADAPTIVE_COORDINATION_TIERS, type CivilisationBusEventMap, adaptiveCoordinationTierRank } from "./game/atlasCivilisationOS/atlasCivilisationOSData";
+import { AtlasScorecardCard, DesignHistoryLedger, TechnicalDebtLog, UpdateLifecycleTracker, updateQualityAssessment } from "./game/atlasMetaEvolution/AtlasMetaEvolutionRuntime";
+import { ATLAS_SCORECARD_CATEGORIES, META_EVOLUTION_DOMAINS } from "./game/atlasMetaEvolution/atlasMetaEvolutionData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2321,6 +2323,36 @@ const civilisationHeartbeat = new CivilisationHeartbeat();
   resourcePools.allocate("Researchers", 6);
   knowledgeGraph.addEdge({ fromId: "service-education", toId: "service-research", kind: "Influenced", strength: 1, confidence: 1, historicalContext: "Education outputs feed Research inputs.", dateEstablished: 20 });
   civilisationHeartbeat.tick(20, { "What has changed?": "A new university opened.", "Who needs help?": "The frontier settlement needs teachers." });
+}
+
+// AF-190: the Atlas Meta Evolution Engine — governs how the Afterlight
+// PROJECT itself evolves across years of real-world development, never
+// any in-fiction mechanic (see atlasMetaEvolutionData.ts's NAMING SCOPE
+// NOTE distinguishing this from AF-139's/AF-186's own locked "Evolution
+// Engine" modules). UpdateLifecycleTracker mirrors AF-149's real
+// FeatureLifecycleTracker shape a second time; the Update Life Cycle's
+// own "Iteration" stage reuses AF-149's real iterationCycles directly;
+// Player Evolution reuses AF-144's real TelemetryCollector directly
+// (a third instantiation); Community Evolution composes AF-159's real
+// culturalTrends directly; Expansion Governance reuses AF-149's real
+// systemImpactReportFor directly. DesignHistoryLedger/TechnicalDebtLog/
+// updateQualityAssessment/AtlasScorecardCard are the genuinely new
+// pieces (see atlasMetaEvolutionData.ts for the full reuse notes).
+const updateLifecycle = new UpdateLifecycleTracker();
+const designHistory = new DesignHistoryLedger();
+const technicalDebt = new TechnicalDebtLog();
+const playerEvolutionTelemetry = new TelemetryCollector();
+const atlasScorecard = new AtlasScorecardCard();
+{
+  updateLifecycle.register("feature-living-city-heartbeat", 20);
+  updateLifecycle.advance("feature-living-city-heartbeat", 20);
+  iterationCycles.recordCycle("feature-living-city-heartbeat", 20);
+  iterationCycles.recordCycle("feature-living-city-heartbeat", 20);
+  designHistory.record("mechanic-living-city-heartbeat", { originalIntent: "Make the city feel alive.", currentImplementation: "Per-cycle Q&A log.", playerReception: "Positive.", technicalComplexity: 3, futureOpportunities: "Expose to narration.", replacementRisk: 1 }, 20);
+  technicalDebt.record("Redundant code", "Two overlapping cascade trackers could merge.", 20);
+  playerEvolutionTelemetry.record("Museum usage");
+  culturalTrends.record("Living City Fan Art", "settlement-verdance", 20);
+  for (const category of ATLAS_SCORECARD_CATEGORIES) atlasScorecard.score(category, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6283,6 +6315,11 @@ const loop = new GameLoop({
         atlasCivilisationOS: (() => {
           const failsafe = resolveByCivilisationFailsafePriority(new Set(["Commander burnout", "Knowledge loss"]));
           return `state population ${civilisationState.getCurrent()?.Population ?? 0} · priority emergency-recovery=${civilisationPriority.tierFor("emergency-recovery") ?? "none"} · telemetry events ${civilisationTelemetry.totalEvents()} · weakest health ${civilisationHealth.weakestDomains()[0] ?? "none"} · researchers available ${resourcePools.availableFor("Researchers")} · network neighbours ${knowledgeGraph.neighbors("service-education").length} · failsafe ${failsafe ?? "none"} · coordination tier rank ${adaptiveCoordinationTierRank(ADAPTIVE_COORDINATION_TIERS[0]!)} · heartbeat "${civilisationHeartbeat.latest()?.answers["What has changed?"] ?? "none"}"`;
+        })(),
+        atlasMetaEvolution: (() => {
+          const overlap = detectOverlap(META_EVOLUTION_DOMAINS, SYSTEM_IMPACT_CATEGORIES);
+          const quality = updateQualityAssessment(new Set(), new Set(["Wonder", "Accessibility"]));
+          return `lifecycle ${updateLifecycle.stageFor("feature-living-city-heartbeat") ?? "none"} · ready to ship=${iterationCycles.readyToShip("feature-living-city-heartbeat")} · design complexity ${designHistory.latestFor("mechanic-living-city-heartbeat")?.technicalComplexity ?? 0} · technical debt logged ${technicalDebt.all().length} · player signals ${playerEvolutionTelemetry.totalEvents()} · community adopters ${culturalTrends.adoptersFor("Living City Fan Art").length} · quality reject=${quality.shouldReject} improvements ${quality.qualityImprovementCount} · scorecard ${atlasScorecard.overallScore().toFixed(1)} (${atlasScorecard.passesGate() ? "passed" : "pending"}) · domain overlap[Meta,SystemImpact] ${overlap.shared.length}/${META_EVOLUTION_DOMAINS.length}`;
         })(),
       });
     }
