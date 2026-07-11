@@ -16,6 +16,7 @@ import type {
   Ship,
   Sector,
   Station,
+  NpcEnemy,
 } from '../types.js';
 
 function loadJson<T>(relativePath: string): T {
@@ -27,6 +28,7 @@ const itemSeed = loadJson<Item[]>('../data/items.json');
 const crimeSeed = loadJson<Crime[]>('../data/crimes.json');
 const locationSeed = loadJson<Location[]>('../data/locations.json');
 const shipClassSeed = loadJson<ShipClass[]>('../data/ships.json');
+const npcSeed = loadJson<NpcEnemy[]>('../data/npcs.json');
 // Sectors are authored without lastTickAt (a JSON file can't hold "now") — it's
 // stamped at first boot so alien-strength growth starts counting from here.
 const sectorSeed = loadJson<Omit<Sector, 'lastTickAt'>[]>('../data/sectors.json').map((s) => ({
@@ -49,6 +51,7 @@ export const shipClasses = new Collection<ShipClass>('ship_classes', shipClassSe
 export const ships = new Collection<Ship>('ships');
 export const sectors = new Collection<Sector>('sectors', sectorSeed);
 export const stations = new Collection<Station>('stations');
+export const npcEnemies = new Collection<NpcEnemy>('npc_enemies', npcSeed);
 
 export const HOME_LOCATION_ID = 'nova-city';
 export const STARTER_SHIP_CLASS_ID = 'ship-scout-skiff';

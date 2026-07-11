@@ -3,24 +3,28 @@ import { useAuth } from '../state/AuthContext';
 import { useToast } from '../state/ToastContext';
 import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
-import type { Character, PublicCharacter } from '../types';
+import { Timer } from '../components/Timer';
+import { Icon } from '../icons/Icon';
+import type { Character, CombatTarget, NpcTarget, PlayerTarget } from '../types';
 
 interface AttackResult {
   character: Character;
   won: boolean;
-  salvage: number;
   hospitalMinutes: number;
   outcome: { log: string[] };
+  salvage?: number;
+  reward?: number;
+  npc?: { name: string };
 }
 
 export function Combat() {
   const { character, setCharacter } = useAuth();
   const { pushToast } = useToast();
-  const [targets, setTargets] = useState<PublicCharacter[]>([]);
+  const [targets, setTargets] = useState<CombatTarget[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<AttackResult | null>(null);
 
-  const load = () => api.get<{ targets: PublicCharacter[] }>('/combat/targets').then((d) => setTargets(d.targets));
+  const load = () => api.get<{ targets: CombatTarget[] }>('/combat/targets').then((d) => setTargets(d.targets));
 
   useEffect(() => {
     load();
@@ -31,7 +35,7 @@ export function Combat() {
   if (!character) return null;
   const locked = character.status !== 'ok';
 
-  const attack = async (target: PublicCharacter) => {
+  const attackPlayer = async (target: PlayerTarget) => {
     setBusy(target.id);
     try {
       const data = await api.post<AttackResult>(`/combat/${target.id}/attack`);
@@ -49,26 +53,84 @@ export function Combat() {
     }
   };
 
+  const attackNpc = async (target: NpcTarget) => {
+    setBusy(target.id);
+    try {
+      const data = await api.post<AttackResult>(`/combat/npc/${target.id}/attack`);
+      setCharacter(data.character);
+      setLastResult(data);
+      pushToast(
+        data.won ? `Defeated ${target.name}! +${data.reward} credits.` : `${target.name} put you in the Medbay.`,
+        data.won ? 'success' : 'danger',
+      );
+      load();
+    } catch (err) {
+      pushToast(err instanceof ApiError ? err.message : 'Attack failed', 'danger');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const npcTargets = targets.filter((t): t is NpcTarget => t.kind === 'npc');
+  const playerTargets = targets.filter((t): t is PlayerTarget => t.kind === 'player');
+
   return (
     <div className="screen">
       <h1 className="screen-title">Combat</h1>
       {locked && <div className="banner banner-warning">You can't attack while {character.status}.</div>}
-      <p className="muted">Attacking costs 20 Resolve. Only pilots at your current location can be targeted.</p>
+      <p className="muted">Attacking costs 20 Resolve. Only targets at your current location can be fought.</p>
+
+      <h2 className="section-title">
+        <Icon name="enemy" size={14} /> Hostiles
+      </h2>
       <div className="grid two-col">
-        {targets.map((target) => (
+        {npcTargets.map((target) => (
+          <Card
+            key={target.id}
+            title={
+              <span className="card-title-with-icon">
+                <Icon name="enemy" size={16} />
+                {target.name}
+              </span>
+            }
+          >
+            <p className="muted small">{target.flavor}</p>
+            <p className="small">Tier {target.tier}</p>
+            {target.defeated && target.respawnsAt ? (
+              <p className="small muted">
+                Recovering — back in <Timer target={target.respawnsAt} onComplete={load} />
+              </p>
+            ) : (
+              <button
+                className="btn-primary"
+                disabled={locked || busy !== null || character.resources.resolve < 20}
+                onClick={() => attackNpc(target)}
+              >
+                {busy === target.id ? 'Attacking…' : 'Attack'}
+              </button>
+            )}
+          </Card>
+        ))}
+        {npcTargets.length === 0 && <p className="muted">No hostiles detected here.</p>}
+      </div>
+
+      <h2 className="section-title">Pilots</h2>
+      <div className="grid two-col">
+        {playerTargets.map((target) => (
           <Card key={target.id} title={target.callsign}>
             <p>Level {target.level}</p>
             <button
               className="btn-primary"
               disabled={locked || busy !== null || character.resources.resolve < 20}
-              onClick={() => attack(target)}
+              onClick={() => attackPlayer(target)}
             >
               {busy === target.id ? 'Attacking…' : 'Attack'}
             </button>
           </Card>
         ))}
-        {targets.length === 0 && <p className="muted">No one else is here right now.</p>}
+        {playerTargets.length === 0 && <p className="muted">No other pilots are here right now.</p>}
       </div>
+
       {lastResult && (
         <Card title="Last engagement log">
           {lastResult.outcome.log.map((line, i) => (

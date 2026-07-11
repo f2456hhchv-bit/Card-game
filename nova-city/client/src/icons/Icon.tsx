@@ -32,7 +32,8 @@ export type IconName =
   | 'ship'
   | 'galaxy'
   | 'station'
-  | 'alignment';
+  | 'alignment'
+  | 'enemy';
 
 const PATHS: Record<IconName, ReactNode> = {
   fuel: (
@@ -252,6 +253,13 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M3 7h8M14 7h7" />
       <path d="M3 7c0 2 1.5 3.5 3.5 3.5S10 9 10 7" />
       <path d="M14 7c0 2 1.5 3.5 3.5 3.5S21 9 21 7" />
+    </>
+  ),
+  enemy: (
+    <>
+      <path d="M11 3c-4.4 0-7.5 3.2-7.5 7.3v2.7c0 1.1.6 2.1 1.7 2.6l1 1.4h2v-2h1.1v2h3.4v-2h1.1v2h2l1-1.4c1.1-.5 1.7-1.5 1.7-2.6v-2.7C18.5 6.2 15.4 3 11 3z" />
+      <circle cx="8" cy="10.5" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="10.5" r="1.3" fill="currentColor" stroke="none" />
     </>
   ),
 };

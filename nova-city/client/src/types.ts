@@ -53,6 +53,22 @@ export interface PublicCharacter {
   factionId: string | null;
 }
 
+export interface PlayerTarget extends PublicCharacter {
+  kind: 'player';
+}
+
+export interface NpcTarget {
+  id: string;
+  name: string;
+  flavor: string;
+  tier: number;
+  kind: 'npc';
+  defeated: boolean;
+  respawnsAt: number | null;
+}
+
+export type CombatTarget = PlayerTarget | NpcTarget;
+
 export interface Item {
   id: string;
   name: string;

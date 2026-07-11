@@ -147,8 +147,10 @@ friends" above.
 - **Brig** — timed jail; other players can spend Resolve + credits to spring you
 - **Medbay** — timed recovery after a PvP loss; fleet-mates can speed it up with
   a cooldown-limited Medic Assist
-- **Combat** — attack other players at your location; loser goes to the Medbay,
-  winner takes a salvage cut
+- **Combat** — attack other players at your location (loser goes to the
+  Medbay, winner takes a salvage cut) **or** fight persistent NPC hostiles
+  seeded at every location, so there's always something to fight even solo —
+  each respawns a few minutes after being defeated
 - **Trade Hub / Inventory** — buy/sell/equip weapons, armor, consumables, and
   decaying contraband
 - **Travel** — 8 stations/planets with travel time and location-exclusive Ops

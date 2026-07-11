@@ -86,6 +86,21 @@ export interface Location {
   travelMinutes: number;
 }
 
+export interface NpcEnemy {
+  id: string;
+  name: string;
+  flavor: string;
+  locationId: string;
+  tier: number;
+  stats: Record<Stat, number>;
+  minReward: number;
+  maxReward: number;
+  xp: number;
+  respawnMinutes: number;
+  /** set after a win against this NPC; null or in the past means it's up for a fight */
+  defeatedUntil: number | null;
+}
+
 export interface FactionWar {
   id: string;
   factionAId: string;
