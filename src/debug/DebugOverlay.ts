@@ -218,6 +218,8 @@ export interface DebugSnapshot {
   atlasCivilisationOS: string | null;
   /** Atlas Meta Evolution Engine summary — governs how the Afterlight PROJECT itself evolves across real-world development, never any in-fiction mechanic (distinct from AF-139's and AF-186's own locked "Evolution Engine" modules — see atlasMetaEvolutionData.ts's NAMING SCOPE NOTE): the new UpdateLifecycleTracker's current stage for a sample feature (mirroring AF-149's real FeatureLifecycleTracker shape a second time), the reused AF-149 IterationCycleTracker's ready-to-ship status, the new DesignHistoryLedger's latest recorded technical complexity, the new TechnicalDebtLog's record count, the reused AF-144 TelemetryCollector's total event count for Player Evolution, the reused AF-159 CulturalTrendTracker's adopter count for Community Evolution, the new updateQualityAssessment's reject/improvement result (mirroring AF-149's real featureFlagAssessment shape a second time), the new AtlasScorecardCard's score/gate status (the tenth mirrored scoring-rubric shape), and a live detectOverlap reading against AF-149's real SYSTEM_IMPACT_CATEGORIES (AF-190 §DEBUG). */
   atlasMetaEvolution: string | null;
+  /** Atlas Creator Engine summary — governs every act of creation within the Afterlight universe, distinct from AF-141's locked "Galactic Creator Engine" (player decoration tooling) and AF-171's locked "Atlas Creative Intelligence" (an exact 12/12 domain match, reused directly rather than duplicated — see atlasCreatorData.ts's NAMING SCOPE NOTE): the new CyclicStageTracker instantiation's current/next Creation Cycle stage, the reused AF-155 CollaborativeProblemLog's participant count for Collaborative Creation, the reused AF-171 CreativeContributionLog's per-domain counts for Commander/Scientific/Engineering/Educational/Artistic/Architectural Creation, the reused AF-151 KnowledgeGraph's neighbour count for The Creator Network, the reused AF-168 BeautyIndexTracker's level for Beauty Through Purpose, the reused AF-171 CreativeHeritageArchive's outcome count for The Creation Archive, and the new purposefulBeautyMet's all-must-pass result (AF-191 §DEBUG). */
+  atlasCreator: string | null;
 }
 
 export class DebugOverlay {
@@ -360,6 +362,7 @@ export class DebugOverlay {
       `realisation ${snapshot.atlasRealisation ?? "—"}`,
       `civOS      ${snapshot.atlasCivilisationOS ?? "—"}`,
       `metaEvo    ${snapshot.atlasMetaEvolution ?? "—"}`,
+      `creatorEng ${snapshot.atlasCreator ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -262,6 +262,8 @@ import { CivilisationHeartbeat, CivilisationHealthTracker, ResourcePoolCoordinat
 import { ADAPTIVE_COORDINATION_TIERS, type CivilisationBusEventMap, adaptiveCoordinationTierRank } from "./game/atlasCivilisationOS/atlasCivilisationOSData";
 import { AtlasScorecardCard, DesignHistoryLedger, TechnicalDebtLog, UpdateLifecycleTracker, updateQualityAssessment } from "./game/atlasMetaEvolution/AtlasMetaEvolutionRuntime";
 import { ATLAS_SCORECARD_CATEGORIES, META_EVOLUTION_DOMAINS } from "./game/atlasMetaEvolution/atlasMetaEvolutionData";
+import { purposefulBeautyMet } from "./game/atlasCreator/AtlasCreatorRuntime";
+import { CREATION_CYCLE_STAGES, PURPOSEFUL_BEAUTY_CRITERIA } from "./game/atlasCreator/atlasCreatorData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2353,6 +2355,29 @@ const atlasScorecard = new AtlasScorecardCard();
   playerEvolutionTelemetry.record("Museum usage");
   culturalTrends.record("Living City Fan Art", "settlement-verdance", 20);
   for (const category of ATLAS_SCORECARD_CATEGORIES) atlasScorecard.score(category, 9.6);
+}
+
+// AF-191: the Atlas Creator Engine — governs every act of creation
+// within the Afterlight universe (see atlasCreatorData.ts's NAMING
+// SCOPE NOTE distinguishing this from AF-141's locked "Galactic
+// Creator Engine" and AF-171's locked "Atlas Creative Intelligence",
+// the latter an exact 12/12 domain match, a new absolute overlap
+// record). Reuses AF-171's real creativeContributions/creativeHeritage
+// directly for every "X Creation" section and The Creation Archive,
+// AF-155's real collaborativeProblems directly for Collaborative
+// Creation, AF-151's real knowledgeGraph directly for The Creator
+// Network, and AF-168's real beautyIndex directly for Beauty Through
+// Purpose. purposefulBeautyMet is the module's sole genuinely new piece
+// (see atlasCreatorData.ts for the full reuse notes).
+const creationCycle = new CyclicStageTracker(CREATION_CYCLE_STAGES);
+{
+  creationCycle.record("Inspiration", 20);
+  collaborativeProblems.propose("problem-living-city-restoration", ["scientist-vale", "commander-fen-beastmaster"], "Ecology", 20);
+  creativeContributions.contribute("commander-fen-beastmaster", "Engineering", "Designed an adaptive habitat.", 20);
+  creativeContributions.contribute("artist-of-verdance", "Art", "Painted the restored garden.", 20);
+  knowledgeGraph.addEdge({ fromId: "creation-living-city-garden", toId: "artist-of-verdance", kind: "Created", strength: 1, confidence: 1, historicalContext: "The garden's original creator.", dateEstablished: 20 });
+  beautyIndex.setLevel("Public spaces", 75);
+  creativeHeritage.archive("creation-living-city-garden", ["Museum exhibits", "Public traditions"], 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6320,6 +6345,9 @@ const loop = new GameLoop({
           const overlap = detectOverlap(META_EVOLUTION_DOMAINS, SYSTEM_IMPACT_CATEGORIES);
           const quality = updateQualityAssessment(new Set(), new Set(["Wonder", "Accessibility"]));
           return `lifecycle ${updateLifecycle.stageFor("feature-living-city-heartbeat") ?? "none"} · ready to ship=${iterationCycles.readyToShip("feature-living-city-heartbeat")} · design complexity ${designHistory.latestFor("mechanic-living-city-heartbeat")?.technicalComplexity ?? 0} · technical debt logged ${technicalDebt.all().length} · player signals ${playerEvolutionTelemetry.totalEvents()} · community adopters ${culturalTrends.adoptersFor("Living City Fan Art").length} · quality reject=${quality.shouldReject} improvements ${quality.qualityImprovementCount} · scorecard ${atlasScorecard.overallScore().toFixed(1)} (${atlasScorecard.passesGate() ? "passed" : "pending"}) · domain overlap[Meta,SystemImpact] ${overlap.shared.length}/${META_EVOLUTION_DOMAINS.length}`;
+        })(),
+        atlasCreator: (() => {
+          return `cycle ${creationCycle.currentStage() ?? "none"} (next ${creationCycle.next("Teaching")}) · collaborators ${collaborativeProblems.participantsFor("problem-living-city-restoration").length} · contributions Engineering=${creativeContributions.countForDomain("Engineering")} Art=${creativeContributions.countForDomain("Art")} · network neighbours ${knowledgeGraph.neighbors("creation-living-city-garden").length} · beauty Public spaces=${beautyIndex.levelFor("Public spaces")} · archive outcomes ${creativeHeritage.outcomesFor("creation-living-city-garden").length} · purposeful beauty met=${purposefulBeautyMet(new Set(PURPOSEFUL_BEAUTY_CRITERIA))}`;
         })(),
       });
     }
