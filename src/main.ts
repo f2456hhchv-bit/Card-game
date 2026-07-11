@@ -40,9 +40,20 @@ import { XpSystem } from "./game/progression/XpSystem";
 import { XpPickups } from "./game/progression/XpPickups";
 import { UpgradePool } from "./game/progression/UpgradePool";
 import { DEFAULT_XP_TUNING, type UpgradeDefinition } from "./game/progression/xpTuning";
+import { BUILD_PATHS, BuildPathRuntime, offerBiasedUpgrades, offerBuildPaths, shouldOfferBuildPath, type BuildPathDef } from "./game/progression/buildPaths";
+import {
+  BOSS_ARTIFACTS,
+  BossArtifactRuntime,
+  atlasCoreFireIntervalScale,
+  livingReactorHealPerPulse,
+  offerBossArtifacts,
+  stellarCompassRarityFloor,
+  type BossArtifactDef,
+} from "./game/bosses/bossArtifacts";
 import { generateDrop, type DropTableEntry, type LootDrop } from "./game/loot/LootGenerator";
 import { GroundLoot } from "./game/loot/GroundLoot";
-import { DEFAULT_LOOT_TUNING, RARITY_LADDER, RARITY_TABLE } from "./game/loot/lootTuning";
+import { DEFAULT_LOOT_TUNING, RARITY_LADDER, RARITY_TABLE, type Rarity } from "./game/loot/lootTuning";
+import { applyEliteRewardPackage } from "./game/loot/eliteRewards";
 import { SaveSlice } from "./core/save/SaveSlice";
 import { LocalStorageAdapter } from "./core/save/SaveStorage";
 import { ResearchTree, type ResearchSaveData } from "./game/research/ResearchTree";
@@ -378,7 +389,7 @@ import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
 import { GalaxyRuntime } from "./game/galaxy/GalaxyRuntime";
 import { SANDBOX_FACTION_ROSTER, PLAYER_CHOICE_REPUTATION_DELTA, REPUTATION_MIN, REPUTATION_MAX, type PlayerChoiceKind } from "./game/factions/factionData";
 import { FactionRuntime } from "./game/factions/FactionRuntime";
-import { SANDBOX_GALAXY_ECONOMY, CREDIT_AWARDS } from "./game/economy/economyData";
+import { SANDBOX_GALAXY_ECONOMY, CREDIT_AWARDS, type MerchantOfferReward } from "./game/economy/economyData";
 import { MarketRuntime } from "./game/economy/MarketRuntime";
 import { GalacticEconomyRuntime } from "./game/economy/GalacticEconomyRuntime";
 import { SEEDED_SETTLEMENTS } from "./game/civilisation/civilisationFrameworkData";
@@ -466,6 +477,9 @@ interface Drone {
   codexId: string;
   eliteTier: string | null;
   eliteMutations: readonly string[];
+  /** GP-001: AF-034's own reward-package fields, previously generated then discarded. */
+  eliteRewardMultiplier: number;
+  eliteRarityFloor: Rarity | null;
   /** AF-046: Outlaw squad membership — null for every non-squad enemy. */
   squadId: string | null;
   /** AF-047: Machine network membership + assigned formation slot — null for every non-networked enemy. */
@@ -635,6 +649,69 @@ let xpSystem: XpSystem | null = null;
 let xpPickups: XpPickups | null = null;
 let upgradePool: UpgradePool | null = null;
 let currentOffer: readonly UpgradeDefinition[] = [];
+
+// ── GP-001: Build-Defining Paths — a bias layer over AF-022's UpgradePool,
+// triggered every 5th landed wave. wavesLanded is the run's own wave counter
+// (fed from executeWave, the shared per-wave landing point); the offer rng
+// is a dedicated seeded fork so the bias choice never perturbs any other
+// deterministic stream (combat/loot/director all keep their own).
+let wavesLanded = 0;
+let buildPathOfferedAtWave = 0;
+let buildPathRuntime = new BuildPathRuntime();
+let buildPathBiasRng: Rng | null = null;
+let currentBuildPathOffer: readonly BuildPathDef[] = [];
+
+// ── GP-001: Mid-Run Merchant — the Travelling Merchant mission event already
+// fired (AF-037); it now actually opens the same persistent AF-040
+// MarketRuntime/"lucent-gate-trader" merchant as a real overlay mid-mission.
+let midRunMerchantVisits = 0;
+
+// ── GP-001: Extraction as a real risk/reward decision — times "Push Deeper"
+// was chosen this run; feeds both real danger (EnemyDirector.missionDifficulty)
+// and real reward (dropLoot's difficulty context) rather than a cosmetic timer.
+let extractionDepth = 0;
+
+// ── GP-001: Boss Game-Changing Rewards — a real, permanent, mechanically-
+// active passive chosen after the boss dies, replacing the pacing-only
+// reward-ceremony placeholder. livingReactorClockMs paces its heal+explosion
+// pulse; bossArtifactRng seeds the 3-of-5 offer, mirroring buildPathBiasRng.
+let bossArtifactRuntime = new BossArtifactRuntime();
+let currentBossArtifactOffer: readonly BossArtifactDef[] = [];
+let bossArtifactRng: Rng | null = null;
+let livingReactorClockMs = 0;
+const LIVING_REACTOR_INTERVAL_MS = 4000;
+
+/** GP-001: the Mission Results recap — replaces the old 2-line placeholder
+ * with a real combat/build/commander/ship/mission summary of the run that
+ * just ended. Every run-scoped field it reads is still populated at this
+ * point: endRun() runs before the MissionComplete/Defeat transition, and the
+ * next startRun() hasn't reset anything yet. */
+function missionResultsSummary(): string {
+  const minutes = (sessionMs / 60000).toFixed(1);
+  const accuracy = hitCount > 0 ? ((critCount / hitCount) * 100).toFixed(0) : "0";
+  const missionSnap = missionRuntime?.snapshot ?? null;
+  const level = xpSystem?.snapshot.level ?? 0;
+  const shipSnap = shipRuntime?.snapshot ?? null;
+  const ultimateReady = commanderRuntime?.snapshot.ultimateReady ?? false;
+  const bossesDefeated = missionRuntime?.currentValue("missionBossDefeated") ?? 0;
+  return [
+    `${selectedMissionTemplate.name} · ${minutes} min · Ascension ${session?.ascension ?? 0}`,
+    `Combat: ${hitCount} hits · ${critCount} crits (${accuracy}%) · ${wavesLanded} waves survived · ${bossesDefeated > 0 ? "boss defeated" : "no boss reached"}`,
+    `Commander: reached level ${level} · ultimate ${ultimateReady ? "ready" : "charging"}`,
+    `Ship: ${sandboxShip.name} · energy ${shipSnap ? `${Math.round(shipSnap.energy)}/${sandboxShip.maxEnergy}` : "—"}`,
+    `Loot: ${lootCollectedCount} collected · ${lootBankedCount} banked`,
+    missionSnap
+      ? `Objectives: ${missionSnap.primaryDone}/${missionSnap.primaryTotal} primary · ${missionSnap.optionalDone}/${missionSnap.optionalTotal} optional`
+      : "Objectives: —",
+    `Build path: [${buildPathRuntime.chosenIds.join(", ") || "none chosen"}] · merchant visits ${midRunMerchantVisits} · extraction depth ${extractionDepth}`,
+    `Boss artifact: ${bossArtifactRuntime.heldIds.join(", ") || "none claimed"}`,
+  ].join("\n");
+}
+
+/** GP-001 §DEBUG: one combined summary line, extended as each mechanic lands. */
+function gpCoreLoopDebugLine(): string {
+  return `waves ${wavesLanded} · next path offer at wave ${buildPathOfferedAtWave + 5} · chosen [${buildPathRuntime.chosenIds.join(", ") || "none"}] · paths ${BUILD_PATHS.length} · merchant visits ${midRunMerchantVisits} · extraction depth ${extractionDepth} · boss artifacts [${bossArtifactRuntime.heldIds.join(", ") || "none"}]/${BOSS_ARTIFACTS.length}`;
+}
 
 // ── Sandbox loot (AF-023): elites always drop, drones sometimes; beams on
 // the field, pickups announced. Placeholder drop table — the generator,
@@ -877,6 +954,23 @@ const civilisation = new CivilisationFrameworkRuntime(civSim, galacticEconomy, r
 function awardCredits(amount: number): void {
   meta.recordStat(CREDITS_KEY, amount);
   persistMeta();
+}
+
+/** AF-040's reward-application step, extracted so GP-001's mid-run merchant
+ * overlay can grant the exact same three live reward kinds Galaxy Command's
+ * merchant already grants — a pure extraction, no behaviour change. */
+function applyMerchantOfferReward(reward: MerchantOfferReward): void {
+  if (reward.kind === "resource") {
+    crafting.addMaterial(reward.id, reward.amount);
+    persistCrafting();
+    if (collectionLedger.discover("resources", reward.id)) persistCollectionLedger(); // AF-042: Collections.
+  } else if (reward.kind === "researchPoints") {
+    researchTree.addPoints(reward.amount);
+    persistResearch();
+  } else if (reward.kind === "blueprint") {
+    crafting.unlockBlueprint(reward.id);
+    persistCrafting();
+  }
 }
 
 // ── Galaxy Events (AF-041): World State persists through the same
@@ -2608,6 +2702,7 @@ let bossRuntime: BossRuntime | null = null;
 let bossMotion = { x: 0, y: 0, elapsedMs: 0, strafeDirection: 1 as 1 | -1, phase: "hidden" as "hidden" | "active" };
 let bossIntroRemainingMs = 0;
 let bossRewardsGranted = false;
+let bossArtifactOffered = false; // GP-001: the artifact choice fires once, after the ceremony lines drain.
 let bossFightDamageTaken = false;
 // AF-057: the Boss Director decorates the locked AF-035 runtime — run-scoped.
 let bossDirector: BossDirectorRuntime | null = null;
@@ -2681,13 +2776,41 @@ function equipmentEffects() {
   return aggregateLoadout(sandboxLoadoutSlots, sandboxEquipmentById, ROSTER_EQUIPMENT_SETS);
 }
 
-function dropLoot(x: number, y: number): void {
+/** GP-001: player-sourced area damage against nearby drones — mirrors AF-034's
+ * own mutationEffects.explosionOnDeath packet shape exactly, just aimed the
+ * other way. `pullFraction` (Graviton Heart) additionally drags hit drones a
+ * fraction of the way toward the epicentre before damage lands. */
+function dealAreaDamageToEnemies(x: number, y: number, radius: number, baseDamage: number, pullFraction = 0): void {
+  if (!combatRng) return;
+  const packet = { baseDamage, kind: "area", school: "energy", critChance: 0, critMultiplier: 1 } as const;
+  for (const drone of drones) {
+    if (!drone.alive || Math.hypot(drone.x - x, drone.y - y) > radius) continue;
+    if (pullFraction > 0) {
+      drone.x += (x - drone.x) * pullFraction;
+      drone.y += (y - drone.y) * pullFraction;
+    }
+    const result = resolveDamage(packet, NEUTRAL_MODIFIERS, { values: {} }, DEFAULT_COMBAT_TUNING, combatRng);
+    drone.hull -= result.finalDamage;
+    const popup = popupPool.acquire();
+    popup.x = drone.x;
+    popup.y = drone.y;
+    popup.text = `${Math.round(result.finalDamage)}`;
+    popup.critical = false;
+    popup.ttlMs = 600;
+    popup.live = true;
+    popups.push(popup);
+    if (drone.hull <= 0) killDrone(drone);
+  }
+}
+
+function dropLoot(x: number, y: number, eliteReward?: { rewardMultiplier: number; rarityFloor: Rarity | null } | null): void {
   if (!lootRng || !groundLoot || !xpSystem || !session) return;
-  const drop = generateDrop(
+  let drop = generateDrop(
     SANDBOX_DROP_TABLE,
     {
       itemLevel: xpSystem.snapshot.level,
-      difficulty: 1,
+      // GP-001: pushing deeper during Extraction is real reward, not just real risk.
+      difficulty: 1 + extractionDepth * 0.35,
       ascension: session.ascension,
       mutatorBonus: missionRuntime?.lootMutatorBonus ?? 0,
       researchBonus: sandboxBuild.researchLootBonus,
@@ -2697,6 +2820,12 @@ function dropLoot(x: number, y: number): void {
     DEFAULT_LOOT_TUNING,
     lootRng,
   );
+  // GP-001: an Elite's reward package (AF-034's own rewardMultiplier/rarityFloor,
+  // generated at spawn then previously discarded) is now enforced here — a
+  // guaranteed floor on top of whatever generateDrop rolled, never a downgrade.
+  if (eliteReward?.rarityFloor) {
+    drop = applyEliteRewardPackage(drop, eliteReward.rarityFloor, eliteReward.rewardMultiplier);
+  }
   groundLoot.place(drop, x, y);
   bus.emit("LootDropped", { itemId: drop.baseItemId, rarity: drop.rarity, category: drop.category, seed: drop.seed });
 }
@@ -2745,6 +2874,8 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
   let codexId = baseDef.id;
   let eliteTier: string | null = null;
   let eliteMutations: readonly string[] = [];
+  let eliteRewardMultiplier = 1;
+  let eliteRarityFloor: Rarity | null = null;
   if (elite && combatRng) {
     const tier = combatRng.pick(ELITE_TIERS);
     const eliteInstance = generateElite(baseDef, tier, combatRng);
@@ -2753,6 +2884,10 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     codexId = eliteInstance.id;
     eliteTier = eliteInstance.tier;
     eliteMutations = eliteInstance.mutations;
+    // GP-001: previously generated then discarded — now stored so killDrone
+    // can enforce the guaranteed reward package at the point the Elite dies.
+    eliteRewardMultiplier = eliteInstance.rewardMultiplier;
+    eliteRarityFloor = eliteInstance.rarityFloor;
   }
   // AF-036: the biome's enemy buff is the same EquipmentBonus shape every passive uses —
   // only shieldCapacity is mechanically live today (folded into starting shield at spawn),
@@ -2788,6 +2923,8 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     codexId,
     eliteTier,
     eliteMutations,
+    eliteRewardMultiplier,
+    eliteRarityFloor,
     squadId: null,
     networkId: null,
     networkOffsetX: null,
@@ -3249,7 +3386,12 @@ function killDrone(drone: Drone): void {
     xpPickups?.spawn(drone.elite ? "elite" : drone.def.xpTier, drone.x, drone.y);
   }
   if (hasDeathEvent(drone.def, "loot") && (drone.elite || (lootRng && lootRng.next() < 0.08))) {
-    dropLoot(drone.x, drone.y);
+    dropLoot(
+      drone.x,
+      drone.y,
+      // GP-001 Stellar Compass: raises (never lowers) the Elite's own rarity floor.
+      drone.elite ? { rewardMultiplier: drone.eliteRewardMultiplier, rarityFloor: stellarCompassRarityFloor(bossArtifactRuntime, drone.eliteRarityFloor) } : null,
+    );
   }
   // AF-029: elites never simply drop gold — relic pool applies on pickup.
   if (drone.elite && lootRng && hasDeathEvent(drone.def, "loot")) {
@@ -3544,6 +3686,7 @@ function executeWave(directive: SpawnDirective): void {
     }
     // AF-056: a full faction group is a Large Enemy Wave — it earns breathing room.
     conductor?.notifyWaveLanded(6);
+    wavesLanded += 1; // GP-001: every landed wave counts toward the Build-Defining Path cadence
     return;
   }
   // Remaining generic waves (SwarmWave, MiniBossWave overflow, etc.) — never
@@ -3560,6 +3703,7 @@ function executeWave(directive: SpawnDirective): void {
   }
   director.notifyEnemiesSpawned(count, 0);
   conductor?.notifyWaveLanded(count);
+  wavesLanded += 1; // GP-001: every landed wave counts toward the Build-Defining Path cadence
 }
 
 /** AF-035: the Boss spawns once per run, triggered by the Director's existing MiniBoss phase. */
@@ -3570,6 +3714,7 @@ function spawnBoss(): void {
   bossMotion = { x: player.x + 10, y: player.y, elapsedMs: 0, strafeDirection: 1, phase: "hidden" };
   bossIntroRemainingMs = 2500;
   bossRewardsGranted = false;
+  bossArtifactOffered = false;
   bossFightDamageTaken = false;
   bossHazardState = { tickClockMs: 0 };
   // AF-057: one director per encounter; every arrival is a recorded attempt (§Boss Memory).
@@ -3656,6 +3801,18 @@ function updateSandboxCombat(fixedDtMs: number): void {
   if (!movement || !playerDefence || !combatRng || !director) return;
   const dt = fixedDtMs / 1000;
   const player = movement.snapshot;
+
+  // GP-001 Living Reactor: a slow, steady hull regen pulse — and every pulse
+  // detonates, damaging anything standing near the player when it lands.
+  if (bossArtifactRuntime.has("livingReactor")) {
+    livingReactorClockMs += fixedDtMs;
+    if (livingReactorClockMs >= LIVING_REACTOR_INTERVAL_MS) {
+      livingReactorClockMs -= LIVING_REACTOR_INTERVAL_MS;
+      playerDefence.healHull(livingReactorHealPerPulse(playerDefence.snapshot.maxHull));
+      dealAreaDamageToEnemies(player.x, player.y, 5, 15);
+      lootNotices.push({ text: "REACTOR PULSE", colour: "#ff8c1a", ttlMs: 1400 });
+    }
+  }
 
   // AF-046: squad clocks tick; mine layers seed AF-035-engine hazard zones on
   // a cadence; live mines tick against the player exactly like a boss hazard.
@@ -4181,7 +4338,16 @@ function updateSandboxCombat(fixedDtMs: number): void {
     } else if (bossRuntime.snapshot.state === "rewardCeremony") {
       // AF-057 §Reward Ceremony: the memory lines land one at a time — paced presentation.
       const ceremonyLine = bossDirector?.consumeCeremonyLine();
-      if (ceremonyLine) lootNotices.push({ text: ceremonyLine, colour: "#ffc652", ttlMs: 2600 });
+      if (ceremonyLine) {
+        lootNotices.push({ text: ceremonyLine, colour: "#ffc652", ttlMs: 2600 });
+      } else if (bossDirector && bossDirector.snapshot.queuedCeremonyLines === 0 && !bossArtifactOffered && bossArtifactRng) {
+        // GP-001: once the ceremony finishes, a real choice — one permanent,
+        // mechanically-active artifact — replaces the old "ceremony only" ending.
+        bossArtifactOffered = true;
+        currentBossArtifactOffer = offerBossArtifacts(bossArtifactRuntime.heldIds, 3, bossArtifactRng);
+        machine.pushOverlay("BossArtifactChoice");
+        return;
+      }
     } else {
       bossFightElapsedMs += fixedDtMs;
       bossRuntime.update(fixedDtMs);
@@ -4273,21 +4439,41 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
 
-  // AF-037: Mission — objective completion drives Extraction; a real (if
-  // short) countdown, not an instant skip, closes out the mission structure.
+  // AF-037/GP-001: Mission — objective completion drives Extraction. GP-001
+  // replaces the old fixed 5000ms auto-advance with a real player decision:
+  // Extract Now banks rewards safely; Push Deeper raises real danger
+  // (EnemyDirector.setThreatInputs — the same missionDifficulty knob
+  // computeThreat already multiplies threat by) and real reward (dropLoot's
+  // difficulty context, previously hardcoded to 1) for a timed window, then
+  // asks again. The player can still die while pushing deeper — real risk.
   if (missionRuntime && session) {
     missionRuntime.update(fixedDtMs);
     if (session.phase === "RewardPhase" && missionRuntime.primaryObjectivesComplete) {
       advanceRunPhaseTo("Extraction");
-      extractionRemainingMs = 5000;
+      machine.pushOverlay("ExtractionDecision");
+      return;
     } else if (session.phase === "Extraction") {
       extractionRemainingMs = Math.max(0, extractionRemainingMs - fixedDtMs);
-      if (extractionRemainingMs === 0) advanceRunPhaseTo("Results");
+      if (extractionRemainingMs === 0) {
+        machine.pushOverlay("ExtractionDecision");
+        return;
+      }
     }
     const missionEvent = missionRuntime.tryTriggerEvent();
     if (missionEvent) {
       bus.emit("EnvironmentalEventTriggered", { eventType: MISSION_EVENT_TO_ENVIRONMENTAL_EVENT[missionEvent] });
       lootNotices.push({ text: missionEvent.replace(/([A-Z])/g, " $1").trim().toUpperCase(), colour: "#3fd4f5", ttlMs: 2600 });
+      // GP-001: the Travelling Merchant mission event already existed
+      // (AF-037's own eventPool + MISSION_EVENT_TO_ENVIRONMENTAL_EVENT
+      // mapping) but never opened a shop — it only ever fired the generic
+      // toast above. This is the first mid-run merchant encounter: the same
+      // persistent AF-040 MarketRuntime the Galaxy Command screen already
+      // reads, opened as a real overlay instead of a home-base-only screen.
+      if (missionEvent === "travellingMerchant") {
+        midRunMerchantVisits += 1;
+        machine.pushOverlay("MidRunMerchant");
+        return;
+      }
     }
   }
 
@@ -4338,18 +4524,35 @@ function updateSandboxCombat(fixedDtMs: number): void {
   for (const notice of lootNotices) notice.ttlMs -= fixedDtMs;
   lootNotices = lootNotices.filter((n) => n.ttlMs > 0);
 
-  // Level-up: consume one queued level, present an offer (AF-022 §4).
-  if (xpSystem && upgradePool && xpSystem.snapshot.pendingLevels > 0 && machine.overlays.length === 0) {
+  // Level-up: consume one queued level, present an offer (AF-022 §4). GP-001:
+  // the offer is now biased by any chosen Build-Defining Path — a pure
+  // composition layer over the pool, never a change to its own offer().
+  if (xpSystem && upgradePool && buildPathBiasRng && xpSystem.snapshot.pendingLevels > 0 && machine.overlays.length === 0) {
     xpSystem.consumePendingLevel();
-    currentOffer = upgradePool.offer(DEFAULT_XP_TUNING.choicesPerLevel).choices;
+    currentOffer = offerBiasedUpgrades(
+      SANDBOX_UPGRADES,
+      upgradePool,
+      DEFAULT_XP_TUNING.choicesPerLevel,
+      (category) => buildPathRuntime.multiplierFor(category),
+      buildPathBiasRng,
+    ).choices;
     machine.pushOverlay("LevelUp");
+    return;
+  }
+
+  // GP-001: every 5th landed wave offers a Build-Defining Path choice —
+  // three paths, picked once, biasing every future level-up offer this run.
+  if (buildPathBiasRng && machine.overlays.length === 0 && shouldOfferBuildPath(wavesLanded, buildPathOfferedAtWave)) {
+    buildPathOfferedAtWave = wavesLanded;
+    currentBuildPathOffer = offerBuildPaths(buildPathRuntime.chosenIds, 3, buildPathBiasRng);
+    machine.pushOverlay("BuildPathChoice");
     return;
   }
 
   // Weapon (AF-032): nearest-priority target, WeaponRuntime gates cooldown
   // + energy cost, fire pattern determines spawn geometry.
   if (weaponRuntime) {
-    weaponRuntime.intervalScale = sandboxBuild.fireIntervalScale;
+    weaponRuntime.intervalScale = sandboxBuild.fireIntervalScale * atlasCoreFireIntervalScale(bossArtifactRuntime);
     weaponRuntime.update(fixedDtMs);
     const candidates: TargetCandidate[] = drones
       .filter((d) => d.alive)
@@ -4698,6 +4901,17 @@ function startRun(): void {
   persistMeta();
   missionRuntime = new MissionRuntime(missionInstance, new Rng(seed).fork("mission"));
   extractionRemainingMs = 0;
+  wavesLanded = 0; // GP-001: fresh run, fresh wave count and Build Path choices
+  buildPathOfferedAtWave = 0;
+  buildPathRuntime = new BuildPathRuntime();
+  buildPathBiasRng = new Rng(seed).fork("build-path-bias");
+  currentBuildPathOffer = [];
+  midRunMerchantVisits = 0;
+  extractionDepth = 0;
+  bossArtifactRuntime = new BossArtifactRuntime();
+  currentBossArtifactOffer = [];
+  bossArtifactRng = new Rng(seed).fork("boss-artifact");
+  livingReactorClockMs = 0;
   biomeRuntime = new BiomeRuntime(activeBiome, new Rng(seed).fork("biome"));
   movement = new PlayerMovement(sandboxShip.movementProfile);
   movement.setPosition(30, 17);
@@ -5398,17 +5612,7 @@ function render(): void {
                 if (credits < price) return;
                 meta.recordStat(CREDITS_KEY, -price);
                 persistMeta();
-                if (reward.kind === "resource") {
-                  crafting.addMaterial(reward.id, reward.amount);
-                  persistCrafting();
-                  if (collectionLedger.discover("resources", reward.id)) persistCollectionLedger(); // AF-042: Collections.
-                } else if (reward.kind === "researchPoints") {
-                  researchTree.addPoints(reward.amount);
-                  persistResearch();
-                } else if (reward.kind === "blueprint") {
-                  crafting.unlockBlueprint(reward.id);
-                  persistCrafting();
-                }
+                applyMerchantOfferReward(reward);
                 render();
               },
             ];
@@ -5548,6 +5752,115 @@ function render(): void {
       );
       break;
     }
+    case "BuildPathChoice": {
+      // GP-001: every 5th landed wave, once each — the choice biases every
+      // future level-up offer this run (compounds with any prior pick).
+      screen(
+        `Wave ${wavesLanded} — Choose Your Path`,
+        "A Build-Defining choice. Future upgrade offers lean toward this path — future runs specialise.",
+        currentBuildPathOffer.map((path): [string, () => void] => [
+          `${path.name} — ${path.description}`,
+          () => {
+            buildPathRuntime.choose(path.id);
+            currentBuildPathOffer = [];
+            lootNotices.push({ text: `PATH CHOSEN · ${path.name.toUpperCase()}`, colour: "#3fd4f5", ttlMs: 2600 });
+            machine.popOverlay();
+          },
+        ]),
+      );
+      break;
+    }
+    case "MidRunMerchant": {
+      // GP-001: reuses AF-040's real MarketRuntime/pricing exactly as Galaxy
+      // Command does — the same merchant, the same Credits balance, just
+      // reachable mid-mission instead of only at the home base. Reputation
+      // is neutral mid-mission — there is no dominant-faction concept inside a run.
+      const credits = meta.stat(CREDITS_KEY);
+      const merchant = marketRuntime.findMerchant("lucent-gate-trader");
+      const offerButtons: Array<[string, () => void]> = merchant
+        ? marketRuntime.offersFor(merchant.id).map((offer) => {
+            const price = MarketRuntime.price(offer, "neutral", marketRuntime.currentEvent);
+            const reward = offer.reward;
+            const label =
+              reward.kind === "resource"
+                ? `${reward.amount} ${reward.id}`
+                : reward.kind === "researchPoints"
+                  ? `${reward.amount} research pts`
+                  : reward.kind === "blueprint"
+                    ? `blueprint ${reward.id}`
+                    : reward.kind;
+            return [
+              `Buy: ${label} (${price} cr)`,
+              () => {
+                if (credits < price) return;
+                meta.recordStat(CREDITS_KEY, -price);
+                persistMeta();
+                applyMerchantOfferReward(reward);
+                render();
+              },
+            ];
+          })
+        : [];
+      screen(
+        `Travelling Merchant (${Math.round(credits)} cr)`,
+        "A trader's signal cuts through the static. The run waits — buy now, or move on.",
+        [...offerButtons, ["Continue Mission", () => machine.popOverlay()]],
+      );
+      break;
+    }
+    case "ExtractionDecision": {
+      // GP-001: the real extraction risk/reward decision. Extract Now banks
+      // the depth bonus earned so far and ends the mission; Push Deeper
+      // raises real danger (EnemyDirector.missionDifficulty) and real reward
+      // (dropLoot's difficulty context) for another timed window, then asks again.
+      const rewardBonusPercent = Math.round(extractionDepth * 35);
+      screen(
+        `Extraction Window — Depth ${extractionDepth}`,
+        `Extract now and bank everything safely, or push deeper: every wave that follows is more dangerous, but loot rarity and credits rise with it. Current depth bonus: +${rewardBonusPercent}% rewards.`,
+        [
+          [
+            "Extract Now — Bank Rewards",
+            () => {
+              if (extractionDepth > 0) {
+                awardCredits(Math.round(CREDIT_AWARDS.missionCompleted * extractionDepth * 0.35));
+                missionRuntime?.recordProgress("missionExtractionDepth", extractionDepth);
+              }
+              machine.popOverlay();
+              advanceRunPhaseTo("Results");
+            },
+          ],
+          [
+            "Push Deeper — Higher Risk, Higher Reward",
+            () => {
+              extractionDepth += 1;
+              director?.setThreatInputs({ missionDifficulty: 1 + extractionDepth * 0.35 });
+              extractionRemainingMs = 20000;
+              lootNotices.push({ text: `PUSHING DEEPER · DEPTH ${extractionDepth}`, colour: "#ff8c1a", ttlMs: 2600 });
+              machine.popOverlay();
+            },
+          ],
+        ],
+      );
+      break;
+    }
+    case "BossArtifactChoice": {
+      // GP-001: a real, permanent, mechanically-active passive — not another
+      // resource drop. Replaces the old "ceremony lines only" boss ending.
+      screen(
+        `${sandboxBoss.name} Has Fallen`,
+        "One artifact survives the wreck. It will change everything about how the rest of this run plays.",
+        currentBossArtifactOffer.map((artifact): [string, () => void] => [
+          `${artifact.name} — ${artifact.description}`,
+          () => {
+            bossArtifactRuntime.choose(artifact.id);
+            currentBossArtifactOffer = [];
+            lootNotices.push({ text: `ARTIFACT CLAIMED · ${artifact.name.toUpperCase()}`, colour: "#ffc652", ttlMs: 3000 });
+            machine.popOverlay();
+          },
+        ]),
+      );
+      break;
+    }
     case "InventoryOverlay": {
       // AF-027: real persistent inventory, sorted by power, top entries shown.
       const topItems = inventory.sorted("power").slice(0, 6);
@@ -5563,13 +5876,13 @@ function render(): void {
       break;
     }
     case "MissionComplete":
-      screen("Mission Complete", "Rewards banked. The galaxy grows brighter.", [
+      screen("Mission Complete", `Rewards banked. The galaxy grows brighter.\n\n${missionResultsSummary()}`, [
         ["Return to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
         ["Statistics", () => machine.transitionTo("Statistics")],
       ]);
       break;
     case "Defeat":
-      screen("Run Lost", "Knowledge, research, and statistics retained.", [
+      screen("Run Lost", `Knowledge, research, and statistics retained.\n\n${missionResultsSummary()}`, [
         ["Return to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
         ["Statistics", () => machine.transitionTo("Statistics")],
       ]);
@@ -5773,7 +6086,19 @@ const loop = new GameLoop({
       sessionMs += fixedDtMs;
       director?.update(fixedDtMs);
       if (movement) {
-        if (input.consumeBuffered("Boost")) movement.tryBoost();
+        if (input.consumeBuffered("Boost") && movement.tryBoost()) {
+          // GP-001 Void Engine / Graviton Heart: a boost that lands is a real
+          // trigger point for two of the five Boss Artifact effects.
+          const boostSnap = movement.snapshot;
+          if (bossArtifactRuntime.has("voidEngine")) {
+            dealAreaDamageToEnemies(boostSnap.x, boostSnap.y, 4, 18);
+            lootNotices.push({ text: "VOID SHOCKWAVE", colour: "#9b5cff", ttlMs: 1400 });
+          }
+          if (bossArtifactRuntime.has("gravitonHeart")) {
+            dealAreaDamageToEnemies(boostSnap.x, boostSnap.y, 6, 12, 0.5);
+            lootNotices.push({ text: "GRAVITON WELL", colour: "#4d7cff", ttlMs: 1400 });
+          }
+        }
         // AF-033: enemy status-on-hit reaches the player through the exact
         // AF-020 movement bridge StatusEngine already documents.
         if (playerStatus) {
@@ -6588,6 +6913,7 @@ const loop = new GameLoop({
           const oathOverlap = detectOverlap(CONSTITUTIONAL_OATH_COMMITMENTS, PRIME_DIRECTIVE_DEVELOPER_PROMISE);
           return `articles ${CONSTITUTIONAL_ARTICLES.length} · review passed=${constitutionalReviewPassed(new Set(articleNames))} · player promise ${ATLAS_CONSTITUTION_PLAYER_PROMISE.length} items · developer promise ${ATLAS_CONSTITUTION_DEVELOPER_PROMISE.length} items · article overlap[Constitution,Pillars] ${pillarOverlap.shared.length}/${articleNames.length} · article overlap[Constitution,PrimeDirectives] ${primeDirectiveOverlap.shared.length}/${articleNames.length} · oath overlap[Constitution,PrimeDevPromise] ${oathOverlap.shared.length}/${CONSTITUTIONAL_OATH_COMMITMENTS.length}`;
         })(),
+        gpCoreLoop: gpCoreLoopDebugLine(),
       });
     }
   },

@@ -102,6 +102,19 @@ describe("Game state machine (AF-016 §2)", () => {
     expect(machine.base).toBe("GalaxyCommand");
   });
 
+  it("GP-001's four new decision overlays stack on Gameplay, additively, like every prior overlay", () => {
+    const machine = makeMachine();
+    for (const s of ["Splash", "MainMenu", "GalaxyCommand", "MissionSelect", "Loading", "Gameplay"] as const) {
+      machine.transitionTo(s);
+    }
+    for (const overlay of ["BuildPathChoice", "MidRunMerchant", "ExtractionDecision", "BossArtifactChoice"] as const) {
+      expect(machine.pushOverlay(overlay)).toBe(true);
+      expect(machine.current).toBe(overlay);
+      expect(machine.base).toBe("Gameplay");
+      expect(machine.popOverlay()).toBe(overlay);
+    }
+  });
+
   it("records transition duration against the 250ms budget", () => {
     let clock = 0;
     const machine = new StateMachine<GameStateId>({

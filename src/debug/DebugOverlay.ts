@@ -238,6 +238,11 @@ export interface DebugSnapshot {
   atlasCivilisationalWisdom: string | null;
   /** Atlas Constitution summary — CRITICAL: never modifies, ranks above, or duplicates the real docs/CONSTITUTION.md, AF-146's real Design Constitution, or AF-170's real Atlas Prime Directive (see atlasConstitutionData.ts's CRITICAL SCOPE NOTE); a third, separate in-fiction charter: the 15 Articles' count and the new constitutionalReviewPassed's all-must-pass result (the broadest such gate in this codebase), the new module's own Player/Developer Promise item counts, and live detectOverlap readings against AF-146's real TEN_PILLARS, AF-170's real PRIME_DIRECTIVES names, and AF-170's real DEVELOPER_PROMISE (AF-200 §DEBUG). */
   atlasConstitution: string | null;
+  /** GP-001 Core Gameplay Loop summary: wavesLanded feeding the every-5th-wave
+   * Build-Defining Path cadence and its chosen-path category bias, the
+   * mid-run merchant/extraction-decision state, and elite/boss reward content —
+   * one combined line, extended as each GP-001 mechanic lands. */
+  gpCoreLoop: string | null;
 }
 
 export class DebugOverlay {
@@ -390,6 +395,7 @@ export class DebugOverlay {
       `judgement  ${snapshot.atlasJudgement ?? "—"}`,
       `civWisdom  ${snapshot.atlasCivilisationalWisdom ?? "—"}`,
       `atlasConst ${snapshot.atlasConstitution ?? "—"}`,
+      `gpCoreLoop ${snapshot.gpCoreLoop ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
