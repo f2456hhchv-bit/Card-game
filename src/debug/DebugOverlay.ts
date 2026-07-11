@@ -226,6 +226,8 @@ export interface DebugSnapshot {
   atlasExcellence: string | null;
   /** Atlas Possibility Engine (AF-194) summary — CRITICAL: a verbatim title duplicate of AF-159's own real, already-locked "Atlas Possibility Engine" (see atlasOpenPossibilityData.ts's prominent NAMING COLLISION note; disambiguated here as "(AF-194)"): the reused AF-159 possibilityRegistry's required-people count for The Possibility Web, the reused AF-159 mysteryLog's unsolved count for The Unknown Reserve, the reused AF-159 playerInspiration's surfaced count for Player Possibility, the reused AF-155 collaborativeProblems' participant count for Possibility Through Cooperation, the reused AF-151 knowledgeGraph's neighbour count for Civilisational Possibility, the new possibilityCycleRank's ordered (non-cyclic) rank for The Possibility Cycle, the new PossibilityIndexScoreCard's score/gate status (the twelfth mirrored scoring-rubric shape), and a live detectOverlap reading against AF-193's real EXCELLENCE_DOMAINS (AF-194 §DEBUG). */
   atlasOpenPossibility: string | null;
+  /** Atlas Coherence Engine summary — overlaps almost entirely with AF-148's own already-locked "Atlas Canon Engine" (a different title, same territory — see atlasCoherenceData.ts's module doc comment): the reused AF-148 canonEvents' participant count for The Context Chain, the reused AF-148 knowledgeStates' diverged status for The Contradiction Detector, the reused AF-148 commanderContinuity's fact count for Character Coherence, the reused AF-165 institutionalMemory's memory count for Institutional Coherence, the reused AF-135 PlanetaryChronicle's latest entry (composed via AF-148's real recordPlanetContinuityFact) for Planetary Coherence, the reused AF-151 knowledgeGraph's neighbour count for The Canon Graph, the new coherenceStandardMet's all-must-pass result for The Coherence Standard, and a live detectOverlap reading against AF-194's real POSSIBILITY_DOMAINS (AF-195 §DEBUG). */
+  atlasCoherence: string | null;
 }
 
 export class DebugOverlay {
@@ -372,6 +374,7 @@ export class DebugOverlay {
       `craftsman  ${snapshot.atlasCraftsmanship ?? "—"}`,
       `excellence ${snapshot.atlasExcellence ?? "—"}`,
       `openDoor   ${snapshot.atlasOpenPossibility ?? "—"}`,
+      `coherence  ${snapshot.atlasCoherence ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

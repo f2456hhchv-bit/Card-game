@@ -270,6 +270,8 @@ import { ExcellenceIndexScoreCard, ImprovementNetworkLedger, excellenceStandardA
 import { EXCELLENCE_CYCLE_STAGES, EXCELLENCE_DOMAINS, EXCELLENCE_INDEX_CATEGORIES } from "./game/atlasExcellence/atlasExcellenceData";
 import { PossibilityIndexScoreCard } from "./game/atlasOpenPossibility/AtlasOpenPossibilityRuntime";
 import { POSSIBILITY_DOMAINS, POSSIBILITY_INDEX_CATEGORIES, possibilityCycleRank } from "./game/atlasOpenPossibility/atlasOpenPossibilityData";
+import { coherenceStandardMet } from "./game/atlasCoherence/AtlasCoherenceRuntime";
+import { COHERENCE_DOMAINS, COHERENCE_STANDARD_QUESTIONS } from "./game/atlasCoherence/atlasCoherenceData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2445,6 +2447,23 @@ const possibilityIndex = new PossibilityIndexScoreCard();
   collaborativeProblems.propose("problem-open-frontier-restoration", ["scientist-vale", "commander-fen-beastmaster"], "Ecology", 20);
   ensureNextHorizonOpen(longTermMissions, "living-library-network", mysteryLog, "mystery-next-open-question", "Unknown signals", "What new possibility does this success reveal?", 30);
   for (const category of POSSIBILITY_INDEX_CATEGORIES) possibilityIndex.score(category, 9.6);
+}
+
+// AF-195: the Atlas Coherence Engine — overlaps almost entirely with
+// AF-148's own already-locked "Atlas Canon Engine" (a different title,
+// same territory). Reuses AF-148's real canonEvents/loreValidationReport/
+// knowledgeStates/commanderContinuity/recordPlanetContinuityFact
+// directly, AF-165's real institutionalMemory directly, and AF-151's
+// real knowledgeGraph directly. coherenceStandardMet is the module's
+// sole genuinely new piece (see atlasCoherenceData.ts for the full
+// reuse notes).
+{
+  canonEvents.record({ id: "event-open-frontier-signal", date: 20, participants: ["scientist-vale"], planetId: "settlement-verdance", galaxyRegion: null, commanderIds: ["commander-fen-beastmaster"], witnesses: ["scientist-vale"], evidence: ["Signal log"], museumReferences: [], chronicleReferences: [], relationshipImpact: null, futureCallbacks: ["mystery-next-open-question"] });
+  knowledgeStates.setObjectiveReality("event-open-frontier-signal", "The signal originated from a dormant relay.");
+  commanderContinuity.recordFact("commander-fen-beastmaster", "Founded the Verdance wildlife sanctuary.", 20);
+  institutionalMemory.remember("institution-living-city-academy", "Founders", "Founded to preserve adaptive-architecture education.", 20);
+  recordPlanetContinuityFact(chroniclePlanets, "settlement-verdance", "Ecological changes", "A wounded ecosystem was restored.", 20, "Scientists");
+  knowledgeGraph.addEdge({ fromId: "event-open-frontier-signal", toId: "scientist-vale", kind: "Discovered", strength: 1, confidence: 1, historicalContext: "The scientist who first traced the signal.", dateEstablished: 20 });
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6430,6 +6449,10 @@ const loop = new GameLoop({
         atlasOpenPossibility: (() => {
           const domainOverlap = detectOverlap(POSSIBILITY_DOMAINS, EXCELLENCE_DOMAINS);
           return `web required people ${possibilityRegistry.get("possibility-restored-frontier")?.requiredPeople.length ?? 0} · mysteries unsolved ${mysteryLog.unsolved().length} · inspiration surfaced ${playerInspiration.countFor("Historic mysteries")} · collaborators ${collaborativeProblems.participantsFor("problem-open-frontier-restoration").length} · network neighbours ${knowledgeGraph.neighbors("scientist-vale").length} · cycle rank ${possibilityCycleRank("Discovery")} · index score ${possibilityIndex.overallScore().toFixed(1)} (${possibilityIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Possibility,Excellence] ${domainOverlap.shared.length}/${POSSIBILITY_DOMAINS.length}`;
+        })(),
+        atlasCoherence: (() => {
+          const domainOverlap = detectOverlap(COHERENCE_DOMAINS, POSSIBILITY_DOMAINS);
+          return `context event participants ${canonEvents.eventFor("event-open-frontier-signal")?.participants.length ?? 0} · diverged=${knowledgeStates.hasDiverged("event-open-frontier-signal")} · character facts ${commanderContinuity.factsFor("commander-fen-beastmaster").length} · institution memories ${institutionalMemory.memoriesFor("institution-living-city-academy").length} · planet entry "${chroniclePlanets.entryFor("settlement-verdance").latest()?.text ?? "none"}" · canon graph neighbours ${knowledgeGraph.neighbors("event-open-frontier-signal").length} · standard met=${coherenceStandardMet(new Set(COHERENCE_STANDARD_QUESTIONS))} · domain overlap[Coherence,Possibility] ${domainOverlap.shared.length}/${COHERENCE_DOMAINS.length}`;
         })(),
       });
     }
