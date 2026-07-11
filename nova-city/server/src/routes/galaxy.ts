@@ -7,6 +7,8 @@ import { settleAlienStrength, resolveSectorAttack } from '../domain/sector.js';
 import { summarizeFleet } from '../domain/fleet.js';
 import { combatRating } from '../domain/combat.js';
 import { shiftAlignment } from '../domain/alignment.js';
+import { requiredFleetPowerForStationTier, commandLicenseForStationTier } from '../domain/station.js';
+import { discountedScoutCost } from '../domain/scouting.js';
 import { newId } from '../util/ids.js';
 import type { Character, Sector } from '../types.js';
 
@@ -42,9 +44,11 @@ function sectorView(sector: Sector, character: Character) {
     id: sector.id,
     name: sector.name,
     flavor: sector.flavor,
-    scoutFuelCost: sector.scoutFuelCost,
+    scoutFuelCost: discountedScoutCost(sector.scoutFuelCost, character.exploredSectorIds.length),
     stationTier: sector.stationTier,
     stationPrice: sector.stationPrice,
+    requiredFleetPower: requiredFleetPowerForStationTier(sector.stationTier),
+    commandLicense: commandLicenseForStationTier(sector.stationTier),
     explored,
     alienStrength: explored ? sector.alienStrength : null,
     maxAlienStrength: explored ? sector.maxAlienStrength : null,
@@ -72,14 +76,15 @@ galaxyRouter.post('/:sectorId/scout', (req: AuthedRequest, res) => {
     res.status(404).json({ error: 'Unknown sector' });
     return;
   }
-  if (character.resources.fuel < sector.scoutFuelCost) {
+  const cost = discountedScoutCost(sector.scoutFuelCost, character.exploredSectorIds.length);
+  if (character.resources.fuel < cost) {
     res.status(409).json({ error: 'Not enough Fuel' });
     return;
   }
   const alreadyExplored = character.exploredSectorIds.includes(sector.id);
   const updated = {
     ...character,
-    resources: { ...character.resources, fuel: character.resources.fuel - sector.scoutFuelCost },
+    resources: { ...character.resources, fuel: character.resources.fuel - cost },
     exploredSectorIds: alreadyExplored ? character.exploredSectorIds : [...character.exploredSectorIds, sector.id],
   };
   characters.put(updated);
@@ -158,6 +163,19 @@ galaxyRouter.post('/:sectorId/build-station', (req: AuthedRequest, res) => {
   if (stations.find((s) => s.sectorId === sector.id)) {
     res.status(409).json({ error: 'Someone has already built a station here' });
     return;
+  }
+  const requiredPower = requiredFleetPowerForStationTier(sector.stationTier);
+  if (requiredPower > 0) {
+    const classById = new Map(shipClasses.all().map((c) => [c.id, c]));
+    const ownedShips = ships.filter((s) => s.ownerCharacterId === character.id);
+    const { firepower } = summarizeFleet(ownedShips, classById);
+    if (firepower < requiredPower) {
+      const license = commandLicenseForStationTier(sector.stationTier);
+      res.status(409).json({
+        error: `Requires the ${license} (${requiredPower} fleet firepower to garrison a tier ${sector.stationTier} station)`,
+      });
+      return;
+    }
   }
   if (character.credits < sector.stationPrice) {
     res.status(409).json({ error: 'Not enough credits' });

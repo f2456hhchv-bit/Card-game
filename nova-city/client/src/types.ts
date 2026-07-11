@@ -41,6 +41,9 @@ export interface Character {
   stationCount: number;
   sectorsControlled: number;
   exploredSectorIds: string[];
+  tradesCompleted: number;
+  tradeRank: string;
+  navigatorRank: string;
 }
 
 export interface PublicCharacter {
@@ -80,6 +83,8 @@ export interface Item {
   healAmount?: number;
   resourceRestore?: { resource: ResourceKey; amount: number };
   decays?: boolean;
+  requiredTotalStats?: number;
+  certification?: string | null;
 }
 
 export interface Crime {
@@ -195,6 +200,8 @@ export interface SectorView {
   plundered: boolean;
   hasStation: boolean;
   controlledByMe: boolean;
+  requiredFleetPower: number;
+  commandLicense: string | null;
 }
 
 export interface SectorAttackOutcome {

@@ -33,6 +33,7 @@ function createStarterCharacter(userId: string, callsign: string): Character {
     medicAssistUsedAt: null,
     alignment: 0,
     exploredSectorIds: [],
+    tradesCompleted: 0,
     createdAt: now,
   };
 }

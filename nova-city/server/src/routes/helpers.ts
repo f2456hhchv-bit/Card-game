@@ -4,6 +4,8 @@ import { tickCharacter } from '../domain/regen.js';
 import { effectiveStats } from '../domain/gear.js';
 import { commandRank } from '../domain/commandRank.js';
 import { alignmentLabel } from '../domain/alignment.js';
+import { tradeRank } from '../domain/trade.js';
+import { navigatorRank } from '../domain/scouting.js';
 import type { Character } from '../types.js';
 
 export function getCharacterByUserId(userId: string): Character | undefined {
@@ -19,6 +21,7 @@ export function hydrateCharacter(character: Character): Character {
     ...character,
     alignment: character.alignment ?? 0,
     exploredSectorIds: character.exploredSectorIds ?? [],
+    tradesCompleted: character.tradesCompleted ?? 0,
   };
 }
 
@@ -97,6 +100,9 @@ export function characterView(character: Character) {
     stationCount: command.stationCount,
     sectorsControlled: command.sectorsControlled,
     exploredSectorIds: character.exploredSectorIds,
+    tradesCompleted: character.tradesCompleted,
+    tradeRank: tradeRank(character.tradesCompleted).name,
+    navigatorRank: navigatorRank(character.exploredSectorIds.length).name,
   };
 }
 

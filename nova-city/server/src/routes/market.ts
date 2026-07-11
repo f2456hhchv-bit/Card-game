@@ -5,6 +5,8 @@ import { requireCharacter, characterView } from './helpers.js';
 import { characters, items } from '../store/collections.js';
 import { sellPrice } from '../domain/market.js';
 import { RESOURCE_MAX } from '../domain/regen.js';
+import { totalStatPoints } from '../domain/training.js';
+import { tradeRank } from '../domain/trade.js';
 import type { InventoryStack } from '../types.js';
 
 export const marketRouter = Router();
@@ -25,6 +27,16 @@ marketRouter.post('/buy', (req: AuthedRequest, res) => {
     res.status(404).json({ error: 'Unknown item' });
     return;
   }
+  if (item.requiredTotalStats && totalStatPoints(character.stats) < item.requiredTotalStats) {
+    res.status(409).json({
+      error: `Requires the ${item.certification} (${item.requiredTotalStats} total trained stats)`,
+    });
+    return;
+  }
+  if (item.type === 'contraband' && !tradeRank(character.tradesCompleted).unlocksContraband) {
+    res.status(409).json({ error: 'Requires Black Market Contact trade rank' });
+    return;
+  }
   const cost = item.price * quantity;
   if (character.credits < cost) {
     res.status(409).json({ error: 'Not enough credits' });
@@ -42,7 +54,12 @@ marketRouter.post('/buy', (req: AuthedRequest, res) => {
       : [...character.inventory, { itemId: item.id, qty: quantity, acquiredAt: now }];
   }
 
-  const updated = { ...character, credits: character.credits - cost, inventory };
+  const updated = {
+    ...character,
+    credits: character.credits - cost,
+    inventory,
+    tradesCompleted: character.tradesCompleted + 1,
+  };
   characters.put(updated);
   res.json({ character: characterView(updated) });
 });
@@ -93,7 +110,8 @@ marketRouter.post('/sell', (req: AuthedRequest, res) => {
     res.status(409).json({ error: "You don't have that many to sell" });
     return;
   }
-  const proceeds = result.consumed.reduce((sum, stack) => sum + sellPrice(item, stack.acquiredAt, now) * stack.qty, 0);
+  const basePrice = result.consumed.reduce((sum, stack) => sum + sellPrice(item, stack.acquiredAt, now) * stack.qty, 0);
+  const proceeds = Math.round(basePrice * (1 + tradeRank(character.tradesCompleted).sellBonusPct));
 
   const updated = {
     ...character,
@@ -101,6 +119,7 @@ marketRouter.post('/sell', (req: AuthedRequest, res) => {
     inventory: result.remaining,
     equippedWeaponId: character.equippedWeaponId === item.id ? null : character.equippedWeaponId,
     equippedArmorId: character.equippedArmorId === item.id ? null : character.equippedArmorId,
+    tradesCompleted: character.tradesCompleted + 1,
   };
   characters.put(updated);
   res.json({ character: characterView(updated), proceeds });

@@ -166,6 +166,7 @@ export function Galaxy() {
           <p className="small muted">
             {character.stationCount} stations · {character.sectorsControlled} sectors controlled
           </p>
+          <p className="small muted">Navigator Rating: {character.navigatorRank}</p>
         </Card>
       </div>
 
@@ -233,6 +234,8 @@ export function Galaxy() {
         {sectors.map((sector) => {
           const presence =
             sector.explored && sector.maxAlienStrength ? (sector.alienStrength ?? 0) / sector.maxAlienStrength : null;
+          const fleetPower = summary?.firepower ?? 0;
+          const commandLocked = sector.requiredFleetPower > 0 && fleetPower < sector.requiredFleetPower;
           return (
             <Card key={sector.id} className="sector-card">
               <div className="location-header">
@@ -261,6 +264,12 @@ export function Galaxy() {
                           ? 'Cleared — ready to build or plunder.'
                           : `Hollow presence: ${Math.round(sector.alienStrength ?? 0)}/${sector.maxAlienStrength}`}
                   </p>
+                  {sector.cleared && !sector.hasStation && !sector.plundered && sector.commandLicense && (
+                    <p className={commandLocked ? 'small warn' : 'small muted'}>
+                      {sector.commandLicense} — {sector.requiredFleetPower} fleet firepower
+                      {commandLocked ? ` (you're at ${fleetPower})` : ' ✓'}
+                    </p>
+                  )}
                   <div className="button-row">
                     {!sector.cleared && (
                       <button
@@ -275,10 +284,10 @@ export function Galaxy() {
                       <>
                         <button
                           className="btn-primary"
-                          disabled={busy !== null || character.credits < sector.stationPrice}
+                          disabled={busy !== null || commandLocked || character.credits < sector.stationPrice}
                           onClick={() => buildStation(sector)}
                         >
-                          Build ({sector.stationPrice.toLocaleString()} cr)
+                          {commandLocked ? 'Fleet too weak' : `Build (${sector.stationPrice.toLocaleString()} cr)`}
                         </button>
                         <button className="btn-ghost" disabled={busy !== null} onClick={() => plunder(sector)}>
                           Plunder

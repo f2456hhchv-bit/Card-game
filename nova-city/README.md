@@ -182,6 +182,17 @@ friends" above.
     rank (Drifter → Ship Captain → Squadron Leader → Fleet Commander →
     Sector Warlord/Steward → Galactic Commander) track your growth from one
     ship to commanding the frontier
+- **Certifications** — Torn-style, tied to active play rather than idle
+  waiting; every gate is unlocked by *doing*, not by a timer:
+  - **Combat License** — Journeyman/Veteran/Elite tiers of weapons and armor
+    are gated behind total trained stats, same as the Shipyard
+  - **Trade License** — Novice → Licensed → Black Market Contact → Master
+    Trader ranks up from lifetime completed trades; higher ranks earn a sell
+    bonus and Black Market Contact+ unlocks contraband
+  - **Command License** — Garrison/Fortress/Bastion licenses gate higher
+    station tiers behind fleet firepower — your fleet garrisons what it builds
+  - **Navigator Rating** — Novice → Charted → Veteran → Master Navigator
+    ranks up from sectors scouted, discounting future scouting Fuel cost
 - All of the above push **real-time WebSocket notifications** (attacked,
   sprung, mail, faction chat, war updates, salvage events)
 

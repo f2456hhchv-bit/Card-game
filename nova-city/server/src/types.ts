@@ -49,6 +49,8 @@ export interface Character {
   /** -100 (ruthless) .. 100 (benevolent), shifted only by rebuild/plunder choices */
   alignment: number;
   exploredSectorIds: string[];
+  /** total market buy+sell transactions — drives Trade License rank */
+  tradesCompleted: number;
   createdAt: number;
 }
 
@@ -63,6 +65,9 @@ export interface Item {
   healAmount?: number;
   resourceRestore?: { resource: ResourceKey; amount: number };
   decays?: boolean;
+  /** sum of strength+defense+speed+dexterity required to buy this item (weapons/armor only) */
+  requiredTotalStats?: number;
+  certification?: string | null;
 }
 
 export interface Crime {
