@@ -278,6 +278,10 @@ import { REASONING_DOMAINS, reasoningCycleRank } from "./game/atlasReasoning/atl
 import { JUDGEMENT_DOMAINS, judgementCycleRank } from "./game/atlasJudgement/atlasJudgementData";
 import { WisdomLibrary } from "./game/atlasCivilisationalWisdom/AtlasCivilisationalWisdomRuntime";
 import { WISDOM_CYCLE_STAGES } from "./game/atlasCivilisationalWisdom/atlasCivilisationalWisdomData";
+import { constitutionalReviewPassed } from "./game/atlasConstitution/AtlasConstitutionRuntime";
+import { CONSTITUTIONAL_ARTICLES, CONSTITUTIONAL_OATH_COMMITMENTS, DEVELOPER_PROMISE as ATLAS_CONSTITUTION_DEVELOPER_PROMISE, PLAYER_PROMISE as ATLAS_CONSTITUTION_PLAYER_PROMISE } from "./game/atlasConstitution/atlasConstitutionData";
+import { TEN_PILLARS } from "./game/designConstitution/designConstitutionData";
+import { PRIME_DIRECTIVES, DEVELOPER_PROMISE as PRIME_DIRECTIVE_DEVELOPER_PROMISE } from "./game/atlasPrimeDirective/atlasPrimeDirectiveData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2553,6 +2557,19 @@ const wisdomLibrary = new WisdomLibrary();
   culturalTrends.record("Verdance Harvest Proverb", "settlement-verdance", 20);
   wisdomMemory.archive("lesson-failed-first-expedition", ["Schools", "Museums"], 20);
   wisdomLibrary.record("lesson-failed-first-expedition", { situation: "A first expedition to the frontier lost contact.", decision: "Recalled the team before further loss.", outcome: "All members recovered safely.", reflection: "Redundant communication relays are essential.", futureRelevance: "Applied to every subsequent expedition.", teachingValue: "Taught at the Verdance Academy." }, 20);
+}
+
+// AF-200: the Atlas Constitution — CRITICAL: never modifies, ranks
+// above, or duplicates the real docs/CONSTITUTION.md, AF-146's real
+// Design Constitution, or AF-170's real Atlas Prime Directive (see
+// atlasConstitutionData.ts's CRITICAL SCOPE NOTE). This module's own
+// Player/Developer Promise and 15 Articles are new, separate lists,
+// documented honestly against AF-146's/AF-170's own near-identical
+// vocabulary via detectOverlap rather than merged.
+// constitutionalReviewPassed is the module's sole genuinely new piece.
+{
+  const articleNames = new Set(CONSTITUTIONAL_ARTICLES.map((a) => a.name));
+  constitutionalReviewPassed(articleNames);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6562,6 +6579,14 @@ const loop = new GameLoop({
         })(),
         atlasCivilisationalWisdom: (() => {
           return `cycle ${wisdomCycle.currentStage() ?? "none"} (next ${wisdomCycle.next("New Experience")}) · commander wisdom ${commanderWisdom.overallWisdom("commander-fen-beastmaster").toFixed(1)} · mentees ${mentorshipLedger.menteesOf("commander-fen-beastmaster").length} · institution memories ${institutionalMemory.memoriesFor("institution-living-city-academy").length} · cultural adopters ${culturalTrends.adoptersFor("Verdance Harvest Proverb").length} · failure outcomes ${wisdomMemory.outcomesFor("lesson-failed-first-expedition").length} · library teaching value "${wisdomLibrary.latestFor("lesson-failed-first-expedition")?.teachingValue ?? "none"}"`;
+        })(),
+        atlasConstitution: (() => {
+          const articleNames = CONSTITUTIONAL_ARTICLES.map((a) => a.name);
+          const pillarOverlap = detectOverlap(articleNames, TEN_PILLARS);
+          const primeDirectiveNames = PRIME_DIRECTIVES.map((d) => d.name);
+          const primeDirectiveOverlap = detectOverlap(articleNames, primeDirectiveNames);
+          const oathOverlap = detectOverlap(CONSTITUTIONAL_OATH_COMMITMENTS, PRIME_DIRECTIVE_DEVELOPER_PROMISE);
+          return `articles ${CONSTITUTIONAL_ARTICLES.length} · review passed=${constitutionalReviewPassed(new Set(articleNames))} · player promise ${ATLAS_CONSTITUTION_PLAYER_PROMISE.length} items · developer promise ${ATLAS_CONSTITUTION_DEVELOPER_PROMISE.length} items · article overlap[Constitution,Pillars] ${pillarOverlap.shared.length}/${articleNames.length} · article overlap[Constitution,PrimeDirectives] ${primeDirectiveOverlap.shared.length}/${articleNames.length} · oath overlap[Constitution,PrimeDevPromise] ${oathOverlap.shared.length}/${CONSTITUTIONAL_OATH_COMMITMENTS.length}`;
         })(),
       });
     }
