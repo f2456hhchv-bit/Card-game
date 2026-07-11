@@ -2,7 +2,7 @@ import type { AttachmentSlot, ShipDef, UpgradeDef } from "../game/types";
 import { ATTACHMENT_DEFS } from "../game/data/attachmentDefs";
 import { nextTier } from "../game/systems/ShopSystem";
 import type { SaveData } from "../game/save/SaveManager";
-import { drawPlaceholderShape } from "../game/render/PlaceholderArt";
+import { drawEntitySprite, drawPlaceholderShape } from "../game/render/PlaceholderArt";
 
 export interface HudState {
   hp: number;
@@ -23,13 +23,25 @@ export interface GameOverStats {
   motesRetained: number;
 }
 
-function iconCanvas(shape: UpgradeDef["icon"] | ShipDef["shape"], size = 40): HTMLCanvasElement {
+function iconCanvas(shape: UpgradeDef["icon"], size = 40): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d")!;
   ctx.translate(size / 2, size / 2);
   drawPlaceholderShape(ctx, { ...shape, radius: size * 0.36 }, 1);
+  return canvas;
+}
+
+/** Ship icons prefer real manifested art (same lookup the in-game renderer
+ * uses) and fall back to the placeholder shape, so ship-select always
+ * matches what the ship looks like in-run. */
+function shipIconCanvas(ship: ShipDef, size = 48): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  drawEntitySprite(ctx, `ship.${ship.id}`, { ...ship.shape, radius: size * 0.4 }, size / 2, size / 2, 0);
   return canvas;
 }
 
@@ -125,7 +137,7 @@ export class UIManager {
       const card = document.createElement("button");
       card.className = "al-card";
       if (ship.id === defaultShipId) card.classList.add("al-selected");
-      card.appendChild(iconCanvas(ship.shape, 48));
+      card.appendChild(shipIconCanvas(ship, 48));
       const name = document.createElement("div");
       name.className = "al-card-name";
       name.textContent = ship.name;

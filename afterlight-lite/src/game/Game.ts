@@ -4,6 +4,7 @@ import { Camera } from "../engine/Camera";
 import { Input } from "../engine/Input";
 import { World, xpForLevel } from "./World";
 import { renderWorld } from "./render/GameRenderer";
+import { preloadImages } from "./render/ArtManifest";
 import { UIManager } from "../ui/UIManager";
 import { SHIP_DEFS } from "./data/shipDefs";
 import { getUpgradeDef } from "./data/upgradeDefs";
@@ -96,7 +97,12 @@ export class Game {
     this.screen = "shipSelect";
     this.world = null;
     this.ui.hideAll();
-    this.ui.showShipSelect(SHIP_DEFS, this.save.lastShipId, (shipId) => this.startRun(shipId));
+    // Preload ship art first so the select screen never flashes the
+    // placeholder shape just because an image request was still in flight.
+    void preloadImages(SHIP_DEFS.map((s) => `ship.${s.id}`)).then(() => {
+      if (this.screen !== "shipSelect") return;
+      this.ui.showShipSelect(SHIP_DEFS, this.save.lastShipId, (shipId) => this.startRun(shipId));
+    });
   }
 
   private startRun(shipId: string): void {

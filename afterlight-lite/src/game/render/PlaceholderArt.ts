@@ -117,8 +117,13 @@ export function drawEntitySprite(
 
   const img = getManifestedImage(artId);
   if (img) {
-    const size = shape.radius * 2 * scale;
-    ctx.drawImage(img, -size / 2, -size / 2, size, size);
+    // Fit the image's longer dimension to the shape's diameter, preserving
+    // its natural aspect ratio (source art usually isn't square).
+    const maxDim = shape.radius * 2 * scale;
+    const aspect = img.naturalWidth / img.naturalHeight || 1;
+    const w = aspect >= 1 ? maxDim : maxDim * aspect;
+    const h = aspect >= 1 ? maxDim / aspect : maxDim;
+    ctx.drawImage(img, -w / 2, -h / 2, w, h);
   } else {
     drawPlaceholderShape(ctx, shape, scale);
   }
