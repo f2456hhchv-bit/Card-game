@@ -228,6 +228,8 @@ export interface DebugSnapshot {
   atlasOpenPossibility: string | null;
   /** Atlas Coherence Engine summary — overlaps almost entirely with AF-148's own already-locked "Atlas Canon Engine" (a different title, same territory — see atlasCoherenceData.ts's module doc comment): the reused AF-148 canonEvents' participant count for The Context Chain, the reused AF-148 knowledgeStates' diverged status for The Contradiction Detector, the reused AF-148 commanderContinuity's fact count for Character Coherence, the reused AF-165 institutionalMemory's memory count for Institutional Coherence, the reused AF-135 PlanetaryChronicle's latest entry (composed via AF-148's real recordPlanetContinuityFact) for Planetary Coherence, the reused AF-151 knowledgeGraph's neighbour count for The Canon Graph, the new coherenceStandardMet's all-must-pass result for The Coherence Standard, and a live detectOverlap reading against AF-194's real POSSIBILITY_DOMAINS (AF-195 §DEBUG). */
   atlasCoherence: string | null;
+  /** Atlas Verification Engine summary — the Coherence Engine ensures everything fits together, the Verification Engine ensures everything is demonstrably correct: the reused AF-172 hypotheses' grounded status for Scientific Verification, the reused AF-151 knowledgeGraph's neighbour count for The Evidence Graph, the reused AF-148 canonEvents' witness count for Player Verification, the reused AF-165 institutionalMemory's memory count for Institutional Verification, the reused AF-148 knowledgeStates' expanded understanding text for Contradiction Review, the new verificationChainRank/confidenceLevelRank's ordered (non-cyclic) ranks, the new truthStandardMet's all-must-pass result (mirroring AF-195's real coherenceStandardMet shape), and a live detectOverlap reading against AF-195's real COHERENCE_DOMAINS (AF-196 §DEBUG). */
+  atlasVerification: string | null;
 }
 
 export class DebugOverlay {
@@ -375,6 +377,7 @@ export class DebugOverlay {
       `excellence ${snapshot.atlasExcellence ?? "—"}`,
       `openDoor   ${snapshot.atlasOpenPossibility ?? "—"}`,
       `coherence  ${snapshot.atlasCoherence ?? "—"}`,
+      `verify     ${snapshot.atlasVerification ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

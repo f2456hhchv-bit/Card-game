@@ -272,6 +272,8 @@ import { PossibilityIndexScoreCard } from "./game/atlasOpenPossibility/AtlasOpen
 import { POSSIBILITY_DOMAINS, POSSIBILITY_INDEX_CATEGORIES, possibilityCycleRank } from "./game/atlasOpenPossibility/atlasOpenPossibilityData";
 import { coherenceStandardMet } from "./game/atlasCoherence/AtlasCoherenceRuntime";
 import { COHERENCE_DOMAINS, COHERENCE_STANDARD_QUESTIONS } from "./game/atlasCoherence/atlasCoherenceData";
+import { truthStandardMet } from "./game/atlasVerification/AtlasVerificationRuntime";
+import { TRUTH_STANDARD_QUESTIONS, VERIFICATION_DOMAINS, confidenceLevelRank, verificationChainRank } from "./game/atlasVerification/atlasVerificationData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2464,6 +2466,27 @@ const possibilityIndex = new PossibilityIndexScoreCard();
   institutionalMemory.remember("institution-living-city-academy", "Founders", "Founded to preserve adaptive-architecture education.", 20);
   recordPlanetContinuityFact(chroniclePlanets, "settlement-verdance", "Ecological changes", "A wounded ecosystem was restored.", 20, "Scientists");
   knowledgeGraph.addEdge({ fromId: "event-open-frontier-signal", toId: "scientist-vale", kind: "Discovered", strength: 1, confidence: 1, historicalContext: "The scientist who first traced the signal.", dateEstablished: 20 });
+}
+
+// AF-196: the Atlas Verification Engine — the Coherence Engine ensures
+// everything fits together, the Verification Engine ensures everything
+// is demonstrably correct. Reuses AF-172's real hypotheses directly for
+// Scientific Verification, AF-151's real knowledgeGraph directly for
+// The Evidence Graph, AF-148's real canonEvents directly for Player
+// Verification, AF-165's real institutionalMemory directly for
+// Institutional Verification, and AF-148's real
+// knowledgeStates.revealHistoricalUnderstanding directly for
+// Contradiction Review. verificationChainRank/confidenceLevelRank/
+// truthStandardMet are the genuinely new pieces (see
+// atlasVerificationData.ts for the full reuse notes).
+{
+  hypotheses.propose("theory-open-frontier-signal", "The signal originates from a dormant relay.", 20);
+  hypotheses.supportWithEvidence("theory-open-frontier-signal", 20);
+  knowledgeGraph.addEdge({ fromId: "fact-dormant-relay", toId: "scientist-vale", kind: "Discovered", strength: 1, confidence: 0.8, historicalContext: "Confirmed via independent replication.", dateEstablished: 20 });
+  canonEvents.record({ id: "event-player-restored-frontier", date: 20, participants: ["player"], planetId: "settlement-verdance", galaxyRegion: null, commanderIds: [], witnesses: ["scientist-vale"], evidence: ["Restoration survey"], museumReferences: [], chronicleReferences: [], relationshipImpact: null, futureCallbacks: [] });
+  institutionalMemory.remember("institution-living-city-academy", "Research", "Validated the restoration survey before publication.", 20);
+  knowledgeStates.revealHistoricalUnderstanding("event-player-restored-frontier", "Initially attributed to a single scientist.", 20, "Scientists");
+  knowledgeStates.revealHistoricalUnderstanding("event-player-restored-frontier", "Later evidence showed a full team contributed.", 25, "Scientists");
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6453,6 +6476,10 @@ const loop = new GameLoop({
         atlasCoherence: (() => {
           const domainOverlap = detectOverlap(COHERENCE_DOMAINS, POSSIBILITY_DOMAINS);
           return `context event participants ${canonEvents.eventFor("event-open-frontier-signal")?.participants.length ?? 0} · diverged=${knowledgeStates.hasDiverged("event-open-frontier-signal")} · character facts ${commanderContinuity.factsFor("commander-fen-beastmaster").length} · institution memories ${institutionalMemory.memoriesFor("institution-living-city-academy").length} · planet entry "${chroniclePlanets.entryFor("settlement-verdance").latest()?.text ?? "none"}" · canon graph neighbours ${knowledgeGraph.neighbors("event-open-frontier-signal").length} · standard met=${coherenceStandardMet(new Set(COHERENCE_STANDARD_QUESTIONS))} · domain overlap[Coherence,Possibility] ${domainOverlap.shared.length}/${COHERENCE_DOMAINS.length}`;
+        })(),
+        atlasVerification: (() => {
+          const domainOverlap = detectOverlap(VERIFICATION_DOMAINS, COHERENCE_DOMAINS);
+          return `hypothesis grounded=${hypotheses.isGrounded("theory-open-frontier-signal")} · evidence graph neighbours ${knowledgeGraph.neighbors("fact-dormant-relay").length} · player event witnesses ${canonEvents.eventFor("event-player-restored-frontier")?.witnesses.length ?? 0} · institution memories ${institutionalMemory.memoriesFor("institution-living-city-academy").length} · understanding "${knowledgeStates.historicalUnderstandingFor("event-player-restored-frontier") ?? "none"}" · chain rank ${verificationChainRank("Peer Review")} · confidence rank ${confidenceLevelRank("Strong Evidence")} · truth met=${truthStandardMet(new Set(TRUTH_STANDARD_QUESTIONS))} · domain overlap[Verification,Coherence] ${domainOverlap.shared.length}/${VERIFICATION_DOMAINS.length}`;
         })(),
       });
     }
