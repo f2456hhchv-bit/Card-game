@@ -1,0 +1,29 @@
+# Fly.io app config for NOVA CITY. See nova-city/README.md for the deploy steps.
+# If "nova-city" is already taken (Fly app names are global), change `app` below
+# before your first `fly launch` / `fly deploy`.
+app = "nova-city"
+primary_region = "iad"
+
+[build]
+
+[env]
+  PORT = "4000"
+  # Uncomment once you've created a volume (see README) to persist save data
+  # across deploys/restarts instead of using ephemeral container storage:
+  # NOVA_CITY_DATA_DIR = "/data"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+# Uncomment once you've run `fly volumes create nova_city_data --size 1`:
+# [[mounts]]
+#   source = "nova_city_data"
+#   destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

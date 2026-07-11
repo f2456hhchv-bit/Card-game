@@ -15,29 +15,64 @@ completely separate, unrelated codebase and game. AFTERLIGHT is untouched.
 NOVA CITY ships as one deployable service: the Node server serves both the API/
 WebSocket **and** the built client, so one deploy gives you one shareable URL.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/f2456hhchv-bit/Card-game)
+### Fly.io (recommended)
 
-1. Click the button above (or go to render.com → New → Blueprint and point it at
-   this repo). Render reads `render.yaml` at the repo root and provisions a free
-   web service rooted at `nova-city/`, auto-generating a real
-   `NOVA_CITY_JWT_SECRET`.
-2. Wait for the first build to finish (a few minutes) — Render gives you a URL
-   like `https://nova-city-xxxx.onrender.com`.
-3. Send that URL to your friends. Everyone registers their own pilot and plays
-   against the same live server — Combat, Fleets, mail, and chat all work across
-   accounts in real time.
+Fly.io's free allowance covers a small always-available app, has solid
+WebSocket support, and its free volumes let save data survive redeploys
+(unlike most free tiers). Setup is a few CLI commands rather than a pure
+click-a-button flow:
 
-**Known limits of the free tier:** the service spins down after ~15 minutes of
-inactivity, so the first request after a lull takes 30–60s to wake back up. Save
-data lives on the instance's local disk (see "Why a real backend" below) and is
-**not guaranteed to survive a redeploy** on the free plan — fine for casual play
-with friends, but if you want persistence, add a Render persistent Disk (paid) or
-swap the JSON store for a real database later; the repository layer in
-`server/src/store/` was built to make that swap localized.
+```bash
+# 1. Install the Fly CLI (see https://fly.io/docs/flyctl/install/ for other OSes)
+curl -L https://fly.io/install.sh | sh
 
-**Alternative: Docker.** `nova-city/Dockerfile` builds and runs the same
-single-process app and works on Railway, Fly.io, or any host that runs
-containers:
+# 2. Log in — opens a browser to sign up/sign in. A card is required for
+#    identity verification but you won't be charged within the free allowance.
+fly auth login
+
+# 3. From nova-city/, register + deploy the app using the checked-in fly.toml.
+#    If "nova-city" is taken (app names are global), edit `app =` in fly.toml first.
+cd nova-city
+fly launch --copy-config --now
+
+# 4. Set a real JWT secret (fly launch does not do this for you):
+fly secrets set NOVA_CITY_JWT_SECRET=$(openssl rand -hex 32)
+fly deploy
+```
+
+Fly prints your live URL at the end (`https://<app-name>.fly.dev`) — send that
+to your friends.
+
+**Optional: persist save data across deploys.** By default the JSON save data
+lives on the container's disk and resets on redeploy, same as any free tier.
+Fly's free allowance includes up to 3GB of volume storage, so you can avoid
+that:
+
+```bash
+fly volumes create nova_city_data --region iad --size 1
+```
+
+Then uncomment the `NOVA_CITY_DATA_DIR` env var and the `[[mounts]]` block in
+`nova-city/fly.toml` and redeploy (`fly deploy`).
+
+**Known limit:** on the free allowance, Fly stops the machine after a period of
+no traffic and restarts it on the next request (`auto_stop_machines` in
+`fly.toml`) — the first request after a lull takes a few seconds while it wakes
+up, similar to other free tiers.
+
+### Alternative: Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/f2456hhchv-bit/Card-game/tree/claude/space-torn-game-5qlu8q)
+
+Click the button (reads `render.yaml` at the repo root, auto-generates a real
+`NOVA_CITY_JWT_SECRET`). Render's free tier spins down after ~15 minutes of
+inactivity (30–60s to wake back up) and doesn't offer a free persistent disk —
+Fly.io above is the better free option if persistence matters to you.
+
+### Alternative: any Docker host
+
+`nova-city/Dockerfile` builds and runs the same single-process app and works on
+Railway, Koyeb, a VPS, or anywhere else that runs containers:
 
 ```bash
 cd nova-city
@@ -134,6 +169,7 @@ nova-city/
   server/        Express + ws API, JSON-file store, domain logic, tests
   client/        Vite + React SPA
   Dockerfile     Multi-stage build: server + client into one runnable image
+  fly.toml       Fly.io app config
 render.yaml      Render Blueprint (repo root) — one-click deploy config
 ```
 
