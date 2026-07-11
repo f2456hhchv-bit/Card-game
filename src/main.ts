@@ -276,6 +276,8 @@ import { truthStandardMet } from "./game/atlasVerification/AtlasVerificationRunt
 import { TRUTH_STANDARD_QUESTIONS, VERIFICATION_DOMAINS, confidenceLevelRank, verificationChainRank } from "./game/atlasVerification/atlasVerificationData";
 import { REASONING_DOMAINS, reasoningCycleRank } from "./game/atlasReasoning/atlasReasoningData";
 import { JUDGEMENT_DOMAINS, judgementCycleRank } from "./game/atlasJudgement/atlasJudgementData";
+import { WisdomLibrary } from "./game/atlasCivilisationalWisdom/AtlasCivilisationalWisdomRuntime";
+import { WISDOM_CYCLE_STAGES } from "./game/atlasCivilisationalWisdom/atlasCivilisationalWisdomData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2526,6 +2528,31 @@ const possibilityIndex = new PossibilityIndexScoreCard();
   ]);
   if (judgementExplanation) decisionLog.record("Ecology", "Restoration priority", judgementExplanation.chosenId, judgementExplanation.confidence, 20);
   collaborativeProblems.propose("problem-restoration-priority-panel", ["scientist-vale", "commander-fen-beastmaster"], "Ecology", 20);
+}
+
+// AF-199: the Atlas Civilisational Wisdom Engine — heavily overlaps
+// with AF-160's own already-locked "Atlas Wisdom Engine" (see
+// atlasCivilisationalWisdomData.ts's NAMING SCOPE NOTE; Wisdom Domains
+// is an exact 12/12 match with AF-198's real JUDGEMENT_DOMAINS, a
+// second tie of the absolute overlap record). Reuses AF-155's real
+// CyclicStageTracker directly for The Wisdom Cycle, AF-160's real
+// commanderWisdom/mentorshipLedger directly for Commander Wisdom,
+// AF-165's real institutionalMemory directly for Institutional Wisdom,
+// AF-159's real culturalTrends directly for Cultural Wisdom, AF-160's
+// real wisdomMemory directly for Wisdom Through Failure, and AF-160's
+// real generationalTransferRank directly for Intergenerational Wisdom.
+// WisdomLibrary is the module's sole genuinely new piece (see
+// atlasCivilisationalWisdomData.ts for the full reuse notes).
+const wisdomCycle = new CyclicStageTracker(WISDOM_CYCLE_STAGES);
+const wisdomLibrary = new WisdomLibrary();
+{
+  wisdomCycle.record("Experience", 20);
+  commanderWisdom.develop("commander-fen-beastmaster", "Patience", 20);
+  mentorshipLedger.assign("commander-fen-beastmaster", "apprentice-of-verdance", 20);
+  institutionalMemory.remember("institution-living-city-academy", "Historic lessons", "Learned to phase restoration work across seasons.", 20);
+  culturalTrends.record("Verdance Harvest Proverb", "settlement-verdance", 20);
+  wisdomMemory.archive("lesson-failed-first-expedition", ["Schools", "Museums"], 20);
+  wisdomLibrary.record("lesson-failed-first-expedition", { situation: "A first expedition to the frontier lost contact.", decision: "Recalled the team before further loss.", outcome: "All members recovered safely.", reflection: "Redundant communication relays are essential.", futureRelevance: "Applied to every subsequent expedition.", teachingValue: "Taught at the Verdance Academy." }, 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6532,6 +6559,9 @@ const loop = new GameLoop({
           const domainOverlap = detectOverlap(JUDGEMENT_DOMAINS, REASONING_DOMAINS);
           const ethics = ethicalAlignmentScore({ Preservation: 10, "Environmental stewardship": 8 }, new Set(["Preservation", "Environmental stewardship"]));
           return `ethical alignment score ${ethics} · collective panel size ${collaborativeProblems.participantsFor("problem-restoration-priority-panel").length} · judgement record entries ${decisionLog.forDomain("Ecology").length} · cycle rank ${judgementCycleRank("Consultation")} · domain overlap[Judgement,Reasoning] ${domainOverlap.shared.length}/${JUDGEMENT_DOMAINS.length}`;
+        })(),
+        atlasCivilisationalWisdom: (() => {
+          return `cycle ${wisdomCycle.currentStage() ?? "none"} (next ${wisdomCycle.next("New Experience")}) · commander wisdom ${commanderWisdom.overallWisdom("commander-fen-beastmaster").toFixed(1)} · mentees ${mentorshipLedger.menteesOf("commander-fen-beastmaster").length} · institution memories ${institutionalMemory.memoriesFor("institution-living-city-academy").length} · cultural adopters ${culturalTrends.adoptersFor("Verdance Harvest Proverb").length} · failure outcomes ${wisdomMemory.outcomesFor("lesson-failed-first-expedition").length} · library teaching value "${wisdomLibrary.latestFor("lesson-failed-first-expedition")?.teachingValue ?? "none"}"`;
         })(),
       });
     }

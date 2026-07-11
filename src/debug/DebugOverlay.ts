@@ -234,6 +234,8 @@ export interface DebugSnapshot {
   atlasReasoning: string | null;
   /** Atlas Judgement Engine summary — AF-197's direct sibling; the Reasoning Engine determines how intelligent entities think, the Judgement Engine determines how they ultimately decide: the reused AF-156 ethicalAlignmentScore's result for balancing evidence with humanity, the reused AF-155 collaborativeProblems' participant count for Collective Judgement, the reused AF-156 decisionLog's entry count for Judgement Record, the new judgementCycleRank's ordered (non-cyclic) rank for The Judgement Cycle, and a live detectOverlap reading against AF-197's real REASONING_DOMAINS (AF-198 §DEBUG). */
   atlasJudgement: string | null;
+  /** Atlas Civilisational Wisdom Engine summary — the closest possible collision short of a verbatim duplicate with AF-160's own locked "Atlas Wisdom Engine" (see atlasCivilisationalWisdomData.ts's NAMING SCOPE NOTE): the new CyclicStageTracker instantiation's current/next Wisdom Cycle stage, the reused AF-160 commanderWisdom/mentorshipLedger for Commander Wisdom, the reused AF-165 institutionalMemory for Institutional Wisdom, the reused AF-159 culturalTrends for Cultural Wisdom, the reused AF-160 wisdomMemory for Wisdom Through Failure, and the new WisdomLibrary's recorded teaching value for The Wisdom Library (AF-199 §DEBUG). */
+  atlasCivilisationalWisdom: string | null;
 }
 
 export class DebugOverlay {
@@ -384,6 +386,7 @@ export class DebugOverlay {
       `verify     ${snapshot.atlasVerification ?? "—"}`,
       `reasoning  ${snapshot.atlasReasoning ?? "—"}`,
       `judgement  ${snapshot.atlasJudgement ?? "—"}`,
+      `civWisdom  ${snapshot.atlasCivilisationalWisdom ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
