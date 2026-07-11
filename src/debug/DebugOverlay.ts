@@ -224,6 +224,8 @@ export interface DebugSnapshot {
   atlasCraftsmanship: string | null;
   /** Atlas Excellence Engine summary — the third module in the Creator (AF-191) -> Craftsmanship (AF-192) -> Excellence (AF-193) trilogy: the new CyclicStageTracker instantiation's current/next Excellence Cycle stage (an explicit closed loop, unlike AF-192's non-cyclic Craft Cycle), the reused AF-160 MentorshipLedger's mentee count for Personal Excellence, the reused AF-166 ReputationTracker's revealed quality for Commander Excellence, the reused AF-159 CulturalTrendTracker's adopter count for Cultural Excellence, the reused AF-149 IterationCycleTracker's ready status for Institutional Excellence, the new ImprovementNetworkLedger's record count for The Improvement Network, the new excellenceStandardAssessment's continue-refining result (the second instance of AF-192's own ANY-of-N shape), the new ExcellenceIndexScoreCard's score/gate status (the eleventh mirrored scoring-rubric shape), and a live detectOverlap reading against AF-191's real CREATIVE_DOMAINS (AF-193 §DEBUG). */
   atlasExcellence: string | null;
+  /** Atlas Possibility Engine (AF-194) summary — CRITICAL: a verbatim title duplicate of AF-159's own real, already-locked "Atlas Possibility Engine" (see atlasOpenPossibilityData.ts's prominent NAMING COLLISION note; disambiguated here as "(AF-194)"): the reused AF-159 possibilityRegistry's required-people count for The Possibility Web, the reused AF-159 mysteryLog's unsolved count for The Unknown Reserve, the reused AF-159 playerInspiration's surfaced count for Player Possibility, the reused AF-155 collaborativeProblems' participant count for Possibility Through Cooperation, the reused AF-151 knowledgeGraph's neighbour count for Civilisational Possibility, the new possibilityCycleRank's ordered (non-cyclic) rank for The Possibility Cycle, the new PossibilityIndexScoreCard's score/gate status (the twelfth mirrored scoring-rubric shape), and a live detectOverlap reading against AF-193's real EXCELLENCE_DOMAINS (AF-194 §DEBUG). */
+  atlasOpenPossibility: string | null;
 }
 
 export class DebugOverlay {
@@ -369,6 +371,7 @@ export class DebugOverlay {
       `creatorEng ${snapshot.atlasCreator ?? "—"}`,
       `craftsman  ${snapshot.atlasCraftsmanship ?? "—"}`,
       `excellence ${snapshot.atlasExcellence ?? "—"}`,
+      `openDoor   ${snapshot.atlasOpenPossibility ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

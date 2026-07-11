@@ -268,6 +268,8 @@ import { standardOfExcellenceAssessment } from "./game/atlasCraftsmanship/AtlasC
 import { CRAFTSMANSHIP_DOMAINS, CRAFT_CYCLE_STAGES, craftCycleRank } from "./game/atlasCraftsmanship/atlasCraftsmanshipData";
 import { ExcellenceIndexScoreCard, ImprovementNetworkLedger, excellenceStandardAssessment } from "./game/atlasExcellence/AtlasExcellenceRuntime";
 import { EXCELLENCE_CYCLE_STAGES, EXCELLENCE_DOMAINS, EXCELLENCE_INDEX_CATEGORIES } from "./game/atlasExcellence/atlasExcellenceData";
+import { PossibilityIndexScoreCard } from "./game/atlasOpenPossibility/AtlasOpenPossibilityRuntime";
+import { POSSIBILITY_DOMAINS, POSSIBILITY_INDEX_CATEGORIES, possibilityCycleRank } from "./game/atlasOpenPossibility/atlasOpenPossibilityData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2422,6 +2424,27 @@ const excellenceIndex = new ExcellenceIndexScoreCard();
   iterationCycles.recordCycle("institution-living-city-academy", 20);
   improvementNetwork.record("improvement-verdance-lecture-hall", { reason: "Attendance outgrew capacity.", method: "Expanded seating and added remote broadcast.", evidence: "Post-expansion attendance logs.", outcome: "Doubled attendance.", educationalValue: "More students reached.", futureOpportunities: "Extend broadcast to neighbouring settlements." }, 20);
   for (const category of EXCELLENCE_INDEX_CATEGORIES) excellenceIndex.score(category, 9.6);
+}
+
+// AF-194: the Atlas Possibility Engine — CRITICAL: a verbatim title
+// duplicate of AF-159's own real, already-locked "Atlas Possibility
+// Engine" (see atlasOpenPossibilityData.ts's prominent NAMING
+// COLLISION note). Reuses AF-159's real possibilityRegistry/mysteryLog/
+// playerInspiration directly, AF-169's real ensureNextHorizonOpen
+// directly for The Open Door Principle, AF-155's real
+// collaborativeProblems directly for Possibility Through Cooperation,
+// and AF-151's real knowledgeGraph directly for Civilisational
+// Possibility. possibilityCycleRank/PossibilityIndexScoreCard are the
+// genuinely new pieces (see atlasOpenPossibilityData.ts for the full
+// reuse notes).
+const possibilityIndex = new PossibilityIndexScoreCard();
+{
+  possibilityRegistry.register({ id: "possibility-restored-frontier", discoveryCategory: "Ecological", requiredKnowledge: ["Adaptive materials"], requiredPeople: ["scientist-vale"], requiredLocations: ["settlement-verdance"], potentialRisks: ["Resource strain"], potentialRewards: ["A thriving new habitat"], historicalSignificance: 4, futureImplications: ["A model for future restorations"] });
+  mysteryLog.open("mystery-unexplored-sector", "Unknown signals", "A signal source beyond the charted frontier.", 20);
+  playerInspiration.surface("Historic mysteries", "An old expedition log hints at a lost settlement.", 20);
+  collaborativeProblems.propose("problem-open-frontier-restoration", ["scientist-vale", "commander-fen-beastmaster"], "Ecology", 20);
+  ensureNextHorizonOpen(longTermMissions, "living-library-network", mysteryLog, "mystery-next-open-question", "Unknown signals", "What new possibility does this success reveal?", 30);
+  for (const category of POSSIBILITY_INDEX_CATEGORIES) possibilityIndex.score(category, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6403,6 +6426,10 @@ const loop = new GameLoop({
           const domainOverlap = detectOverlap(EXCELLENCE_DOMAINS, CREATIVE_DOMAINS);
           const standard = excellenceStandardAssessment(new Set(["Can it endure?"]));
           return `cycle ${excellenceCycle.currentStage() ?? "none"} (next ${excellenceCycle.next("Inspire")}) · mentees ${mentorshipLedger.menteesOf("scientist-vale").length} · reputation ${commanderReputation.mostRecognizedQuality("commander-thorne-starforged") ?? "none"} · cultural adopters ${culturalTrends.adoptersFor("Verdance Stewardship Ethic").length} · institution ready=${iterationCycles.readyToShip("institution-living-city-academy")} · improvements logged ${improvementNetwork.historyFor("improvement-verdance-lecture-hall").length} · continue refining=${standard.shouldContinueRefining} · index score ${excellenceIndex.overallScore().toFixed(1)} (${excellenceIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Excellence,Creative] ${domainOverlap.shared.length}/${EXCELLENCE_DOMAINS.length}`;
+        })(),
+        atlasOpenPossibility: (() => {
+          const domainOverlap = detectOverlap(POSSIBILITY_DOMAINS, EXCELLENCE_DOMAINS);
+          return `web required people ${possibilityRegistry.get("possibility-restored-frontier")?.requiredPeople.length ?? 0} · mysteries unsolved ${mysteryLog.unsolved().length} · inspiration surfaced ${playerInspiration.countFor("Historic mysteries")} · collaborators ${collaborativeProblems.participantsFor("problem-open-frontier-restoration").length} · network neighbours ${knowledgeGraph.neighbors("scientist-vale").length} · cycle rank ${possibilityCycleRank("Discovery")} · index score ${possibilityIndex.overallScore().toFixed(1)} (${possibilityIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Possibility,Excellence] ${domainOverlap.shared.length}/${POSSIBILITY_DOMAINS.length}`;
         })(),
       });
     }
