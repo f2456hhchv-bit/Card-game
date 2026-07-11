@@ -81,9 +81,9 @@ import { RelicSystem } from "./game/relics/RelicSystem";
 import { CommanderRuntime } from "./game/commanders/CommanderRuntime";
 import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
 import { FRAMEWORK_PROFILES } from "./game/commanders/commanderFrameworkData";
-import { CommanderProgressionRuntime } from "./game/commanders/CommanderProgressionRuntime";
-import { RosterRuntime } from "./game/commanders/RosterRuntime";
-import { STARTING_COMMANDER_IDS, philosophyFor } from "./game/commanders/rosterData";
+import { CommanderProgressionRuntime, type CommanderProgressionSaveData } from "./game/commanders/CommanderProgressionRuntime";
+import { RosterRuntime, type RosterSaveData } from "./game/commanders/RosterRuntime";
+import { STARTING_COMMANDER_IDS, philosophyFor, type RecruitmentSource } from "./game/commanders/rosterData";
 import { LYRA_VOSS_CODEX_ENTRY } from "./game/commanders/cmd001LyraVoss";
 import { KANE_VANGUARD_CODEX_ENTRY } from "./game/commanders/cmd002AdrianKane";
 import { RYKER_ENGINEER_CODEX_ENTRY } from "./game/commanders/cmd003EliasRyker";
@@ -116,7 +116,7 @@ import { NOCTIS_VOIDWALKER_CODEX_ENTRY } from "./game/commanders/cmd029VegaNocti
 import { AETHER_CELESTIAL_CODEX_ENTRY } from "./game/commanders/cmd030LysandraAether";
 import { FULL_PROFILES_WITH_FOUNDER, FULL_RECRUITMENT_WITH_FOUNDER, FULL_ROSTER_WITH_FOUNDER, PRIME_FOUNDER_CODEX_ENTRY } from "./game/commanders/cmd031AtlasPrime";
 import { DUAL_ULTIMATES, seedBondGraph } from "./game/commanders/bondNetworkData";
-import { BondNetworkRuntime, EmotionalMemoryLog } from "./game/commanders/BondNetworkRuntime";
+import { BondNetworkRuntime, EmotionalMemoryLog, type BondNetworkSaveData } from "./game/commanders/BondNetworkRuntime";
 import { INITIAL_SHIP_UPGRADES, commanderRoomsFor } from "./game/livingShip/livingShipData";
 import { CompanionHabitatRuntime, LivingShipRuntime, MemorialGardenLog } from "./game/livingShip/LivingShipRuntime";
 import { seedEnvironmentalStates } from "./game/livingGalaxy/livingGalaxyData";
@@ -307,9 +307,9 @@ import { WeaponMasteryRuntime } from "./game/weapons/WeaponMasteryRuntime";
 import { ARSENAL_ENTRIES, STARTING_WEAPON_IDS } from "./game/weapons/weaponRosterData";
 import { WeaponCollectionRuntime } from "./game/weapons/WeaponCollectionRuntime";
 import { SANDBOX_SHIP_MODULES, SHIP_PROFILES } from "./game/ships/shipFrameworkData";
-import { ShipOutfittingRuntime } from "./game/ships/ShipOutfittingRuntime";
+import { ShipOutfittingRuntime, type ShipOutfittingSaveData } from "./game/ships/ShipOutfittingRuntime";
 import { FLEET_ENTRIES, STARTING_SHIP_IDS } from "./game/ships/shipRosterData";
-import { ShipCollectionRuntime } from "./game/ships/ShipCollectionRuntime";
+import { ShipCollectionRuntime, type ShipCollectionSaveData } from "./game/ships/ShipCollectionRuntime";
 import { WeaponRuntime } from "./game/weapons/WeaponRuntime";
 import { SANDBOX_WEAPONS, type StatusOnHit } from "./game/weapons/weaponData";
 import { stepProjectile } from "./game/weapons/ProjectileBehaviour";
@@ -364,7 +364,7 @@ import { DERELICT_EXPANSE_BIOME } from "./game/biomes/derelictExpanseBiome";
 import { LIVING_ECOSPHERES_BIOME } from "./game/biomes/livingEcospheresBiome";
 import { SINGULARITY_ZONE_BIOME } from "./game/biomes/singularityZoneBiome";
 import { BiomeRuntime } from "./game/biomes/BiomeRuntime";
-import { CampaignRuntime } from "./game/campaign/CampaignRuntime";
+import { CampaignRuntime, type CampaignSaveData } from "./game/campaign/CampaignRuntime";
 import {
   CAMPAIGN_COUNTER_BOSSES,
   CAMPAIGN_COUNTER_MISSIONS,
@@ -392,7 +392,8 @@ import {
 import { MUSEUM_EXHIBIT_KINDS } from "./game/codex/codexEcosystemData";
 import { generateMission } from "./game/missions/MissionGenerator";
 import { MissionRuntime } from "./game/missions/MissionRuntime";
-import { SANDBOX_GALAXY } from "./game/galaxy/galaxyData";
+import { SANDBOX_GALAXY, campaignDifficultyFor } from "./game/galaxy/galaxyData";
+import { GALAXY_CLUSTERS, isClusterUnlocked } from "./game/galaxy/galaxyClusterData";
 import { GalaxyRuntime } from "./game/galaxy/GalaxyRuntime";
 import { SANDBOX_FACTION_ROSTER, PLAYER_CHOICE_REPUTATION_DELTA, REPUTATION_MIN, REPUTATION_MAX, type PlayerChoiceKind } from "./game/factions/factionData";
 import { FactionRuntime } from "./game/factions/FactionRuntime";
@@ -405,6 +406,8 @@ import { SANDBOX_WORLD_EVENTS, WORLD_STATE_MIN, WORLD_STATE_MAX, PLAYER_PARTICIP
 import { WorldEventRuntime } from "./game/worldEvents/WorldEventRuntime";
 import { SANDBOX_ACHIEVEMENTS } from "./game/achievements/achievementData";
 import { AchievementRuntime, type AchievementProgressReader } from "./game/achievements/AchievementRuntime";
+import { ATLAS_PROGRESSION_AXES, atlasProgressionSnapshot, type AtlasProgressionSnapshot } from "./game/atlasProgression/AtlasProgressionRuntime";
+import { LONG_TERM_GOAL_TRACKS, longTermGoalsSnapshot, type LongTermGoalsSnapshot, type LongTermGoalProgress, type LongTermGoalTrack } from "./game/longTermGoals/LongTermGoalsRuntime";
 import { CollectionLedger, type CollectionLedgerSaveData } from "./game/achievements/CollectionLedger";
 import { SANDBOX_CODEX_ENTRIES, CODEX_SECTION_REWARDS, TIMELINE_ERAS } from "./game/codex/codexData";
 import { CodexRuntime, type CodexUnlockReader } from "./game/codex/CodexRuntime";
@@ -757,6 +760,14 @@ function gpEnemyWaveDebugLine(): string {
   return `mutations ${liveMutations}/${MUTATION_KINDS.length} live · roles ${ENEMY_ROLES.length} · stationary ${(playerStationaryMs / 1000).toFixed(1)}s · conductor kills=${conductor?.snapshot.recentKills.toFixed(1) ?? "—"} nearDeaths=${conductor?.snapshot.nearDeathCount ?? "—"} struggle=${conductor?.snapshot.struggleScore.toFixed(2) ?? "—"} · boss ${sandboxBoss.id} (${sandboxBoss.phases.length} phases) · world boss chance ${Math.round(Math.min(0.6, extractionDepth * 0.15) * 100)}%`;
 }
 
+/** GP-003 §DEBUG: one combined summary line, extended as each audited-gap deliverable lands. */
+function gpMetaProgressionDebugLine(): string {
+  const atlas = gatherAtlasProgressionSnapshot();
+  const campaignDifficulty = campaignDifficultyFor(galaxyRuntime.currentSystem.threatLevel);
+  const goals = gatherLongTermGoalsSnapshot();
+  return `commander talent pts=${commanderProgressionFor(sandboxCommander.id).snapshot.talentPoints} · ship modules ${shipOutfittingFor(sandboxShip.id).snapshot.fittedModules}/${shipOutfittingFor(sandboxShip.id).snapshot.moduleSlots} · cluster ${activeGalaxyClusterId} (${GALAXY_CLUSTERS.length} total) · roster ${roster.snapshot.recruitedCount}/${roster.snapshot.rosterSize} · fleet ${fleet.snapshot.collectedCount}/${fleet.snapshot.fleetSize} · atlas score ${atlas.overallScore.toFixed(1)} · campaign difficulty ${campaignDifficulty.toFixed(2)} (threat ${galaxyRuntime.currentSystem.threatLevel}) · long-term goals ${goals.completedCount}/${LONG_TERM_GOAL_TRACKS.length} (${goals.overallCompletionPercent.toFixed(1)}%)`;
+}
+
 // ── Sandbox loot (AF-023): elites always drop, drones sometimes; beams on
 // the field, pickups announced. Placeholder drop table — the generator,
 // rarity ladder, and ground-loot policy underneath are the deliverable.
@@ -973,7 +984,12 @@ const meta = new MetaProgression(
 // ── Galaxy (AF-038): the permanent overworld. Sector Stability/Exploration%
 // persist through AF-026's existing meta save slice (namespaced statistic
 // keys); the runtime's own position/event-timer state is session-local.
-const galaxyRuntime = new GalaxyRuntime(SANDBOX_GALAXY, new Rng(Date.now()).fork("galaxy"), "sys-lucent-gate");
+// GP-003 §Galaxy Progression: `let`, not `const` — warping to a second real
+// GalaxyClusterDef (galaxyClusterData.ts) reassigns which GalaxyDef backs
+// the runtime, exactly the "sandboxBoss = WORLD_BOSS" reassignment pattern
+// GP-002 already established; nothing captures the old binding in a closure.
+let galaxyRuntime = new GalaxyRuntime(GALAXY_CLUSTERS[0]!.galaxy, new Rng(Date.now()).fork("galaxy"), "sys-lucent-gate");
+let activeGalaxyClusterId = GALAXY_CLUSTERS[0]!.id;
 
 // ── Factions (AF-039): reputation persists through the same namespaced
 // meta-statistic pattern AF-038 established; relationships/events are
@@ -1203,10 +1219,14 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
   // AF-071: the placeholder mastery track becomes the commander's REAL
   // AF-026 track, and victories grant a talent point.
   meta.addMasteryXp(sandboxCommanderProfile.masteryTrackId, result === "victory" ? 20 : 8);
-  if (result === "victory") commanderProgression.grantTalentPoints(1);
+  if (result === "victory") commanderProgressionFor(sandboxCommander.id).grantTalentPoints(1);
+  persistCommanderProgression(); // GP-003: talent points/mission-beat progress now actually survives a reload
   roster.recordUse(sandboxCommander.id, result === "victory"); // AF-072: usage informs future balancing
-  shipOutfitting.recordUse(); // AF-073: hull mastery accumulates per expedition
+  persistRoster();
+  shipOutfittingFor(sandboxShip.id).recordUse(); // AF-073: hull mastery accumulates per expedition
+  persistShipOutfitting();
   fleet.recordMission(sandboxShip.id, result === "victory"); // AF-074: fleet statistics support long-term balancing
+  persistFleet();
   if (weaponRuntime) weaponMastery.recordShots(weaponRuntime.snapshot.shotsFired); // AF-075: accuracy is derived from real fire
   arsenal.recordUse(sandboxWeapon.id); // AF-076: arsenal statistics support future balancing
   meta.addMasteryXp("ship:placeholder", result === "victory" ? 20 : 8);
@@ -1216,6 +1236,17 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
   persistMeta();
   // AF-040: Mission Completion as a Resource Source — Credits on victory only.
   if (result === "victory") awardCredits(CREDIT_AWARDS.missionCompleted);
+  // GP-003 §Resources: real grant sites for the other four newly-added
+  // resources — each ties to a real, active, thematically-matched Mission
+  // Modifier (GP-003 §Mission Modifiers) rather than a flat per-run drop.
+  if (result === "victory") {
+    const activeKinds = missionRuntime?.snapshot.activeModifierKinds ?? [];
+    if (activeKinds.includes("darkMatter")) crafting.addMaterial("darkMatter", 3);
+    if (activeKinds.includes("blackHoleDistortion")) crafting.addMaterial("quantumCrystals", 2);
+    if (activeKinds.includes("toxicClouds")) crafting.addMaterial("biomass", 4);
+    if (activeKinds.includes("ancientBattlefield")) crafting.addMaterial("atlasFragments", 1);
+    persistCrafting();
+  }
   // AF-039: a completed Faction Mission grants reputation (clamped through
   // AF-038's exact GalaxyRuntime.clampedDelta) plus its faction reward,
   // reusing whichever existing acquisition system that reward kind already has.
@@ -1315,12 +1346,25 @@ function newRelicSystem(): RelicSystem {
 }
 
 // ── Commander (AF-030): governs the run via the four-hook signature.
-const sandboxCommander = SANDBOX_COMMANDERS[0]!;
+let sandboxCommander = SANDBOX_COMMANDERS[0]!;
 // AF-071: the framework profile wraps AF-030's def — talents, missions,
 // mastery track, relationships. One progression runtime per commander,
 // profile-scoped, fed a talent point per mission victory.
-const sandboxCommanderProfile = FRAMEWORK_PROFILES.find((p) => p.commanderId === sandboxCommander.id)!;
-const commanderProgression = new CommanderProgressionRuntime(sandboxCommanderProfile);
+let sandboxCommanderProfile = FRAMEWORK_PROFILES.find((p) => p.commanderId === sandboxCommander.id)!;
+// GP-003 §Commanders: "progression never resets" — keyed per commander (not
+// a single singleton) so a real Loadout choice of commander never discards
+// another commander's own talents/mission-beat progress. Lazily created so
+// only ever-selected commanders carry a live runtime.
+const commanderProgressionById = new Map<string, CommanderProgressionRuntime>();
+function commanderProgressionFor(commanderId: string): CommanderProgressionRuntime {
+  let progression = commanderProgressionById.get(commanderId);
+  if (!progression) {
+    const profile = FRAMEWORK_PROFILES.find((p) => p.commanderId === commanderId)!;
+    progression = new CommanderProgressionRuntime(profile);
+    commanderProgressionById.set(commanderId, progression);
+  }
+  return progression;
+}
 // AF-072: the launch roster — fourteen seats, the starting trio recruited,
 // usage recorded per expedition so statistics can inform future balancing.
 const roster = new RosterRuntime(FULL_RECRUITMENT_WITH_FOUNDER, STARTING_COMMANDER_IDS);
@@ -2537,6 +2581,49 @@ const civilisationHeartbeat = new CivilisationHeartbeat();
   civilisationHeartbeat.tick(20, { "What has changed?": "A new university opened.", "Who needs help?": "The frontier settlement needs teachers." });
 }
 
+/** GP-003 §Atlas Progression: gathers each of the ten named axes from its
+ * own real, already-live tracker — pure composition, no new state. Where no
+ * exact 1:1 tracker exists (Species Recovery, History), a documented
+ * count-based proxy over real recorded events stands in rather than a
+ * fabricated dedicated tracker. */
+function gatherAtlasProgressionSnapshot(): AtlasProgressionSnapshot {
+  const activeGalaxy = GALAXY_CLUSTERS.find((c) => c.id === activeGalaxyClusterId)!.galaxy;
+  const explorationAvg =
+    activeGalaxy.systems.reduce((sum, system) => sum + meta.stat(`galaxy:${system.id}:explorationPercent`), 0) / activeGalaxy.systems.length;
+  const restorationTotal = museumRestoration.allProjects().length;
+  return atlasProgressionSnapshot({
+    museum: museumQuality.value(),
+    research: (researchTree.snapshot.unlockedCount / ROSTER_RESEARCH_TREE.length) * 100,
+    knowledge: codexRuntime.discoveryPercent(codexReader),
+    hope: emotionalContinuity.hopeLevelOf("humanity"),
+    civilisation: civilisationState.getCurrent()?.Health ?? 50,
+    planetRestoration: restorationTotal > 0 ? (museumRestoration.completedCount() / restorationTotal) * 100 : 0,
+    speciesRecovery: Math.min(100, speciesAdaptation.all().length * 20),
+    education: civilisationState.getCurrent()?.Education ?? 50,
+    history: Math.min(100, legacyHistory.all().length * 10),
+    exploration: explorationAvg,
+  });
+}
+
+/** GP-003 §Long Term Goals: gathers each of the nine named goals from its
+ * own real, already-live tracker — pure composition, no new state. */
+function gatherLongTermGoalsSnapshot(): LongTermGoalsSnapshot {
+  const restorationTotal = museumRestoration.allProjects().length;
+  const unlockedClusterCount = GALAXY_CLUSTERS.filter((c) => isClusterUnlocked(c, campaign.unlocks)).length;
+  const inputs: Record<LongTermGoalTrack, LongTermGoalProgress> = {
+    unlockAllShips: { current: fleet.snapshot.collectedCount, target: fleet.snapshot.fleetSize },
+    recruitEveryCommander: { current: roster.snapshot.recruitedCount, target: roster.snapshot.rosterSize },
+    completeMuseum: { current: museumQuality.value(), target: 100 },
+    restoreEveryPlanet: { current: museumRestoration.completedCount(), target: restorationTotal },
+    finishResearchTree: { current: researchTree.snapshot.unlockedCount, target: ROSTER_RESEARCH_TREE.length },
+    unlockEveryGalaxy: { current: unlockedClusterCount, target: GALAXY_CLUSTERS.length },
+    completeEveryMission: { current: Math.min(meta.stat("victories"), FRAMEWORK_MISSIONS.length), target: FRAMEWORK_MISSIONS.length },
+    collectLegendaryArtifacts: { current: meta.snapshot.collectionCounts.bossArtifacts ?? 0, target: BOSS_ARTIFACTS.length },
+    atlasCompletion: { current: gatherAtlasProgressionSnapshot().overallScore, target: 100 },
+  };
+  return longTermGoalsSnapshot(inputs);
+}
+
 // AF-190: the Atlas Meta Evolution Engine — governs how the Afterlight
 // PROJECT itself evolves across years of real-world development, never
 // any in-fiction mechanic (see atlasMetaEvolutionData.ts's NAMING SCOPE
@@ -2765,11 +2852,23 @@ const wisdomLibrary = new WisdomLibrary();
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
-const sandboxShip = SANDBOX_SHIPS[0]!;
+let sandboxShip = SANDBOX_SHIPS[0]!;
 // AF-073: the framework profile wraps AF-031's def — modules, mastery,
-// identity, ascension. One outfitting runtime for the active hull.
-const sandboxShipProfile = SHIP_PROFILES.find((p) => p.shipId === sandboxShip.id)!;
-const shipOutfitting = new ShipOutfittingRuntime(sandboxShipProfile, SANDBOX_SHIP_MODULES);
+// identity, ascension. One outfitting runtime per hull, via shipOutfittingFor().
+// GP-003 §Ship Progression: "ships permanently improve" — keyed per ship
+// (not a single singleton) so a real Loadout choice of ship never discards
+// another hull's own fitted modules/mastery ledger. Lazily created so only
+// ever-selected ships carry a live runtime.
+const shipOutfittingById = new Map<string, ShipOutfittingRuntime>();
+function shipOutfittingFor(shipId: string): ShipOutfittingRuntime {
+  let outfitting = shipOutfittingById.get(shipId);
+  if (!outfitting) {
+    const profile = SHIP_PROFILES.find((p) => p.shipId === shipId)!;
+    outfitting = new ShipOutfittingRuntime(profile, SANDBOX_SHIP_MODULES);
+    shipOutfittingById.set(shipId, outfitting);
+  }
+  return outfitting;
+}
 // AF-074: the launch fleet — ten berths, the Wayfarer collected, missions
 // recorded per hull so statistics support long-term balancing.
 const fleet = new ShipCollectionRuntime(FLEET_ENTRIES, STARTING_SHIP_IDS);
@@ -2818,6 +2917,127 @@ let lastCampaignBeat: string | null = null;
 let campaignBeatClockMs = 0;
 const CAMPAIGN_BEAT_CADENCE_MS = 1500;
 
+// GP-003 §Save System: "everything permanent saves automatically" — these six
+// runtimes were real, permanent-by-design (append-only recruitment/collection,
+// never-decreasing bonds, ever-growing talents/mastery/campaign progress) but
+// were never registered with saveCoordinator, so they silently reset on
+// reload despite the spec's own "Humanity never resets" premise. Registered
+// here exactly like every existing slice (settings/research/crafting/meta/
+// inventory/collectionLedger) above.
+const commanderProgressionSlice = new SaveSlice<Readonly<Record<string, CommanderProgressionSaveData>>>({
+  key: "commanderProgression",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({}),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+function persistCommanderProgression(): void {
+  const out: Record<string, CommanderProgressionSaveData> = {};
+  for (const [id, progression] of commanderProgressionById) out[id] = progression.toSave();
+  void commanderProgressionSlice.save(out);
+  saveCoordinator.recordSave("commanderProgression");
+}
+saveCoordinator.register({
+  id: "commanderProgression",
+  toSave: () => {
+    const out: Record<string, CommanderProgressionSaveData> = {};
+    for (const [id, progression] of commanderProgressionById) out[id] = progression.toSave();
+    return out;
+  },
+  loadSave: (data) => {
+    for (const [id, entry] of Object.entries(data)) {
+      if (FRAMEWORK_PROFILES.some((p) => p.commanderId === id)) commanderProgressionFor(id).loadSave(entry);
+    }
+  },
+});
+
+const rosterSlice = new SaveSlice<RosterSaveData>({
+  key: "roster",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({ recruited: [], uses: {}, victories: {} }),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+function persistRoster(): void {
+  void rosterSlice.save(roster.toSave());
+  saveCoordinator.recordSave("roster");
+}
+saveCoordinator.register({ id: "roster", toSave: () => roster.toSave(), loadSave: (data) => roster.loadSave(data) });
+
+const bondNetworkSlice = new SaveSlice<BondNetworkSaveData>({
+  key: "bondNetwork",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({}),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+// No persistBondNetwork() wrapper: AF-130's growBond() has no real mutation
+// call site yet (a pre-existing gap outside GP-003's own audited findings,
+// which only flagged the missing save REGISTRATION). Registering here still
+// has real value — milestone backups (writeMilestoneBackup) already read
+// every registered unit's toSave(), and boot-load below restores it —
+// so a future producer of growBond() gets persistence for free.
+saveCoordinator.register({ id: "bondNetwork", toSave: () => bondNetwork.toSave(), loadSave: (data) => bondNetwork.loadSave(data) });
+
+const shipOutfittingSlice = new SaveSlice<Readonly<Record<string, ShipOutfittingSaveData>>>({
+  key: "shipOutfitting",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({}),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+function persistShipOutfitting(): void {
+  const out: Record<string, ShipOutfittingSaveData> = {};
+  for (const [id, outfitting] of shipOutfittingById) out[id] = outfitting.toSave();
+  void shipOutfittingSlice.save(out);
+  saveCoordinator.recordSave("shipOutfitting");
+}
+saveCoordinator.register({
+  id: "shipOutfitting",
+  toSave: () => {
+    const out: Record<string, ShipOutfittingSaveData> = {};
+    for (const [id, outfitting] of shipOutfittingById) out[id] = outfitting.toSave();
+    return out;
+  },
+  loadSave: (data) => {
+    for (const [id, entry] of Object.entries(data)) {
+      if (SHIP_PROFILES.some((p) => p.shipId === id)) shipOutfittingFor(id).loadSave(entry);
+    }
+  },
+});
+
+const fleetSlice = new SaveSlice<ShipCollectionSaveData>({
+  key: "fleet",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({ collected: [], uses: {}, successes: {} }),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+function persistFleet(): void {
+  void fleetSlice.save(fleet.toSave());
+  saveCoordinator.recordSave("fleet");
+}
+saveCoordinator.register({ id: "fleet", toSave: () => fleet.toSave(), loadSave: (data) => fleet.loadSave(data) });
+
+const campaignSlice = new SaveSlice<CampaignSaveData>({
+  key: "campaign",
+  currentVersion: 1,
+  migrations: {},
+  defaultData: () => ({ chapterIndex: 0, finalChapterGranted: false, counters: {}, flags: [], choices: [] }),
+  storage: new LocalStorageAdapter(),
+  onWarning: (message, detail) => log.warn("save", message, detail),
+});
+function persistCampaign(): void {
+  void campaignSlice.save(campaign.toSave());
+  saveCoordinator.recordSave("campaign");
+}
+saveCoordinator.register({ id: "campaign", toSave: () => campaign.toSave(), loadSave: (data) => campaign.loadSave(data) });
+
 // AF-069: the endgame begins after the main campaign — constructed locked,
 // unlocked the moment AF-068's ladder completes, fed by the same real play.
 const endgame = new EndgameRuntime(SANDBOX_ASCENSIONS);
@@ -2831,6 +3051,7 @@ liveOps.beginSeason(SEASON_ONE);
 
 function feedCampaignProgress(counterKey: string): void {
   campaign.recordProgress(counterKey);
+  persistCampaign(); // GP-003: campaign chapter/counter/unlock progress now actually survives a reload
   if (campaign.isComplete && !endgame.isUnlocked) endgame.notifyCampaignComplete();
   if (endgame.isUnlocked) endgame.recordMilestone();
 }
@@ -3946,6 +4167,29 @@ function grantBossRewards(): void {
     lootNotices.push({ text: "BLUEPRINT · PROTOTYPE LANCE", colour: "#9b5cff", ttlMs: 2200 });
     persistCrafting();
   }
+  // GP-003 §Resources/§Blueprints: the two new recipes that spend the five
+  // newly-added exact-named resources unlock on the same real boss-defeat
+  // trigger every other guaranteed blueprint already uses.
+  if (def.rewards.guaranteedBlueprint && crafting.unlockBlueprint("bp-ancient-tech-core")) {
+    bus.emit("BlueprintUnlocked", { blueprintId: "bp-ancient-tech-core" });
+    lootNotices.push({ text: "BLUEPRINT · ANCIENT TECH CORE", colour: "#9b5cff", ttlMs: 2200 });
+    persistCrafting();
+  }
+  if (def.rewards.guaranteedBlueprint && crafting.unlockBlueprint("bp-biosynth-plating")) {
+    bus.emit("BlueprintUnlocked", { blueprintId: "bp-biosynth-plating" });
+    lootNotices.push({ text: "BLUEPRINT · BIOSYNTH PLATING", colour: "#9b5cff", ttlMs: 2200 });
+    persistCrafting();
+  }
+  if (def.rewards.guaranteedBlueprint && crafting.unlockBlueprint("bp-shield-capacitor-module")) {
+    bus.emit("BlueprintUnlocked", { blueprintId: "bp-shield-capacitor-module" });
+    lootNotices.push({ text: "BLUEPRINT · SHIELD CAPACITOR MODULE", colour: "#9b5cff", ttlMs: 2200 });
+    persistCrafting();
+  }
+  // GP-003 §Resources: livingMetal is granted from the same real boss-defeat
+  // trigger — "living metal" fits the ancient-guardian-construct fiction
+  // (Hollow Sentinel) directly.
+  crafting.addMaterial("livingMetal", 2);
+  persistCrafting();
   meta.recordStat("bossesDefeated");
   meta.discover("bosses", def.codexId);
   awardCredits(CREDIT_AWARDS.bossDefeated); // AF-040: Bosses as a Resource Source.
@@ -5321,7 +5565,14 @@ function startRun(): void {
       : DEFAULT_DIRECTOR_TUNING,
     rng: new Rng(seed).fork("director"),
     threatInputs: {
-      missionDifficulty: 1,
+      // GP-003 §Enemy Scaling / §Galaxy Progression: campaign-depth difficulty
+      // — StarSystemDef.threatLevel (AF-038) was set on every system but read
+      // by nothing anywhere; threatLevel 1 (the easiest system) is the
+      // baseline, each level above it raises missionDifficulty exactly the
+      // way Push Deeper's own extractionDepth escalation already does,
+      // distinct from and additive to that per-run scaling (setThreatInputs
+      // below only ever raises this further, never resets it).
+      missionDifficulty: campaignDifficultyFor(galaxyRuntime.currentSystem.threatLevel),
       biomeModifier: biomeRuntime.threatModifier,
       mutatorModifier: missionRuntime.mutatorModifier,
       ascension: session.ascension,
@@ -5746,6 +5997,22 @@ function drawSandbox(): void {
   }
 }
 
+/** GP-003 §Commanders: real, derived recruitment-source gates — reads only
+ * already-live state (no new unlock flags invented) so "Recruit Commanders"
+ * gates on genuine play rather than being unconditionally open. */
+function unlockedRecruitmentSources(): Set<RecruitmentSource> {
+  const sources = new Set<RecruitmentSource>(["campaign"]);
+  if (researchTree.snapshot.unlockedCount > 0) sources.add("research");
+  if (meta.stat(`galaxy:${galaxyRuntime.currentSystem.id}:explorationPercent`) > 0) sources.add("exploration");
+  if (campaign.snapshot.storyFlagCount > 0) sources.add("story");
+  if (campaign.majorEventsFired.length > 0) sources.add("legendaryMissions");
+  if (collectionLedger.recentDiscoveries.length > 0) sources.add("hiddenDiscoveries");
+  if (Object.keys(meta.snapshot.statistics).some((k) => k.startsWith("faction:") && k.endsWith(":reputation") && meta.stat(k) > 0)) {
+    sources.add("factionReputation");
+  }
+  return sources;
+}
+
 function render(): void {
   const state = machine.current;
   switch (state) {
@@ -5820,6 +6087,39 @@ function render(): void {
           },
         ]);
       }
+      // GP-003 §Meta Loop: "Upgrade Commander" — the commander's own talent
+      // points (AF-071, granted per mission victory) were real but had no
+      // spend UI anywhere; this closes that dead end using the exact same
+      // tryUnlockTalent() the AF-071 engine already exposes.
+      const commanderUpgradeButtons: Array<[string, () => void]> = commanderProgressionFor(sandboxCommander.id).snapshot.talentPoints > 0
+        ? sandboxCommanderProfile.talentBranches
+            .flatMap((branch) => branch.nodes)
+            .filter((node) => !commanderProgressionFor(sandboxCommander.id).isUnlocked(node.id))
+            .slice(0, 3)
+            .map((node) => [
+              `Upgrade Commander: ${node.kind} — ${node.description} (1 talent pt)`,
+              () => {
+                if (commanderProgressionFor(sandboxCommander.id).tryUnlockTalent(node.id)) {
+                  persistCommanderProgression();
+                  render();
+                }
+              },
+            ])
+        : [];
+      // GP-003 §Meta Loop: "Upgrade Ship" — module fitting (AF-073) had a
+      // real engine (slots, bonuses, refitting) but no way to reach it from
+      // Home Base; this is the ship-side twin of the commander upgrade above.
+      const shipUpgradeButtons: Array<[string, () => void]> = SANDBOX_SHIP_MODULES.filter((m) => !shipOutfittingFor(sandboxShip.id).isFitted(m.id))
+        .slice(0, 3)
+        .map((module) => [
+          `Upgrade Ship: fit ${module.name} (${module.kind})`,
+          () => {
+            if (shipOutfittingFor(sandboxShip.id).tryFitModule(module.id)) {
+              persistShipOutfitting();
+              render();
+            }
+          },
+        ]);
       // AF-038: Galaxy Map — route travel (gated by adjacency or the AF-024
       // Fast Travel unlock) and point-of-interest discovery (AF-026 collections).
       const fastTravelUnlocked = researchTree.isUnlocked("warp-charting");
@@ -5838,6 +6138,19 @@ function render(): void {
             }
           },
         ]);
+      // GP-003 §Galaxy Unlocking: warping into a real second GalaxyClusterDef
+      // is gated on CampaignRuntime.unlocks — previously granted but never
+      // read by anything. Only unlocked, non-active clusters get a button.
+      const clusterWarpButtons: Array<[string, () => void]> = GALAXY_CLUSTERS.filter(
+        (cluster) => cluster.id !== activeGalaxyClusterId && isClusterUnlocked(cluster, campaign.unlocks),
+      ).map((cluster) => [
+        `Warp to ${cluster.name}`,
+        () => {
+          activeGalaxyClusterId = cluster.id;
+          galaxyRuntime = new GalaxyRuntime(cluster.galaxy, new Rng(Date.now()).fork("galaxy"), cluster.galaxy.systems[0]!.id);
+          render();
+        },
+      ]);
       const poiButtons: Array<[string, () => void]> = currentSystem.pointsOfInterest
         .filter((poi) => !meta.hasDiscovered(poi.discoveryCategory, poi.discoveryId))
         .map((poi) => [
@@ -5977,16 +6290,27 @@ function render(): void {
       }
       screen(
         "Galaxy Command",
-        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${ROSTER_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}\n${factionLine}\nCredits: ${credits.toFixed(0)} · ${activeMerchant?.name ?? "Market"}${marketRuntime.currentEvent ? ` — ${marketRuntime.currentEvent}` : ""}\n${worldEventLine}`,
+        `Research: ${snapshot.points} pts, ${snapshot.unlockedCount}/${ROSTER_RESEARCH_TREE.length} tech · Materials: ${crafting.materialCount("commonMaterials")} common, ${crafting.materialCount("rareAlloys")} alloy · Hangar: ${crafting.hangarItems.length}\n${GALAXY_CLUSTERS.find((c) => c.id === activeGalaxyClusterId)!.name} · ${currentSystem.name} (${currentSystem.region}) · exploration ${meta.stat(explorationKey).toFixed(0)}% · stability ${meta.stat(stabilityKey).toFixed(0)} · fast travel ${fastTravelUnlocked ? "unlocked" : "locked"}\n${factionLine}\nCredits: ${credits.toFixed(0)} · ${activeMerchant?.name ?? "Market"}${marketRuntime.currentEvent ? ` — ${marketRuntime.currentEvent}` : ""}\n${worldEventLine}\n${sandboxCommander.name}: ${commanderProgressionFor(sandboxCommander.id).snapshot.talentPoints} talent pts unspent · ${sandboxShip.name}: ${shipOutfittingFor(sandboxShip.id).snapshot.fittedModules}/${shipOutfittingFor(sandboxShip.id).snapshot.moduleSlots} modules fitted`,
         [
           ["Select Mission", () => machine.transitionTo("MissionSelect")],
           ...travelButtons,
+          ...clusterWarpButtons,
           ...poiButtons,
           ...factionButtons,
           ...marketButtons,
           ...worldEventButtons,
           ...nodeButtons,
           ...forgeButtons,
+          ...commanderUpgradeButtons,
+          ...shipUpgradeButtons,
+          // GP-003 §Home Base: five sub-screens the audit found entirely
+          // missing — Recruit Commanders/View Museum/Read Codex/Manage Atlas
+          // (built above) and Customise Loadout (built in the Loadout task).
+          ["Recruit Commanders", () => machine.transitionTo("RecruitCommanders")],
+          ["View Museum", () => machine.transitionTo("ViewMuseum")],
+          ["Read Codex", () => machine.transitionTo("ReadCodex")],
+          ["Manage Atlas", () => machine.transitionTo("ManageAtlas")],
+          ["Customise Loadout", () => machine.transitionTo("LoadoutChoice")],
           ["Statistics", () => machine.transitionTo("Statistics")],
           ["Main Menu", () => machine.transitionTo("MainMenu")],
         ],
@@ -6023,6 +6347,7 @@ function render(): void {
               machine.transitionTo("Loading");
             },
           ],
+          ["Customise Loadout", () => machine.transitionTo("LoadoutChoice")],
           ...missionButtons,
           [
             "Back",
@@ -6160,7 +6485,10 @@ function render(): void {
             "Push Deeper — Higher Risk, Higher Reward",
             () => {
               extractionDepth += 1;
-              director?.setThreatInputs({ missionDifficulty: 1 + extractionDepth * 0.35 });
+              // GP-003: compose with the campaign-depth base set at startRun()
+              // rather than overwriting it — pushing deeper in an easy system
+              // still starts from that system's own real threatLevel baseline.
+              director?.setThreatInputs({ missionDifficulty: campaignDifficultyFor(galaxyRuntime.currentSystem.threatLevel) + extractionDepth * 0.35 });
               extractionRemainingMs = 20000;
               lootNotices.push({ text: `PUSHING DEEPER · DEPTH ${extractionDepth}`, colour: "#ff8c1a", ttlMs: 2600 });
               // GP-002 §Mission End: "each additional wave increases... boss
@@ -6193,6 +6521,10 @@ function render(): void {
           `${artifact.name} — ${artifact.description}`,
           () => {
             bossArtifactRuntime.choose(artifact.id);
+            // GP-003 §Long Term Goals: "Collect Legendary Artifacts" needs a
+            // permanent record — bossArtifactRuntime itself resets every run
+            // by design, so this is the one place that remembers forever.
+            if (meta.discover("bossArtifacts", artifact.id)) persistMeta();
             currentBossArtifactOffer = [];
             lootNotices.push({ text: `ARTIFACT CLAIMED · ${artifact.name.toUpperCase()}`, colour: "#ffc652", ttlMs: 3000 });
             machine.popOverlay();
@@ -6273,6 +6605,11 @@ function render(): void {
           codexLine,
           journalLine,
           saveLine,
+          (() => {
+            const goals = gatherLongTermGoalsSnapshot();
+            const goalLines = LONG_TERM_GOAL_TRACKS.map((track) => `${goals.goals[track].complete ? "★" : "☆"} ${track} ${goals.goals[track].percent.toFixed(0)}%`).join("   ");
+            return `Long Term Goals ${goals.completedCount}/${LONG_TERM_GOAL_TRACKS.length} complete (${goals.overallCompletionPercent.toFixed(1)}% overall):   ${goalLines}`;
+          })(),
         ].join("\n"),
         [
           [
@@ -6325,6 +6662,124 @@ function render(): void {
             : []),
           ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
           ["Back to Main Menu", () => machine.transitionTo("MainMenu")],
+        ],
+      );
+      break;
+    }
+    // GP-003 §Home Base: "Recruit Commanders" — every not-yet-recruited seat
+    // whose registered source (AF-072) has actually been reached, wired to
+    // the real tryRecruit() the audit found had no player-facing screen at all.
+    case "RecruitCommanders": {
+      const sources = unlockedRecruitmentSources();
+      const recruitButtons: Array<[string, () => void]> = FULL_ROSTER_WITH_FOUNDER.filter((c) => !roster.isRecruited(c.id)).map((c) => {
+        const entry = FULL_RECRUITMENT_WITH_FOUNDER.find((r) => r.commanderId === c.id);
+        const reached = entry ? sources.has(entry.source) : false;
+        return [
+          `Recruit: ${c.name} (${entry?.source ?? "unknown"}${reached ? "" : " — locked"})`,
+          () => {
+            if (roster.tryRecruit(c.id, sources)) {
+              persistRoster();
+              render();
+            }
+          },
+        ];
+      });
+      screen(
+        "Recruit Commanders",
+        `${roster.snapshot.recruitedCount}/${roster.snapshot.rosterSize} recruited · sources reached: ${[...sources].join(", ")}`,
+        [...recruitButtons, ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")]],
+      );
+      break;
+    }
+    // GP-003 §Home Base / §The Museum: a real, player-facing Museum screen —
+    // previously only a debug-overlay summary line, now browsable, fed by
+    // real restoration/visitor/collection trackers (AF-134).
+    case "ViewMuseum": {
+      const restorationButtons: Array<[string, () => void]> = museumRestoration
+        .allProjects()
+        .filter((p) => !museumRestoration.isComplete(p.id))
+        .map((p) => [
+          `Advance Restoration: ${p.id} (${p.artifactType}, ${p.progress.toFixed(0)}%)`,
+          () => {
+            museumRestoration.advance(p.id, 15);
+            render();
+          },
+        ]);
+      screen(
+        "The Museum",
+        `Quality ${museumQuality.value().toFixed(0)}/100 · Restoration ${museumRestoration.completedCount()}/${museumRestoration.allProjects().length} complete · Donations ${museumDonations.all().length} · Visitors ${museumVisitors.totalVisitors()}\nTheater programs ${museumTheater.all().length} · Library ${museumLibrary.all().length} · Audio Archive ${museumAudioArchive.all().length}`,
+        [...restorationButtons, ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")]],
+      );
+      break;
+    }
+    // GP-003 §Home Base: a real, browsable Codex screen (AF-043) — previously
+    // only a debug-overlay title list, never a screen the player could open.
+    case "ReadCodex": {
+      const unlockedEntries = codexRuntime.unlockedEntries(codexReader);
+      const entryButtons: Array<[string, () => void]> = unlockedEntries.slice(0, 8).map((entry) => [
+        `${codexJournal.isPinned(entry.id) ? "★" : "☆"} ${entry.title}`,
+        () => {
+          codexJournal.togglePin(entry.id);
+          render();
+        },
+      ]);
+      screen(
+        "Codex",
+        `${unlockedEntries.length}/${codexRuntime.all.length} entries (${codexRuntime.discoveryPercent(codexReader).toFixed(0)}%) · Missing Links ${codexRuntime.missingLinkCount()}\nTap an entry to pin/unpin it as a Featured Discovery.`,
+        [...entryButtons, ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")]],
+      );
+      break;
+    }
+    // GP-003 §Atlas Progression: a real, unified Atlas score — previously
+    // dozens of independently-named trackers with no single composed number.
+    case "ManageAtlas": {
+      const atlas = gatherAtlasProgressionSnapshot();
+      const axisLines = ATLAS_PROGRESSION_AXES.map((axis) => `${axis}: ${atlas.axisScores[axis].toFixed(0)}`).join(" · ");
+      screen(
+        "Manage Atlas",
+        `Overall Atlas Score: ${atlas.overallScore.toFixed(1)}/100\nStrongest: ${atlas.strongestAxis} · Weakest: ${atlas.weakestAxis}\n${axisLines}`,
+        [["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")]],
+      );
+      break;
+    }
+    // GP-003 §Loadout: a real pre-run choice of Ship and Commander from what
+    // the player has actually recruited/collected — previously both were
+    // hardcoded singletons (SANDBOX_COMMANDERS[0]/SANDBOX_SHIPS[0]) with no
+    // selection screen at all. Scoped to Ship + Commander only: unlike those
+    // two (real hardcoded-singleton bugs the audit found), "Starting
+    // Passive"/"Starting Artifact"/"Consumables"/"Cosmetics" have no dormant
+    // backing mechanism anywhere in this codebase to wire up — passives are
+    // chosen mid-run via AF-022 level-ups, and boss artifacts (GP-001) are a
+    // 3-of-5 post-boss choice that resets every run by design, not a
+    // pre-run equip slot. Inventing four new permanent-unlock systems from
+    // scratch would be a real scope expansion beyond what this module's
+    // audit found, so this is a documented trim, not a silent omission.
+    case "LoadoutChoice": {
+      const commanderButtons: Array<[string, () => void]> = SANDBOX_COMMANDERS.filter(
+        (c) => c.id !== sandboxCommander.id && roster.isRecruited(c.id),
+      ).map((c) => [
+        `Set Commander: ${c.name}`,
+        () => {
+          sandboxCommander = c;
+          sandboxCommanderProfile = FRAMEWORK_PROFILES.find((p) => p.commanderId === c.id)!;
+          render();
+        },
+      ]);
+      const shipButtons: Array<[string, () => void]> = SANDBOX_SHIPS.filter((s) => s.id !== sandboxShip.id && fleet.isCollected(s.id)).map((s) => [
+        `Set Ship: ${s.name}`,
+        () => {
+          sandboxShip = s;
+          render();
+        },
+      ]);
+      screen(
+        "Loadout",
+        `Commander: ${sandboxCommander.name} · ${commanderProgressionFor(sandboxCommander.id).snapshot.talentsUnlocked}/${commanderProgressionFor(sandboxCommander.id).snapshot.talentsTotal} talents\nShip: ${sandboxShip.name} · ${shipOutfittingFor(sandboxShip.id).snapshot.fittedModules}/${shipOutfittingFor(sandboxShip.id).snapshot.moduleSlots} modules fitted`,
+        [
+          ...commanderButtons,
+          ...shipButtons,
+          ["Back to Mission Select", () => machine.transitionTo("MissionSelect")],
+          ["Back to Galaxy Command", () => machine.transitionTo("GalaxyCommand")],
         ],
       );
       break;
@@ -6585,7 +7040,7 @@ const loop = new GameLoop({
         })(),
         commander: commanderRuntime
           ? (() => {
-              const prog = commanderProgression.snapshot;
+              const prog = commanderProgressionFor(sandboxCommander.id).snapshot;
               const rosterSnap = roster.snapshot;
               const usage = roster.statsFor(sandboxCommander.id);
               return `${sandboxCommander.callsign} (${prog.class}/${philosophyFor(sandboxCommander.id)}) · ability cd ${commanderRuntime.snapshot.activeCooldownMs.toFixed(0)}ms · ult ${commanderRuntime.snapshot.ultimateCharge.toFixed(0)}/${sandboxCommander.ultimate.chargeRequired}${commanderRuntime.snapshot.ultimateReady ? " READY" : ""} · talents ${prog.talentsUnlocked}/${prog.talentsTotal} (${prog.talentPoints} pts) · mission ${prog.missionBeat} · roster ${rosterSnap.recruitedCount}/${rosterSnap.rosterSize} · uses ${usage.uses} (${(usage.winRate * 100).toFixed(0)}% wr) · ${commanderTemplateCoverageSummary()} · ${recruitmentMethodLiveSummary()} · ${relationshipCoverageSummary()} · ${personalityFrameworkSummary()} · ${dialogueLibraryStatusSummary()} · ${masteryFeaturesLiveSummary()}`;
@@ -6593,7 +7048,7 @@ const loop = new GameLoop({
           : null,
         ships: shipRuntime
           ? (() => {
-              const fit = shipOutfitting.snapshot;
+              const fit = shipOutfittingFor(sandboxShip.id).snapshot;
               const fleetSnap = fleet.snapshot;
               return `${sandboxShip.name} (${sandboxShip.shipClass}/${fit.frameworkClass}) · ${sandboxFleetEntry.tier}/${sandboxFleetEntry.specialisation} · energy ${shipRuntime.snapshot.energy.toFixed(0)}/${sandboxShip.maxEnergy} · ${fit.offensiveIdentity}/${fit.primaryDefence} · modules ${fit.fittedModules}/${fit.moduleSlots} · fleet ${fleetSnap.collectedCount}/${fleetSnap.fleetSize}`;
             })()
@@ -6900,7 +7355,7 @@ const loop = new GameLoop({
         evolutionEngine: (() => {
           const settlement = civilisation.allSettlements[0];
           const archStage = settlement ? architecturalStageFor(settlement.developmentStage) : "—";
-          const prog = commanderProgression.snapshot;
+          const prog = commanderProgressionFor(sandboxCommander.id).snapshot;
           const maturityScore = commanderMaturityScore(prog.talentsUnlocked, prog.missionBeatIndex, bondNetwork.snapshot().averageLevel);
           const maturityStage = commanderMaturityStageFor(maturityScore);
           const unlockedNodes = researchTree.unlockedNodes;
@@ -6938,7 +7393,7 @@ const loop = new GameLoop({
             museumContributionCount: museumDonations.fromCommander(sandboxCommander.id).length,
             hasChronicleBiography: chronicleCommanderMemories.historyFor(sandboxCommander.id).length > 0,
             personalQuestCount: commanderStorylines.beatFor(sandboxCommander.id, "Origin Story")?.allVersions().length ?? 0,
-            masteryTrackProgress: commanderProgression.snapshot.talentsUnlocked,
+            masteryTrackProgress: commanderProgressionFor(sandboxCommander.id).snapshot.talentsUnlocked,
             accessibilityReviewed: true,
           });
           const settlement = civilisation.allSettlements[0];
@@ -7282,6 +7737,7 @@ const loop = new GameLoop({
         })(),
         gpCoreLoop: gpCoreLoopDebugLine(),
         gpEnemyWave: gpEnemyWaveDebugLine(),
+        gpMetaProgression: gpMetaProgressionDebugLine(),
       });
     }
   },
@@ -7339,6 +7795,18 @@ void (async () => {
   meta.loadSave(await metaSlice.load());
   inventory.loadSave(await inventorySlice.load());
   collectionLedger.loadSave(await collectionLedgerSlice.load());
+  // GP-003: the six previously-unregistered permanent runtimes — load in the
+  // same boot step as every other slice above.
+  for (const [id, entry] of Object.entries(await commanderProgressionSlice.load())) {
+    if (FRAMEWORK_PROFILES.some((p) => p.commanderId === id)) commanderProgressionFor(id).loadSave(entry);
+  }
+  roster.loadSave(await rosterSlice.load());
+  bondNetwork.loadSave(await bondNetworkSlice.load());
+  for (const [id, entry] of Object.entries(await shipOutfittingSlice.load())) {
+    if (SHIP_PROFILES.some((p) => p.shipId === id)) shipOutfittingFor(id).loadSave(entry);
+  }
+  fleet.loadSave(await fleetSlice.load());
+  campaign.loadSave(await campaignSlice.load());
   // AF-044: Save Slots — every install always has at least a Primary Profile.
   let profiles = await saveProfileManager.list();
   if (profiles.length === 0) {

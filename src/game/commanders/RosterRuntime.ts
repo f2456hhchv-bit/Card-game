@@ -27,6 +27,14 @@ export interface RosterSnapshot {
   mostUsedCommanderId: string | null;
 }
 
+/** GP-003 §Commanders: recruitment is permanent — this is the save shape
+ * the append-only recruited set and usage/victory ledgers round-trip through. */
+export interface RosterSaveData {
+  recruited: readonly string[];
+  uses: Readonly<Record<string, number>>;
+  victories: Readonly<Record<string, number>>;
+}
+
 export class RosterRuntime {
   private readonly recruited = new Set<string>();
   private readonly uses = new Map<string, number>();
@@ -88,5 +96,22 @@ export class RosterRuntime {
       totalUses,
       mostUsedCommanderId: mostUsed,
     };
+  }
+
+  toSave(): RosterSaveData {
+    return {
+      recruited: [...this.recruited],
+      uses: Object.fromEntries(this.uses),
+      victories: Object.fromEntries(this.victories),
+    };
+  }
+
+  /** Restore from a save slice; unknown commander ids are dropped (deprecation-safe). */
+  loadSave(data: RosterSaveData): void {
+    for (const id of data.recruited) if (this.recruitmentByCommander.has(id)) this.recruited.add(id);
+    this.uses.clear();
+    for (const [id, count] of Object.entries(data.uses)) if (this.recruited.has(id)) this.uses.set(id, Math.max(0, count));
+    this.victories.clear();
+    for (const [id, count] of Object.entries(data.victories)) if (this.recruited.has(id)) this.victories.set(id, Math.max(0, count));
   }
 }

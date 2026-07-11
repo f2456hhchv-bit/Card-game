@@ -213,6 +213,8 @@ export const MISSION_ROSTER_ENTRIES: readonly MissionRosterEntry[] = [
   { missionId: "crystal-fields-incursion", family: "worldEvent", tier: "special" },
   { missionId: "winterline-rescue", family: "civilianSupport", tier: "common" },
   { missionId: "first-light-excavation", family: "ancientDiscovery", tier: "ancient" },
+  // GP-003 §Star Systems: Forge Primus's own real roster entry.
+  { missionId: "forge-primus-uprising", family: "sabotage", tier: "elite" },
 ];
 
 /** One permanent expedition record (AF-084 §Mission Collection / §Mission History). */

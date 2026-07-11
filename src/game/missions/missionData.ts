@@ -72,6 +72,19 @@ export const MISSION_MODIFIER_KINDS = [
   "darkSector",
   "voidCorruption",
   "experimentalConditions",
+  // GP-003 §Mission Modifiers: the spec's own named list (Meteor Storm/Solar
+  // Radiation/Black Hole Distortion/Electrical Nebula/Frozen Sector/Toxic
+  // Clouds/Dark Matter/Ancient Battlefield/Civilian Evacuation) — only
+  // "lowGravity" matched verbatim before this; the other nine are additive.
+  "meteorStorm",
+  "solarRadiation",
+  "blackHoleDistortion",
+  "electricalNebula",
+  "frozenSector",
+  "toxicClouds",
+  "darkMatter",
+  "ancientBattlefield",
+  "civilianEvacuation",
 ] as const;
 export type MissionModifierKind = (typeof MISSION_MODIFIER_KINDS)[number];
 
@@ -190,6 +203,10 @@ export const SANDBOX_MISSIONS: readonly MissionDef[] = [
       { kind: "eliteActivity", description: "Elite squads run larger.", mutatorModifierDelta: 0.15, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 1, rewardMultiplierDelta: 0.1 },
       { kind: "doubleRewards", description: "Loot ladder shifted upward.", mutatorModifierDelta: 0, lootMutatorBonusDelta: 0.3, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.5 },
       { kind: "voidCorruption", description: "Threat runs hotter throughout.", mutatorModifierDelta: 0.25, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.15 },
+      // GP-003: Crystal Fields' own share of the spec's newly-added named modifiers.
+      { kind: "meteorStorm", description: "The fields are catching fire from above.", mutatorModifierDelta: 0.2, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.15 },
+      { kind: "solarRadiation", description: "Unshielded exposure climbs by the hour.", mutatorModifierDelta: 0.15, lootMutatorBonusDelta: 0.05, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.1 },
+      { kind: "civilianEvacuation", description: "A settlement convoy is still inside the fields.", mutatorModifierDelta: 0, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.3 },
     ],
     modifierSlots: 1,
     eventPool: [

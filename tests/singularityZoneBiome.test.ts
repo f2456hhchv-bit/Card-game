@@ -38,6 +38,7 @@ import { CELESTIAL_ENEMIES } from "../src/game/enemies/celestialData";
 import { ANCIENT_ENEMIES } from "../src/game/enemies/ancientData";
 import { PARAGON_ENEMIES } from "../src/game/enemies/paragonData";
 import { GALAXY_REGIONS, SANDBOX_GALAXY } from "../src/game/galaxy/galaxyData";
+import { GALAXY_CLUSTERS } from "../src/game/galaxy/galaxyClusterData";
 import { GalaxyRuntime } from "../src/game/galaxy/GalaxyRuntime";
 import { CodexRuntime } from "../src/game/codex/CodexRuntime";
 import { SANDBOX_CODEX_ENTRIES } from "../src/game/codex/codexData";
@@ -126,8 +127,13 @@ describe("The Singularity Zone is a plain AF-036 BiomeDef — zero schema change
 describe("Galaxy integration — Axiom carries the Zone, and the galaxy map is complete (AF-067 §Lore)", () => {
   it("the singularityZone region exists — every region on AF-038's locked shelf now has a definition", () => {
     expect(SANDBOX_GALAXY.regions.some((r) => r.id === "singularityZone")).toBe(true);
+    // GP-003 §Galaxy Progression: GALAXY_REGIONS now spans every real
+    // GalaxyClusterDef, not just SANDBOX_GALAXY alone (galaxyClusterData.ts's
+    // second cluster owns "shatteredExpanse") — the galaxy map is still
+    // complete, just across the full cluster set rather than one GalaxyDef.
+    const allDefinedRegions = new Set(GALAXY_CLUSTERS.flatMap((c) => c.galaxy.regions.map((r) => r.id)));
     for (const region of GALAXY_REGIONS) {
-      expect(SANDBOX_GALAXY.regions.some((r) => r.id === region)).toBe(true); // the galaxy map is complete
+      expect(allDefinedRegions.has(region)).toBe(true);
     }
   });
 

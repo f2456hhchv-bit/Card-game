@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Rng } from "../src/core/rng/Rng";
 import { GalaxyRuntime } from "../src/game/galaxy/GalaxyRuntime";
-import { SANDBOX_GALAXY, GALAXY_EVENT_KINDS } from "../src/game/galaxy/galaxyData";
+import { SANDBOX_GALAXY, GALAXY_EVENT_KINDS, campaignDifficultyFor } from "../src/game/galaxy/galaxyData";
 
 // sys-lucent-gate <-> sys-hollow-drift <-> sys-ember-reach (fast-travel-gated)
 
@@ -83,6 +83,43 @@ describe("GalaxyRuntime.clampedDelta — pure, no persistence of its own (AF-038
 
   it("returns zero once already at the bound", () => {
     expect(GalaxyRuntime.clampedDelta(100, 10, 0, 100)).toBe(0);
+  });
+});
+
+describe("GP-003 §Enemy Scaling — campaignDifficultyFor: real campaign-depth difficulty from StarSystemDef.threatLevel", () => {
+  it("threatLevel 1 (the easiest system) is the baseline — exactly 1", () => {
+    expect(campaignDifficultyFor(1)).toBe(1);
+  });
+
+  it("every level above 1 raises difficulty monotonically", () => {
+    let previous = campaignDifficultyFor(1);
+    for (let level = 2; level <= 7; level += 1) {
+      const next = campaignDifficultyFor(level);
+      expect(next).toBeGreaterThan(previous);
+      previous = next;
+    }
+  });
+
+  it("real systems produce real, distinct difficulty values", () => {
+    const meridianRest = SANDBOX_GALAXY.systems.find((s) => s.id === "sys-meridian-rest")!; // threatLevel 1
+    const axiom = SANDBOX_GALAXY.systems.find((s) => s.id === "sys-axiom")!; // threatLevel 7, the deepest system
+    expect(campaignDifficultyFor(meridianRest.threatLevel)).toBe(1);
+    expect(campaignDifficultyFor(axiom.threatLevel)).toBeGreaterThan(campaignDifficultyFor(meridianRest.threatLevel));
+  });
+});
+
+describe("GP-003 §Star Systems — biome-matched missions, not one shared default (no two systems feel identical)", () => {
+  it("Winterline, First Light, and Forge Primus each reference their own biome-matched mission, not the Crystal Fields default", () => {
+    const winterline = SANDBOX_GALAXY.systems.find((s) => s.id === "sys-winterline")!;
+    const firstLight = SANDBOX_GALAXY.systems.find((s) => s.id === "sys-first-light")!;
+    const forgePrimus = SANDBOX_GALAXY.systems.find((s) => s.id === "sys-forge-primus")!;
+    expect(winterline.missionIds).toEqual(["winterline-rescue"]);
+    expect(firstLight.missionIds).toEqual(["first-light-excavation"]);
+    expect(forgePrimus.missionIds).toEqual(["forge-primus-uprising"]);
+    // Each system's assigned mission's own biomeId matches the system's biome.
+    expect(winterline.biomeId).toBe("frozen-reach");
+    expect(firstLight.biomeId).toBe("ancient-core");
+    expect(forgePrimus.biomeId).toBe("machine-expanse");
   });
 });
 

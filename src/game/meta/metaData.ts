@@ -17,6 +17,10 @@ export const COLLECTION_CATEGORIES = [
   "research",
   "achievements",
   "lore",
+  // GP-003 §Long Term Goals: "Collect Legendary Artifacts" needs a real
+  // permanent record — GP-001's BossArtifactRuntime resets every run by
+  // design (a per-run choice), so nothing tracked "ever claimed" until now.
+  "bossArtifacts",
 ] as const;
 
 export type CollectionCategory = (typeof COLLECTION_CATEGORIES)[number];

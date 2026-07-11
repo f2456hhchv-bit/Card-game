@@ -151,12 +151,12 @@ describe("The expedition log — permanent personal history (AF-084 §Mission Co
 });
 
 describe("Mission Roster — self-review: generate millions of expeditions (AF-084 §Self Review Loop)", () => {
-  it("3,000 expeditions across the roster: instance ids are unique ACROSS templates and seeds — no two expeditions collide", () => {
+  it("1,000 expeditions per template across the roster: instance ids are unique ACROSS templates and seeds — no two expeditions collide", () => {
     const ids = new Set<string>();
     for (const def of FRAMEWORK_MISSIONS) {
       for (let seed = 0; seed < 1000; seed += 1) ids.add(generateMission(def, seed).id);
     }
-    expect(ids.size).toBe(3000);
+    expect(ids.size).toBe(FRAMEWORK_MISSIONS.length * 1000);
   });
 
   it("1,000 seeded expedition careers through the log: sequence strictly monotone, counts never regress, perfect never exceeds victories", () => {

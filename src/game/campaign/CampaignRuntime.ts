@@ -40,6 +40,20 @@ export interface CampaignObjectiveProgress {
   complete: boolean;
 }
 
+/** GP-003 §The Campaign: "no two players' galaxies" reset — this is the
+ * permanent-save shape campaign progress round-trips through. grantedUnlocks/
+ * firedEvents/appliedWorldChanges mirror static chapter data (never player
+ * state) and are recomputed from chapterIndex on load rather than serialized;
+ * the pending story-beat queue is a same-session presentation-drain queue
+ * (AF-068 §Design constraints), deliberately not persisted. */
+export interface CampaignSaveData {
+  chapterIndex: number;
+  finalChapterGranted: boolean;
+  counters: Readonly<Record<string, number>>;
+  flags: readonly string[];
+  choices: ReadonlyArray<{ domain: ChoiceDomain; optionId: string }>;
+}
+
 export interface CampaignSnapshot {
   stage: CampaignStage;
   chapterName: string;
@@ -160,6 +174,46 @@ export class CampaignRuntime {
       worldChangeCount: this.appliedWorldChanges.length,
       isComplete: this.isComplete,
     };
+  }
+
+  toSave(): CampaignSaveData {
+    return {
+      chapterIndex: this.chapterIndex,
+      finalChapterGranted: this.finalChapterGranted,
+      counters: Object.fromEntries(this.counters),
+      flags: [...this.flags],
+      choices: [...this.choices],
+    };
+  }
+
+  /** Restore from a save slice. grantedUnlocks/firedEvents/appliedWorldChanges
+   * are recomputed from the loaded chapterIndex (static chapter content),
+   * never serialized directly; the pending beat queue is deliberately reset. */
+  loadSave(data: CampaignSaveData): void {
+    this.counters.clear();
+    for (const [key, value] of Object.entries(data.counters)) this.counters.set(key, Math.max(0, value));
+    this.flags.clear();
+    for (const flag of data.flags) this.flags.add(flag);
+    this.choices.length = 0;
+    this.choices.push(...data.choices);
+    this.chapterIndex = Math.max(0, Math.min(data.chapterIndex, this.chapters.length - 1));
+    this.finalChapterGranted = data.finalChapterGranted;
+    this.beatQueue.length = 0;
+    this.grantedUnlocks.length = 0;
+    this.firedEvents.length = 0;
+    this.appliedWorldChanges.length = 0;
+    for (let i = 0; i < this.chapterIndex; i += 1) {
+      const chapter = this.chapters[i]!;
+      this.grantedUnlocks.push(...chapter.unlocks);
+      this.appliedWorldChanges.push(...chapter.worldChanges);
+      if (chapter.majorEvent) this.firedEvents.push(chapter.majorEvent);
+    }
+    if (this.finalChapterGranted && this.chapterIndex === this.chapters.length - 1) {
+      const last = this.chapters[this.chapters.length - 1]!;
+      this.grantedUnlocks.push(...last.unlocks);
+      this.appliedWorldChanges.push(...last.worldChanges);
+      if (last.majorEvent) this.firedEvents.push(last.majorEvent);
+    }
   }
 
   /** Counters persist across chapters, so a satisfied next chapter completes immediately —

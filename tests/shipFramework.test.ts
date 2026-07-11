@@ -129,6 +129,30 @@ describe("Modules — AF-028 bonuses, one per kind (AF-073 §Module Support)", (
   });
 });
 
+describe("GP-003 §Ship Progression — save/load round-trips (ships permanently improve)", () => {
+  it("toSave/loadSave round-trips fitted modules, ascension, and mastery", () => {
+    const runtime = new ShipOutfittingRuntime(profileFor("wayfarer-hull-mk2"), SANDBOX_SHIP_MODULES);
+    runtime.tryFitModule("module-fusion-reactor");
+    runtime.recordUse();
+    runtime.recordKills(5);
+    runtime.recordBossVictory();
+    runtime.recordDistance(120);
+    const saved = runtime.toSave();
+
+    const restored = new ShipOutfittingRuntime(profileFor("wayfarer-hull-mk2"), SANDBOX_SHIP_MODULES);
+    restored.loadSave(saved);
+    expect(restored.snapshot).toEqual(runtime.snapshot);
+    expect(restored.isFitted("module-fusion-reactor")).toBe(true);
+  });
+
+  it("drops unknown module ids on load rather than throwing (deprecation-safe)", () => {
+    const runtime = new ShipOutfittingRuntime(profileFor("wayfarer-hull-mk2"), SANDBOX_SHIP_MODULES);
+    runtime.loadSave({ fitted: ["not-a-real-module"], ascensionModuleFitted: false, mastery: { uses: 3, kills: 0, bossVictories: 0, distanceTravelled: 0 } });
+    expect(runtime.isFitted("not-a-real-module")).toBe(false);
+    expect(runtime.snapshot.mastery.uses).toBe(3);
+  });
+});
+
 describe("Ship Framework — self-review: play every ship (AF-073 §Self Review Loop)", () => {
   it("1,000 seeded careers of refitting and mastery keep every ledger consistent and never exceed slots", () => {
     for (let career = 0; career < 1000; career += 1) {

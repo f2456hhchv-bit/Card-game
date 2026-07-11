@@ -25,6 +25,14 @@ export const GAME_STATE_IDS = [
   "MidRunMerchant",
   "ExtractionDecision",
   "BossArtifactChoice",
+  // GP-003 §Home Base: five new Home-Base sub-screens (base states, not
+  // Gameplay overlays — reached from and returning to GalaxyCommand exactly
+  // like the pre-existing "Statistics" state), additive per AF-016 §2.
+  "RecruitCommanders",
+  "ViewMuseum",
+  "ReadCodex",
+  "ManageAtlas",
+  "LoadoutChoice",
 ] as const;
 
 export type GameStateId = (typeof GAME_STATE_IDS)[number];
@@ -44,8 +52,13 @@ export const GAME_TRANSITIONS: Readonly<Record<GameStateId, readonly GameStateId
   Boot: ["Splash"],
   Splash: ["MainMenu"],
   MainMenu: ["GalaxyCommand", "Statistics"],
-  GalaxyCommand: ["MissionSelect", "Statistics", "MainMenu"],
-  MissionSelect: ["Loading", "GalaxyCommand"],
+  GalaxyCommand: ["MissionSelect", "Statistics", "MainMenu", "RecruitCommanders", "ViewMuseum", "ReadCodex", "ManageAtlas", "LoadoutChoice"],
+  MissionSelect: ["Loading", "GalaxyCommand", "LoadoutChoice"],
+  RecruitCommanders: ["GalaxyCommand"],
+  ViewMuseum: ["GalaxyCommand"],
+  ReadCodex: ["GalaxyCommand"],
+  ManageAtlas: ["GalaxyCommand"],
+  LoadoutChoice: ["GalaxyCommand", "MissionSelect"],
   Loading: ["Gameplay", "GalaxyCommand"],
   // GalaxyCommand edge = abandoning the run (offered from the Pause overlay).
   Gameplay: ["MissionComplete", "Defeat", "GalaxyCommand"],

@@ -171,6 +171,43 @@ describe("CampaignRuntime — post-campaign is a state, not an ending (AF-068 §
   });
 });
 
+describe("GP-003 §The Campaign — save/load round-trip (no two players' galaxies reset)", () => {
+  it("toSave/loadSave round-trips chapter progress, counters, flags, and choices — including recomputed unlocks/events", () => {
+    const campaign = new CampaignRuntime(SANDBOX_CAMPAIGN);
+    campaign.recordProgress(CAMPAIGN_COUNTER_MISSIONS, 1);
+    campaign.recordChoice(CHOICE_DOMAINS[0]!, "option-a");
+    const saved = campaign.toSave();
+
+    const restored = new CampaignRuntime(SANDBOX_CAMPAIGN);
+    restored.loadSave(saved);
+    expect(restored.stage).toBe(campaign.stage);
+    expect(restored.snapshot.storyFlagCount).toBe(campaign.snapshot.storyFlagCount);
+    expect(restored.snapshot.unlockCount).toBe(campaign.snapshot.unlockCount);
+    expect(restored.snapshot.worldChangeCount).toBe(campaign.snapshot.worldChangeCount);
+    expect(restored.majorEventsFired).toEqual(campaign.majorEventsFired);
+    expect(restored.choiceLog).toEqual(campaign.choiceLog);
+  });
+
+  it("round-trips a fully-complete campaign, including the final chapter's granted-once payload", () => {
+    const campaign = completedRuntime();
+    const saved = campaign.toSave();
+
+    const restored = new CampaignRuntime(SANDBOX_CAMPAIGN);
+    restored.loadSave(saved);
+    expect(restored.isComplete).toBe(campaign.isComplete);
+    expect(restored.snapshot).toEqual({ ...campaign.snapshot, pendingBeats: restored.snapshot.pendingBeats });
+    // The pending story-beat queue is deliberately not persisted — a same-
+    // session presentation-drain queue, not save state (see CampaignRuntime.loadSave).
+    expect(restored.snapshot.pendingBeats).toBe(0);
+  });
+
+  it("clamps an out-of-range chapterIndex on load rather than throwing (deprecation-safe)", () => {
+    const campaign = new CampaignRuntime(SANDBOX_CAMPAIGN);
+    campaign.loadSave({ chapterIndex: 9999, finalChapterGranted: false, counters: {}, flags: [], choices: [] });
+    expect(campaign.stage).toBe(SANDBOX_CAMPAIGN[SANDBOX_CAMPAIGN.length - 1]!.stage);
+  });
+});
+
 describe("CampaignRuntime — determinism (AF-068 §Core Philosophy)", () => {
   it("the same play sequence always produces the same campaign — personal, not random", () => {
     const a = new CampaignRuntime(SANDBOX_CAMPAIGN);

@@ -13,8 +13,10 @@ import { SANDBOX_BOSSES } from "../src/game/bosses/bossData";
 import { SANDBOX_BIOMES } from "../src/game/biomes/biomeData";
 import { FROZEN_REACH_BIOME } from "../src/game/biomes/frozenReachBiome";
 import { ANCIENT_CORE_BIOME } from "../src/game/biomes/ancientCoreBiome";
+import { MACHINE_EXPANSE_BIOME } from "../src/game/biomes/machineExpanseBiome";
 import {
   FIRST_LIGHT_EXCAVATION,
+  FORGE_PRIMUS_UPRISING,
   FRAMEWORK_CATEGORY_TO_MISSION_CATEGORY,
   FRAMEWORK_EVENT_TO_MISSION_EVENT,
   FRAMEWORK_MISSIONS,
@@ -37,7 +39,7 @@ import {
   missionArchitectureFor,
 } from "../src/game/missions/missionFrameworkData";
 
-const KNOWN_BIOME_IDS = new Set([...SANDBOX_BIOMES.map((b) => b.id), FROZEN_REACH_BIOME.id, ANCIENT_CORE_BIOME.id]);
+const KNOWN_BIOME_IDS = new Set([...SANDBOX_BIOMES.map((b) => b.id), FROZEN_REACH_BIOME.id, ANCIENT_CORE_BIOME.id, MACHINE_EXPANSE_BIOME.id]);
 
 function profileFor(missionId: string) {
   return MISSION_PROFILES.find((p) => p.missionId === missionId)!;
@@ -83,12 +85,15 @@ describe("Mission Framework vocabulary — registered shelves (AF-083)", () => {
   });
 });
 
-describe("The expedition roster — AF-037 untouched, two expeditions added (AF-083)", () => {
-  it("three expeditions: the sandbox template heads the array unchanged; the additions are the FIRST missions set outside the sandbox biome", () => {
-    expect(FRAMEWORK_MISSIONS.length).toBe(3);
+describe("The expedition roster — AF-037 untouched, three expeditions added (AF-083/GP-003)", () => {
+  it("four expeditions: the sandbox template heads the array unchanged; the additions are the FIRST missions set outside the sandbox biome", () => {
+    // GP-003 §Star Systems: FORGE_PRIMUS_UPRISING is the fourth addition —
+    // Forge Primus's own real, biome-matched mission (see galaxyData.ts).
+    expect(FRAMEWORK_MISSIONS.length).toBe(4);
     expect(FRAMEWORK_MISSIONS.slice(0, SANDBOX_MISSIONS.length)).toEqual(SANDBOX_MISSIONS);
     expect(WINTERLINE_RESCUE.biomeId).toBe("frozen-reach");
     expect(FIRST_LIGHT_EXCAVATION.biomeId).toBe("ancient-core");
+    expect(FORGE_PRIMUS_UPRISING.biomeId).toBe("machine-expanse");
     for (const def of FRAMEWORK_MISSIONS) {
       expect(KNOWN_BIOME_IDS.has(def.biomeId), `${def.id} biome ${def.biomeId}`).toBe(true);
       if (def.bossId !== null) expect(SANDBOX_BOSSES.some((b) => b.id === def.bossId), `${def.id} boss`).toBe(true);

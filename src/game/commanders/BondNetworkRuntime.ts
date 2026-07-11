@@ -13,6 +13,10 @@ export interface BondNetworkSnapshot {
   averageLevel: number;
 }
 
+/** GP-003 §Commanders: bonds "never decrease" and must survive a reload —
+ * this is the save shape each pair's current level round-trips through. */
+export type BondNetworkSaveData = Readonly<Record<string, number>>;
+
 export class BondNetworkRuntime {
   private readonly bonds = new Map<string, BondDef>();
 
@@ -63,6 +67,21 @@ export class BondNetworkRuntime {
       maxedBonds: maxed,
       averageLevel: this.bonds.size > 0 ? levelSum / this.bonds.size : 0,
     };
+  }
+
+  toSave(): BondNetworkSaveData {
+    const out: Record<string, number> = {};
+    for (const [key, bond] of this.bonds) out[key] = bond.level;
+    return out;
+  }
+
+  /** Restore from a save slice; unknown pair keys are dropped (deprecation-safe);
+   * a level lower than the seeded default never regresses a bond. */
+  loadSave(data: BondNetworkSaveData): void {
+    for (const [key, level] of Object.entries(data)) {
+      const bond = this.bonds.get(key);
+      if (bond) bond.level = Math.min(MAX_BOND_LEVEL, Math.max(bond.level, level));
+    }
   }
 }
 

@@ -10,6 +10,7 @@ import {
   SPENDABLE_CURRENCIES,
 } from "../src/game/economy/economyData";
 import { RARITY_TABLE } from "../src/game/loot/lootTuning";
+import { SANDBOX_RECIPES } from "../src/game/crafting/craftingData";
 
 describe("MarketRuntime — merchant inventory rotation (AF-040 §Merchant Inventory)", () => {
   it("rolls an initial offer window no larger than the merchant's slot count", () => {
@@ -51,6 +52,18 @@ describe("MarketRuntime — merchant inventory rotation (AF-040 §Merchant Inven
     expect(a.offersFor("lucent-gate-trader").map((o) => o.id)).toEqual(
       b.offersFor("lucent-gate-trader").map((o) => o.id),
     );
+  });
+});
+
+describe("GP-003 §Blueprints — a real second acquisition route alongside boss-defeat drops", () => {
+  it("every blueprint offer in the merchant's catalogue references a real, existing recipe", () => {
+    const merchant = new MarketRuntime(SANDBOX_GALAXY_ECONOMY, new Rng(1)).findMerchant("lucent-gate-trader")!;
+    const recipeBlueprintIds = new Set(SANDBOX_RECIPES.map((r) => r.blueprintId));
+    const blueprintOffers = merchant.catalogue.filter((o) => o.reward.kind === "blueprint");
+    expect(blueprintOffers.length).toBeGreaterThanOrEqual(3); // prototype-lance + the two new GP-003 blueprints
+    for (const offer of blueprintOffers) {
+      if (offer.reward.kind === "blueprint") expect(recipeBlueprintIds.has(offer.reward.id)).toBe(true);
+    }
   });
 });
 

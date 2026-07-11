@@ -32,6 +32,14 @@ export interface ShipOutfittingSnapshot {
   mastery: ShipMasteryLedger;
 }
 
+/** GP-003 §Ship Progression: "ships permanently improve" — this is the save
+ * shape one ship's fitted modules/ascension/mastery ledger round-trips through. */
+export interface ShipOutfittingSaveData {
+  fitted: readonly string[];
+  ascensionModuleFitted: boolean;
+  mastery: ShipMasteryLedger;
+}
+
 export class ShipOutfittingRuntime {
   private readonly fitted = new Set<string>();
   private ascensionModuleFittedFlag = false;
@@ -123,5 +131,25 @@ export class ShipOutfittingRuntime {
       ascensionModuleFitted: this.ascensionModuleFittedFlag,
       mastery: { ...this.mastery },
     };
+  }
+
+  toSave(): ShipOutfittingSaveData {
+    return {
+      fitted: [...this.fitted],
+      ascensionModuleFitted: this.ascensionModuleFittedFlag,
+      mastery: { ...this.mastery },
+    };
+  }
+
+  /** Restore from a save slice; unknown module ids are dropped (deprecation-safe). */
+  loadSave(data: ShipOutfittingSaveData): void {
+    this.fitted.clear();
+    for (const id of data.fitted) if (this.modulesById.has(id)) this.fitted.add(id);
+    this.ascensionModuleFittedFlag = data.ascensionModuleFitted;
+    this.mastery.uses = Math.max(0, data.mastery.uses);
+    this.mastery.kills = Math.max(0, data.mastery.kills);
+    this.mastery.bossVictories = Math.max(0, data.mastery.bossVictories);
+    this.mastery.distanceTravelled = Math.max(0, data.mastery.distanceTravelled);
+    this.bonusCache = null;
   }
 }

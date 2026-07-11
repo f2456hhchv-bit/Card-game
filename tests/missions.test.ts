@@ -4,7 +4,7 @@ import { generateMission } from "../src/game/missions/MissionGenerator";
 import { MissionRuntime } from "../src/game/missions/MissionRuntime";
 import { SANDBOX_MISSIONS, MISSION_EVENT_TO_ENVIRONMENTAL_EVENT, MISSION_EVENT_KINDS } from "../src/game/missions/missionData";
 
-const template = SANDBOX_MISSIONS[0]!; // Crystal Fields Incursion — 2 primary, 2 optional, 3 modifiers (1 slot), 4 events
+const template = SANDBOX_MISSIONS[0]!; // Crystal Fields Incursion — 2 primary, 2 optional, 6 modifiers (1 slot), 4 events
 
 describe("generateMission — deterministic modifier rolling (AF-037 §Mission Generation)", () => {
   it("is deterministic given the same seed", () => {

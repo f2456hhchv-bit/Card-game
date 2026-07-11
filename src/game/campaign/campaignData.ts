@@ -257,7 +257,10 @@ export const SANDBOX_CAMPAIGN: readonly CampaignChapterDef[] = [
     ],
     storyFlags: ["FLAG_CRISIS_DECLARED"],
     worldChanges: [{ kind: "missionAvailability", description: "Crisis-response operations authorised galaxy-wide." }],
-    unlocks: [{ kind: "difficultyLevels", id: "veteran" }],
+    // GP-003 §Galaxy Unlocking: the Shattered Expanse (galaxyClusterData.ts's
+    // second real GalaxyClusterDef) reveals itself once the crisis widens —
+    // additive to this chapter's existing unlock, never replacing it.
+    unlocks: [{ kind: "difficultyLevels", id: "veteran" }, { kind: "galaxyRegions", id: "shatteredExpanse" }],
     majorEvent: "galaxyEmergency",
   },
   {

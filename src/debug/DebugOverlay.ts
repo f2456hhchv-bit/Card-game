@@ -246,6 +246,9 @@ export interface DebugSnapshot {
   /** GP-002 Enemy, Wave & Difficulty Framework summary — one combined line,
    * extended as each of its 9 audited-gap deliverables lands. */
   gpEnemyWave: string | null;
+  /** GP-003 Meta Progression, Campaign & Persistent Progression summary —
+   * one combined line, extended as each audited-gap deliverable lands. */
+  gpMetaProgression: string | null;
 }
 
 export class DebugOverlay {
@@ -400,6 +403,7 @@ export class DebugOverlay {
       `atlasConst ${snapshot.atlasConstitution ?? "—"}`,
       `gpCoreLoop ${snapshot.gpCoreLoop ?? "—"}`,
       `gpEnemyWave ${snapshot.gpEnemyWave ?? "—"}`,
+      `gpMeta     ${snapshot.gpMetaProgression ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

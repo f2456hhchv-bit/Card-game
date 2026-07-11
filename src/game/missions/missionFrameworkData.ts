@@ -259,6 +259,10 @@ export const WINTERLINE_RESCUE: MissionDef = {
     { kind: "darkSector", description: "The Winterline runs dark — visibility collapses.", mutatorModifierDelta: 0.1, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.1 },
     { kind: "shieldInstability", description: "Deep cold saps shield lattices.", mutatorModifierDelta: 0.15, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.15 },
     { kind: "doubleRewards", description: "The colonies pay well for their people.", mutatorModifierDelta: 0, lootMutatorBonusDelta: 0.3, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.5 },
+    // GP-003: Winterline's own share of the spec's newly-added named modifiers.
+    { kind: "frozenSector", description: "The Reach itself is closing in — cold that thinks.", mutatorModifierDelta: 0.1, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.1 },
+    { kind: "electricalNebula", description: "Aurora discharge shorts unshielded systems.", mutatorModifierDelta: 0.15, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.1 },
+    { kind: "civilianEvacuation", description: "The stranded crews cannot hold much longer.", mutatorModifierDelta: 0, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.3 },
   ],
   modifierSlots: 1,
   eventPool: [
@@ -292,6 +296,11 @@ export const FIRST_LIGHT_EXCAVATION: MissionDef = {
     { kind: "experimentalConditions", description: "The vault's systems are still calibrating.", mutatorModifierDelta: 0.2, lootMutatorBonusDelta: 0.1, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.2 },
     { kind: "radiation", description: "Core radiation seeps through the dig window.", mutatorModifierDelta: 0.15, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.1 },
     { kind: "eliteActivity", description: "The custodians patrol in force.", mutatorModifierDelta: 0.15, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 1, rewardMultiplierDelta: 0.15 },
+    // GP-003: First Light's own share of the spec's newly-added named modifiers.
+    { kind: "blackHoleDistortion", description: "The vault sits on a gravitational scar — nothing falls straight.", mutatorModifierDelta: 0.3, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.25 },
+    { kind: "darkMatter", description: "The dig has broken into an exotic-matter seam.", mutatorModifierDelta: 0.2, lootMutatorBonusDelta: 0.1, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.15 },
+    { kind: "ancientBattlefield", description: "This vault was fought over once. It remembers.", mutatorModifierDelta: 0.1, lootMutatorBonusDelta: 0.15, eliteSquadSizeDelta: 1, rewardMultiplierDelta: 0.2 },
+    { kind: "toxicClouds", description: "Ancient coolant vents have gone feral.", mutatorModifierDelta: 0.15, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.15 },
   ],
   modifierSlots: 2,
   eventPool: [
@@ -303,8 +312,42 @@ export const FIRST_LIGHT_EXCAVATION: MissionDef = {
   xpTier: "large",
 };
 
+/** GP-003 §Star Systems: a real mission for the Machine Expanse — Forge
+ * Primus's own system previously reused Crystal Fields Incursion's mission
+ * verbatim despite a completely different biome/faction, matching neither
+ * (see galaxyData.ts's sys-forge-primus). This gives one more real system
+ * its own genuinely distinct content rather than the shared default. */
+export const FORGE_PRIMUS_UPRISING: MissionDef = {
+  id: "forge-primus-uprising",
+  name: "Forge Primus Uprising",
+  category: "machineAssault",
+  briefing: "The Foundry's own production line has turned on its overseers. Break the assembly line before it arms itself.",
+  biomeId: "machine-expanse",
+  bossId: null,
+  primaryObjectives: [
+    { id: "disable-lines", type: "destroy", description: "Disable 3 assembly lines", counterKey: "missionSitesScanned", target: 3, optional: false, reward: null },
+    { id: "clear-uprising", type: "destroy", description: "Destroy 15 hostiles", counterKey: "missionKills", target: 15, optional: false, reward: null },
+  ],
+  optionalObjectives: [
+    { id: "foundry-hunt", type: "destroy", description: "Destroy 2 Elites among the machinery", counterKey: "missionElitesKilled", target: 2, optional: true, reward: { kind: "title", id: "TITLE_FOUNDRY_BREAKER" } },
+  ],
+  modifierPool: [
+    { kind: "weaponOvercharge", description: "The Foundry's own power grid feeds every weapon here.", mutatorModifierDelta: 0.1, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.1 },
+    // GP-003: Forge Primus's own share of the spec's newly-added named modifiers.
+    { kind: "electricalNebula", description: "Severed power conduits arc across the factory floor.", mutatorModifierDelta: 0.15, lootMutatorBonusDelta: 0, eliteSquadSizeDelta: 0, rewardMultiplierDelta: 0.1 },
+    { kind: "ancientBattlefield", description: "The line has been fighting itself since the uprising began.", mutatorModifierDelta: 0.1, lootMutatorBonusDelta: 0.15, eliteSquadSizeDelta: 1, rewardMultiplierDelta: 0.2 },
+  ],
+  modifierSlots: 1,
+  eventPool: [
+    { kind: "machineAwakening", weight: 4 },
+    { kind: "factionAmbush", weight: 2 },
+  ],
+  difficulty: 5,
+  xpTier: "large",
+};
+
 /** The expedition roster — AF-037's sandbox template heads the array unchanged. */
-export const FRAMEWORK_MISSIONS: readonly MissionDef[] = [...SANDBOX_MISSIONS, WINTERLINE_RESCUE, FIRST_LIGHT_EXCAVATION];
+export const FRAMEWORK_MISSIONS: readonly MissionDef[] = [...SANDBOX_MISSIONS, WINTERLINE_RESCUE, FIRST_LIGHT_EXCAVATION, FORGE_PRIMUS_UPRISING];
 
 export const MISSION_PROFILES: readonly MissionProfileDef[] = [
   {
@@ -339,6 +382,18 @@ export const MISSION_PROFILES: readonly MissionProfileDef[] = [
     worldStateKey: "campaign:bossesDefeated",
     rewardKinds: ["credits", "research", "relics", "equipment"],
     futureExpansionHooks: ["mission-first-light-network-thread"],
+  },
+  // GP-003 §Star Systems: Forge Primus's own real expedition profile.
+  {
+    missionId: "forge-primus-uprising",
+    frameworkCategory: "sabotage",
+    threatBudget: 400,
+    factionPresence: "machineCollective",
+    environmentalSystems: ["hazard:severedPower", "poi:assembly-lines", "faction:uprising"],
+    narrativeHooks: ["The line stopped taking orders from anyone.", "Every disabled foundry buys the Expanse another year."],
+    worldStateKey: "campaign:missionsCompleted",
+    rewardKinds: ["credits", "resources", "research"],
+    futureExpansionHooks: ["mission-forge-primus-counter-strike"],
   },
 ];
 

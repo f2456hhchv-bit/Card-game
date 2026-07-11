@@ -120,6 +120,28 @@ describe("Recruitment — meaningful and total (AF-072 §Recruitment)", () => {
   });
 });
 
+describe("GP-003 §Commanders — RosterRuntime save/load round-trip (recruitment never resets)", () => {
+  it("toSave/loadSave round-trips recruited ids, uses, and victories", () => {
+    const roster = new RosterRuntime(RECRUITMENT_TABLE, STARTING_COMMANDER_IDS);
+    roster.tryRecruit("naru-whisper", new Set<RecruitmentSource>(["exploration"]));
+    roster.recordUse("naru-whisper", true);
+    roster.recordUse("naru-whisper", false);
+    const saved = roster.toSave();
+
+    const restored = new RosterRuntime(RECRUITMENT_TABLE, STARTING_COMMANDER_IDS);
+    restored.loadSave(saved);
+    expect(restored.isRecruited("naru-whisper")).toBe(true);
+    expect(restored.statsFor("naru-whisper")).toEqual(roster.statsFor("naru-whisper"));
+    expect(restored.snapshot).toEqual(roster.snapshot);
+  });
+
+  it("drops unknown commander ids on load rather than throwing (deprecation-safe)", () => {
+    const roster = new RosterRuntime(RECRUITMENT_TABLE, STARTING_COMMANDER_IDS);
+    roster.loadSave({ recruited: ["not-a-real-commander"], uses: { "not-a-real-commander": 5 }, victories: {} });
+    expect(roster.isRecruited("not-a-real-commander")).toBe(false);
+  });
+});
+
 describe("Long-term roster — 25+/50+/100+ without redesign (AF-072 §Long-Term Roster)", () => {
   it("one hundred synthetic commanders pass AF-030's overlap law and AF-071's completeness function on unchanged shapes", () => {
     const synthetics = Array.from({ length: 100 }, (_, i) => syntheticCommanderFor(i));

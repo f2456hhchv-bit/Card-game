@@ -85,6 +85,24 @@ describe("Commander Bond Network (AF-130)", () => {
     expect(runtime.bondFor(a, b)!.level).toBe(MAX_BOND_LEVEL);
   });
 
+  it("GP-003 §Commanders: toSave/loadSave round-trips bond levels and never regresses a higher-loaded level", () => {
+    const bonds = seedBondGraph(FULL_ROSTER_WITH_FOUNDER, FULL_PROFILES_WITH_FOUNDER);
+    const runtime = new BondNetworkRuntime(bonds, DUAL_ULTIMATES);
+    const [a, b] = ["kane-vanguard", "ryker-engineer"];
+    runtime.growBond(a, b, 2);
+    const saved = runtime.toSave();
+
+    const restored = new BondNetworkRuntime(seedBondGraph(FULL_ROSTER_WITH_FOUNDER, FULL_PROFILES_WITH_FOUNDER), DUAL_ULTIMATES);
+    restored.loadSave(saved);
+    expect(restored.bondFor(a, b)!.level).toBe(runtime.bondFor(a, b)!.level);
+
+    // A stale/lower save (e.g. an older backup) never regresses a bond already grown higher.
+    restored.growBond(a, b, 1);
+    const higherLevel = restored.bondFor(a, b)!.level;
+    restored.loadSave(saved);
+    expect(restored.bondFor(a, b)!.level).toBe(higherLevel);
+  });
+
   it("unlockedDualUltimateFor is null below max bond and returns the real DualUltimateDef once maxed", () => {
     const bonds = seedBondGraph(FULL_ROSTER_WITH_FOUNDER, FULL_PROFILES_WITH_FOUNDER);
     const runtime = new BondNetworkRuntime(bonds, DUAL_ULTIMATES);

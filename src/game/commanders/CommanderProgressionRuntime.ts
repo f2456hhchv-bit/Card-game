@@ -30,6 +30,16 @@ export interface CommanderProgressionSnapshot {
   ascensionUpgradeApplied: boolean;
 }
 
+/** GP-003 §Commanders: "Commander progression never resets" — this is the
+ * permanent-save shape one commander's talents/mission-beat/ascension state
+ * round-trips through. */
+export interface CommanderProgressionSaveData {
+  talentPoints: number;
+  unlockedNodeIds: readonly string[];
+  missionBeatIndex: number;
+  ascensionUpgradeApplied: boolean;
+}
+
 export class CommanderProgressionRuntime {
   private talentPoints = 0;
   private readonly unlockedNodeIds = new Set<string>();
@@ -121,5 +131,24 @@ export class CommanderProgressionRuntime {
       missionBeat: beat,
       ascensionUpgradeApplied: this.ascensionUpgradeAppliedFlag,
     };
+  }
+
+  toSave(): CommanderProgressionSaveData {
+    return {
+      talentPoints: this.talentPoints,
+      unlockedNodeIds: [...this.unlockedNodeIds],
+      missionBeatIndex: this.missionBeatIndex,
+      ascensionUpgradeApplied: this.ascensionUpgradeAppliedFlag,
+    };
+  }
+
+  /** Restore from a save slice; unknown node ids are dropped (deprecation-safe). */
+  loadSave(data: CommanderProgressionSaveData): void {
+    this.talentPoints = Math.max(0, data.talentPoints);
+    this.unlockedNodeIds.clear();
+    for (const id of data.unlockedNodeIds) if (this.findNode(id)) this.unlockedNodeIds.add(id);
+    this.missionBeatIndex = Math.max(0, Math.min(data.missionBeatIndex, this.profile.personalMissions.length));
+    this.ascensionUpgradeAppliedFlag = data.ascensionUpgradeApplied;
+    this.bonusCache = null;
   }
 }

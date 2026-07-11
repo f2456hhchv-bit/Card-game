@@ -22,9 +22,13 @@
         background: var(--space-black);
         color: var(--energy-white);
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
-      #app { height: 100%; display: flex; align-items: center; justify-content: center; }
+      /* GP-003: Home Base's action list has grown past a single viewport —
+         min-height (not height) lets #app grow taller than the screen and
+         scroll rather than clipping buttons under the old overflow:hidden. */
+      #app { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 1rem 0; }
     </style>
   </head>
   <body>

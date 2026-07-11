@@ -156,6 +156,29 @@ describe("Personal missions, relationships, ascension (AF-071 §Personal Mission
   });
 });
 
+describe("GP-003 §Commanders — save/load round-trips (progression never resets)", () => {
+  it("toSave/loadSave round-trips talent points, unlocked nodes, mission beat, and ascension", () => {
+    const runtime = new CommanderProgressionRuntime(profileFor("reyes-longlight"));
+    runtime.grantTalentPoints(3);
+    runtime.tryUnlockTalent("reyes-longlight:doctrine:combat");
+    runtime.advanceMissionBeat();
+    runtime.tryApplyAscensionUpgrade(1);
+    const saved = runtime.toSave();
+
+    const restored = new CommanderProgressionRuntime(profileFor("reyes-longlight"));
+    restored.loadSave(saved);
+    expect(restored.snapshot).toEqual(runtime.snapshot);
+    expect(restored.isUnlocked("reyes-longlight:doctrine:combat")).toBe(true);
+  });
+
+  it("drops unknown talent node ids on load rather than throwing (deprecation-safe)", () => {
+    const runtime = new CommanderProgressionRuntime(profileFor("vek-ironhull"));
+    runtime.loadSave({ talentPoints: 2, unlockedNodeIds: ["not-a-real-node"], missionBeatIndex: 0, ascensionUpgradeApplied: false });
+    expect(runtime.isUnlocked("not-a-real-node")).toBe(false);
+    expect(runtime.snapshot.talentsUnlocked).toBe(0);
+  });
+});
+
 describe("Commander Framework — self-review: build diversity (AF-071 §Self Review Loop)", () => {
   it("1,000 seeded careers spend points across random branches — every build is valid, hybrid-capable, and never overspends", () => {
     for (let career = 0; career < 1000; career += 1) {

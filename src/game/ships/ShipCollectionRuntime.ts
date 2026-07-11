@@ -22,6 +22,14 @@ export interface ShipCollectionSnapshot {
   totalUses: number;
 }
 
+/** GP-003 §Ship Progression: "no Ship should become obsolete" — this is the
+ * save shape the append-only collected fleet and its usage ledger round-trip through. */
+export interface ShipCollectionSaveData {
+  collected: readonly string[];
+  uses: Readonly<Record<string, number>>;
+  successes: Readonly<Record<string, number>>;
+}
+
 export class ShipCollectionRuntime {
   private readonly collected = new Set<string>();
   private readonly uses = new Map<string, number>();
@@ -73,5 +81,22 @@ export class ShipCollectionRuntime {
       collectedCount: this.collected.size,
       totalUses,
     };
+  }
+
+  toSave(): ShipCollectionSaveData {
+    return {
+      collected: [...this.collected],
+      uses: Object.fromEntries(this.uses),
+      successes: Object.fromEntries(this.successes),
+    };
+  }
+
+  /** Restore from a save slice; unknown ship ids are dropped (deprecation-safe). */
+  loadSave(data: ShipCollectionSaveData): void {
+    for (const id of data.collected) if (this.entriesByShip.has(id)) this.collected.add(id);
+    this.uses.clear();
+    for (const [id, count] of Object.entries(data.uses)) if (this.collected.has(id)) this.uses.set(id, Math.max(0, count));
+    this.successes.clear();
+    for (const [id, count] of Object.entries(data.successes)) if (this.collected.has(id)) this.successes.set(id, Math.max(0, count));
   }
 }

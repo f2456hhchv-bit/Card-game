@@ -116,6 +116,28 @@ describe("Collection — permanent, gated, append-only (AF-074 §Ship Collection
   });
 });
 
+describe("GP-003 §Ship Progression — ShipCollectionRuntime save/load round-trip (no Ship should become obsolete)", () => {
+  it("toSave/loadSave round-trips collected hulls, uses, and successes", () => {
+    const fleet = new ShipCollectionRuntime(FLEET_ENTRIES, STARTING_SHIP_IDS);
+    fleet.tryCollect("dawnspire", new Set<ShipCollectionKind>(["legendaryShips"]));
+    fleet.recordMission("dawnspire", true);
+    fleet.recordMission("dawnspire", false);
+    const saved = fleet.toSave();
+
+    const restored = new ShipCollectionRuntime(FLEET_ENTRIES, STARTING_SHIP_IDS);
+    restored.loadSave(saved);
+    expect(restored.isCollected("dawnspire")).toBe(true);
+    expect(restored.statsFor("dawnspire")).toEqual(fleet.statsFor("dawnspire"));
+    expect(restored.snapshot).toEqual(fleet.snapshot);
+  });
+
+  it("drops unknown ship ids on load rather than throwing (deprecation-safe)", () => {
+    const fleet = new ShipCollectionRuntime(FLEET_ENTRIES, STARTING_SHIP_IDS);
+    fleet.loadSave({ collected: ["not-a-real-hull"], uses: { "not-a-real-hull": 4 }, successes: {} });
+    expect(fleet.isCollected("not-a-real-hull")).toBe(false);
+  });
+});
+
 describe("Long-term fleet — 25+/50+/100+ without redesign (AF-074 §Output)", () => {
   it("one hundred synthetic hulls pass AF-031's overlap law and AF-073's completeness function on unchanged shapes", () => {
     const synthetics = Array.from({ length: 100 }, (_, i) => syntheticShipFor(i));

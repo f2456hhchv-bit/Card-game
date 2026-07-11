@@ -21,6 +21,10 @@ export const GALAXY_REGIONS = [
   "brokenSystems",
   "darkNebula",
   "singularityZone",
+  // GP-003 §Galaxy Progression: the Shattered Expanse — the second real
+  // GalaxyClusterDef's home region (see galaxyClusterData.ts), unlocked
+  // through CampaignRuntime rather than reachable from the start.
+  "shatteredExpanse",
 ] as const;
 export type GalaxyRegion = (typeof GALAXY_REGIONS)[number];
 
@@ -102,6 +106,18 @@ export interface GalaxyDef {
   regions: readonly GalaxyRegionDef[];
   systems: readonly StarSystemDef[];
   events: readonly GalaxyEventDef[];
+}
+
+/**
+ * GP-003 §Enemy Scaling / §Galaxy Progression: campaign-depth difficulty —
+ * `threatLevel` was set on every StarSystemDef but read by nothing anywhere.
+ * threatLevel 1 (the easiest system) is the baseline; each level above it
+ * feeds EnemyDirector's real `ThreatInputs.missionDifficulty` seam (AF-017),
+ * additive to and distinct from Push Deeper's own per-run extractionDepth
+ * escalation — never a second difficulty model.
+ */
+export function campaignDifficultyFor(threatLevel: number): number {
+  return 1 + (threatLevel - 1) * 0.15;
 }
 
 /** Sandbox galaxy — three systems, one region, proving the route/discovery/faction/event engine. */
@@ -252,7 +268,11 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Forge Primus",
       region: "machineExpanse",
       biomeId: "machine-expanse",
-      missionIds: ["crystal-fields-incursion"],
+      // GP-003 §Star Systems: Forge Primus's own real, biome-matched mission
+      // (forge-primus-uprising) — previously reused crystal-fields-incursion
+      // verbatim despite the mismatched biome/faction, exactly what the
+      // audit flagged ("no two systems feel identical" was not yet true).
+      missionIds: ["forge-primus-uprising"],
       connectedSystemIds: ["sys-hollow-drift", "sys-hollow-crown", "sys-cinderfall"], // AF-061/063: the Void and the Wastes lie past the Forge
       pointsOfInterest: [
         { id: "forge-primus-foundry", kind: "machineFoundries", discoveryCategory: "lore", discoveryId: "LORE_FORGE_PRIMUS_FOUNDRY" },
@@ -284,7 +304,10 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "First Light",
       region: "ancientCore",
       biomeId: "ancient-core",
-      missionIds: ["crystal-fields-incursion"],
+      // GP-003 §Star Systems: First Light's own biome-matched mission
+      // (first-light-excavation, its bossId already the sandbox boss) —
+      // previously reused crystal-fields-incursion verbatim.
+      missionIds: ["first-light-excavation"],
       connectedSystemIds: ["sys-hollow-crown", "sys-axiom"], // AF-067: the Zone begins where the precursors' light ends
       pointsOfInterest: [
         { id: "first-light-council", kind: "ancientVaults", discoveryCategory: "lore", discoveryId: "LORE_FIRST_LIGHT_COUNCIL" },
@@ -316,7 +339,9 @@ export const SANDBOX_GALAXY: GalaxyDef = {
       name: "Winterline",
       region: "frozenReach",
       biomeId: "frozen-reach",
-      missionIds: ["crystal-fields-incursion"],
+      // GP-003 §Star Systems: Winterline's own biome-matched mission
+      // (winterline-rescue) — previously reused crystal-fields-incursion verbatim.
+      missionIds: ["winterline-rescue"],
       connectedSystemIds: ["sys-meridian-rest"],
       pointsOfInterest: [
         { id: "winterline-fleet", kind: "abandonedFleets", discoveryCategory: "lore", discoveryId: "LORE_WINTERLINE_FLEET" },

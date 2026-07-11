@@ -212,6 +212,25 @@ export const SANDBOX_GALAXY_ECONOMY: GalaxyEconomyDef = {
           priceScale: 1.5,
           limitedStock: true,
         },
+        // GP-003 §Blueprints: real purchase sites for two of the newly-added
+        // categorized recipes (Commander Equipment / Drone Types) — a second
+        // real acquisition route alongside the boss-defeat guaranteed drop.
+        {
+          id: "offer-commander-badge-blueprint",
+          reward: { kind: "blueprint", id: "bp-commander-badge" },
+          rarity: "epic",
+          currency: "credits",
+          priceScale: 1.3,
+          limitedStock: true,
+        },
+        {
+          id: "offer-drone-companion-blueprint",
+          reward: { kind: "blueprint", id: "bp-drone-companion-core" },
+          rarity: "rare",
+          currency: "credits",
+          priceScale: 1.1,
+          limitedStock: true,
+        },
       ],
     },
   ],

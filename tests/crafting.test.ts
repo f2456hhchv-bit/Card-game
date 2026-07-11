@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { Rng } from "../src/core/rng/Rng";
 import { CraftingSystem, type CraftedItem } from "../src/game/crafting/CraftingSystem";
 import {
+  BLUEPRINT_CATEGORIES,
   DEFAULT_CRAFTING_TUNING,
+  RESOURCE_TYPES,
   SANDBOX_RECIPES,
   STARTING_BLUEPRINTS,
 } from "../src/game/crafting/craftingData";
@@ -68,6 +70,71 @@ describe("CraftingSystem — crafting (AF-025 §3)", () => {
       ok: false,
       reason: "insufficientMaterials",
     });
+  });
+});
+
+describe("GP-003 §Resources — five newly-added exact-named resources, each a real, spendable currency", () => {
+  it("registers all five without disturbing the ten pre-existing resource types", () => {
+    for (const kind of ["darkMatter", "quantumCrystals", "biomass", "livingMetal", "atlasFragments"]) {
+      expect(RESOURCE_TYPES).toContain(kind);
+    }
+    expect(RESOURCE_TYPES).toContain("commonMaterials"); // pre-existing, untouched
+    expect(RESOURCE_TYPES.length).toBe(15); // 10 original + 5 new
+  });
+
+  it("ancient-tech-core spends darkMatter/quantumCrystals/atlasFragments — a real sink, not a dead recipe", () => {
+    const system = new CraftingSystem(SANDBOX_RECIPES, DEFAULT_CRAFTING_TUNING, () => true);
+    system.unlockBlueprint("bp-ancient-tech-core");
+    expect(system.canCraft("ancient-tech-core")).toEqual({ ok: false, reason: "insufficientMaterials" });
+    system.addMaterial("darkMatter", 3);
+    system.addMaterial("quantumCrystals", 2);
+    system.addMaterial("atlasFragments", 1);
+    const result = system.craft("ancient-tech-core", 5, new Rng(1));
+    expect(result.ok).toBe(true);
+    expect(system.materialCount("darkMatter")).toBe(0);
+    expect(system.materialCount("quantumCrystals")).toBe(0);
+    expect(system.materialCount("atlasFragments")).toBe(0);
+  });
+
+  it("biosynth-plating spends biomass/livingMetal — a real sink for the remaining two", () => {
+    const system = new CraftingSystem(SANDBOX_RECIPES, DEFAULT_CRAFTING_TUNING, () => true);
+    system.unlockBlueprint("bp-biosynth-plating");
+    system.addMaterial("biomass", 4);
+    system.addMaterial("livingMetal", 2);
+    const result = system.craft("biosynth-plating", 5, new Rng(1));
+    expect(result.ok).toBe(true);
+    expect(system.materialCount("biomass")).toBe(0);
+    expect(system.materialCount("livingMetal")).toBe(0);
+  });
+});
+
+describe("GP-003 §Blueprints — a real categorized system over the spec's named categories", () => {
+  it("registers exactly the six real-backed categories (Passives/Buildings deliberately excluded)", () => {
+    expect(BLUEPRINT_CATEGORIES).toEqual(["ships", "weapons", "commanderEquipment", "droneTypes", "modules", "artifacts"]);
+  });
+
+  it("every real recipe carries a real blueprintCategory tag", () => {
+    for (const recipe of SANDBOX_RECIPES) expect(BLUEPRINT_CATEGORIES).toContain(recipe.blueprintCategory);
+  });
+
+  it("every category has at least one real, craftable recipe — not a dead catalogue entry", () => {
+    const coveredCategories = new Set(SANDBOX_RECIPES.map((r) => r.blueprintCategory));
+    for (const category of BLUEPRINT_CATEGORIES) expect(coveredCategories.has(category)).toBe(true);
+  });
+
+  it("the new commanderEquipment/droneTypes/modules recipes are real craftable content", () => {
+    const system = new CraftingSystem(SANDBOX_RECIPES, DEFAULT_CRAFTING_TUNING, () => true);
+    system.unlockBlueprint("bp-commander-badge");
+    system.unlockBlueprint("bp-drone-companion-core");
+    system.unlockBlueprint("bp-shield-capacitor-module");
+    system.addMaterial("rareAlloys", 3);
+    system.addMaterial("researchSamples", 2);
+    system.addMaterial("commonMaterials", 6);
+    system.addMaterial("energyCells", 4);
+    system.addMaterial("crystalFragments", 3);
+    expect(system.craft("commander-badge", 5, new Rng(1)).ok).toBe(true);
+    expect(system.craft("drone-companion-core", 5, new Rng(1)).ok).toBe(true);
+    expect(system.craft("shield-capacitor-module", 5, new Rng(1)).ok).toBe(true);
   });
 });
 
