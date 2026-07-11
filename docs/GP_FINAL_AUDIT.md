@@ -64,4 +64,27 @@ Prerequisite met: GP-001 (core gameplay loop), GP-002 (enemy/wave/difficulty), G
 
 ---
 
-*First execution recorded 2026-07-06. Second execution recorded 2026-07-11. Next execution: at the next playable milestone or on the Project Owner's next scope choice, whichever comes first.*
+## 5. Third execution — 2026-07-11, the second execution's three deferred items picked up
+
+Immediately following the second execution, the Project Owner instructed picking up all three items §4 had flagged as real, audited, and deliberately not selected for that round: the Elite reward pool's remaining named types, a standalone per-wave Reward system, and the 6-weapon/6-passive build frame (the "core-combat-loop rework" §4 recommended as its own dedicated module).
+
+**FAIL/FLAGGED items #2 and #3 (from §2) move FAIL → REAL:**
+- **Elite reward pool** — the eleven-entry pool now exists in full (`src/game/loot/eliteRewardPool.ts`): the 1 previously-real type (rarity/power-boosted drop, unchanged, additive) plus all 10 previously-missing types (Large XP Crystal, XP Magnet, Screen Clear, Screen Stun, Rare Cache, Epic Upgrade, Legendary Chance, Temporary Ally, Repair Drone, Atlas Fragment, Ultra Rare Event Trigger) — weighted-picked and dispatched through a generic `applyEliteReward` interpreter (main.ts), reusing real existing mechanisms (XP pickups, the upgrade pool, the relic/loot rarity ladder, status/particle systems) rather than inventing new ones.
+- **Wave rewards** — did not exist at all per §2's audit; now a full standalone system (`src/game/progression/waveRewards.ts`), eight named categories, auto-granted on every wave landing (a design decision documented in the module's own header — a blocking modal choice every 5-15s would itself violate the "No Dead Time" test's spirit), dispatched through a generic `applyWaveReward` interpreter that includes the first real caller of `UpgradePool.reroll()`, a framework method its own AF-022 doc comment had flagged as "awaiting its content buyer."
+
+**FAIL/FLAGGED item #4 (from §4, "the 6-weapon/6-passive build frame") moves FAIL → REAL:**
+- Combat no longer runs on one hardcoded weapon. `equippedWeapons`/`weaponRuntimes` (main.ts) are parallel arrays, up to six, each targeting and firing independently through its own `WeaponRuntime`; projectiles now carry a `sourceWeaponIndex` so hit-resolution (damage school, status-on-hit) reads from the weapon that actually fired the shot rather than a single global — closing a latent correctness gap the single-weapon design had painted over.
+- Five new "Salvaged &lt;weapon&gt;" upgrade offers (`weaponEvolution` category) are the loadout's real acquisition point, dispatched through a new `addEquippedWeapon()`, capped at six and de-duplicated.
+- The Passive side of the same flag — "no passive-slot cap exists" — is also closed: `UpgradePool` gained an additive, optional `isAllowed` predicate (every existing caller that omits it is provably unaffected — see `tests/xpProgression.test.ts`'s new `isAllowed` describe block); main.ts's `resetRun()` uses it to cap simultaneously-held distinct Passives at 6 from the exact same predicate that gates weapon-unlock availability.
+- Verified live (Playwright, dev server): a bot run reached a level-up, was offered and took a "Salvaged Hailborn Array" choice, and the debug overlay's weapons line showed `loadout 2/6 [Coil Ripper, Hailborn Array]` immediately afterward, with zero console/runtime errors.
+
+**Still FAIL/FLAGGED, unchanged by this execution (real, open, not re-scoped away — the one item neither round's scope choice selected):**
+1. **Level-up content law violation** — `SANDBOX_UPGRADES`'s plain stat-percentage entries (Focused Coils, Rapid Cycler, Precision Optics, Tuned Thrusters, Emergency Barrier, Collection Field) are still exactly the "boring percentage upgrades" GP-FINAL bans, still declared placeholders. Untouched by either the second or third execution's scope choices. This is the only remaining item blocking §3's lock condition.
+
+**Full details, implementation record, and verification:** `docs/modules/GP-FINAL-gameplay-audit.md`'s "Third execution" section (2026-07-11).
+
+**Lock condition still not met, but narrowly** — §3 requires ALL flagged items resolved; three of the original four are now real. Only item #1 above (the level-up content law violation) remains, and it is the one item never yet selected by the Project Owner in either scope round. GP-FINAL stays open, pending that single remaining choice.
+
+---
+
+*First execution recorded 2026-07-06. Second execution recorded 2026-07-11. Third execution recorded 2026-07-11 (same day, second scope round). Next execution: at the next playable milestone or on the Project Owner's next scope choice, whichever comes first.*
