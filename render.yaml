@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: nova-city
+    runtime: node
+    rootDir: nova-city
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NOVA_CITY_JWT_SECRET
+        generateValue: true
+      - key: NODE_VERSION
+        value: "20"

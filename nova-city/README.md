@@ -10,6 +10,41 @@ a Fleet (faction) with a shared bank, live chat, and Fleet Wars.
 This is a **sibling project to AFTERLIGHT** (the rest of this repository) — a
 completely separate, unrelated codebase and game. AFTERLIGHT is untouched.
 
+## Play online with friends
+
+NOVA CITY ships as one deployable service: the Node server serves both the API/
+WebSocket **and** the built client, so one deploy gives you one shareable URL.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/f2456hhchv-bit/Card-game)
+
+1. Click the button above (or go to render.com → New → Blueprint and point it at
+   this repo). Render reads `render.yaml` at the repo root and provisions a free
+   web service rooted at `nova-city/`, auto-generating a real
+   `NOVA_CITY_JWT_SECRET`.
+2. Wait for the first build to finish (a few minutes) — Render gives you a URL
+   like `https://nova-city-xxxx.onrender.com`.
+3. Send that URL to your friends. Everyone registers their own pilot and plays
+   against the same live server — Combat, Fleets, mail, and chat all work across
+   accounts in real time.
+
+**Known limits of the free tier:** the service spins down after ~15 minutes of
+inactivity, so the first request after a lull takes 30–60s to wake back up. Save
+data lives on the instance's local disk (see "Why a real backend" below) and is
+**not guaranteed to survive a redeploy** on the free plan — fine for casual play
+with friends, but if you want persistence, add a Render persistent Disk (paid) or
+swap the JSON store for a real database later; the repository layer in
+`server/src/store/` was built to make that swap localized.
+
+**Alternative: Docker.** `nova-city/Dockerfile` builds and runs the same
+single-process app and works on Railway, Fly.io, or any host that runs
+containers:
+
+```bash
+cd nova-city
+docker build -t nova-city .
+docker run -p 4000:4000 -e NOVA_CITY_JWT_SECRET=<a-real-secret> nova-city
+```
+
 ## Why a real backend
 
 Unlike AFTERLIGHT, NOVA CITY is explicitly **real multiplayer**: accounts are
@@ -62,10 +97,8 @@ Server-only env vars:
 - `NOVA_CITY_DATA_DIR` — where the JSON save data lives (default
   `server/.data/`)
 
-This is a real local/LAN multiplayer server. Public hosting (a real domain,
-HTTPS, a managed database, process supervision) is a separate follow-up and out
-of scope here — everything above is aimed at "run it and play with a friend on
-the same network."
+For actually playing with friends over the internet, see "Play online with
+friends" above.
 
 ## Systems
 
@@ -100,6 +133,8 @@ the same network."
 nova-city/
   server/        Express + ws API, JSON-file store, domain logic, tests
   client/        Vite + React SPA
+  Dockerfile     Multi-stage build: server + client into one runnable image
+render.yaml      Render Blueprint (repo root) — one-click deploy config
 ```
 
 See `server/src/domain/` for the pure, unit-tested game-logic functions (regen,

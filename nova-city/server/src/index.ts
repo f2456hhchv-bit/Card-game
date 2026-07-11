@@ -1,4 +1,7 @@
 import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
@@ -37,6 +40,19 @@ app.use('/api/faction', factionRouter);
 app.use('/api/mail', mailRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/salvage', salvageRouter);
+
+// If a built client (client/dist) is present alongside this checkout, serve it —
+// this lets a single deployed process host both the API/WebSocket and the SPA
+// behind one URL. In local dev the Vite dev server handles the client instead,
+// so this is a no-op unless `npm run build` has produced client/dist.
+const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+const clientDist = path.resolve(moduleDir, '../../client/dist');
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+  app.get(/^(?!\/api|\/ws).*/, (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 app.use((_req, res) => res.status(404).json({ error: 'Not found' }));
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
