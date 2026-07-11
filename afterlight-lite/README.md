@@ -30,13 +30,16 @@ npm run dev      # http://localhost:5174
 Append `#dev` to the URL to expose `window.__AL_DEBUG__()`, a small debug
 snapshot (screen, wave, hp, xp, motes) for testing.
 
-## Status: placeholder art
+## Status: art in progress
 
-There are no image assets yet — everything is drawn from simple vector
-shapes, colour-coded per biome. The intended final look is described in the
-project brief (Nintendo-inspired stylized 3D, hand-painted, transparent
-cut-outs); art will be swapped in via `src/game/render/ArtManifest.ts`
-without touching any gameplay code once it's available.
+The 5 ships and the Asteroid Belt enemy trio (grunt/elite/boss) have real
+art; everything else still draws from simple vector shapes, colour-coded per
+biome, as a placeholder. The intended final look is described in the project
+brief (Nintendo-inspired stylized 3D, hand-painted, transparent cut-outs).
+Art lives in `src/assets/art/` and is wired in via
+`src/game/render/ArtManifest.ts` — dropping in the remaining 5 biomes
+(Nebula Drift, Ice Field, Volcanic Moon, Derelict Station, Void Rift) is
+just adding files there, no gameplay code changes needed.
 
 ## Project layout
 
@@ -62,6 +65,7 @@ src/
 | --- | --- |
 | `npm run dev` | Dev server with hot-reload |
 | `npm run build` | Typecheck + production build to `dist/` |
+| `npm run build:single` | Typecheck + a single self-contained `dist-single/index.html` (art inlined as data URIs) — double-click to play offline, no server, or share as a standalone file |
 | `npm run preview` | Serve the production build |
 | `npm run typecheck` | TypeScript checking only |
 | `npm run test` | Run the unit test suite (Vitest) |

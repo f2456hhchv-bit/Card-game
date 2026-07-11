@@ -1,20 +1,31 @@
+import vanguardUrl from "../../assets/art/ships/vanguard.png";
+import sparrowUrl from "../../assets/art/ships/sparrow.png";
+import warhawkUrl from "../../assets/art/ships/warhawk.png";
+import specterUrl from "../../assets/art/ships/specter.png";
+import voltaicUrl from "../../assets/art/ships/voltaic.png";
+import rockSkittererUrl from "../../assets/art/enemies/rockSkitterer.png";
+import asteroidCrusherUrl from "../../assets/art/elites/asteroidCrusher.png";
+import fractureKingUrl from "../../assets/art/bosses/fractureKing.png";
+
 /**
- * Maps a content id (ship/enemy/elite/boss id) to a real sprite image path.
+ * Maps a content id (ship/enemy/elite/boss id) to a real sprite image.
+ * Imported through Vite's asset pipeline (rather than referenced as a plain
+ * /public path) so the single-file build can inline them as data URIs.
  * Afterlight Lite otherwise draws placeholder vector shapes; the renderer
  * prefers a loaded image over the placeholder automatically, so no other
  * code needs to change as more art is added here.
  */
 export const ART_MANIFEST: Record<string, string> = {
-  "ship.vanguard": "/art/ships/vanguard.png",
-  "ship.sparrow": "/art/ships/sparrow.png",
-  "ship.warhawk": "/art/ships/warhawk.png",
-  "ship.specter": "/art/ships/specter.png",
-  "ship.voltaic": "/art/ships/voltaic.png",
+  "ship.vanguard": vanguardUrl,
+  "ship.sparrow": sparrowUrl,
+  "ship.warhawk": warhawkUrl,
+  "ship.specter": specterUrl,
+  "ship.voltaic": voltaicUrl,
 
   // Asteroid Belt
-  "enemy.rockSkitterer": "/art/enemies/rockSkitterer.png",
-  "enemy.asteroidCrusher": "/art/elites/asteroidCrusher.png",
-  "enemy.fractureKing": "/art/bosses/fractureKing.png",
+  "enemy.rockSkitterer": rockSkittererUrl,
+  "enemy.asteroidCrusher": asteroidCrusherUrl,
+  "enemy.fractureKing": fractureKingUrl,
 };
 
 const imageCache = new Map<string, HTMLImageElement | null>();
