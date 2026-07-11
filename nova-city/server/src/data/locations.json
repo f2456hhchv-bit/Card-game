@@ -6,5 +6,9 @@
   { "id": "obsidian-drift", "name": "Obsidian Drift", "flavor": "A pirate haven lashed together from stolen hulls. Trust no one.", "travelMinutes": 5 },
   { "id": "halcyon-spire", "name": "Halcyon Spire", "flavor": "A gleaming corporate tower-station. Security is excellent; so is the loot.", "travelMinutes": 4 },
   { "id": "the-hollows", "name": "The Hollows", "flavor": "A vast wreck field swallowed by a dead nebula. Things still move out there.", "travelMinutes": 6 },
-  { "id": "frostgate", "name": "Frostgate", "flavor": "An ice-mining outpost on a frozen moon, cold enough to crack hull plating.", "travelMinutes": 5 }
+  { "id": "frostgate", "name": "Frostgate", "flavor": "An ice-mining outpost on a frozen moon, cold enough to crack hull plating.", "travelMinutes": 5 },
+  { "id": "sun-forge-yards", "name": "Sun-Forge Yards", "flavor": "A refinery station drinking straight from a young star's corona. Wealthy, and it knows it.", "travelMinutes": 3 },
+  { "id": "bastion-reach", "name": "Bastion Reach", "flavor": "A fortified garrison world, walls thick and orders followed. The frontier's shield.", "travelMinutes": 4 },
+  { "id": "undertow-market", "name": "The Undertow Market", "flavor": "A rogue bazaar strung together in a gas giant's upper atmosphere. No manifest, no questions.", "travelMinutes": 6 },
+  { "id": "wraith-choir-nebula", "name": "The Wraith-Choir Nebula", "flavor": "A listening post gone dark inside a Hollow-thick nebula. Something still hums on the old channels.", "travelMinutes": 7 }
 ]

@@ -154,5 +154,159 @@
     "maxReward": 600,
     "jailMinutes": 6,
     "xp": 50
+  },
+  {
+    "id": "crime-pickpocket-courier",
+    "name": "Pickpocket a Courier",
+    "flavor": "A distracted runner, a light touch, an easy first mark.",
+    "locationId": null,
+    "fuelCost": 4,
+    "difficulty": 0.12,
+    "primaryStats": [
+      "dexterity"
+    ],
+    "minReward": 8,
+    "maxReward": 30,
+    "jailMinutes": 1,
+    "xp": 4
+  },
+  {
+    "id": "crime-jam-comm-relay",
+    "name": "Jam a Comm Relay",
+    "flavor": "Scramble a relay long enough to reroute its toll fees your way.",
+    "locationId": null,
+    "fuelCost": 7,
+    "difficulty": 0.22,
+    "primaryStats": [
+      "dexterity"
+    ],
+    "minReward": 25,
+    "maxReward": 65,
+    "jailMinutes": 1,
+    "xp": 7
+  },
+  {
+    "id": "crime-raid-supply-cache",
+    "name": "Raid a Supply Cache",
+    "flavor": "Someone stashed this well. Not well enough.",
+    "locationId": null,
+    "fuelCost": 11,
+    "difficulty": 0.32,
+    "primaryStats": [
+      "strength",
+      "dexterity"
+    ],
+    "minReward": 70,
+    "maxReward": 190,
+    "jailMinutes": 2,
+    "xp": 20
+  },
+  {
+    "id": "crime-forge-transit-papers",
+    "name": "Forge Transit Papers",
+    "flavor": "A clean set of credentials opens a lot of doors, if the ink dries right.",
+    "locationId": null,
+    "fuelCost": 9,
+    "difficulty": 0.28,
+    "primaryStats": [
+      "dexterity"
+    ],
+    "minReward": 50,
+    "maxReward": 130,
+    "jailMinutes": 2,
+    "xp": 14
+  },
+  {
+    "id": "crime-sabotage-airlock",
+    "name": "Sabotage a Rival's Airlock",
+    "flavor": "Nothing fatal. Just enough to ground them for a while.",
+    "locationId": null,
+    "fuelCost": 17,
+    "difficulty": 0.48,
+    "primaryStats": [
+      "strength"
+    ],
+    "minReward": 160,
+    "maxReward": 380,
+    "jailMinutes": 4,
+    "xp": 34
+  },
+  {
+    "id": "crime-strip-derelict-beacon",
+    "name": "Strip a Derelict Beacon",
+    "flavor": "Old nav-beacons carry rare alloys, if you can pry them loose before it drifts into a lane.",
+    "locationId": null,
+    "fuelCost": 14,
+    "difficulty": 0.38,
+    "primaryStats": [
+      "strength",
+      "dexterity"
+    ],
+    "minReward": 100,
+    "maxReward": 260,
+    "jailMinutes": 3,
+    "xp": 28
+  },
+  {
+    "id": "crime-skim-solar-array",
+    "name": "Skim the Solar Array",
+    "flavor": "Sun-Forge Yards bleeds power into the black. Redirect a little to your own hold.",
+    "locationId": "sun-forge-yards",
+    "fuelCost": 16,
+    "difficulty": 0.42,
+    "primaryStats": [
+      "strength",
+      "dexterity"
+    ],
+    "minReward": 180,
+    "maxReward": 420,
+    "jailMinutes": 4,
+    "xp": 38
+  },
+  {
+    "id": "crime-forge-garrison-credentials",
+    "name": "Forge Garrison Credentials",
+    "flavor": "Bastion Reach's checkpoints trust the badge more than the face behind it.",
+    "locationId": "bastion-reach",
+    "fuelCost": 19,
+    "difficulty": 0.5,
+    "primaryStats": [
+      "dexterity"
+    ],
+    "minReward": 220,
+    "maxReward": 480,
+    "jailMinutes": 5,
+    "xp": 42
+  },
+  {
+    "id": "crime-undertow-black-deal",
+    "name": "Undertow Black Deal",
+    "flavor": "Broker something illegal in the gas giant's haze, where nothing is ever really seen.",
+    "locationId": "undertow-market",
+    "fuelCost": 21,
+    "difficulty": 0.48,
+    "primaryStats": [
+      "dexterity"
+    ],
+    "minReward": 240,
+    "maxReward": 520,
+    "jailMinutes": 5,
+    "xp": 44
+  },
+  {
+    "id": "crime-loot-listening-post",
+    "name": "Loot a Listening Post",
+    "flavor": "The Wraith-Choir Nebula's old post still has vaults, and the Hollow don't guard them well.",
+    "locationId": "wraith-choir-nebula",
+    "fuelCost": 24,
+    "difficulty": 0.58,
+    "primaryStats": [
+      "dexterity",
+      "speed"
+    ],
+    "minReward": 320,
+    "maxReward": 680,
+    "jailMinutes": 7,
+    "xp": 58
   }
 ]

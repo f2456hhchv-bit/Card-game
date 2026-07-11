@@ -153,7 +153,7 @@ friends" above.
   each respawns a few minutes after being defeated
 - **Trade Hub / Inventory** — buy/sell/equip weapons, armor, consumables, and
   decaying contraband
-- **Travel** — 8 stations/planets with travel time and location-exclusive Ops
+- **Travel** — 12 stations/planets with travel time and location-exclusive Ops
   and gear
 - **Factions** — create/join, shared bank, live chat, simplified Faction Wars
   (declare → contribute Fuel → payout)
@@ -163,15 +163,16 @@ friends" above.
   Fuel and split a fixed credit pool by contribution
 - **Galaxy Command** — the bigger "space frontier" layer, in AFTERLIGHT's
   spirit (a universe that lost its light and is rebuilding):
-  - **Fleet** — every pilot starts with one Scout Skiff; buy Frigates,
-    Cruisers, and Dreadnoughts from the Shipyard to grow your fleet power.
-    Higher hull classes are gated behind Training Bay progress (total
-    trained stats: 80 / 200 / 400), so ship access tiers with active play
-    the same way Torn's education/certification gates do — not idle
-    waiting, since stats only grow by actually training
-  - **Sectors** — ~10 shared sectors with Hollow-touched hostile presence
-    that grows over real time the longer it goes unchecked (fog-of-war until
-    scouted)
+  - **Fleet** — every pilot starts with one Scout Skiff; buy from 8 ships
+    across 4 hull classes (Scout, Frigate, Cruiser, Dreadnought — each with a
+    second, differently-statted variant) at the Shipyard to grow your fleet
+    power. Higher hull classes are gated behind Training Bay progress (total
+    trained stats: 80 / 200 / 400), so ship access tiers with active play the
+    same way Torn's education/certification gates do — not idle waiting,
+    since stats only grow by actually training
+  - **Sectors** — 15 shared sectors, tiers 1-5, with Hollow-touched hostile
+    presence that grows over real time the longer it goes unchecked
+    (fog-of-war until scouted); tier 5 stations require a Sovereign License
   - **Fighting the Hollow** — your fleet (plus a small personal-command
     assist) chips away at a sector's alien strength; badly-outmatched
     attacks cost you Health instead

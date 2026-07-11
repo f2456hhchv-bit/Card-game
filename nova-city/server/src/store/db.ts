@@ -19,6 +19,18 @@ export class Collection<T extends { id: string }> {
     if (fs.existsSync(this.file)) {
       const raw = JSON.parse(fs.readFileSync(this.file, 'utf-8')) as T[];
       for (const item of raw) this.items.set(item.id, item);
+      // Merge in any seed entries added since this store was first created (new
+      // content shipped in a later release) without touching already-persisted
+      // entries — a live deploy's data survives redeploys, so new catalog rows
+      // need a way in besides wiping the file.
+      let addedNew = false;
+      for (const item of seed) {
+        if (!this.items.has(item.id)) {
+          this.items.set(item.id, item);
+          addedNew = true;
+        }
+      }
+      if (addedNew) this.flush();
     } else {
       for (const item of seed) this.items.set(item.id, item);
       this.flush();

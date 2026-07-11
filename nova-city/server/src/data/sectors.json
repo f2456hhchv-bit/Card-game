@@ -128,5 +128,70 @@
     "stationTier": 4,
     "stationPrice": 25000,
     "plunderedByCharacterId": null
+  },
+  {
+    "id": "sector-cinder-wastes",
+    "name": "The Cinder Wastes",
+    "flavor": "A burnt-out mining belt, thinly held by the Hollow. A gentle second sector to clear.",
+    "alienStrength": 30,
+    "maxAlienStrength": 150,
+    "alienGrowthPerHour": 1.2,
+    "resourceYield": 35,
+    "scoutFuelCost": 7,
+    "stationTier": 1,
+    "stationPrice": 1800,
+    "plunderedByCharacterId": null
+  },
+  {
+    "id": "sector-glass-reef",
+    "name": "The Glass Reef",
+    "flavor": "A field of fused, mirror-bright wreckage. Beautiful, and dangerous to fly through.",
+    "alienStrength": 80,
+    "maxAlienStrength": 280,
+    "alienGrowthPerHour": 3.2,
+    "resourceYield": 60,
+    "scoutFuelCost": 13,
+    "stationTier": 2,
+    "stationPrice": 5000,
+    "plunderedByCharacterId": null
+  },
+  {
+    "id": "sector-bastion-approach",
+    "name": "The Bastion Approach",
+    "flavor": "The buffer zone Bastion Reach holds against the dark. Contested, but worth holding.",
+    "alienStrength": 130,
+    "maxAlienStrength": 420,
+    "alienGrowthPerHour": 5,
+    "resourceYield": 95,
+    "scoutFuelCost": 18,
+    "stationTier": 3,
+    "stationPrice": 14000,
+    "plunderedByCharacterId": null
+  },
+  {
+    "id": "sector-choir-expanse",
+    "name": "The Choir Expanse",
+    "flavor": "The Wraith-Choir Nebula's outer reaches. The Hollow sing here, and it's getting louder.",
+    "alienStrength": 190,
+    "maxAlienStrength": 600,
+    "alienGrowthPerHour": 7,
+    "resourceYield": 115,
+    "scoutFuelCost": 22,
+    "stationTier": 4,
+    "stationPrice": 20000,
+    "plunderedByCharacterId": null
+  },
+  {
+    "id": "sector-deep-null",
+    "name": "The Deep Null",
+    "flavor": "Past the last charted lane, where the light never reached at all. The final frontier of the Hollow.",
+    "alienStrength": 300,
+    "maxAlienStrength": 900,
+    "alienGrowthPerHour": 10,
+    "resourceYield": 180,
+    "scoutFuelCost": 30,
+    "stationTier": 5,
+    "stationPrice": 45000,
+    "plunderedByCharacterId": null
   }
 ]

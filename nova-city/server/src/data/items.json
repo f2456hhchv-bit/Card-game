@@ -93,6 +93,34 @@
     "certification": "Elite Combat License"
   },
   {
+    "id": "item-ion-lance",
+    "name": "Ion Lance",
+    "type": "weapon",
+    "tier": 2,
+    "price": 480,
+    "flavor": "Punches a charged spike clean through shielding.",
+    "statBonus": {
+      "strength": 3,
+      "dexterity": 4
+    },
+    "requiredTotalStats": 60,
+    "certification": "Journeyman Combat License"
+  },
+  {
+    "id": "item-voidforged-reaper",
+    "name": "Voidforged Reaper",
+    "type": "weapon",
+    "tier": 5,
+    "price": 25000,
+    "flavor": "Forged in the dark between stars. Legends disagree on who made it first.",
+    "statBonus": {
+      "strength": 40,
+      "dexterity": 20
+    },
+    "requiredTotalStats": 500,
+    "certification": "Legendary Combat License"
+  },
+  {
     "id": "item-scavenger-plating",
     "name": "Scavenger Plating",
     "type": "armor",
@@ -160,6 +188,34 @@
     "certification": "Elite Combat License"
   },
   {
+    "id": "item-thermal-weave",
+    "name": "Thermal Weave Suit",
+    "type": "armor",
+    "tier": 2,
+    "price": 540,
+    "flavor": "Bleeds off heat and impact alike, favored past the frost line.",
+    "statBonus": {
+      "defense": 6,
+      "speed": 2
+    },
+    "requiredTotalStats": 60,
+    "certification": "Journeyman Combat License"
+  },
+  {
+    "id": "item-sovereign-aegis",
+    "name": "Sovereign Aegis Plate",
+    "type": "armor",
+    "tier": 5,
+    "price": 22000,
+    "flavor": "Worn only by those who hold a Sovereign License, and lived to keep it.",
+    "statBonus": {
+      "defense": 50,
+      "speed": 5
+    },
+    "requiredTotalStats": 500,
+    "certification": "Legendary Combat License"
+  },
+  {
     "id": "item-fuel-cell",
     "name": "Fuel Cell",
     "type": "consumable",
@@ -214,6 +270,27 @@
     "healAmount": 100
   },
   {
+    "id": "item-nanite-gel",
+    "name": "Nanite Gel",
+    "type": "consumable",
+    "tier": 3,
+    "price": 280,
+    "flavor": "Swarms the wound and knits it shut in seconds.",
+    "healAmount": 220
+  },
+  {
+    "id": "item-resolve-booster",
+    "name": "Resolve Booster",
+    "type": "consumable",
+    "tier": 2,
+    "price": 90,
+    "flavor": "Steadies the nerves for whatever's next.",
+    "resourceRestore": {
+      "resource": "resolve",
+      "amount": 55
+    }
+  },
+  {
     "id": "item-zenith-shard",
     "name": "Zenith Crystal Shard",
     "type": "contraband",
@@ -238,6 +315,24 @@
     "tier": 3,
     "price": 900,
     "flavor": "Half-life means half its value by next week.",
+    "decays": true
+  },
+  {
+    "id": "item-grey-ledger-chip",
+    "name": "Grey Ledger Chip",
+    "type": "contraband",
+    "tier": 1,
+    "price": 150,
+    "flavor": "Someone's off-book accounts. Worth plenty to the right buyer, fast.",
+    "decays": true
+  },
+  {
+    "id": "item-sovereign-relic",
+    "name": "Sovereign Relic",
+    "type": "contraband",
+    "tier": 4,
+    "price": 1800,
+    "flavor": "Pulled from the Deep Null. It hums like it remembers something.",
     "decays": true
   }
 ]

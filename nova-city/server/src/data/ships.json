@@ -50,5 +50,57 @@
     "crewCapacity": 80,
     "requiredTotalStats": 400,
     "certification": "Command Certification"
+  },
+  {
+    "id": "ship-interceptor",
+    "hullClass": "scout",
+    "name": "Interceptor",
+    "flavor": "Barely more than an engine with a seat. Nothing outruns it, and nothing protects it either.",
+    "price": 450,
+    "firepower": 14,
+    "shieldHP": 12,
+    "cargo": 5,
+    "crewCapacity": 2,
+    "requiredTotalStats": 0,
+    "certification": null
+  },
+  {
+    "id": "ship-corvette",
+    "hullClass": "frigate",
+    "name": "Corvette",
+    "flavor": "Trades a frigate's plating for raw speed and a lighter hold.",
+    "price": 3200,
+    "firepower": 30,
+    "shieldHP": 110,
+    "cargo": 55,
+    "crewCapacity": 14,
+    "requiredTotalStats": 80,
+    "certification": "Basic Flight Certification"
+  },
+  {
+    "id": "ship-heavy-cruiser",
+    "hullClass": "cruiser",
+    "name": "Heavy Cruiser",
+    "flavor": "Slower off the line than a standard Cruiser, but it hits like one twice its size.",
+    "price": 11000,
+    "firepower": 110,
+    "shieldHP": 190,
+    "cargo": 70,
+    "crewCapacity": 26,
+    "requiredTotalStats": 200,
+    "certification": "Advanced Flight Certification"
+  },
+  {
+    "id": "ship-titan",
+    "hullClass": "dreadnought",
+    "name": "Titan",
+    "flavor": "Even heavier than a Dreadnought, and even slower to turn. Nobody boards a Titan twice.",
+    "price": 38000,
+    "firepower": 310,
+    "shieldHP": 520,
+    "cargo": 120,
+    "crewCapacity": 95,
+    "requiredTotalStats": 400,
+    "certification": "Command Certification"
   }
 ]

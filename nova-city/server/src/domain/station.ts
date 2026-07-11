@@ -11,6 +11,7 @@ const STATION_TIER_FIREPOWER_REQUIREMENT: Record<number, number> = {
   2: 100,
   3: 250,
   4: 500,
+  5: 900,
 };
 
 const COMMAND_LICENSE_NAMES: Record<number, string | null> = {
@@ -18,6 +19,7 @@ const COMMAND_LICENSE_NAMES: Record<number, string | null> = {
   2: 'Garrison License',
   3: 'Fortress License',
   4: 'Bastion License',
+  5: 'Sovereign License',
 };
 
 /** Fleet firepower required to hold a station of this tier — your fleet garrisons what it builds. */

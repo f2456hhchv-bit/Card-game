@@ -45,6 +45,7 @@ describe('requiredFleetPowerForStationTier', () => {
     expect(requiredFleetPowerForStationTier(2)).toBeGreaterThan(requiredFleetPowerForStationTier(1));
     expect(requiredFleetPowerForStationTier(3)).toBeGreaterThan(requiredFleetPowerForStationTier(2));
     expect(requiredFleetPowerForStationTier(4)).toBeGreaterThan(requiredFleetPowerForStationTier(3));
+    expect(requiredFleetPowerForStationTier(5)).toBeGreaterThan(requiredFleetPowerForStationTier(4));
   });
 });
 
@@ -56,5 +57,6 @@ describe('commandLicenseForStationTier', () => {
   it('names a license for higher tiers', () => {
     expect(commandLicenseForStationTier(2)).toBe('Garrison License');
     expect(commandLicenseForStationTier(4)).toBe('Bastion License');
+    expect(commandLicenseForStationTier(5)).toBe('Sovereign License');
   });
 });
