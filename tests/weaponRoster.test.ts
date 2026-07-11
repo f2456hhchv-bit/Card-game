@@ -32,10 +32,10 @@ function profileFor(weaponId: string) {
 }
 
 describe("Weapon Roster vocabulary — registered shelves (AF-076)", () => {
-  it("registers fourteen manufacturers, eight tiers, twenty-one families, seven collection kinds, six research kinds, seven legendary traits, seven prototype mechanics, eight stat kinds, five balance axes", () => {
+  it("registers fourteen manufacturers, eight tiers, twenty-three families (twenty-one AF-076 + GP-004's summon/biological), seven collection kinds, six research kinds, seven legendary traits, seven prototype mechanics, eight stat kinds, five balance axes", () => {
     expect(WEAPON_MANUFACTURER_IDS.length).toBe(14);
     expect(WEAPON_TIERS.length).toBe(8);
-    expect(ALL_WEAPON_FAMILIES.length).toBe(21);
+    expect(ALL_WEAPON_FAMILIES.length).toBe(23);
     expect(WEAPON_COLLECTION_KINDS.length).toBe(7);
     expect(WEAPON_ROSTER_RESEARCH_KINDS.length).toBe(6);
     expect(LEGENDARY_WEAPON_TRAITS.length).toBe(7);
@@ -66,14 +66,14 @@ describe("Weapon Roster vocabulary — registered shelves (AF-076)", () => {
   });
 });
 
-describe("The launch arsenal — ten weapons on unchanged shapes (AF-076 §Weapon Families)", () => {
-  it("ships ten weapons; AF-032's four and AF-075's five head the arsenal unchanged; the overlap law holds across all ten", () => {
-    expect(LAUNCH_ARSENAL.length).toBe(10);
-    expect(ARSENAL_PROFILES.length).toBe(10);
-    expect(ARSENAL_ENTRIES.length).toBe(10);
+describe("The launch arsenal — twelve weapons on unchanged shapes (AF-076/GP-004 §Weapon Families)", () => {
+  it("ships twelve weapons; AF-032's four, AF-075's five, and GP-004's two head the arsenal unchanged; the overlap law holds across all twelve", () => {
+    expect(LAUNCH_ARSENAL.length).toBe(12);
+    expect(ARSENAL_PROFILES.length).toBe(12);
+    expect(ARSENAL_ENTRIES.length).toBe(12);
     expect(LAUNCH_ARSENAL.slice(0, 4)).toEqual(SANDBOX_WEAPONS);
     for (const weapon of LAUNCH_ARSENAL) expect(findWeaponOverlap(weapon, LAUNCH_ARSENAL)).toBeNull();
-    expect(new Set(LAUNCH_ARSENAL.map(weaponFingerprint)).size).toBe(10);
+    expect(new Set(LAUNCH_ARSENAL.map(weaponFingerprint)).size).toBe(12);
   });
 
   it("every weapon passes AF-075's twenty-part completeness function AND its element/status consistency law", () => {
@@ -138,7 +138,7 @@ describe("Long-term arsenal — limitless expansion without redesign (AF-076 §O
   it("one hundred synthetic weapons pass AF-032's overlap law and AF-075's completeness function on unchanged shapes", () => {
     const synthetics = Array.from({ length: 100 }, (_, i) => syntheticWeaponFor(i));
     const combined = [...LAUNCH_ARSENAL, ...synthetics.map((s) => s.def)];
-    expect(new Set(combined.map(weaponFingerprint)).size).toBe(combined.length); // 110 distinct fingerprints
+    expect(new Set(combined.map(weaponFingerprint)).size).toBe(combined.length); // 112 distinct fingerprints
     for (const { def, profile, entry } of synthetics) {
       const architecture = weaponArchitectureFor(def, profile);
       for (const part of WEAPON_ARCHITECTURE_PARTS) expect(architecture[part]).toBe(true);

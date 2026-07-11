@@ -35,8 +35,8 @@ function profileFor(weaponId: string) {
 }
 
 describe("Weapon Framework vocabulary — registered shelves (AF-075)", () => {
-  it("registers seventeen categories, twenty architecture parts, ten fire modes, ten projectile kinds, ten elements, six evolution sources, eight mastery metrics, seven synergy surfaces, seven customisation kinds", () => {
-    expect(WEAPON_FRAMEWORK_CATEGORIES.length).toBe(17);
+  it("registers eighteen categories (seventeen AF-075 + GP-004's summonWeapons), twenty architecture parts, ten fire modes, ten projectile kinds, ten elements, six evolution sources, eight mastery metrics, seven synergy surfaces, seven customisation kinds", () => {
+    expect(WEAPON_FRAMEWORK_CATEGORIES.length).toBe(18);
     expect(WEAPON_ARCHITECTURE_PARTS.length).toBe(20);
     expect(FIRE_MODES.length).toBe(10);
     expect(PROJECTILE_SYSTEM_KINDS.length).toBe(10);
@@ -62,13 +62,23 @@ describe("Weapon Framework vocabulary — registered shelves (AF-075)", () => {
   });
 });
 
-describe("The extended arsenal — AF-032 untouched, one cryo weapon added (AF-075 §Weapon Categories)", () => {
-  it("AF-032's sandbox four remain the unmodified head; the Hailborn Array joins additively; the overlap law holds", () => {
-    expect(FRAMEWORK_WEAPONS.length).toBe(5);
+describe("The extended arsenal — AF-032 untouched, cryo/summon/biological weapons added (AF-075/GP-004 §Weapon Categories)", () => {
+  it("AF-032's sandbox four remain the unmodified head; Hailborn Array/Swarm Tender/Spore Lance join additively; the overlap law holds", () => {
+    expect(FRAMEWORK_WEAPONS.length).toBe(7);
     expect(FRAMEWORK_WEAPONS.slice(0, 4)).toEqual(SANDBOX_WEAPONS);
     for (const weapon of FRAMEWORK_WEAPONS) expect(findWeaponOverlap(weapon, FRAMEWORK_WEAPONS)).toBeNull();
-    expect(new Set(FRAMEWORK_WEAPONS.map(weaponFingerprint)).size).toBe(5);
+    expect(new Set(FRAMEWORK_WEAPONS.map(weaponFingerprint)).size).toBe(7);
     expect(HAILBORN_ARRAY.statusOnHit?.kind).toBe("freeze"); // the freeze status's first WEAPON producer
+  });
+
+  it("GP-004: the Summon and Biological categories — flagged as gaps with zero real weapons — each have exactly one now", () => {
+    expect(FRAMEWORK_CATEGORY_TO_WEAPON_CATEGORY.summonWeapons).toBe("summon");
+    expect(FRAMEWORK_CATEGORY_TO_WEAPON_CATEGORY.biologicalWeapons).toBe("plasma");
+    const summonWeapons = WEAPON_PROFILES.filter((p) => p.frameworkCategory === "summonWeapons");
+    const biologicalWeapons = WEAPON_PROFILES.filter((p) => p.frameworkCategory === "biologicalWeapons");
+    expect(summonWeapons.length).toBeGreaterThanOrEqual(1);
+    expect(biologicalWeapons.length).toBeGreaterThanOrEqual(1);
+    expect(FRAMEWORK_WEAPONS.find((w) => w.id === summonWeapons[0]!.weaponId)?.category).toBe("summon");
   });
 
   it("all twenty architecture parts are present for every profiled weapon — nothing remains undefined", () => {

@@ -249,6 +249,9 @@ export interface DebugSnapshot {
   /** GP-003 Meta Progression, Campaign & Persistent Progression summary —
    * one combined line, extended as each audited-gap deliverable lands. */
   gpMetaProgression: string | null;
+  /** GP-004 Content Engine summary — the architecture-scalability fixes'
+   * combined line (standalone Passives/Artifacts, weapon-category gaps). */
+  gpContentEngine: string | null;
 }
 
 export class DebugOverlay {
@@ -404,6 +407,7 @@ export class DebugOverlay {
       `gpCoreLoop ${snapshot.gpCoreLoop ?? "—"}`,
       `gpEnemyWave ${snapshot.gpEnemyWave ?? "—"}`,
       `gpMeta     ${snapshot.gpMetaProgression ?? "—"}`,
+      `gpContent  ${snapshot.gpContentEngine ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

@@ -40,6 +40,8 @@ import { XpSystem } from "./game/progression/XpSystem";
 import { XpPickups } from "./game/progression/XpPickups";
 import { UpgradePool } from "./game/progression/UpgradePool";
 import { DEFAULT_XP_TUNING, type UpgradeDefinition } from "./game/progression/xpTuning";
+import { PASSIVE_CATEGORIES, SANDBOX_PASSIVES } from "./game/passives/passiveData";
+import { SANDBOX_ARTIFACTS, ArtifactRuntime } from "./game/artifacts/artifactData";
 import { BUILD_PATHS, BuildPathRuntime, offerBiasedUpgrades, offerBuildPaths, shouldOfferBuildPath, type BuildPathDef } from "./game/progression/buildPaths";
 import {
   BOSS_ARTIFACTS,
@@ -79,7 +81,7 @@ import { ROSTER_EQUIPMENT, ROSTER_EQUIPMENT_PROFILES, ROSTER_EQUIPMENT_SETS } fr
 import { EquipmentCollectionRuntime } from "./game/equipment/EquipmentCollectionRuntime";
 import { RelicSystem } from "./game/relics/RelicSystem";
 import { CommanderRuntime } from "./game/commanders/CommanderRuntime";
-import { SANDBOX_COMMANDERS } from "./game/commanders/commanderData";
+import { SANDBOX_COMMANDERS, type CommanderDef } from "./game/commanders/commanderData";
 import { FRAMEWORK_PROFILES } from "./game/commanders/commanderFrameworkData";
 import { CommanderProgressionRuntime, type CommanderProgressionSaveData } from "./game/commanders/CommanderProgressionRuntime";
 import { RosterRuntime, type RosterSaveData } from "./game/commanders/RosterRuntime";
@@ -311,7 +313,8 @@ import { ShipOutfittingRuntime, type ShipOutfittingSaveData } from "./game/ships
 import { FLEET_ENTRIES, STARTING_SHIP_IDS } from "./game/ships/shipRosterData";
 import { ShipCollectionRuntime, type ShipCollectionSaveData } from "./game/ships/ShipCollectionRuntime";
 import { WeaponRuntime } from "./game/weapons/WeaponRuntime";
-import { SANDBOX_WEAPONS, type StatusOnHit } from "./game/weapons/weaponData";
+import { SANDBOX_WEAPONS, WEAPON_CATEGORIES, type StatusOnHit } from "./game/weapons/weaponData";
+import { WEAPON_FRAMEWORK_CATEGORIES } from "./game/weapons/weaponFrameworkData";
 import { stepProjectile } from "./game/weapons/ProjectileBehaviour";
 import { computeShotAngles } from "./game/weapons/FirePattern";
 import { StatusEngine } from "./game/combat/StatusEngine";
@@ -623,15 +626,30 @@ const sandboxBuild = {
   researchWeaponBonus: 0, // AF-024 → AF-021 pipeline research stage
   researchLootBonus: 0, // AF-024 → AF-023 ladder shift
   equipmentWeaponBonus: 0, // AF-028 → AF-021 pipeline equipment stage
+  passiveLootBonus: 0, // GP-004: standalone Passives, economy category
+  passiveXpBonus: 0, // GP-004: standalone Passives, xp category
 };
 
 const SANDBOX_UPGRADES: UpgradeDefinition[] = [
-  { id: "damage", category: "weaponUpgrade", name: "Focused Coils", description: "+15% weapon damage", weight: 10, maxStacks: 5 },
-  { id: "firerate", category: "weaponUpgrade", name: "Rapid Cycler", description: "+14% fire rate", weight: 10, maxStacks: 5 },
-  { id: "crit", category: "critical", name: "Precision Optics", description: "+5% critical chance", weight: 6, maxStacks: 4 },
-  { id: "speed", category: "movement", name: "Tuned Thrusters", description: "+8% movement speed", weight: 6, maxStacks: 5 },
-  { id: "barrier", category: "shield", name: "Emergency Barrier", description: "+20 barrier now", weight: 5, maxStacks: null },
-  { id: "magnet", category: "resource", name: "Collection Field", description: "+1.5 magnet radius", weight: 4, maxStacks: 3 },
+  { id: "damage", category: "weaponUpgrade", name: "Focused Coils", description: "+15% weapon damage", weight: 10, maxStacks: 5, effect: { kind: "damage", value: 0.15 } },
+  { id: "firerate", category: "weaponUpgrade", name: "Rapid Cycler", description: "+14% fire rate", weight: 10, maxStacks: 5, effect: { kind: "cooldownReduction", value: 0.14 } },
+  { id: "crit", category: "critical", name: "Precision Optics", description: "+5% critical chance", weight: 6, maxStacks: 4, effect: { kind: "criticalChance", value: 0.05 } },
+  { id: "speed", category: "movement", name: "Tuned Thrusters", description: "+8% movement speed", weight: 6, maxStacks: 5, effect: { kind: "movementSpeed", value: 0.08 } },
+  { id: "barrier", category: "shield", name: "Emergency Barrier", description: "+20 barrier now", weight: 5, maxStacks: null, effect: { kind: "shieldCapacity", value: 20 } },
+  { id: "magnet", category: "resource", name: "Collection Field", description: "+1.5 magnet radius", weight: 4, maxStacks: 3, effect: { kind: "pickupRadius", value: 1.5 } },
+  // GP-004 §Content Engine: the standalone Passive registry, offered through
+  // this same real, tested acquisition flow — not a disconnected parallel
+  // system. Each carries `category: "passive"` (already registered in
+  // UPGRADE_CATEGORIES) plus its own taxonomy sub-category for future filtering.
+  ...SANDBOX_PASSIVES.map((passive) => ({
+    id: passive.id,
+    category: "passive" as const,
+    name: passive.name,
+    description: passive.description,
+    weight: 5,
+    maxStacks: 5,
+    effect: passive.bonus,
+  })),
 ];
 
 function playerPacket() {
@@ -645,32 +663,54 @@ function playerPacket() {
   } as const;
 }
 
+/**
+ * GP-004 §Content Engine / §Passives: the audit found this switched on
+ * literal upgrade-id strings — the same hardcoded-branching anti-pattern
+ * flagged in the enemy-squad-spawning code, just in the core level-up
+ * system. Now a generic interpreter over each UpgradeDefinition's own
+ * `effect` (AF-028's EquipmentBonus/BonusKind vocabulary): any future
+ * upgrade — including the whole standalone Passive roster — plugs in with
+ * zero main.ts changes as long as it uses an already-registered BonusKind.
+ */
 function applyUpgrade(id: string): void {
-  switch (id) {
+  const effect = SANDBOX_UPGRADES.find((upgrade) => upgrade.id === id)?.effect;
+  if (!effect) return;
+  switch (effect.kind) {
     case "damage":
-      sandboxBuild.weaponBonus += 0.15;
+      sandboxBuild.weaponBonus += effect.value;
       break;
-    case "firerate":
-      sandboxBuild.fireIntervalScale *= 0.86;
+    case "cooldownReduction":
+      sandboxBuild.fireIntervalScale *= 1 - effect.value;
       break;
-    case "crit":
-      sandboxBuild.critBonus += 0.05;
+    case "criticalChance":
+      sandboxBuild.critBonus += effect.value;
       break;
-    case "speed":
+    case "movementSpeed":
       sandboxBuild.speedStacks += 1;
       movement?.addModifier({
         id: "upgrade-speed",
         kind: "speedMultiplier",
-        multiplier: 1 + 0.08 * sandboxBuild.speedStacks,
+        multiplier: 1 + effect.value * sandboxBuild.speedStacks,
         durationMs: Number.MAX_SAFE_INTEGER,
       });
       break;
-    case "barrier":
-      playerDefence?.addBarrier(20);
+    case "shieldCapacity":
+      playerDefence?.addBarrier(effect.value);
       break;
-    case "magnet":
-      sandboxBuild.magnetBonus += 1.5;
+    case "pickupRadius":
+      sandboxBuild.magnetBonus += effect.value;
       break;
+    case "shieldRegeneration":
+      playerDefence?.healHull(effect.value);
+      break;
+    case "resourceGain":
+      sandboxBuild.passiveLootBonus += effect.value;
+      break;
+    case "experienceGain":
+      sandboxBuild.passiveXpBonus += effect.value;
+      break;
+    default:
+      break; // registered-future bonus kinds (droneEffectiveness/orbitalPower/...) — no consumer system yet, by design.
   }
 }
 
@@ -722,6 +762,11 @@ let bossArtifactRng: Rng | null = null;
 let livingReactorClockMs = 0;
 const LIVING_REACTOR_INTERVAL_MS = 4000;
 
+// ── GP-004 §Content Engine: the standalone Artifact registry — a real,
+// permanent, build-altering passive, distinct from the Boss's own five
+// hand-authored artifacts above. Bought at the mid-run Travelling Merchant.
+let artifactRuntime = new ArtifactRuntime();
+
 /** GP-001: the Mission Results recap — replaces the old 2-line placeholder
  * with a real combat/build/commander/ship/mission summary of the run that
  * just ended. Every run-scoped field it reads is still populated at this
@@ -746,6 +791,7 @@ function missionResultsSummary(): string {
       : "Objectives: —",
     `Build path: [${buildPathRuntime.chosenIds.join(", ") || "none chosen"}] · merchant visits ${midRunMerchantVisits} · extraction depth ${extractionDepth}`,
     `Boss artifact: ${bossArtifactRuntime.heldIds.join(", ") || "none claimed"}`,
+    `Artifacts: ${artifactRuntime.heldIds.join(", ") || "none bought"}`, // GP-004: standalone Artifact registry.
   ].join("\n");
 }
 
@@ -766,6 +812,11 @@ function gpMetaProgressionDebugLine(): string {
   const campaignDifficulty = campaignDifficultyFor(galaxyRuntime.currentSystem.threatLevel);
   const goals = gatherLongTermGoalsSnapshot();
   return `commander talent pts=${commanderProgressionFor(sandboxCommander.id).snapshot.talentPoints} · ship modules ${shipOutfittingFor(sandboxShip.id).snapshot.fittedModules}/${shipOutfittingFor(sandboxShip.id).snapshot.moduleSlots} · cluster ${activeGalaxyClusterId} (${GALAXY_CLUSTERS.length} total) · roster ${roster.snapshot.recruitedCount}/${roster.snapshot.rosterSize} · fleet ${fleet.snapshot.collectedCount}/${fleet.snapshot.fleetSize} · atlas score ${atlas.overallScore.toFixed(1)} · campaign difficulty ${campaignDifficulty.toFixed(2)} (threat ${galaxyRuntime.currentSystem.threatLevel}) · long-term goals ${goals.completedCount}/${LONG_TERM_GOAL_TRACKS.length} (${goals.overallCompletionPercent.toFixed(1)}%)`;
+}
+
+/** GP-004 §DEBUG: one combined summary line for the Content Engine's architecture fixes. */
+function gpContentEngineDebugLine(): string {
+  return `passives ${SANDBOX_PASSIVES.length}/${PASSIVE_CATEGORIES.length} categories · artifacts [${artifactRuntime.heldIds.join(", ") || "none"}]/${SANDBOX_ARTIFACTS.length} · weapon categories ${WEAPON_CATEGORIES.length} (+summon) · framework categories ${WEAPON_FRAMEWORK_CATEGORIES.length}`;
 }
 
 // ── Sandbox loot (AF-023): elites always drop, drones sometimes; beams on
@@ -1094,6 +1145,41 @@ bus.on("ShieldBroken", () => {
 });
 bus.on("CommanderLevelUp", () => {
   audioEngine.play("cue-level-up"); // AF-045: Player Feedback.
+});
+// GP-004 §Content Engine: the standalone Artifact registry's generic
+// interpreter — every held Artifact's `effect.kind` is dispatched off the
+// SAME real facts every other permanent-passive system already emits, never
+// a per-id branch. Any future Artifact plugs in with zero listener changes
+// as long as it reuses an already-registered ArtifactEffectKind.
+bus.on("EnemyKilled", () => {
+  if (!movement) return;
+  const player = movement.snapshot;
+  for (const artifact of SANDBOX_ARTIFACTS) {
+    if (artifact.effect.kind === "novaOnKill" && artifactRuntime.has(artifact.id)) {
+      dealAreaDamageToEnemies(player.x, player.y, artifact.effect.radius ?? 4, artifact.effect.value);
+    }
+  }
+});
+bus.on("PlayerDamaged", () => {
+  for (const artifact of SANDBOX_ARTIFACTS) {
+    if (artifact.effect.kind === "barrierOnDamage" && artifactRuntime.has(artifact.id)) {
+      playerDefence?.addBarrier(artifact.effect.value);
+    }
+  }
+});
+bus.on("ShieldBroken", () => {
+  for (const artifact of SANDBOX_ARTIFACTS) {
+    if (artifact.effect.kind === "healOnShieldBreak" && artifactRuntime.has(artifact.id)) {
+      playerDefence?.healHull(artifact.effect.value);
+    }
+  }
+});
+bus.on("CommanderLevelUp", () => {
+  for (const artifact of SANDBOX_ARTIFACTS) {
+    if (artifact.effect.kind === "critOnLevelUp" && artifactRuntime.has(artifact.id)) {
+      sandboxBuild.critBonus += artifact.effect.value;
+    }
+  }
 });
 // AF-049: Void Distortion is one of AF-017's existing EnvironmentalEvent
 // outcomes — reacting to the fact the Director already emits, no Director change.
@@ -3149,6 +3235,28 @@ function dealAreaDamageToEnemies(x: number, y: number, radius: number, baseDamag
   }
 }
 
+/** GP-004 §Content Engine / §Commanders: the generic Ultimate interpreter —
+ * reads `commander.ultimate.effect.kind` and dispatches to the one real
+ * mechanism each kind already has (area damage / barrier / heal), rather
+ * than the old presentation-only activation. Absent `effect` still does
+ * something real (a modest default nova) instead of nothing at all. */
+function applyCommanderUltimateEffect(commander: CommanderDef): void {
+  if (!movement) return;
+  const player = movement.snapshot;
+  const effect = commander.ultimate.effect ?? { kind: "novaDamage" as const, value: 40, radius: 5 };
+  switch (effect.kind) {
+    case "novaDamage":
+      dealAreaDamageToEnemies(player.x, player.y, effect.radius ?? 5, effect.value);
+      break;
+    case "barrierBurst":
+      playerDefence?.addBarrier(effect.value);
+      break;
+    case "healBurst":
+      playerDefence?.healHull(effect.value);
+      break;
+  }
+}
+
 function dropLoot(x: number, y: number, eliteReward?: { rewardMultiplier: number; rarityFloor: Rarity | null } | null): void {
   if (!lootRng || !groundLoot || !xpSystem || !session) return;
   let drop = generateDrop(
@@ -3160,7 +3268,7 @@ function dropLoot(x: number, y: number, eliteReward?: { rewardMultiplier: number
       difficulty: 1 + extractionDepth * 0.35,
       ascension: session.ascension,
       mutatorBonus: missionRuntime?.lootMutatorBonus ?? 0,
-      researchBonus: sandboxBuild.researchLootBonus + extractionDepth * 0.1,
+      researchBonus: sandboxBuild.researchLootBonus + sandboxBuild.passiveLootBonus + extractionDepth * 0.1,
       // AF-036: Resource Distribution feeds AF-023's own reserved-but-unused hook.
       smartLoot: biomeRuntime ? { categoryWeights: biomeRuntime.resourceWeights } : undefined,
     },
@@ -3326,8 +3434,11 @@ function spawnOutlawSquad(anchorX: number, anchorY: number): void {
   if (!combatRng) return;
   outlawSquadCounter += 1;
   const squadId = `outlaw-squad-${outlawSquadCounter}`;
-  const captainDef = OUTLAW_ENEMIES.find((d) => d.id === "outlaw-captain")!;
-  const memberDefs = OUTLAW_ENEMIES.filter((d) => d.id !== "outlaw-captain");
+  // GP-004: found by role, not a hardcoded id — "elite" is unique to exactly
+  // the squad leader within each faction's own small spawn roster, so a new
+  // leader-tagged enemy slots in automatically with zero code changes here.
+  const captainDef = OUTLAW_ENEMIES.find((d) => d.roles.includes("elite"))!;
+  const memberDefs = OUTLAW_ENEMIES.filter((d) => d !== captainDef);
   const captainDroneId = spawnEnemyInstance(captainDef, anchorX, anchorY, true); // Elite Captain — AF-034's pipeline, unchanged
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
   const memberDroneIds = memberDefs.map((def, index) =>
@@ -3357,8 +3468,13 @@ function networkOf(drone: Drone): MachineNetworkRuntime | null {
 function spawnMachineNetwork(anchorX: number, anchorY: number): void {
   machineNetworkCounter += 1;
   const networkId = `machine-network-${machineNetworkCounter}`;
-  const coreDef = MACHINE_ENEMIES.find((d) => d.id === "machine-command-core")!;
-  const memberDefs = MACHINE_ENEMIES.filter((d) => d.id !== "machine-command-core");
+  // GP-004: found by role, not a hardcoded id. machine-command-core carries
+  // neither "elite" nor "commander" (its own lore: "not a leader — a
+  // router") — "controller" is its own real, already-tagged role and is
+  // unique within MACHINE_ENEMIES, so it's the correct lookup here rather
+  // than the "elite" convention every other faction's leader uses.
+  const coreDef = MACHINE_ENEMIES.find((d) => d.roles.includes("controller"))!;
+  const memberDefs = MACHINE_ENEMIES.filter((d) => d !== coreDef);
   const coreDroneId = spawnEnemyInstance(coreDef, anchorX, anchorY, true); // Elite Command Core — AF-034's pipeline, unchanged
   // Cross-module reuse of AF-046's pure formation math — same wedge, different doctrine.
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
@@ -3367,9 +3483,10 @@ function spawnMachineNetwork(anchorX: number, anchorY: number): void {
   let constructorDroneId: string | null = null;
   const memberDroneIds = memberDefs.map((def, index) => {
     const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
-    if (def.id === "machine-shield-generator") shieldGeneratorDroneId = id;
-    if (def.id === "machine-repair-drone") repairDroneId = id;
-    if (def.id === "machine-swarm-constructor") constructorDroneId = id;
+    // GP-004: each special role reads its own already-registered, mechanically-specific role tag.
+    if (def.roles.includes("shieldUnit")) shieldGeneratorDroneId = id;
+    if (def.roles.includes("healer")) repairDroneId = id;
+    if (def.roles.includes("summoner")) constructorDroneId = id;
     return id;
   });
   machineNetworks.push(new MachineNetworkRuntime(networkId, coreDroneId, memberDroneIds, shieldGeneratorDroneId, repairDroneId, constructorDroneId));
@@ -3405,15 +3522,16 @@ function ecosystemOf(drone: Drone): CrystalResonanceRuntime | null {
 function spawnCrystalEcosystem(anchorX: number, anchorY: number): void {
   crystalEcosystemCounter += 1;
   const ecosystemId = `crystal-ecosystem-${crystalEcosystemCounter}`;
-  const titanDef = CRYSTAL_ENEMIES.find((d) => d.id === "crystal-titan")!;
-  const memberDefs = CRYSTAL_ENEMIES.filter((d) => d.id !== "crystal-titan");
+  // GP-004: found by role, not a hardcoded id — see spawnOutlawSquad's comment.
+  const titanDef = CRYSTAL_ENEMIES.find((d) => d.roles.includes("elite"))!;
+  const memberDefs = CRYSTAL_ENEMIES.filter((d) => d !== titanDef);
   const titanDroneId = spawnEnemyInstance(titanDef, anchorX, anchorY, true); // Elite Titan — AF-034's pipeline, unchanged
   // Cross-module reuse of AF-046's pure formation math — same wedge, third doctrine.
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
   const nodeIds: string[] = [];
   const memberDroneIds = memberDefs.map((def, index) => {
     const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
-    if (def.id === "crystal-resonance-node") nodeIds.push(id);
+    if (def.roles.includes("support")) nodeIds.push(id);
     return id;
   });
   crystalEcosystems.push(new CrystalResonanceRuntime(ecosystemId, [titanDroneId, ...memberDroneIds], nodeIds));
@@ -3443,15 +3561,18 @@ function swarmOf(drone: Drone): VoidCorruptionRuntime | null {
 function spawnVoidSwarm(anchorX: number, anchorY: number): void {
   voidSwarmCounter += 1;
   const swarmId = `void-swarm-${voidSwarmCounter}`;
-  const avatarDef = VOID_ENEMIES.find((d) => d.id === "ancient-void-avatar")!;
-  const memberDefs = VOID_ENEMIES.filter((d) => d.id !== "ancient-void-avatar");
+  // GP-004: found by role, not a hardcoded id — ancient-void-avatar is
+  // "elite" but deliberately NOT "commander" (its own lore: "it does not
+  // lead the Swarm"), so leader-detection uses "elite" consistently.
+  const avatarDef = VOID_ENEMIES.find((d) => d.roles.includes("elite"))!;
+  const memberDefs = VOID_ENEMIES.filter((d) => d !== avatarDef);
   const avatarDroneId = spawnEnemyInstance(avatarDef, anchorX, anchorY, true); // Elite Avatar — AF-034's pipeline, unchanged
   // Cross-module reuse of AF-046's pure formation math — same wedge, fourth doctrine.
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
   const beaconIds: string[] = [];
   const memberDroneIds = memberDefs.map((def, index) => {
     const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
-    if (def.id === "void-beacon") beaconIds.push(id);
+    if (def.roles.includes("support")) beaconIds.push(id);
     return id;
   });
   voidSwarms.push(new VoidCorruptionRuntime(swarmId, [avatarDroneId, ...memberDroneIds], beaconIds));
@@ -3492,15 +3613,16 @@ function siteOf(drone: Drone): AncientSecurityRuntime | null {
 function spawnAncientSite(anchorX: number, anchorY: number): void {
   ancientSiteCounter += 1;
   const siteId = `ancient-site-${ancientSiteCounter}`;
-  const executorDef = ANCIENT_ENEMIES.find((d) => d.id === "ancient-executor")!;
-  const memberDefs = ANCIENT_ENEMIES.filter((d) => d.id !== "ancient-executor");
+  // GP-004: found by role, not a hardcoded id — see spawnOutlawSquad's comment.
+  const executorDef = ANCIENT_ENEMIES.find((d) => d.roles.includes("elite"))!;
+  const memberDefs = ANCIENT_ENEMIES.filter((d) => d !== executorDef);
   const executorDroneId = spawnEnemyInstance(executorDef, anchorX, anchorY, true); // Elite Executor — AF-034's pipeline, unchanged
   // Cross-module reuse of AF-046's pure formation math — same wedge, fifth doctrine.
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
   const nodeIds: string[] = [];
   const memberDroneIds = memberDefs.map((def, index) => {
     const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
-    if (def.id === "shield-architect") nodeIds.push(id);
+    if (def.roles.includes("support")) nodeIds.push(id);
     return id;
   });
   ancientSites.push(new AncientSecurityRuntime(siteId, [executorDroneId, ...memberDroneIds], nodeIds));
@@ -3542,15 +3664,16 @@ function hiveOf(drone: Drone): HiveEvolutionRuntime | null {
 function spawnHive(anchorX: number, anchorY: number): void {
   xenoHiveCounter += 1;
   const hiveId = `xeno-hive-${xenoHiveCounter}`;
-  const titanDef = XENO_ENEMIES.find((d) => d.id === "living-titan")!;
-  const memberDefs = XENO_ENEMIES.filter((d) => d.id !== "living-titan");
+  // GP-004: found by role, not a hardcoded id — see spawnOutlawSquad's comment.
+  const titanDef = XENO_ENEMIES.find((d) => d.roles.includes("elite"))!;
+  const memberDefs = XENO_ENEMIES.filter((d) => d !== titanDef);
   const titanDroneId = spawnEnemyInstance(titanDef, anchorX, anchorY, true); // Elite Titan — AF-034's pipeline, unchanged
   // Cross-module reuse of AF-046's pure formation math — same wedge, sixth doctrine.
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
   const nodeIds: string[] = [];
   const memberDroneIds = memberDefs.map((def, index) => {
     const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
-    if (def.id === "evolution-node") nodeIds.push(id);
+    if (def.roles.includes("support")) nodeIds.push(id);
     return id;
   });
   xenoHives.push(new HiveEvolutionRuntime(hiveId, [titanDroneId, ...memberDroneIds], nodeIds));
@@ -3577,15 +3700,16 @@ function fleetOf(drone: Drone): NomadFleetRuntime | null {
 function spawnFleet(anchorX: number, anchorY: number): void {
   nomadFleetCounter += 1;
   const fleetId = `nomad-fleet-${nomadFleetCounter}`;
-  const flagshipDef = NOMAD_ENEMIES.find((d) => d.id === "nomad-flagship")!;
-  const memberDefs = NOMAD_ENEMIES.filter((d) => d.id !== "nomad-flagship");
+  // GP-004: found by role, not a hardcoded id — see spawnOutlawSquad's comment.
+  const flagshipDef = NOMAD_ENEMIES.find((d) => d.roles.includes("elite"))!;
+  const memberDefs = NOMAD_ENEMIES.filter((d) => d !== flagshipDef);
   const flagshipDroneId = spawnEnemyInstance(flagshipDef, anchorX, anchorY, true); // Elite Flagship — AF-034's pipeline, unchanged
   // Cross-module reuse of AF-046's pure formation math — same wedge, seventh doctrine.
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
   const escortIds: string[] = [];
   const memberDroneIds = memberDefs.map((def, index) => {
     const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
-    if (def.id === "escort-fighter") escortIds.push(id);
+    if (def.roles.includes("support")) escortIds.push(id);
     return id;
   });
   nomadFleets.push(new NomadFleetRuntime(fleetId, [flagshipDroneId, ...memberDroneIds], flagshipDroneId, escortIds));
@@ -3613,15 +3737,16 @@ function protocolOf(drone: Drone): ParagonInstabilityRuntime | null {
 function spawnProtocol(anchorX: number, anchorY: number): void {
   paragonProtocolCounter += 1;
   const protocolId = `paragon-protocol-${paragonProtocolCounter}`;
-  const omegaDef = PARAGON_ENEMIES.find((d) => d.id === "omega-prototype")!;
-  const memberDefs = PARAGON_ENEMIES.filter((d) => d.id !== "omega-prototype");
+  // GP-004: found by role, not a hardcoded id — see spawnOutlawSquad's comment.
+  const omegaDef = PARAGON_ENEMIES.find((d) => d.roles.includes("elite"))!;
+  const memberDefs = PARAGON_ENEMIES.filter((d) => d !== omegaDef);
   const omegaDroneId = spawnEnemyInstance(omegaDef, anchorX, anchorY, true); // Elite Omega — AF-034's pipeline, unchanged
   // Cross-module reuse of AF-046's pure formation math — same wedge, eighth doctrine.
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
   const sentinelIds: string[] = [];
   const memberDroneIds = memberDefs.map((def, index) => {
     const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
-    if (def.id === "containment-sentinel") sentinelIds.push(id);
+    if (def.roles.includes("support")) sentinelIds.push(id);
     return id;
   });
   paragonProtocols.push(new ParagonInstabilityRuntime(protocolId, [omegaDroneId, ...memberDroneIds], sentinelIds));
@@ -3667,15 +3792,16 @@ function constellationOf(drone: Drone): CelestialConstellationRuntime | null {
 function spawnConstellation(anchorX: number, anchorY: number): void {
   celestialConstellationCounter += 1;
   const constellationId = `celestial-constellation-${celestialConstellationCounter}`;
-  const supernovaDef = CELESTIAL_ENEMIES.find((d) => d.id === "living-supernova")!;
-  const memberDefs = CELESTIAL_ENEMIES.filter((d) => d.id !== "living-supernova");
+  // GP-004: found by role, not a hardcoded id — see spawnOutlawSquad's comment.
+  const supernovaDef = CELESTIAL_ENEMIES.find((d) => d.roles.includes("elite"))!;
+  const memberDefs = CELESTIAL_ENEMIES.filter((d) => d !== supernovaDef);
   const supernovaDroneId = spawnEnemyInstance(supernovaDef, anchorX, anchorY, true); // Elite Supernova — AF-034's pipeline, unchanged
   // Cross-module reuse of AF-046's pure formation math — same wedge, ninth doctrine.
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
   let avatarDroneId: string | null = null;
   const memberDroneIds = memberDefs.map((def, index) => {
     const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
-    if (def.id === "constellation-avatar") avatarDroneId = id;
+    if (def.roles.includes("support")) avatarDroneId = id;
     return id;
   });
   const allIds = [supernovaDroneId, ...memberDroneIds];
@@ -3722,15 +3848,16 @@ function eclipsedOf(drone: Drone): EclipsedCorruptionRuntime | null {
 function spawnEclipsed(anchorX: number, anchorY: number): void {
   eclipsedGroupCounter += 1;
   const eclipsedId = `eclipsed-${eclipsedGroupCounter}`;
-  const championDef = ECLIPSED_ENEMIES.find((d) => d.id === "eclipsed-champion")!;
-  const memberDefs = ECLIPSED_ENEMIES.filter((d) => d.id !== "eclipsed-champion");
+  // GP-004: found by role, not a hardcoded id — see spawnOutlawSquad's comment.
+  const championDef = ECLIPSED_ENEMIES.find((d) => d.roles.includes("elite"))!;
+  const memberDefs = ECLIPSED_ENEMIES.filter((d) => d !== championDef);
   const championDroneId = spawnEnemyInstance(championDef, anchorX, anchorY, true); // Elite Champion — AF-034's pipeline, unchanged
   // Cross-module reuse of AF-046's pure formation math — same wedge, tenth doctrine.
   const offsets = OutlawSquadRuntime.formationOffsets(memberDefs.length);
   let wardenDroneId: string | null = null;
   const memberDroneIds = memberDefs.map((def, index) => {
     const id = spawnEnemyInstance(def, anchorX + offsets[index]!.x, anchorY + offsets[index]!.y, false);
-    if (def.id === "memory-warden") wardenDroneId = id;
+    if (def.roles.includes("support")) wardenDroneId = id;
     return id;
   });
   eclipsedGroups.push(new EclipsedCorruptionRuntime(eclipsedId, [championDroneId, ...memberDroneIds], championDroneId, wardenDroneId));
@@ -3962,7 +4089,9 @@ function killDrone(drone: Drone): void {
   const constellation = constellationOf(drone);
   if (constellation) {
     const role = constellation.notifyDroneDestroyed(drone.id);
-    if (role === "member" && drone.def.id === "constellation-avatar") {
+    // GP-004: found by role, not a hardcoded id — "support" is unique to
+    // the Constellation Avatar within CELESTIAL_ENEMIES (see spawnConstellation).
+    if (role === "member" && drone.def.roles.includes("support")) {
       lootNotices.push({ text: "CONSTELLATION AVATAR DESTROYED — FORMATION DESTABILISED", colour: "#ffd24d", ttlMs: 2600 });
       meta.discover("lore", LORE_CELESTIAL_CONCLAVE_CODEX); // first avatar kill unlocks the doctrine Codex entry (AF-043)
       persistMeta();
@@ -4142,7 +4271,7 @@ function grantBossRewards(): void {
             difficulty: 1,
             ascension: session.ascension,
             mutatorBonus: missionRuntime?.lootMutatorBonus ?? 0,
-            researchBonus: sandboxBuild.researchLootBonus + extractionDepth * 0.1, // GP-002: a World Boss defeated deep in extraction pays out too.
+            researchBonus: sandboxBuild.researchLootBonus + sandboxBuild.passiveLootBonus + extractionDepth * 0.1, // GP-002: a World Boss defeated deep in extraction pays out too.
             smartLoot: biomeRuntime ? { categoryWeights: biomeRuntime.resourceWeights } : undefined,
           },
           DEFAULT_LOOT_TUNING,
@@ -4257,7 +4386,9 @@ function updateSandboxCombat(fixedDtMs: number): void {
     outlawMineDropClockMs = 0;
     for (const drone of drones) {
       // (phase is only meaningful for ambush/burrow movement — alive is the correct gate here)
-      if (drone.alive && drone.def.id === "outlaw-mine-layer") {
+      // GP-004: found by role, not a hardcoded id — "areaDenial" is unique
+      // to the Mine Layer within OUTLAW_ENEMIES.
+      if (drone.alive && drone.def.roles.includes("areaDenial")) {
         outlawMineCounter += 1;
         outlawMines.push({ zone: createOutlawMine(`outlaw-mine-${outlawMineCounter}`, drone.x, drone.y), state: { tickClockMs: 0 }, ttlMs: OUTLAW_MINE_TUNING.ttlMs });
         if (outlawMines.length > OUTLAW_MINE_TUNING.maxLiveMines) outlawMines.shift();
@@ -5448,6 +5579,7 @@ function startRun(): void {
   playerWasNearDeath = false;
   bossArtifactRuntime = new BossArtifactRuntime();
   currentBossArtifactOffer = [];
+  artifactRuntime = new ArtifactRuntime(); // GP-004: standalone Artifacts are run-scoped too.
   bossArtifactRng = new Rng(seed).fork("boss-artifact");
   livingReactorClockMs = 0;
   biomeRuntime = new BiomeRuntime(activeBiome, new Rng(seed).fork("biome"));
@@ -5497,6 +5629,8 @@ function startRun(): void {
   sandboxBuild.critBonus = 0;
   sandboxBuild.fireIntervalScale = 1;
   sandboxBuild.speedStacks = 0;
+  sandboxBuild.passiveLootBonus = 0; // GP-004: standalone Passives, economy category
+  sandboxBuild.passiveXpBonus = 0; // GP-004: standalone Passives, xp category
   const research = researchEffects();
   sandboxBuild.magnetBonus = research.magnetBonus;
   sandboxBuild.researchWeaponBonus = research.weaponBonus;
@@ -5526,7 +5660,7 @@ function startRun(): void {
     bus.emit("CommanderLevelUp", { level }),
   );
   xpPickups = new XpPickups(DEFAULT_XP_TUNING, (amount, tier) => {
-    xpSystem?.addXp(amount);
+    xpSystem?.addXp(amount * (1 + sandboxBuild.passiveXpBonus)); // GP-004: standalone Passives, xp category
     bus.emit("XpCollected", { amount, tier });
   });
   upgradePool = new UpgradePool(SANDBOX_UPGRADES, new Rng(seed).fork("upgrades"));
@@ -6453,10 +6587,26 @@ function render(): void {
             ];
           })
         : [];
+      // GP-004 §Content Engine: the standalone Artifact registry — a real,
+      // permanent, build-altering purchase distinct from the Boss's own
+      // once-per-run reward ceremony (bossArtifacts.ts).
+      const artifactButtons: Array<[string, () => void]> = SANDBOX_ARTIFACTS.filter(
+        (artifact) => !artifactRuntime.has(artifact.id),
+      ).map((artifact) => [
+        `Artifact: ${artifact.name} — ${artifact.description} (${artifact.price} cr)`,
+        () => {
+          if (credits < artifact.price) return;
+          meta.recordStat(CREDITS_KEY, -artifact.price);
+          persistMeta();
+          artifactRuntime.choose(artifact.id);
+          lootNotices.push({ text: `ARTIFACT CLAIMED · ${artifact.name.toUpperCase()}`, colour: "#f5a623", ttlMs: 2600 });
+          render();
+        },
+      ]);
       screen(
         `Travelling Merchant (${Math.round(credits)} cr)`,
         "A trader's signal cuts through the static. The run waits — buy now, or move on.",
-        [...offerButtons, ["Continue Mission", () => machine.popOverlay()]],
+        [...offerButtons, ...artifactButtons, ["Continue Mission", () => machine.popOverlay()]],
       );
       break;
     }
@@ -6941,6 +7091,7 @@ const loop = new GameLoop({
         }
         if (input.consumeBuffered("Ultimate") && commanderRuntime.tryActivateUltimate()) {
           camera.shake("Ultimate");
+          applyCommanderUltimateEffect(sandboxCommander); // GP-004: real mechanical effect, not presentation-only
           lootNotices.push({ text: `${sandboxCommander.ultimate.name.toUpperCase()}!`, colour: "#9b5cff", ttlMs: 2600 });
         }
       }
@@ -7738,6 +7889,7 @@ const loop = new GameLoop({
         gpCoreLoop: gpCoreLoopDebugLine(),
         gpEnemyWave: gpEnemyWaveDebugLine(),
         gpMetaProgression: gpMetaProgressionDebugLine(),
+        gpContentEngine: gpContentEngineDebugLine(),
       });
     }
   },

@@ -23,6 +23,11 @@ export const WEAPON_CATEGORIES = [
   "prototype",
   "ancient",
   "singularity",
+  // GP-004 §Content Engine: the audit found no category at all — not even a
+  // naming-layer mapping (AF-075's WEAPON_FRAMEWORK_CATEGORIES) — could
+  // represent a summon-flavoured weapon. Added additively; the fourteen
+  // above are untouched.
+  "summon",
 ] as const;
 
 export type WeaponCategory = (typeof WEAPON_CATEGORIES)[number];

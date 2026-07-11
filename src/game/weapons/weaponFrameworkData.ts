@@ -24,7 +24,24 @@ import {
   type WeaponDef,
 } from "./weaponData";
 
-/** The seventeen spec categories (AF-075 §Weapon Categories) — mapped totally onto AF-032's locked shelf. */
+/**
+ * The seventeen spec categories (AF-075 §Weapon Categories) — mapped
+ * totally onto AF-032's locked shelf, plus GP-004's own addition below.
+ *
+ * GP-004 §Content Engine used a shorter, differently-worded weapon-category
+ * list (Laser/Ballistic/Missile/Plasma/Energy/Gravity/Drone/Summon/
+ * Explosive/Biological/Experimental). Every name in that list already maps
+ * onto this superset: Laser→pulseRifles/laserArrays, Ballistic→
+ * assaultCannons, Missile→missileLaunchers/rocketBatteries, Plasma→
+ * plasmaWeapons, Energy→beamWeapons (damageSchool "energy" already spans
+ * several), Gravity→gravityWeapons, Drone→droneControllers, Explosive→
+ * rocketBatteries/shotguns (PROJECTILE_SYSTEM_KINDS "explosive"),
+ * Experimental→experimentalWeapons. Two names had no real weapon behind
+ * them anywhere in this shelf — Summon (not even a naming-layer entry) and
+ * Biological (a naming-layer entry with zero weapons using it). Both now
+ * have one: SWARM_TENDER (summonWeapons) and SPORE_LANCE
+ * (biologicalWeapons) below.
+ */
 export const WEAPON_FRAMEWORK_CATEGORIES = [
   "assaultCannons",
   "pulseRifles",
@@ -43,6 +60,7 @@ export const WEAPON_FRAMEWORK_CATEGORIES = [
   "biologicalWeapons",
   "voidWeapons",
   "experimentalWeapons",
+  "summonWeapons", // GP-004: the one genuine gap — no prior category, naming layer, or weapon.
 ] as const;
 export type WeaponFrameworkCategory = (typeof WEAPON_FRAMEWORK_CATEGORIES)[number];
 
@@ -64,6 +82,7 @@ export const FRAMEWORK_CATEGORY_TO_WEAPON_CATEGORY: Readonly<Record<WeaponFramew
   biologicalWeapons: "plasma",
   voidWeapons: "void",
   experimentalWeapons: "prototype",
+  summonWeapons: "summon", // GP-004: the new WeaponCategory value, added additively to AF-032's shelf.
 };
 
 /** The 20-part weapon architecture (AF-075 §Weapon Architecture) — nothing remains undefined. */
@@ -249,8 +268,73 @@ export const HAILBORN_ARRAY: WeaponDef = {
   evolution: null,
 };
 
-/** The extended arsenal — AF-032's sandbox four plus AF-075's addition, additively. */
-export const FRAMEWORK_WEAPONS: readonly WeaponDef[] = [...SANDBOX_WEAPONS, HAILBORN_ARRAY];
+/**
+ * GP-004 §Content Engine's roster addition — the Summon category's first
+ * real weapon. No "summon a persistent ally" engine exists to invent, so
+ * this reuses AF-032's own closest existing primitive for it: a projectile
+ * that never returns (`orbiting`, the same behaviour "orbital"-category
+ * weapons already use for a satellite that circles and fires).
+ */
+export const SWARM_TENDER: WeaponDef = {
+  id: "swarm-tender",
+  name: "Swarm Tender",
+  category: "summon",
+  manufacturer: "Halcyon Driveworks",
+  tier: 2,
+  rarity: "rare",
+  lore: "Doesn't fire so much as release — a tending drone that never comes back to dock.",
+  damageSchool: "energy",
+  damageSourceKind: "direct",
+  baseDamage: 5,
+  critChance: 0.05,
+  critMultiplier: 1.5,
+  fireIntervalMs: 1400,
+  firePattern: "orbit",
+  projectilesPerShot: 1,
+  projectileBehaviour: "orbiting",
+  range: 6,
+  projectileSpeed: 10,
+  pierceCount: 0,
+  explosionRadius: 0,
+  statusOnHit: null,
+  energyCost: 6,
+  evolution: null,
+};
+
+/**
+ * GP-004 §Content Engine's roster addition — the Biological naming layer's
+ * first real weapon (biologicalWeapons already mapped totally onto
+ * "plasma"; nothing had ever used the mapping). Poison is AF-021's own
+ * existing status kind — no new damage-over-time mechanic invented.
+ */
+export const SPORE_LANCE: WeaponDef = {
+  id: "spore-lance",
+  name: "Spore Lance",
+  category: "plasma",
+  manufacturer: "Meridian Yards",
+  tier: 2,
+  rarity: "improved",
+  lore: "Grown from the same lattice as Winterline's crystal work — this one blooms toxin instead of frost.",
+  damageSchool: "physical",
+  damageSourceKind: "direct",
+  baseDamage: 6,
+  critChance: 0.1,
+  critMultiplier: 1.8,
+  fireIntervalMs: 650,
+  firePattern: "burst",
+  projectilesPerShot: 2,
+  projectileBehaviour: "piercing",
+  range: 11,
+  projectileSpeed: 20,
+  pierceCount: 1,
+  explosionRadius: 0,
+  statusOnHit: { kind: "poison", chance: 0.35, strength: 4, durationMs: 3000 },
+  energyCost: 0,
+  evolution: null,
+};
+
+/** The extended arsenal — AF-032's sandbox four plus AF-075/GP-004's additions, additively. */
+export const FRAMEWORK_WEAPONS: readonly WeaponDef[] = [...SANDBOX_WEAPONS, HAILBORN_ARRAY, SWARM_TENDER, SPORE_LANCE];
 
 export const WEAPON_PROFILES: readonly WeaponProfileDef[] = [
   {
@@ -322,6 +406,34 @@ export const WEAPON_PROFILES: readonly WeaponProfileDef[] = [
     statisticKeys: ["weapon:hailborn-array:kills", "weapon:hailborn-array:freezes"],
     cosmetics: [{ kind: "projectileColours", id: "hailborn-aurora" }],
     futureExpansionHooks: ["evolution-hailborn-glacier"],
+  },
+  {
+    weaponId: "swarm-tender",
+    frameworkCategory: "summonWeapons",
+    visualIdentity: "A stubby launcher that ejects a palm-sized drone — it never returns, just keeps circling.",
+    element: "kinetic",
+    heatGenerationPerShot: 3,
+    passiveTrait: { trigger: "onKill", bonus: { kind: "droneEffectiveness", value: 0.05 } },
+    uniqueMechanic: { tag: "swarm-tender-doctrine", description: "Every drone launched joins the last — a growing ring, never a replacement." },
+    evolutionSource: "mastery",
+    masteryTrackId: "weapon:swarm-tender",
+    statisticKeys: ["weapon:swarm-tender:kills", "weapon:swarm-tender:dronesLaunched"],
+    cosmetics: [{ kind: "weaponSkins", id: "swarm-tender-halcyon" }],
+    futureExpansionHooks: ["evolution-swarm-tender-hive"],
+  },
+  {
+    weaponId: "spore-lance",
+    frameworkCategory: "biologicalWeapons",
+    visualIdentity: "A grown lattice barrel, veined and faintly warm, that exhales more than it fires.",
+    element: "radiation",
+    heatGenerationPerShot: 2,
+    passiveTrait: { trigger: "onCriticalHit", bonus: { kind: "statusChance", value: 0.05 } },
+    uniqueMechanic: { tag: "spore-lance-doctrine", description: "Poisoned targets that die release a cloud that reapplies the toxin to whoever stands near." },
+    evolutionSource: "research",
+    masteryTrackId: "weapon:spore-lance",
+    statisticKeys: ["weapon:spore-lance:kills", "weapon:spore-lance:poisons"],
+    cosmetics: [{ kind: "impactEffects", id: "spore-lance-bloom" }],
+    futureExpansionHooks: ["evolution-spore-lance-bloom"],
   },
 ];
 

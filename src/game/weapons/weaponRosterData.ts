@@ -238,7 +238,15 @@ const ROSTER_WEAPON_PROFILE_DEFS: readonly WeaponProfileDef[] = [
 
 /** Beam family for the Sunlance's category — registered alongside the in-use families above. */
 export const BEAM_VIGIL_FAMILY: WeaponFamilyDef = { id: "beamWeapons:vigil", category: "beamWeapons", name: "Vigil Beams", gameplayNote: "Lances that recognise their targets." };
-export const ALL_WEAPON_FAMILIES: readonly WeaponFamilyDef[] = [...WEAPON_FAMILIES, BEAM_VIGIL_FAMILY];
+/** GP-004: families for the Summon/Biological categories' first real weapons (Swarm Tender, Spore Lance). */
+export const SUMMON_TENDING_FAMILY: WeaponFamilyDef = { id: "summonWeapons:tending", category: "summonWeapons", name: "Tending Swarm", gameplayNote: "The ring grows; it never restarts." };
+export const BIOLOGICAL_BLOOM_FAMILY: WeaponFamilyDef = { id: "biologicalWeapons:bloom", category: "biologicalWeapons", name: "Bloom Toxins", gameplayNote: "The poison outlives the shot." };
+export const ALL_WEAPON_FAMILIES: readonly WeaponFamilyDef[] = [
+  ...WEAPON_FAMILIES,
+  BEAM_VIGIL_FAMILY,
+  SUMMON_TENDING_FAMILY,
+  BIOLOGICAL_BLOOM_FAMILY,
+];
 
 /** The launch arsenal — ten weapons on unchanged shapes; mythic honestly awaits its first weapon. */
 export const LAUNCH_ARSENAL: readonly WeaponDef[] = [...FRAMEWORK_WEAPONS, ...ROSTER_WEAPON_DEFS];
@@ -255,6 +263,9 @@ export const ARSENAL_ENTRIES: readonly WeaponRosterEntry[] = [
   { weaponId: "paragon-flux-driver", manufacturerId: "paragon-laboratories", tier: "prototype", familyId: "gravityWeapons:singularity", collectionKind: "prototypeDesigns", discoveryMethod: "Volunteered for — the Laboratories do not assign the Flux Driver." },
   { weaponId: "foundry-sunlance", manufacturerId: "ancient-foundry", tier: "legendary", familyId: "beamWeapons:vigil", collectionKind: "legendaryWeapons", discoveryMethod: "Unique discovery — the armoury vault beneath First Light." },
   { weaponId: "salvage-scattergun", manufacturerId: "frontier-salvage", tier: "common", familyId: "shotguns:breach", collectionKind: "blueprints", discoveryMethod: "Traded from a Nomad junker working the Gravewake fields." },
+  // GP-004 §Content Engine: the Summon/Biological categories' first real weapons.
+  { weaponId: "swarm-tender", manufacturerId: "halcyon-driveworks", tier: "rare", familyId: "summonWeapons:tending", collectionKind: "blueprints", discoveryMethod: "Field-modified from expedition survey drones." },
+  { weaponId: "spore-lance", manufacturerId: "meridian-yards", tier: "uncommon", familyId: "biologicalWeapons:bloom", collectionKind: "blueprints", discoveryMethod: "Grown alongside the Hailborn lattice, tuned for toxin instead of frost." },
 ];
 
 export const STARTING_WEAPON_IDS: readonly string[] = ["coil-ripper"];

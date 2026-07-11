@@ -27,6 +27,27 @@ export interface CommanderPassive {
   threshold?: number;
 }
 
+/**
+ * GP-004 §Content Engine / §Commanders: "Commanders should meaningfully
+ * affect runs" — the audit found ultimate activation was presentation-only
+ * (camera shake + toast) for every commander regardless of which one, with
+ * no data field anywhere describing what an ultimate actually DOES. This
+ * is the generic interpreter: any of 500+ future commanders becomes
+ * mechanically distinct just by setting `effect` on their own def — zero
+ * main.ts changes required, the same "generic enum, not per-id code"
+ * discipline every other content category in this codebase already uses.
+ */
+export const COMMANDER_ULTIMATE_EFFECT_KINDS = ["novaDamage", "barrierBurst", "healBurst"] as const;
+export type CommanderUltimateEffectKind = (typeof COMMANDER_ULTIMATE_EFFECT_KINDS)[number];
+
+export interface CommanderUltimateEffect {
+  kind: CommanderUltimateEffectKind;
+  /** Meaning depends on kind: nova damage amount / barrier amount / heal amount. */
+  value: number;
+  /** novaDamage only — the AoE radius centred on the player. */
+  radius?: number;
+}
+
 export interface CommanderUltimate {
   id: string;
   name: string;
@@ -35,6 +56,10 @@ export interface CommanderUltimate {
   /** Charge gained per kill / per point of damage dealt. */
   chargePerKill: number;
   chargePerDamage: number;
+  /** Optional — absent means the generic default (a modest novaDamage burst)
+   * applies, so every ultimate does SOMETHING real even before an author
+   * gives it a bespoke effect. */
+  effect?: CommanderUltimateEffect;
 }
 
 export interface CommanderSignatureMechanic {
@@ -90,7 +115,8 @@ export const SANDBOX_COMMANDERS: readonly CommanderDef[] = [
     biography: "The last gunnery officer of a fleet that no longer exists.",
     passive: { trigger: "onCriticalHit", bonus: { kind: "criticalDamage", value: 0.1 } },
     active: { id: "energy-pulse", name: "Energy Pulse", cooldownMs: 8000 },
-    ultimate: { id: "orbital-strike", name: "Orbital Strike", chargeRequired: 100, chargePerKill: 4, chargePerDamage: 0.05 },
+    // GP-004: a real mechanical effect, not just a name — an orbital strike is a nova.
+    ultimate: { id: "orbital-strike", name: "Orbital Strike", chargeRequired: 100, chargePerKill: 4, chargePerDamage: 0.05, effect: { kind: "novaDamage", value: 90, radius: 6 } },
     signature: {
       tag: "longlight-doctrine",
       description: "Every fifth critical hit briefly overcharges weapons.",
@@ -106,7 +132,8 @@ export const SANDBOX_COMMANDERS: readonly CommanderDef[] = [
     biography: "Rebuilt three times. Remembers all three deaths.",
     passive: { trigger: "onShieldBreak", bonus: { kind: "shieldRegeneration", value: 8 } },
     active: { id: "emergency-barrier", name: "Emergency Barrier", cooldownMs: 12000 },
-    ultimate: { id: "planetary-defence-grid", name: "Planetary Defence Grid", chargeRequired: 100, chargePerKill: 2, chargePerDamage: 0.03 },
+    // GP-004: a real mechanical effect — a defence grid throws up a major barrier.
+    ultimate: { id: "planetary-defence-grid", name: "Planetary Defence Grid", chargeRequired: 100, chargePerKill: 2, chargePerDamage: 0.03, effect: { kind: "barrierBurst", value: 120 } },
     signature: {
       tag: "ironhull-doctrine",
       description: "Taking damage below 30% health grants a stacking damage reduction.",

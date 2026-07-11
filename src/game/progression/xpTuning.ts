@@ -2,6 +2,7 @@
  * XP & level progression tuning surface (AF-022). Curve, tiers, collection,
  * and offer parameters are data (AF-011 §7); missions override per config.
  */
+import type { EquipmentBonus } from "../equipment/equipmentData";
 export type XpTier =
   | "small"
   | "medium"
@@ -82,4 +83,13 @@ export interface UpgradeDefinition {
   weight: number;
   /** Times it may be taken; null = unlimited. */
   maxStacks: number | null;
+  /**
+   * GP-004 §Content Engine: the generic effect the interpreter (applyUpgrade
+   * in main.ts) applies on pick. Optional — legacy entries without it keep
+   * their own hardcoded-by-id behaviour rather than being forced to migrate.
+   * Reuses AF-028's EquipmentBonus/BonusKind vocabulary so any future
+   * upgrade — including the standalone Passive roster — plugs in with zero
+   * main.ts changes as long as it uses an already-registered BonusKind.
+   */
+  effect?: EquipmentBonus;
 }
