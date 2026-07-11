@@ -274,6 +274,7 @@ import { coherenceStandardMet } from "./game/atlasCoherence/AtlasCoherenceRuntim
 import { COHERENCE_DOMAINS, COHERENCE_STANDARD_QUESTIONS } from "./game/atlasCoherence/atlasCoherenceData";
 import { truthStandardMet } from "./game/atlasVerification/AtlasVerificationRuntime";
 import { TRUTH_STANDARD_QUESTIONS, VERIFICATION_DOMAINS, confidenceLevelRank, verificationChainRank } from "./game/atlasVerification/atlasVerificationData";
+import { REASONING_DOMAINS, reasoningCycleRank } from "./game/atlasReasoning/atlasReasoningData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2487,6 +2488,24 @@ const possibilityIndex = new PossibilityIndexScoreCard();
   institutionalMemory.remember("institution-living-city-academy", "Research", "Validated the restoration survey before publication.", 20);
   knowledgeStates.revealHistoricalUnderstanding("event-player-restored-frontier", "Initially attributed to a single scientist.", 20, "Scientists");
   knowledgeStates.revealHistoricalUnderstanding("event-player-restored-frontier", "Later evidence showed a full team contributed.", 25, "Scientists");
+}
+
+// AF-197: the Atlas Reasoning Engine — overlaps almost entirely with
+// AF-155's own already-locked "Atlas Intelligence Engine" and AF-156's
+// own already-locked "Atlas Decision Engine". Reuses AF-155's real
+// suggestUncertaintyResponse/collaborativeProblems/rankOptions
+// directly, and AF-156's real explainDecision/decisionLog directly for
+// Reasoning Record. reasoningCycleRank is the module's sole genuinely
+// new piece (see atlasReasoningData.ts for the full reuse notes; this
+// module intentionally has no Runtime.ts, since it introduces no new
+// stateful class or gate function).
+{
+  collaborativeProblems.propose("problem-open-frontier-signal-origin", ["scientist-vale", "commander-fen-beastmaster"], "Science", 20);
+  const reasoningExplanation = explainDecision([
+    { id: "hypothesis-dormant-relay", scores: { "Evidence quality": 0.8 } },
+    { id: "hypothesis-natural-phenomenon", scores: { "Evidence quality": 0.3 } },
+  ]);
+  if (reasoningExplanation) decisionLog.record("Science", "Hypothesis selection", reasoningExplanation.chosenId, reasoningExplanation.confidence, 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6480,6 +6499,14 @@ const loop = new GameLoop({
         atlasVerification: (() => {
           const domainOverlap = detectOverlap(VERIFICATION_DOMAINS, COHERENCE_DOMAINS);
           return `hypothesis grounded=${hypotheses.isGrounded("theory-open-frontier-signal")} · evidence graph neighbours ${knowledgeGraph.neighbors("fact-dormant-relay").length} · player event witnesses ${canonEvents.eventFor("event-player-restored-frontier")?.witnesses.length ?? 0} · institution memories ${institutionalMemory.memoriesFor("institution-living-city-academy").length} · understanding "${knowledgeStates.historicalUnderstandingFor("event-player-restored-frontier") ?? "none"}" · chain rank ${verificationChainRank("Peer Review")} · confidence rank ${confidenceLevelRank("Strong Evidence")} · truth met=${truthStandardMet(new Set(TRUTH_STANDARD_QUESTIONS))} · domain overlap[Verification,Coherence] ${domainOverlap.shared.length}/${VERIFICATION_DOMAINS.length}`;
+        })(),
+        atlasReasoning: (() => {
+          const domainOverlap = detectOverlap(REASONING_DOMAINS, VERIFICATION_DOMAINS);
+          const outcome = rankOptions([
+            { id: "hypothesis-dormant-relay", scores: { "Evidence quality": 0.8, Replication: 0.6 } },
+            { id: "hypothesis-natural-phenomenon", scores: { "Evidence quality": 0.3, Replication: 0.2 } },
+          ]);
+          return `collaborators ${collaborativeProblems.participantsFor("problem-open-frontier-signal-origin").length} · best hypothesis ${outcome?.bestId ?? "none"} · uncertainty response ${outcome ? suggestUncertaintyResponse(outcome.confidence) ?? "none" : "none"} · reasoning record entries ${decisionLog.forDomain("Science").length} · cycle rank ${reasoningCycleRank("Evaluation")} · domain overlap[Reasoning,Verification] ${domainOverlap.shared.length}/${REASONING_DOMAINS.length}`;
         })(),
       });
     }

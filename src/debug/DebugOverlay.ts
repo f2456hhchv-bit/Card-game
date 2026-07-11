@@ -230,6 +230,8 @@ export interface DebugSnapshot {
   atlasCoherence: string | null;
   /** Atlas Verification Engine summary — the Coherence Engine ensures everything fits together, the Verification Engine ensures everything is demonstrably correct: the reused AF-172 hypotheses' grounded status for Scientific Verification, the reused AF-151 knowledgeGraph's neighbour count for The Evidence Graph, the reused AF-148 canonEvents' witness count for Player Verification, the reused AF-165 institutionalMemory's memory count for Institutional Verification, the reused AF-148 knowledgeStates' expanded understanding text for Contradiction Review, the new verificationChainRank/confidenceLevelRank's ordered (non-cyclic) ranks, the new truthStandardMet's all-must-pass result (mirroring AF-195's real coherenceStandardMet shape), and a live detectOverlap reading against AF-195's real COHERENCE_DOMAINS (AF-196 §DEBUG). */
   atlasVerification: string | null;
+  /** Atlas Reasoning Engine summary — overlaps almost entirely with AF-155's own already-locked "Atlas Intelligence Engine" and AF-156's own already-locked "Atlas Decision Engine" (see atlasReasoningData.ts's module doc comment): the reused AF-155 collaborativeProblems' participant count for Collaborative Reasoning, the reused AF-155 rankOptions/suggestUncertaintyResponse for the Commander/Scientific/Engineering Reasoning mechanism and Uncertainty, the reused AF-156 decisionLog's entry count for Reasoning Record, the new reasoningCycleRank's ordered (non-cyclic) rank for The Reasoning Cycle, and a live detectOverlap reading against AF-196's real VERIFICATION_DOMAINS (AF-197 §DEBUG). */
+  atlasReasoning: string | null;
 }
 
 export class DebugOverlay {
@@ -378,6 +380,7 @@ export class DebugOverlay {
       `openDoor   ${snapshot.atlasOpenPossibility ?? "—"}`,
       `coherence  ${snapshot.atlasCoherence ?? "—"}`,
       `verify     ${snapshot.atlasVerification ?? "—"}`,
+      `reasoning  ${snapshot.atlasReasoning ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
