@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../state/AuthContext';
 import { ApiError } from '../api/client';
+import { Icon } from '../icons/Icon';
 
 export function Register() {
   const { register } = useAuth();
@@ -30,6 +31,9 @@ export function Register() {
   return (
     <div className="auth-screen">
       <div className="auth-card">
+        <div className="brand-emblem">
+          <Icon name="logo" size={40} />
+        </div>
         <h1 className="brand-title">NOVA CITY</h1>
         <p className="brand-tagline">Pick a callsign. Make a name for yourself out here.</p>
         <form onSubmit={submit}>

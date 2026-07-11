@@ -4,6 +4,7 @@ import { useToast } from '../state/ToastContext';
 import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
 import { Timer } from '../components/Timer';
+import { FactionCrest } from '../components/FactionCrest';
 import type { Character, FactionMessage, FactionSummary } from '../types';
 
 export function Faction() {
@@ -172,7 +173,13 @@ export function Faction() {
         <h2 className="section-title">Browse Fleets</h2>
         <div className="grid two-col">
           {factions.map((f) => (
-            <Card key={f.id} title={`${f.name} [${f.tag}]`}>
+            <Card key={f.id}>
+              <div className="faction-header">
+                <FactionCrest seed={f.id} tag={f.tag} />
+                <h3 className="card-title">
+                  {f.name} [{f.tag}]
+                </h3>
+              </div>
               <p>{f.memberCount} members</p>
               <button className="btn-primary" disabled={busy} onClick={() => join(f.id)}>
                 Join
@@ -189,9 +196,12 @@ export function Faction() {
 
   return (
     <div className="screen">
-      <h1 className="screen-title">
-        {own.name} [{own.tag}]
-      </h1>
+      <div className="faction-header faction-header-lg">
+        <FactionCrest seed={own.id} tag={own.tag} size={56} />
+        <h1 className="screen-title">
+          {own.name} [{own.tag}]
+        </h1>
+      </div>
       <div className="grid two-col">
         <Card title="Fleet">
           <p>{own.memberCount} members</p>

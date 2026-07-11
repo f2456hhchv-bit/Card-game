@@ -1,4 +1,5 @@
 import type { Stat } from '../types';
+import { Icon } from '../icons/Icon';
 
 const LABELS: Record<Stat, string> = {
   strength: 'Strength',
@@ -14,7 +15,10 @@ export function StatBlock({ stats, baseStats }: { stats: Record<Stat, number>; b
         const bonus = baseStats ? stats[stat] - baseStats[stat] : 0;
         return (
           <div key={stat} className="stat-row">
-            <span className="stat-name">{LABELS[stat]}</span>
+            <span className="stat-name">
+              <Icon name={stat} size={15} />
+              {LABELS[stat]}
+            </span>
             <span className="stat-value">
               {Math.round(stats[stat])}
               {bonus > 0 && <span className="stat-bonus"> (+{Math.round(bonus)})</span>}

@@ -1,3 +1,5 @@
+import { Icon } from '../icons/Icon';
+
 export function ResourceBar({
   label,
   value,
@@ -13,7 +15,10 @@ export function ResourceBar({
   return (
     <div className={`resource-bar resource-${variant}`}>
       <div className="resource-bar-label">
-        <span>{label}</span>
+        <span className="resource-bar-name">
+          <Icon name={variant} size={14} />
+          {label}
+        </span>
         <span>
           {Math.round(value)}/{max}
         </span>

@@ -4,6 +4,8 @@ import { useToast } from '../state/ToastContext';
 import { useReferenceData } from '../state/ReferenceDataContext';
 import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
+import { ItemTitle } from '../components/ItemTitle';
+import { Icon } from '../icons/Icon';
 import type { Character } from '../types';
 
 export function Inventory() {
@@ -33,8 +35,12 @@ export function Inventory() {
     <div className="screen">
       <h1 className="screen-title">Inventory</h1>
       <Card title="Equipped">
-        <p>Weapon: {character.equippedWeaponId ? item(character.equippedWeaponId)?.name : 'None'}</p>
-        <p>Armor: {character.equippedArmorId ? item(character.equippedArmorId)?.name : 'None'}</p>
+        <p>
+          <Icon name="weapon" size={15} /> Weapon: {character.equippedWeaponId ? item(character.equippedWeaponId)?.name : 'None'}
+        </p>
+        <p>
+          <Icon name="armor" size={15} /> Armor: {character.equippedArmorId ? item(character.equippedArmorId)?.name : 'None'}
+        </p>
       </Card>
       <div className="grid three-col">
         {stacks.map((stack) => {
@@ -42,7 +48,7 @@ export function Inventory() {
           if (!meta) return null;
           const key = `${stack.itemId}-${stack.acquiredAt}`;
           return (
-            <Card key={key} title={`${meta.name} ×${stack.qty}`}>
+            <Card key={key} title={<ItemTitle type={meta.type} name={`${meta.name} ×${stack.qty}`} />}>
               <p className="muted">{meta.flavor}</p>
               {meta.decays && <p className="small warn">Contraband — value decays over time.</p>}
               <div className="button-row">

@@ -3,6 +3,7 @@ import { useAuth } from '../state/AuthContext';
 import { useToast } from '../state/ToastContext';
 import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
+import { Icon } from '../icons/Icon';
 import type { Character, Stat } from '../types';
 
 const STATS: { key: Stat; label: string; blurb: string }[] = [
@@ -52,7 +53,15 @@ export function Gym() {
       </Card>
       <div className="grid two-col">
         {STATS.map((s) => (
-          <Card key={s.key} title={s.label}>
+          <Card
+            key={s.key}
+            title={
+              <span className="card-title-with-icon">
+                <Icon name={s.key} size={16} />
+                {s.label}
+              </span>
+            }
+          >
             <p className="muted">{s.blurb}</p>
             <p>Current: {Math.round(character.stats[s.key])}</p>
             <button className="btn-primary" disabled={locked || busy !== null} onClick={() => train(s.key)}>

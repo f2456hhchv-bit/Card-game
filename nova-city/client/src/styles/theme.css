@@ -67,8 +67,17 @@ a {
   box-shadow: 0 0 60px rgba(79, 217, 255, 0.08);
 }
 
+.brand-emblem {
+  display: flex;
+  justify-content: center;
+  color: var(--accent-strong);
+  filter: drop-shadow(0 0 14px rgba(79, 217, 255, 0.55));
+  margin-bottom: 0.5rem;
+}
+
 .brand-title {
   margin: 0;
+  text-align: center;
   font-size: 1.8rem;
   letter-spacing: 0.15em;
   background: linear-gradient(90deg, var(--accent-strong), var(--accent));
@@ -79,6 +88,7 @@ a {
 
 .brand-tagline {
   color: var(--text-muted);
+  text-align: center;
   margin-top: 0.25rem;
   margin-bottom: 1.5rem;
 }
@@ -137,6 +147,9 @@ a {
 }
 
 .topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   color: var(--accent-strong);
@@ -163,6 +176,9 @@ a {
 
 .credits {
   color: var(--accent-warn);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .status-badge {
@@ -197,6 +213,25 @@ a {
   font-size: 0.75rem;
   color: var(--text-muted);
   margin-bottom: 0.25rem;
+}
+
+.resource-bar-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.resource-fuel .resource-bar-name {
+  color: #4fd9ff;
+}
+.resource-resolve .resource-bar-name {
+  color: #ffb454;
+}
+.resource-morale .resource-bar-name {
+  color: #d89bff;
+}
+.resource-health .resource-bar-name {
+  color: #52e6a4;
 }
 
 .resource-bar-track {
@@ -242,11 +277,19 @@ a {
 }
 
 .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   color: var(--text-muted);
   text-decoration: none;
   padding: 0.55rem 0.75rem;
   border-radius: 8px;
   font-size: 0.9rem;
+}
+
+.nav-link .icon {
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 
 .nav-link:hover {
@@ -271,6 +314,9 @@ a {
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--text-muted);
   text-transform: uppercase;
   font-size: 0.85rem;
@@ -291,6 +337,52 @@ a {
   margin: 0 0 0.6rem;
   font-size: 1rem;
   color: var(--accent-strong);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon {
+  flex-shrink: 0;
+  vertical-align: -3px;
+}
+
+.location-header,
+.faction-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.location-header .card-title,
+.faction-header .card-title {
+  margin: 0;
+}
+
+.faction-header-lg {
+  margin-bottom: 1rem;
+}
+
+.faction-header-lg .screen-title {
+  margin: 0;
+}
+
+.location-card.here {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(79, 217, 255, 0.25);
+}
+
+.faction-crest,
+.location-glyph {
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
 }
 
 .grid {
@@ -431,6 +523,13 @@ a {
   display: flex;
   justify-content: space-between;
   font-size: 0.9rem;
+}
+
+.stat-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
 }
 
 .stat-bonus {

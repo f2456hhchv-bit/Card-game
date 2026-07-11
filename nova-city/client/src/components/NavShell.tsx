@@ -5,21 +5,23 @@ import { useToast } from '../state/ToastContext';
 import { useNovaSocket } from '../api/ws';
 import { ResourceBar } from './ResourceBar';
 import { Timer } from './Timer';
+import { Icon } from '../icons/Icon';
+import type { IconName } from '../icons/Icon';
 import type { WsEvent } from '../types';
 
-const NAV_ITEMS = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/gym', label: 'Training Bay' },
-  { to: '/crimes', label: 'Ops' },
-  { to: '/combat', label: 'Combat' },
-  { to: '/jail', label: 'Brig' },
-  { to: '/hospital', label: 'Medbay' },
-  { to: '/market', label: 'Trade Hub' },
-  { to: '/inventory', label: 'Inventory' },
-  { to: '/travel', label: 'Travel' },
-  { to: '/faction', label: 'Fleet' },
-  { to: '/mail', label: 'Mail' },
-  { to: '/leaderboard', label: 'Leaderboard' },
+const NAV_ITEMS: { to: string; label: string; icon: IconName }[] = [
+  { to: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/gym', label: 'Training Bay', icon: 'gym' },
+  { to: '/crimes', label: 'Ops', icon: 'crimes' },
+  { to: '/combat', label: 'Combat', icon: 'combat' },
+  { to: '/jail', label: 'Brig', icon: 'jail' },
+  { to: '/hospital', label: 'Medbay', icon: 'hospital' },
+  { to: '/market', label: 'Trade Hub', icon: 'market' },
+  { to: '/inventory', label: 'Inventory', icon: 'inventory' },
+  { to: '/travel', label: 'Travel', icon: 'travel' },
+  { to: '/faction', label: 'Fleet', icon: 'faction' },
+  { to: '/mail', label: 'Mail', icon: 'mail' },
+  { to: '/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
 ];
 
 const STATUS_LABEL: Record<string, string> = {
@@ -92,11 +94,16 @@ export function NavShell() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="topbar-brand">NOVA CITY</div>
+        <div className="topbar-brand">
+          <Icon name="logo" size={22} />
+          NOVA CITY
+        </div>
         <div className="topbar-identity">
           <span className="callsign">{character.callsign}</span>
           <span className="level-badge">Lv {character.level}</span>
-          <span className="credits">{character.credits.toLocaleString()} cr</span>
+          <span className="credits">
+            <Icon name="credits" size={15} /> {character.credits.toLocaleString()} cr
+          </span>
           <span className={`status-badge status-${character.status}`}>
             {STATUS_LABEL[character.status]}
             {character.statusUntil && character.status !== 'ok' && (
@@ -127,6 +134,7 @@ export function NavShell() {
         <nav className="sidenav">
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+              <Icon name={item.icon} size={17} />
               {item.label}
             </NavLink>
           ))}

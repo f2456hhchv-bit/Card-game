@@ -6,6 +6,8 @@ import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
 import { StatBlock } from '../components/StatBlock';
 import { Timer } from '../components/Timer';
+import { LocationGlyph } from '../components/LocationGlyph';
+import { Icon } from '../icons/Icon';
 import type { Character, SalvageEventSummary } from '../types';
 
 function xpToNextLevel(level: number): number {
@@ -55,7 +57,14 @@ function SalvageEventCard() {
   };
 
   return (
-    <Card title="Derelict Salvage">
+    <Card
+      title={
+        <span className="card-title-with-icon">
+          <Icon name="contraband" size={16} />
+          Derelict Salvage
+        </span>
+      }
+    >
       {event ? (
         <>
           <p>
@@ -91,9 +100,12 @@ export function Dashboard() {
       <h1 className="screen-title">Welcome back, {character.callsign}</h1>
       <div className="grid two-col">
         <Card title="Pilot Status">
-          <p>
-            Location: <strong>{locationName(character.locationId)}</strong>
-          </p>
+          <div className="location-header">
+            <LocationGlyph seed={character.locationId} size={30} />
+            <p>
+              Location: <strong>{locationName(character.locationId)}</strong>
+            </p>
+          </div>
           <p>
             Status: <strong>{character.status}</strong>
             {character.statusUntil && character.status !== 'ok' && (
@@ -109,7 +121,9 @@ export function Dashboard() {
           <div className="xp-track">
             <div className="xp-fill" style={{ width: `${pct}%` }} />
           </div>
-          <p>Credits: {character.credits.toLocaleString()}</p>
+          <p>
+            <Icon name="credits" size={15} /> Credits: {character.credits.toLocaleString()}
+          </p>
         </Card>
         <Card title="Combat Profile">
           <StatBlock stats={character.effectiveStats} baseStats={character.stats} />

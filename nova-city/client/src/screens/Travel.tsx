@@ -5,6 +5,7 @@ import { useReferenceData } from '../state/ReferenceDataContext';
 import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
 import { Timer } from '../components/Timer';
+import { LocationGlyph } from '../components/LocationGlyph';
 import type { Character } from '../types';
 
 export function Travel() {
@@ -44,7 +45,11 @@ export function Travel() {
         {locations.map((loc) => {
           const here = loc.id === character.locationId;
           return (
-            <Card key={loc.id} title={loc.name}>
+            <Card key={loc.id} className={here ? 'location-card here' : 'location-card'}>
+              <div className="location-header">
+                <LocationGlyph seed={loc.id} />
+                <h3 className="card-title">{loc.name}</h3>
+              </div>
               <p className="muted">{loc.flavor}</p>
               {here ? (
                 <p className="small">You are here.</p>

@@ -4,6 +4,8 @@ import { useToast } from '../state/ToastContext';
 import { useReferenceData } from '../state/ReferenceDataContext';
 import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
+import { ItemTitle } from '../components/ItemTitle';
+import { Icon } from '../icons/Icon';
 import type { Character, ItemType } from '../types';
 
 const TYPE_LABEL: Record<ItemType, string> = {
@@ -41,10 +43,12 @@ export function Market() {
       <h1 className="screen-title">Trade Hub</h1>
       {(Object.keys(TYPE_LABEL) as ItemType[]).map((type) => (
         <div key={type}>
-          <h2 className="section-title">{TYPE_LABEL[type]}</h2>
+          <h2 className="section-title">
+            <Icon name={type} size={14} /> {TYPE_LABEL[type]}
+          </h2>
           <div className="grid three-col">
             {byType(type).map((item) => (
-              <Card key={item.id} title={item.name}>
+              <Card key={item.id} title={<ItemTitle type={item.type} name={item.name} />}>
                 <p className="muted">{item.flavor}</p>
                 {item.statBonus && (
                   <p className="small">
