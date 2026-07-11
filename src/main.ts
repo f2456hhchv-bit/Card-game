@@ -266,6 +266,8 @@ import { purposefulBeautyMet } from "./game/atlasCreator/AtlasCreatorRuntime";
 import { CREATION_CYCLE_STAGES, PURPOSEFUL_BEAUTY_CRITERIA } from "./game/atlasCreator/atlasCreatorData";
 import { standardOfExcellenceAssessment } from "./game/atlasCraftsmanship/AtlasCraftsmanshipRuntime";
 import { CRAFTSMANSHIP_DOMAINS, CRAFT_CYCLE_STAGES, craftCycleRank } from "./game/atlasCraftsmanship/atlasCraftsmanshipData";
+import { ExcellenceIndexScoreCard, ImprovementNetworkLedger, excellenceStandardAssessment } from "./game/atlasExcellence/AtlasExcellenceRuntime";
+import { EXCELLENCE_CYCLE_STAGES, EXCELLENCE_DOMAINS, EXCELLENCE_INDEX_CATEGORIES } from "./game/atlasExcellence/atlasExcellenceData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2397,6 +2399,29 @@ const creationCycle = new CyclicStageTracker(CREATION_CYCLE_STAGES);
   iterationCycles.recordCycle("creation-living-city-garden", 20);
   knowledgeGraph.addEdge({ fromId: "creation-living-city-garden", toId: "engineer-of-verdance", kind: "Created", strength: 1, confidence: 1, historicalContext: "Built using adaptive-materials techniques pioneered at the Verdance workshop.", dateEstablished: 20 });
   mentorshipLedger.assign("engineer-of-verdance", "apprentice-of-verdance", 20);
+}
+
+// AF-193: the Atlas Excellence Engine — the third module in the Creator
+// (AF-191) -> Craftsmanship (AF-192) -> Excellence (AF-193) trilogy.
+// Reuses AF-160's real mentorshipLedger directly for Personal
+// Excellence, AF-166's real commanderReputation directly for Commander
+// Excellence, AF-159's real culturalTrends directly for Cultural
+// Excellence, and AF-149's real iterationCycles directly for
+// Institutional Excellence. excellenceStandardAssessment/
+// ImprovementNetworkLedger/ExcellenceIndexScoreCard are the genuinely
+// new pieces (see atlasExcellenceData.ts for the full reuse notes).
+const excellenceCycle = new CyclicStageTracker(EXCELLENCE_CYCLE_STAGES);
+const improvementNetwork = new ImprovementNetworkLedger();
+const excellenceIndex = new ExcellenceIndexScoreCard();
+{
+  excellenceCycle.record("Learn", 20);
+  mentorshipLedger.assign("scientist-vale", "student-of-verdance", 20);
+  commanderReputation.recognizeFor("commander-thorne-starforged", "Strategic thinking", 20);
+  culturalTrends.record("Verdance Stewardship Ethic", "settlement-verdance", 20);
+  iterationCycles.recordCycle("institution-living-city-academy", 20);
+  iterationCycles.recordCycle("institution-living-city-academy", 20);
+  improvementNetwork.record("improvement-verdance-lecture-hall", { reason: "Attendance outgrew capacity.", method: "Expanded seating and added remote broadcast.", evidence: "Post-expansion attendance logs.", outcome: "Doubled attendance.", educationalValue: "More students reached.", futureOpportunities: "Extend broadcast to neighbouring settlements." }, 20);
+  for (const category of EXCELLENCE_INDEX_CATEGORIES) excellenceIndex.score(category, 9.6);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6373,6 +6398,11 @@ const loop = new GameLoop({
           const cycleOverlap = detectOverlap(CRAFT_CYCLE_STAGES, CREATION_CYCLE_STAGES);
           const excellence = standardOfExcellenceAssessment(new Set(["Will it endure?"]));
           return `master craftsman ${commanderReputation.mostRecognizedQuality("engineer-of-verdance") ?? "none"} · ready to ship=${iterationCycles.readyToShip("creation-living-city-garden")} · maker's mark neighbours ${knowledgeGraph.neighbors("creation-living-city-garden").length} · guild mentees ${mentorshipLedger.menteesOf("engineer-of-verdance").length} · craft cycle rank ${craftCycleRank("Refinement")} · continue refining=${excellence.shouldContinueRefining} · domain overlap[Craft,Creative] ${domainOverlap.shared.length}/${CRAFTSMANSHIP_DOMAINS.length} · cycle overlap[Craft,Creation] ${cycleOverlap.shared.length}/${CRAFT_CYCLE_STAGES.length}`;
+        })(),
+        atlasExcellence: (() => {
+          const domainOverlap = detectOverlap(EXCELLENCE_DOMAINS, CREATIVE_DOMAINS);
+          const standard = excellenceStandardAssessment(new Set(["Can it endure?"]));
+          return `cycle ${excellenceCycle.currentStage() ?? "none"} (next ${excellenceCycle.next("Inspire")}) · mentees ${mentorshipLedger.menteesOf("scientist-vale").length} · reputation ${commanderReputation.mostRecognizedQuality("commander-thorne-starforged") ?? "none"} · cultural adopters ${culturalTrends.adoptersFor("Verdance Stewardship Ethic").length} · institution ready=${iterationCycles.readyToShip("institution-living-city-academy")} · improvements logged ${improvementNetwork.historyFor("improvement-verdance-lecture-hall").length} · continue refining=${standard.shouldContinueRefining} · index score ${excellenceIndex.overallScore().toFixed(1)} (${excellenceIndex.passesGate() ? "passed" : "pending"}) · domain overlap[Excellence,Creative] ${domainOverlap.shared.length}/${EXCELLENCE_DOMAINS.length}`;
         })(),
       });
     }

@@ -222,6 +222,8 @@ export interface DebugSnapshot {
   atlasCreator: string | null;
   /** Atlas Craftsmanship Engine summary — AF-191's direct sibling, governing the pursuit of excellence rather than the act of creation itself (unrelated to `src/game/crafting/`'s item-recipe Crafting System and `src/game/masterIndex/`'s module dependency registry — see atlasCraftsmanshipData.ts's NAMING NOTE): the reused AF-166 ReputationTracker's revealed (never assigned) most-recognised quality for Master Craftsmen, the reused AF-149 IterationCycleTracker's ready-to-ship status for Quality Without Perfection, the reused AF-151 KnowledgeGraph's neighbour count for The Maker's Mark, the reused AF-160 MentorshipLedger's mentee count for The Craft Guilds, the new craftCycleRank's ordered (non-cyclic) rank for The Craft Cycle, the new standardOfExcellenceAssessment's continue-refining result for The Standard of Excellence, and live detectOverlap readings against AF-191's real CREATIVE_DOMAINS and CREATION_CYCLE_STAGES (AF-192 §DEBUG). */
   atlasCraftsmanship: string | null;
+  /** Atlas Excellence Engine summary — the third module in the Creator (AF-191) -> Craftsmanship (AF-192) -> Excellence (AF-193) trilogy: the new CyclicStageTracker instantiation's current/next Excellence Cycle stage (an explicit closed loop, unlike AF-192's non-cyclic Craft Cycle), the reused AF-160 MentorshipLedger's mentee count for Personal Excellence, the reused AF-166 ReputationTracker's revealed quality for Commander Excellence, the reused AF-159 CulturalTrendTracker's adopter count for Cultural Excellence, the reused AF-149 IterationCycleTracker's ready status for Institutional Excellence, the new ImprovementNetworkLedger's record count for The Improvement Network, the new excellenceStandardAssessment's continue-refining result (the second instance of AF-192's own ANY-of-N shape), the new ExcellenceIndexScoreCard's score/gate status (the eleventh mirrored scoring-rubric shape), and a live detectOverlap reading against AF-191's real CREATIVE_DOMAINS (AF-193 §DEBUG). */
+  atlasExcellence: string | null;
 }
 
 export class DebugOverlay {
@@ -366,6 +368,7 @@ export class DebugOverlay {
       `metaEvo    ${snapshot.atlasMetaEvolution ?? "—"}`,
       `creatorEng ${snapshot.atlasCreator ?? "—"}`,
       `craftsman  ${snapshot.atlasCraftsmanship ?? "—"}`,
+      `excellence ${snapshot.atlasExcellence ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,
