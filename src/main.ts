@@ -42,7 +42,7 @@ import { XpPickups } from "./game/progression/XpPickups";
 import { UpgradePool } from "./game/progression/UpgradePool";
 import { DEFAULT_XP_TUNING, type UpgradeDefinition } from "./game/progression/xpTuning";
 import { PASSIVE_CATEGORIES, SANDBOX_PASSIVES } from "./game/passives/passiveData";
-import { SANDBOX_UPGRADES } from "./game/progression/sandboxUpgrades";
+import { SANDBOX_UPGRADES, WEAPON_UNLOCK_UPGRADES } from "./game/progression/sandboxUpgrades";
 import type { EquipmentBonus, PassiveTrigger } from "./game/equipment/equipmentData";
 import { SANDBOX_ARTIFACTS, ArtifactRuntime } from "./game/artifacts/artifactData";
 import { BUILD_PATHS, BuildPathRuntime, offerBiasedUpgrades, offerBuildPaths, shouldOfferBuildPath, type BuildPathDef } from "./game/progression/buildPaths";
@@ -311,14 +311,14 @@ import { ROSTER_RELICS, ROSTER_RELIC_PROFILES, activeSetBonusesFor } from "./gam
 import { RelicCollectionRuntime } from "./game/relics/RelicCollectionRuntime";
 import { WEAPON_PROFILES } from "./game/weapons/weaponFrameworkData";
 import { WeaponMasteryRuntime } from "./game/weapons/WeaponMasteryRuntime";
-import { ARSENAL_ENTRIES, STARTING_WEAPON_IDS } from "./game/weapons/weaponRosterData";
+import { ARSENAL_ENTRIES, LAUNCH_ARSENAL, STARTING_WEAPON_IDS } from "./game/weapons/weaponRosterData";
 import { WeaponCollectionRuntime } from "./game/weapons/WeaponCollectionRuntime";
 import { SANDBOX_SHIP_MODULES, SHIP_PROFILES } from "./game/ships/shipFrameworkData";
 import { ShipOutfittingRuntime, type ShipOutfittingSaveData } from "./game/ships/ShipOutfittingRuntime";
 import { FLEET_ENTRIES, STARTING_SHIP_IDS } from "./game/ships/shipRosterData";
 import { ShipCollectionRuntime, type ShipCollectionSaveData } from "./game/ships/ShipCollectionRuntime";
 import { WeaponRuntime } from "./game/weapons/WeaponRuntime";
-import { SANDBOX_WEAPONS, WEAPON_CATEGORIES, type StatusOnHit } from "./game/weapons/weaponData";
+import { SANDBOX_WEAPONS, WEAPON_CATEGORIES, type StatusOnHit, type WeaponDef } from "./game/weapons/weaponData";
 import { WEAPON_FRAMEWORK_CATEGORIES } from "./game/weapons/weaponFrameworkData";
 import { stepProjectile } from "./game/weapons/ProjectileBehaviour";
 import { computeShotAngles } from "./game/weapons/FirePattern";
@@ -551,6 +551,11 @@ interface TestProjectile {
   reversed: boolean;
   behaviour: (typeof SANDBOX_WEAPONS)[number]["projectileBehaviour"];
   pierceRemaining: number;
+  // GP-FINAL §Build Philosophy: which equippedWeapons[] slot fired this
+  // (player-fired only) — hit-resolution reads damageSchool/statusOnHit
+  // from that weapon rather than a single global, now that up to six can
+  // fire at once. Meaningless (and unread) for hostile projectiles.
+  sourceWeaponIndex: number;
   // AF-033: enemy-fired projectiles carry their own damage packet — they hit the
   // player, not other drones, so they can't read it from the player's build.
   hostile: boolean;
@@ -586,6 +591,7 @@ const projectilePool = new Pool<TestProjectile>({
     reversed: false,
     behaviour: "straight",
     pierceRemaining: 0,
+    sourceWeaponIndex: 0,
     hostile: false,
     damageBaseDamage: 0,
     damageCritChance: 0,
@@ -658,6 +664,10 @@ function playerPacket() {
 // health recovers above threshold (see checkLowHealthPassives).
 const heldPassiveIds = new Set<string>();
 const lowHealthPassiveFired = new Set<string>();
+// GP-FINAL §Build Philosophy: EVERY passive pick, not just the instant-effect
+// ones heldPassiveIds tracks — feeds the 6-distinct-Passive cap (see the
+// UpgradePool isAllowed predicate, resetRun) rather than a new counter.
+const heldDistinctPassiveIds = new Set<string>();
 
 /**
  * GP-004 §Content Engine / §Passives: the audit found this switched on
@@ -684,7 +694,15 @@ const lowHealthPassiveFired = new Set<string>();
  * redesign.
  */
 function applyUpgrade(id: string): void {
-  const effect = SANDBOX_UPGRADES.find((upgrade) => upgrade.id === id)?.effect;
+  const def = SANDBOX_UPGRADES.find((upgrade) => upgrade.id === id);
+  if (def?.category === "passive") heldDistinctPassiveIds.add(id); // GP-FINAL: feeds the 6-distinct-Passive cap.
+  // GP-FINAL §Build Philosophy: weapon-unlock offers dispatch here, not through `effect` — see WEAPON_UNLOCK_UPGRADES.
+  const weaponUnlock = WEAPON_UNLOCK_UPGRADES.find((unlock) => unlock.id === id);
+  if (weaponUnlock) {
+    addEquippedWeapon(weaponUnlock.weaponId);
+    return;
+  }
+  const effect = def?.effect;
   if (!effect) return;
   const isInstantEffectPassive =
     (effect.kind === "shieldCapacity" || effect.kind === "shieldRegeneration") &&
@@ -734,6 +752,26 @@ function applyUpgradeEffect(effect: EquipmentBonus): void {
     default:
       break; // registered-future bonus kinds (droneEffectiveness/orbitalPower/...) — no consumer system yet, by design.
   }
+}
+
+/**
+ * GP-FINAL §Build Philosophy: the loadout's real acquisition point — up to
+ * six weapons, each firing independently through its own WeaponRuntime
+ * (see the fire loop, executeTick). Capped and de-duplicated here so the
+ * UpgradePool isAllowed predicate (resetRun) is a pure availability check,
+ * never the sole enforcement.
+ */
+function addEquippedWeapon(weaponId: string): void {
+  if (equippedWeapons.length >= 6) return;
+  if (equippedWeapons.some((w) => w.id === weaponId)) return;
+  const weapon = LAUNCH_ARSENAL.find((w) => w.id === weaponId);
+  if (!weapon) return;
+  equippedWeapons.push(weapon);
+  weaponRuntimes.push(new WeaponRuntime(weapon, (amount) => shipRuntime?.trySpendEnergy(amount) ?? true));
+  meta.discover("weapons", weapon.id); // AF-043: a second equipped weapon is a real discovery too.
+  arsenal.recordUse(weapon.id); // AF-076: arsenal statistics support future balancing.
+  persistMeta();
+  lootNotices.push({ text: `WEAPON ACQUIRED · ${weapon.name.toUpperCase()}`, colour: "#7fd9ff", ttlMs: 2400 });
 }
 
 /** GP-005 §Passives: fires every held instant-effect Passive registered on `trigger`. */
@@ -1477,8 +1515,8 @@ bus.on("RunEnded", ({ result, playTimeMs }) => {
   persistShipOutfitting();
   fleet.recordMission(sandboxShip.id, result === "victory"); // AF-074: fleet statistics support long-term balancing
   persistFleet();
-  if (weaponRuntime) weaponMastery.recordShots(weaponRuntime.snapshot.shotsFired); // AF-075: accuracy is derived from real fire
-  arsenal.recordUse(sandboxWeapon.id); // AF-076: arsenal statistics support future balancing
+  if (weaponRuntimes[0]) weaponMastery.recordShots(weaponRuntimes[0].snapshot.shotsFired); // AF-075: accuracy is derived from real fire — primary weapon's mastery track only (GP-FINAL scope trim)
+  arsenal.recordUse(STARTING_WEAPON.id); // AF-076: arsenal statistics support future balancing
   meta.addMasteryXp("ship:placeholder", result === "victory" ? 20 : 8);
   meta.addAccountXp(
     result === "victory" ? ACCOUNT_XP_AWARDS.missionCompleted : ACCOUNT_XP_AWARDS.missionFailed,
@@ -3127,10 +3165,19 @@ let shipRuntime: ShipRuntime | null = null;
 
 // ── Weapon (AF-032): fires through the same DamagePipeline "weapon" stage
 // and StatusEngine every prior module already reserved — no new plumbing.
-const sandboxWeapon = SANDBOX_WEAPONS[0]!;
+const STARTING_WEAPON = SANDBOX_WEAPONS[0]!;
+// GP-FINAL §Build Philosophy: the loadout — up to six weapons, each firing
+// independently through its own index-matched WeaponRuntime (see the fire
+// loop, executeTick, and addEquippedWeapon). Starts as the exact single-
+// weapon case every prior module already proved, so n=1 is a non-regression
+// baseline; resetRun re-seeds both to just STARTING_WEAPON each run.
+let equippedWeapons: WeaponDef[] = [STARTING_WEAPON];
+let weaponRuntimes: WeaponRuntime[] = [];
 // AF-075: the framework profile wraps AF-032's def — element, mastery,
-// unique mechanic. One mastery ledger for the equipped weapon.
-const sandboxWeaponProfile = WEAPON_PROFILES.find((p) => p.weaponId === sandboxWeapon.id)!;
+// unique mechanic. One mastery ledger, tied to the primary (starting) weapon
+// only — extending per-weapon mastery tracking is a scoped-out nice-to-have,
+// not core to "up to six weapons can fire" (GP-FINAL §Build Philosophy).
+const sandboxWeaponProfile = WEAPON_PROFILES.find((p) => p.weaponId === STARTING_WEAPON.id)!;
 const weaponMastery = new WeaponMasteryRuntime(sandboxWeaponProfile);
 // AF-076: the launch arsenal — ten weapons, the Coil Ripper collected,
 // uses recorded per expedition so statistics support future balancing.
@@ -3138,8 +3185,7 @@ const arsenal = new WeaponCollectionRuntime(ARSENAL_ENTRIES, STARTING_WEAPON_IDS
 // AF-077: the reliquary — a monotone collection lattice fed by real acquisitions.
 const reliquary = new RelicCollectionRuntime(ROSTER_RELIC_PROFILES);
 // AF-078: the drop pool and set detection ride the FULL roster.
-const sandboxArsenalEntry = ARSENAL_ENTRIES.find((e) => e.weaponId === sandboxWeapon.id)!;
-let weaponRuntime: WeaponRuntime | null = null;
+const sandboxArsenalEntry = ARSENAL_ENTRIES.find((e) => e.weaponId === STARTING_WEAPON.id)!;
 
 // ── Boss (AF-035): reuses DefenceState for hull/shield/armour and
 // EnemyRuntime for attack telegraph/cooldown gating — spawned when the
@@ -5456,9 +5502,10 @@ function updateSandboxCombat(fixedDtMs: number): void {
 
   // Weapon (AF-032): nearest-priority target, WeaponRuntime gates cooldown
   // + energy cost, fire pattern determines spawn geometry.
-  if (weaponRuntime) {
-    weaponRuntime.intervalScale = sandboxBuild.fireIntervalScale * atlasCoreFireIntervalScale(bossArtifactRuntime);
-    weaponRuntime.update(fixedDtMs);
+  // GP-FINAL §Build Philosophy: up to six equipped weapons each target and
+  // fire independently through their own index-matched WeaponRuntime —
+  // targeting itself stays the one shared rule every weapon already used.
+  if (weaponRuntimes.length > 0) {
     const candidates: TargetCandidate[] = drones
       .filter((d) => d.alive && !isDroneCloaked(d))
       .map((d) => ({ id: d.id, x: d.x, y: d.y, health: d.hull, maxHealth: d.maxHull, isBoss: false, isElite: d.elite }));
@@ -5477,27 +5524,33 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
     // AF-035: a live Boss finally gives AF-021's bossPriority selector a real consumer.
     const target = bossAlive ? TARGET_SELECTORS.boss(candidates, player.x, player.y) : TARGET_SELECTORS.nearest(candidates, player.x, player.y);
-    if (target && Math.hypot(target.x - player.x, target.y - player.y) <= sandboxWeapon.range) {
+    for (let weaponIndex = 0; weaponIndex < weaponRuntimes.length; weaponIndex += 1) {
+      const weapon = equippedWeapons[weaponIndex]!;
+      const runtime = weaponRuntimes[weaponIndex]!;
+      runtime.intervalScale = sandboxBuild.fireIntervalScale * atlasCoreFireIntervalScale(bossArtifactRuntime);
+      runtime.update(fixedDtMs);
+      if (!target || Math.hypot(target.x - player.x, target.y - player.y) > weapon.range) continue;
       const angle = Math.atan2(target.y - player.y, target.x - player.x);
-      const shots = weaponRuntime.tryFire(angle);
-      if (shots) {
-        for (const shot of shots) {
-          const projectile = projectilePool.acquire();
-          projectile.x = player.x;
-          projectile.y = player.y;
-          projectile.originX = player.x;
-          projectile.originY = player.y;
-          projectile.velocityX = Math.cos(shot.angle) * sandboxWeapon.projectileSpeed;
-          projectile.velocityY = Math.sin(shot.angle) * sandboxWeapon.projectileSpeed;
-          projectile.ttlMs = (sandboxWeapon.range / sandboxWeapon.projectileSpeed) * 1000 + 200;
-          projectile.elapsedMs = 0;
-          projectile.bouncesRemaining = 1;
-          projectile.reversed = false;
-          projectile.behaviour = shot.behaviour;
-          projectile.pierceRemaining = sandboxWeapon.pierceCount;
-          projectile.live = true;
-          projectiles.push(projectile);
-        }
+      const shots = runtime.tryFire(angle);
+      if (!shots) continue;
+      for (const shot of shots) {
+        const projectile = projectilePool.acquire();
+        projectile.x = player.x;
+        projectile.y = player.y;
+        projectile.originX = player.x;
+        projectile.originY = player.y;
+        projectile.velocityX = Math.cos(shot.angle) * weapon.projectileSpeed;
+        projectile.velocityY = Math.sin(shot.angle) * weapon.projectileSpeed;
+        projectile.ttlMs = (weapon.range / weapon.projectileSpeed) * 1000 + 200;
+        projectile.elapsedMs = 0;
+        projectile.bouncesRemaining = 1;
+        projectile.reversed = false;
+        projectile.behaviour = shot.behaviour;
+        projectile.pierceRemaining = weapon.pierceCount;
+        projectile.sourceWeaponIndex = weaponIndex;
+        projectile.hostile = false; // pooled objects may have last carried a hostile shot's flag.
+        projectile.live = true;
+        projectiles.push(projectile);
       }
     }
   }
@@ -5606,6 +5659,10 @@ function updateSandboxCombat(fixedDtMs: number): void {
     for (const drone of drones) {
       if (!drone.alive) continue;
       if (Math.hypot(drone.x - projectile.x, drone.y - projectile.y) < 0.6) {
+        // GP-FINAL §Build Philosophy: this projectile's own weapon — up to six
+        // may be firing at once, so damage school/statusOnHit must come from
+        // the shot's source, not a single global.
+        const sourceWeapon = equippedWeapons[projectile.sourceWeaponIndex] ?? equippedWeapons[0] ?? STARTING_WEAPON;
         const result = resolveDamage(
           playerPacket(),
           {
@@ -5627,8 +5684,8 @@ function updateSandboxCombat(fixedDtMs: number): void {
         const droneNetwork = networkOf(drone);
         let appliedDamage = result.finalDamage;
         if (droneNetwork) {
-          droneNetwork.recordIncomingDamage(sandboxWeapon.damageSchool);
-          appliedDamage *= droneNetwork.incomingDamageFactor(sandboxWeapon.damageSchool);
+          droneNetwork.recordIncomingDamage(sourceWeapon.damageSchool);
+          appliedDamage *= droneNetwork.incomingDamageFactor(sourceWeapon.damageSchool);
         }
         // AF-049: Reality Stability — corruption-scaled incoming-damage reduction,
         // the Swarm's own take on the same single damage-application point.
@@ -5691,13 +5748,13 @@ function updateSandboxCombat(fixedDtMs: number): void {
         bus.emit("DamageDealt", { amount: appliedDamage, critical: result.critical, kind: result.kind, targetId: drone.id });
         commanderRuntime?.notifyDamageDealt(appliedDamage);
         // AF-032: status-on-hit applies through the same StatusEngine every status-inflicting system already uses.
-        if (sandboxWeapon.statusOnHit && combatRng.next() < sandboxWeapon.statusOnHit.chance) {
+        if (sourceWeapon.statusOnHit && combatRng.next() < sourceWeapon.statusOnHit.chance) {
           drone.status.apply({
-            kind: sandboxWeapon.statusOnHit.kind,
-            strength: sandboxWeapon.statusOnHit.strength,
-            durationMs: sandboxWeapon.statusOnHit.durationMs,
+            kind: sourceWeapon.statusOnHit.kind,
+            strength: sourceWeapon.statusOnHit.strength,
+            durationMs: sourceWeapon.statusOnHit.durationMs,
           });
-          bus.emit("StatusApplied", { targetId: drone.id, status: sandboxWeapon.statusOnHit.kind });
+          bus.emit("StatusApplied", { targetId: drone.id, status: sourceWeapon.statusOnHit.kind });
         }
         const popup = popupPool.acquire();
         popup.x = drone.x;
@@ -5841,7 +5898,7 @@ function startRun(): void {
   // run is a real discovery, not a new mechanism.
   meta.discover("ships", sandboxShip.id);
   meta.discover("commanders", sandboxCommander.id);
-  meta.discover("weapons", sandboxWeapon.id);
+  meta.discover("weapons", STARTING_WEAPON.id);
   persistMeta();
   missionRuntime = new MissionRuntime(missionInstance, new Rng(seed).fork("mission"));
   extractionRemainingMs = 0;
@@ -5912,7 +5969,9 @@ function startRun(): void {
   sandboxBuild.passiveXpBonus = 0; // GP-004: standalone Passives, xp category
   heldPassiveIds.clear(); // GP-005: instant-effect Passives are held per-run too.
   lowHealthPassiveFired.clear();
+  heldDistinctPassiveIds.clear(); // GP-FINAL: the 6-distinct-Passive cap is run-scoped too.
   activeEliteRewardEffects = []; // GP-FINAL: Elite Reward effects are run-scoped too.
+  equippedWeapons = [STARTING_WEAPON]; // GP-FINAL: the loadout resets to the single starting weapon each run.
   const research = researchEffects();
   sandboxBuild.magnetBonus = research.magnetBonus;
   sandboxBuild.researchWeaponBonus = research.weaponBonus;
@@ -5922,7 +5981,7 @@ function startRun(): void {
   sandboxBuild.equipmentWeaponBonus = equipment.bonuses.damage ?? 0;
   playerDefence.addBarrier(equipment.bonuses.shieldCapacity ?? 0);
   shipRuntime = new ShipRuntime(sandboxShip);
-  weaponRuntime = new WeaponRuntime(sandboxWeapon, (amount) => shipRuntime?.trySpendEnergy(amount) ?? true);
+  weaponRuntimes = equippedWeapons.map((weapon) => new WeaponRuntime(weapon, (amount) => shipRuntime?.trySpendEnergy(amount) ?? true));
   const shipSpeedBonus = shipRuntime.bonuses.movementSpeed ?? 0;
   const equipmentSpeedBonus = equipment.bonuses.movementSpeed ?? 0;
   if (shipSpeedBonus + equipmentSpeedBonus > 0) {
@@ -5945,7 +6004,15 @@ function startRun(): void {
     xpSystem?.addXp(amount * (1 + sandboxBuild.passiveXpBonus)); // GP-004: standalone Passives, xp category
     bus.emit("XpCollected", { amount, tier });
   });
-  upgradePool = new UpgradePool(SANDBOX_UPGRADES, new Rng(seed).fork("upgrades"));
+  // GP-FINAL §Build Philosophy: gates the 6-distinct-Passive cap and withholds
+  // weapon-unlock offers once the loadout is full or the weapon's already held —
+  // addEquippedWeapon (applyUpgrade) still enforces both independently.
+  upgradePool = new UpgradePool(SANDBOX_UPGRADES, new Rng(seed).fork("upgrades"), (def) => {
+    if (def.category === "passive") return heldDistinctPassiveIds.has(def.id) || heldDistinctPassiveIds.size < 6;
+    const weaponUnlock = WEAPON_UNLOCK_UPGRADES.find((unlock) => unlock.id === def.id);
+    if (weaponUnlock) return equippedWeapons.length < 6 && !equippedWeapons.some((w) => w.id === weaponUnlock.weaponId);
+    return true;
+  });
   lootRng = new Rng(seed).fork("loot");
   lootNotices = [];
   lootBankedCount = 0;
@@ -7493,11 +7560,14 @@ const loop = new GameLoop({
               return `${sandboxShip.name} (${sandboxShip.shipClass}/${fit.frameworkClass}) · ${sandboxFleetEntry.tier}/${sandboxFleetEntry.specialisation} · energy ${shipRuntime.snapshot.energy.toFixed(0)}/${sandboxShip.maxEnergy} · ${fit.offensiveIdentity}/${fit.primaryDefence} · modules ${fit.fittedModules}/${fit.moduleSlots} · fleet ${fleetSnap.collectedCount}/${fleetSnap.fleetSize}`;
             })()
           : null,
-        weapons: weaponRuntime
+        weapons: weaponRuntimes[0]
           ? (() => {
               const mastery = weaponMastery.snapshot;
               const arsenalSnap = arsenal.snapshot;
-              return `${sandboxWeapon.name} (${sandboxWeapon.category}/${sandboxWeapon.firePattern}) · ${sandboxArsenalEntry.tier}/${sandboxArsenalEntry.familyId} · ${mastery.frameworkCategory}/${mastery.element}${mastery.elementStatus ? `→${mastery.elementStatus}` : ""} · shots ${weaponRuntime.snapshot.shotsFired} · proj ${projectiles.filter((p) => p.live).length} · arsenal ${arsenalSnap.collectedCount}/${arsenalSnap.arsenalSize}`;
+              const totalShots = weaponRuntimes.reduce((sum, r) => sum + r.snapshot.shotsFired, 0);
+              // GP-FINAL §Build Philosophy: loadout summary — primary weapon's mastery/tier detail
+              // (scope trim, see equippedWeapons declaration) plus the full loadout's names/count.
+              return `loadout ${equippedWeapons.length}/6 [${equippedWeapons.map((w) => w.name).join(", ")}] · primary ${STARTING_WEAPON.name} (${STARTING_WEAPON.category}/${STARTING_WEAPON.firePattern}) · ${sandboxArsenalEntry.tier}/${sandboxArsenalEntry.familyId} · ${mastery.frameworkCategory}/${mastery.element}${mastery.elementStatus ? `→${mastery.elementStatus}` : ""} · shots ${totalShots} · proj ${projectiles.filter((p) => p.live).length} · arsenal ${arsenalSnap.collectedCount}/${arsenalSnap.arsenalSize}`;
             })()
           : null,
         enemies: (() => {

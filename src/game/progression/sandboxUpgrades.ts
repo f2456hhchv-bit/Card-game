@@ -4,7 +4,23 @@
  * balance is independently testable without importing the entry point.
  */
 import { SANDBOX_PASSIVES } from "../passives/passiveData";
+import { LAUNCH_ARSENAL } from "../weapons/weaponRosterData";
 import type { UpgradeDefinition } from "./xpTuning";
+
+/**
+ * GP-FINAL §Build Philosophy: real acquisition points for the 6-weapon
+ * loadout — one upgrade offer per bonus weapon (the starting Coil Ripper
+ * plus these five reaches the spec's cap of six). Dispatched through
+ * addEquippedWeapon (main.ts) rather than the EquipmentBonus/BonusKind
+ * interpreter, since "add a weapon to the loadout" isn't a stat bonus and
+ * doesn't need to become one — mirrors how instant-effect Passives already
+ * bypass that same interpreter for their own real trigger.
+ */
+const WEAPON_UNLOCK_WEAPON_IDS = ["novasplitter", "voidlance", "hailborn-array", "atlas-cluster-battery", "helios-prism-array"] as const;
+
+export const WEAPON_UNLOCK_UPGRADES: readonly { id: string; weaponId: string }[] = WEAPON_UNLOCK_WEAPON_IDS.map(
+  (weaponId) => ({ id: `weapon-unlock-${weaponId}`, weaponId }),
+);
 
 export const SANDBOX_UPGRADES: UpgradeDefinition[] = [
   { id: "damage", category: "weaponUpgrade", name: "Focused Coils", description: "+15% weapon damage", weight: 10, maxStacks: 5, effect: { kind: "damage", value: 0.15 } },
@@ -32,4 +48,17 @@ export const SANDBOX_UPGRADES: UpgradeDefinition[] = [
     maxStacks: 5,
     effect: passive.bonus,
   })),
+  // GP-FINAL §Build Philosophy: no `effect` — applyUpgrade (main.ts) dispatches
+  // these through WEAPON_UNLOCK_UPGRADES instead, calling addEquippedWeapon.
+  ...WEAPON_UNLOCK_UPGRADES.map((unlock) => {
+    const weapon = LAUNCH_ARSENAL.find((w) => w.id === unlock.weaponId)!;
+    return {
+      id: unlock.id,
+      category: "weaponEvolution" as const,
+      name: `Salvaged ${weapon.name}`,
+      description: `Adds the ${weapon.name} to your loadout — it fires independently alongside your other weapons.`,
+      weight: 4,
+      maxStacks: 1,
+    };
+  }),
 ];

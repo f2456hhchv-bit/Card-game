@@ -18,6 +18,14 @@ export class UpgradePool {
   constructor(
     private readonly definitions: readonly UpgradeDefinition[],
     private readonly rng: Rng,
+    /**
+     * GP-FINAL §Build Philosophy: additive, optional gate over which
+     * definitions may appear in an offer at all — every existing caller
+     * that omits it keeps its old unrestricted behaviour. main.ts uses it
+     * to cap simultaneously-held distinct Passives and to withhold weapon-
+     * unlock offers once the loadout is full/the weapon is already held.
+     */
+    private readonly isAllowed?: (def: UpgradeDefinition) => boolean,
   ) {}
 
   /** Times an upgrade has been taken (drives stack exclusion + tooltips). */
@@ -42,7 +50,9 @@ export class UpgradePool {
 
   offer(count: number): UpgradeOffer {
     const available = this.definitions.filter(
-      (def) => def.maxStacks === null || this.stacksOf(def.id) < def.maxStacks,
+      (def) =>
+        (def.maxStacks === null || this.stacksOf(def.id) < def.maxStacks) &&
+        (!this.isAllowed || this.isAllowed(def)),
     );
     const choices: UpgradeDefinition[] = [];
 

@@ -146,4 +146,30 @@ describe("UpgradePool (AF-022 §5)", () => {
     pool.recordTaken("only");
     expect(pool.offer(3).choices).toHaveLength(0);
   });
+
+  /**
+   * GP-FINAL §Build Philosophy: the 6-distinct-Passive cap and the weapon-
+   * unlock loadout both gate through this same additive, optional
+   * constructor param — every test above (which omits it) proves the old
+   * unrestricted behaviour is untouched when a caller doesn't opt in.
+   */
+  describe("isAllowed (GP-FINAL §Build Philosophy — additive optional gate)", () => {
+    it("omitted: behaves exactly as before — nothing is withheld", () => {
+      const pool = new UpgradePool(definitions, new Rng(1).fork("upgrades"));
+      for (let i = 0; i < 20; i += 1) expect(pool.offer(definitions.length).choices).toHaveLength(definitions.length);
+    });
+
+    it("withholds a definition the predicate rejects, even though maxStacks would allow it", () => {
+      const pool = new UpgradePool(definitions, new Rng(1).fork("upgrades"), (def) => def.id !== "damage");
+      for (let i = 0; i < 30; i += 1) {
+        expect(pool.offer(definitions.length).choices.some((c) => c.id === "damage")).toBe(false);
+      }
+    });
+
+    it("still respects maxStacks alongside a permissive predicate", () => {
+      const pool = new UpgradePool(definitions, new Rng(1).fork("upgrades"), () => true);
+      pool.recordTaken("rare");
+      expect(pool.offer(definitions.length).choices.some((c) => c.id === "rare")).toBe(false);
+    });
+  });
 });
