@@ -1,0 +1,133 @@
+import type { EnemyDef } from "../types";
+import { BIOMES } from "./biomes";
+
+/** 6 grunt enemies, one per biome. Stats here are wave-1 baselines — the
+ * SpawnDirector scales hp/damage/speed up as waves progress. */
+export const ENEMY_DEFS: EnemyDef[] = [
+  {
+    id: "rockSkitterer",
+    name: "Rock Skitterer",
+    biome: "asteroidBelt",
+    tier: "grunt",
+    hp: 16,
+    contactDamage: 8,
+    moveSpeed: 170,
+    xpValue: 1,
+    radius: 14,
+    behavior: "erraticChase",
+    behaviorParams: { jitter: 0.6 },
+    shape: {
+      kind: "triangle",
+      radius: 14,
+      colorPrimary: BIOMES.asteroidBelt.colorPrimary,
+      colorSecondary: BIOMES.asteroidBelt.colorSecondary,
+    },
+  },
+  {
+    id: "sporeDrifter",
+    name: "Spore Drifter",
+    biome: "nebulaDrift",
+    tier: "grunt",
+    hp: 14,
+    contactDamage: 5,
+    moveSpeed: 70,
+    xpValue: 2,
+    radius: 16,
+    behavior: "chaseRanged",
+    behaviorParams: { preferredRange: 260, fireInterval: 1.6, projectileSpeed: 140, projectileDamage: 6 },
+    shape: {
+      kind: "circle",
+      radius: 16,
+      colorPrimary: BIOMES.nebulaDrift.colorPrimary,
+      colorSecondary: BIOMES.nebulaDrift.colorSecondary,
+      glowColor: BIOMES.nebulaDrift.glowColor,
+    },
+  },
+  {
+    id: "frostWisp",
+    name: "Frost Wisp",
+    biome: "iceField",
+    tier: "grunt",
+    hp: 15,
+    contactDamage: 6,
+    moveSpeed: 190,
+    xpValue: 1,
+    radius: 13,
+    behavior: "chaseRanged",
+    behaviorParams: { preferredRange: 220, fireInterval: 1.3, projectileSpeed: 260, projectileDamage: 5 },
+    shape: {
+      kind: "diamond",
+      radius: 13,
+      colorPrimary: BIOMES.iceField.colorPrimary,
+      colorSecondary: BIOMES.iceField.colorSecondary,
+      glowColor: BIOMES.iceField.glowColor,
+    },
+  },
+  {
+    id: "emberWretch",
+    name: "Ember Wretch",
+    biome: "volcanicMoon",
+    tier: "grunt",
+    hp: 12,
+    contactDamage: 10,
+    moveSpeed: 150,
+    xpValue: 1,
+    radius: 15,
+    behavior: "kamikaze",
+    behaviorParams: { explodeRadius: 70, explodeDamage: 18 },
+    shape: {
+      kind: "triangle",
+      radius: 15,
+      colorPrimary: BIOMES.volcanicMoon.colorPrimary,
+      colorSecondary: BIOMES.volcanicMoon.colorSecondary,
+      glowColor: BIOMES.volcanicMoon.glowColor,
+    },
+  },
+  {
+    id: "rustDrone",
+    name: "Rust Drone",
+    biome: "derelictStation",
+    tier: "grunt",
+    hp: 18,
+    contactDamage: 5,
+    moveSpeed: 90,
+    xpValue: 2,
+    radius: 16,
+    behavior: "orbitRanged",
+    behaviorParams: { preferredRange: 280, fireInterval: 1.1, projectileSpeed: 320, projectileDamage: 6 },
+    shape: {
+      kind: "polygon",
+      sides: 5,
+      radius: 16,
+      colorPrimary: BIOMES.derelictStation.colorPrimary,
+      colorSecondary: BIOMES.derelictStation.colorSecondary,
+    },
+  },
+  {
+    id: "nullWraith",
+    name: "Null Wraith",
+    biome: "voidRift",
+    tier: "grunt",
+    hp: 16,
+    contactDamage: 7,
+    moveSpeed: 160,
+    xpValue: 2,
+    radius: 14,
+    behavior: "erraticChase",
+    behaviorParams: { jitter: 0.85 },
+    shape: {
+      kind: "star",
+      sides: 5,
+      radius: 14,
+      colorPrimary: BIOMES.voidRift.colorPrimary,
+      colorSecondary: BIOMES.voidRift.colorSecondary,
+      glowColor: BIOMES.voidRift.glowColor,
+    },
+  },
+];
+
+export function getEnemyDef(id: string): EnemyDef {
+  const def = ENEMY_DEFS.find((e) => e.id === id);
+  if (!def) throw new Error(`Unknown enemy id: ${id}`);
+  return def;
+}

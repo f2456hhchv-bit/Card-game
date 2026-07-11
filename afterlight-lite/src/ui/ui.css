@@ -1,0 +1,263 @@
+#ui-root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: #e8f2ff;
+}
+
+#ui-root * {
+  box-sizing: border-box;
+}
+
+.al-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  pointer-events: auto;
+  background: radial-gradient(circle at 50% 30%, rgba(20, 14, 46, 0.92) 0%, rgba(5, 6, 15, 0.97) 75%);
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.al-hidden {
+  display: none !important;
+}
+
+.al-title {
+  font-size: clamp(1.4rem, 5vw, 2.2rem);
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #ffffff, #6fd7ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-align: center;
+}
+
+.al-subtitle {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  text-align: center;
+  max-width: 32rem;
+}
+
+.al-grid {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 40rem;
+}
+
+.al-ship-grid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.al-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(111, 215, 255, 0.25);
+  border-radius: 0.9rem;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease, background 0.15s ease;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+
+.al-card:hover,
+.al-card:active {
+  border-color: #6fd7ff;
+  background: rgba(111, 215, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.al-card.al-selected {
+  border-color: #6fd7ff;
+  box-shadow: 0 0 24px rgba(111, 215, 255, 0.35);
+}
+
+.al-card.al-maxed {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
+.al-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: block;
+  margin: 0 auto;
+}
+
+.al-card-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.al-card-desc {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.al-card-tag {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  text-align: center;
+}
+
+.al-btn {
+  pointer-events: auto;
+  background: linear-gradient(180deg, #6fd7ff, #1c6fa8);
+  color: #05060f;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  border: none;
+  border-radius: 0.7rem;
+  padding: 0.8rem 1.6rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.al-btn:active {
+  transform: scale(0.97);
+}
+
+.al-btn.al-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8f2ff;
+  border: 1.5px solid rgba(232, 242, 255, 0.3);
+}
+
+/* --------------------------------------------------------------- HUD */
+
+#al-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.al-hud-top {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.al-bar-track {
+  width: 100%;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.al-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.15s ease;
+}
+
+.al-bar-fill.al-hp {
+  background: linear-gradient(90deg, #ff6f6f, #ff9f3c);
+}
+
+.al-bar-fill.al-xp {
+  background: linear-gradient(90deg, #6fd7ff, #8a5cff);
+}
+
+.al-hud-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  text-transform: uppercase;
+}
+
+.al-hud-motes {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: 0.75rem;
+  font-size: 0.8rem;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 224, 138, 0.4);
+  color: #ffe08a;
+}
+
+.al-wave-banner {
+  position: absolute;
+  top: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #ffcf5c;
+  text-shadow: 0 0 12px rgba(255, 207, 92, 0.6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  text-align: center;
+}
+
+.al-wave-banner.al-show {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------- Shop */
+
+.al-shop-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(111, 215, 255, 0.2);
+  border-radius: 0.75rem;
+  padding: 0.7rem 0.9rem;
+}
+
+.al-shop-slot-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.al-shop-slot-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.al-shop-slot-desc {
+  font-size: 0.72rem;
+  opacity: 0.7;
+}
+
+.al-shop-slot-level {
+  font-size: 0.65rem;
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
