@@ -1,6 +1,6 @@
 import type { FactionWar } from '../types.js';
 
-export const WAR_DURATION_MINUTES = 60;
+export const WAR_DURATION_MINUTES = 20;
 export const WAR_BASE_PAYOUT = 1000;
 
 /** Lazily resolves a war once its countdown has ended, deciding a winner by total contribution. */

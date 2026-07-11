@@ -9,8 +9,8 @@ import { tickCharacter, RESOURCE_MAX } from '../domain/regen.js';
 export const hospitalRouter = Router();
 hospitalRouter.use(requireAuth);
 
-const MEDIC_ASSIST_REDUCTION_MINUTES = 10;
-const MEDIC_ASSIST_COOLDOWN_MINUTES = 15;
+const MEDIC_ASSIST_REDUCTION_MINUTES = 4;
+const MEDIC_ASSIST_COOLDOWN_MINUTES = 5;
 
 hospitalRouter.get('/', (_req, res) => {
   const now = Date.now();

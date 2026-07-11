@@ -37,7 +37,7 @@ describe('hospitalMinutesFor and salvageCredits', () => {
     );
     const minutes = hospitalMinutesFor(outcome);
     expect(minutes).toBeGreaterThan(0);
-    expect(minutes).toBeLessThanOrEqual(30);
+    expect(minutes).toBeLessThanOrEqual(10);
   });
 
   it('caps salvage credits', () => {

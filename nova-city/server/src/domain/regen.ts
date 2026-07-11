@@ -7,12 +7,12 @@ export const RESOURCE_MAX: Record<ResourceKey, number> = {
   health: 100,
 };
 
-/** Points regenerated per minute of real time. */
+/** Points regenerated per minute of real time — tuned for quick sessions, not multi-hour Torn-style waits. */
 export const REGEN_PER_MINUTE: Record<ResourceKey, number> = {
-  fuel: 2,
-  resolve: 0.4,
-  morale: 1,
-  health: 1,
+  fuel: 10,
+  resolve: 5,
+  morale: 5,
+  health: 5,
 };
 
 /**

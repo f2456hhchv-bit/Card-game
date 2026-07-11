@@ -1,12 +1,158 @@
 [
-  { "id": "crime-skim-fuel-line", "name": "Skim a Fuel Line", "flavor": "Tap a docked freighter's fuel line before anyone notices.", "locationId": null, "fuelCost": 5, "difficulty": 0.15, "primaryStats": ["dexterity"], "minReward": 10, "maxReward": 40, "jailMinutes": 2, "xp": 5 },
-  { "id": "crime-hotwire-drone", "name": "Hotwire a Cargo Drone", "flavor": "Reroute a delivery drone's manifest to your own hold.", "locationId": null, "fuelCost": 8, "difficulty": 0.25, "primaryStats": ["dexterity", "speed"], "minReward": 30, "maxReward": 90, "jailMinutes": 4, "xp": 10 },
-  { "id": "crime-shakedown", "name": "Shake Down a Dock Vendor", "flavor": "A little persuasion goes a long way at the docks.", "locationId": null, "fuelCost": 6, "difficulty": 0.2, "primaryStats": ["strength"], "minReward": 20, "maxReward": 70, "jailMinutes": 3, "xp": 8 },
-  { "id": "crime-hack-terminal", "name": "Hack a Terminal", "flavor": "Crack a public access node before station security notices the traffic.", "locationId": null, "fuelCost": 10, "difficulty": 0.35, "primaryStats": ["dexterity"], "minReward": 60, "maxReward": 150, "jailMinutes": 6, "xp": 18 },
-  { "id": "crime-board-freighter", "name": "Board an Idle Freighter", "flavor": "Cut the airlock and see what's still aboard.", "locationId": null, "fuelCost": 15, "difficulty": 0.45, "primaryStats": ["strength", "speed"], "minReward": 120, "maxReward": 300, "jailMinutes": 10, "xp": 30 },
-  { "id": "crime-black-market-deal", "name": "Black-Market Deal", "flavor": "Broker a deal in Keth Station's back corridors.", "locationId": "keth-station", "fuelCost": 12, "difficulty": 0.3, "primaryStats": ["dexterity"], "minReward": 90, "maxReward": 220, "jailMinutes": 8, "xp": 22 },
-  { "id": "crime-smuggling-run", "name": "Smuggling Run", "flavor": "Run contraband past the Obsidian Drift blockade.", "locationId": "obsidian-drift", "fuelCost": 20, "difficulty": 0.5, "primaryStats": ["speed", "dexterity"], "minReward": 200, "maxReward": 500, "jailMinutes": 15, "xp": 45 },
-  { "id": "crime-corporate-espionage", "name": "Corporate Espionage", "flavor": "Lift a research core from Halcyon Spire's vault ring.", "locationId": "halcyon-spire", "fuelCost": 25, "difficulty": 0.6, "primaryStats": ["dexterity", "strength"], "minReward": 300, "maxReward": 700, "jailMinutes": 20, "xp": 60 },
-  { "id": "crime-wreck-diving", "name": "Wreck Diving", "flavor": "Pull salvage from a hull that's still venting atmosphere in The Hollows.", "locationId": "the-hollows", "fuelCost": 18, "difficulty": 0.4, "primaryStats": ["strength", "speed"], "minReward": 150, "maxReward": 380, "jailMinutes": 12, "xp": 35 },
-  { "id": "crime-ice-core-heist", "name": "Ice Core Heist", "flavor": "Crack Frostgate's reactor core vault before it refreezes shut.", "locationId": "frostgate", "fuelCost": 22, "difficulty": 0.55, "primaryStats": ["strength", "dexterity"], "minReward": 250, "maxReward": 600, "jailMinutes": 18, "xp": 50 }
+  {
+    "id": "crime-skim-fuel-line",
+    "name": "Skim a Fuel Line",
+    "flavor": "Tap a docked freighter's fuel line before anyone notices.",
+    "locationId": null,
+    "fuelCost": 5,
+    "difficulty": 0.15,
+    "primaryStats": [
+      "dexterity"
+    ],
+    "minReward": 10,
+    "maxReward": 40,
+    "jailMinutes": 1,
+    "xp": 5
+  },
+  {
+    "id": "crime-hotwire-drone",
+    "name": "Hotwire a Cargo Drone",
+    "flavor": "Reroute a delivery drone's manifest to your own hold.",
+    "locationId": null,
+    "fuelCost": 8,
+    "difficulty": 0.25,
+    "primaryStats": [
+      "dexterity",
+      "speed"
+    ],
+    "minReward": 30,
+    "maxReward": 90,
+    "jailMinutes": 1,
+    "xp": 10
+  },
+  {
+    "id": "crime-shakedown",
+    "name": "Shake Down a Dock Vendor",
+    "flavor": "A little persuasion goes a long way at the docks.",
+    "locationId": null,
+    "fuelCost": 6,
+    "difficulty": 0.2,
+    "primaryStats": [
+      "strength"
+    ],
+    "minReward": 20,
+    "maxReward": 70,
+    "jailMinutes": 1,
+    "xp": 8
+  },
+  {
+    "id": "crime-hack-terminal",
+    "name": "Hack a Terminal",
+    "flavor": "Crack a public access node before station security notices the traffic.",
+    "locationId": null,
+    "fuelCost": 10,
+    "difficulty": 0.35,
+    "primaryStats": [
+      "dexterity"
+    ],
+    "minReward": 60,
+    "maxReward": 150,
+    "jailMinutes": 2,
+    "xp": 18
+  },
+  {
+    "id": "crime-board-freighter",
+    "name": "Board an Idle Freighter",
+    "flavor": "Cut the airlock and see what's still aboard.",
+    "locationId": null,
+    "fuelCost": 15,
+    "difficulty": 0.45,
+    "primaryStats": [
+      "strength",
+      "speed"
+    ],
+    "minReward": 120,
+    "maxReward": 300,
+    "jailMinutes": 3,
+    "xp": 30
+  },
+  {
+    "id": "crime-black-market-deal",
+    "name": "Black-Market Deal",
+    "flavor": "Broker a deal in Keth Station's back corridors.",
+    "locationId": "keth-station",
+    "fuelCost": 12,
+    "difficulty": 0.3,
+    "primaryStats": [
+      "dexterity"
+    ],
+    "minReward": 90,
+    "maxReward": 220,
+    "jailMinutes": 3,
+    "xp": 22
+  },
+  {
+    "id": "crime-smuggling-run",
+    "name": "Smuggling Run",
+    "flavor": "Run contraband past the Obsidian Drift blockade.",
+    "locationId": "obsidian-drift",
+    "fuelCost": 20,
+    "difficulty": 0.5,
+    "primaryStats": [
+      "speed",
+      "dexterity"
+    ],
+    "minReward": 200,
+    "maxReward": 500,
+    "jailMinutes": 5,
+    "xp": 45
+  },
+  {
+    "id": "crime-corporate-espionage",
+    "name": "Corporate Espionage",
+    "flavor": "Lift a research core from Halcyon Spire's vault ring.",
+    "locationId": "halcyon-spire",
+    "fuelCost": 25,
+    "difficulty": 0.6,
+    "primaryStats": [
+      "dexterity",
+      "strength"
+    ],
+    "minReward": 300,
+    "maxReward": 700,
+    "jailMinutes": 7,
+    "xp": 60
+  },
+  {
+    "id": "crime-wreck-diving",
+    "name": "Wreck Diving",
+    "flavor": "Pull salvage from a hull that's still venting atmosphere in The Hollows.",
+    "locationId": "the-hollows",
+    "fuelCost": 18,
+    "difficulty": 0.4,
+    "primaryStats": [
+      "strength",
+      "speed"
+    ],
+    "minReward": 150,
+    "maxReward": 380,
+    "jailMinutes": 4,
+    "xp": 35
+  },
+  {
+    "id": "crime-ice-core-heist",
+    "name": "Ice Core Heist",
+    "flavor": "Crack Frostgate's reactor core vault before it refreezes shut.",
+    "locationId": "frostgate",
+    "fuelCost": 22,
+    "difficulty": 0.55,
+    "primaryStats": [
+      "strength",
+      "dexterity"
+    ],
+    "minReward": 250,
+    "maxReward": 600,
+    "jailMinutes": 6,
+    "xp": 50
+  }
 ]

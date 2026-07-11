@@ -31,8 +31,8 @@ describe('settleResources', () => {
     const pool = { fuel: 0, resolve: 0, morale: 0, health: 0, updatedAt: 0 };
     const oneMinuteLater = 60_000;
     const next = settleResources(pool, oneMinuteLater, false);
-    expect(next.fuel).toBeCloseTo(2, 5);
-    expect(next.morale).toBeCloseTo(1, 5);
+    expect(next.fuel).toBeCloseTo(10, 5);
+    expect(next.morale).toBeCloseTo(5, 5);
   });
 
   it('caps resources at their max', () => {

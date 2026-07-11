@@ -10,10 +10,10 @@ travelRouter.use(requireAuth);
 function tripMinutes(fromId: string, toId: string): number {
   const from = locations.get(fromId);
   const to = locations.get(toId);
-  if (!from || !to) return 10;
+  if (!from || !to) return 3;
   if (toId === HOME_LOCATION_ID) return from.travelMinutes;
   if (fromId === HOME_LOCATION_ID) return to.travelMinutes;
-  return Math.round((from.travelMinutes + to.travelMinutes) / 2) + 5;
+  return Math.round((from.travelMinutes + to.travelMinutes) / 2) + 1;
 }
 
 travelRouter.get('/', (_req, res) => {

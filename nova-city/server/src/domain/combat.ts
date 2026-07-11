@@ -29,7 +29,7 @@ export function resolveCombat(
 
 export function hospitalMinutesFor(outcome: CombatOutcome): number {
   const gap = Math.abs(outcome.attackerRoll - outcome.defenderRoll);
-  return Math.min(30, 5 + Math.round(gap / 10));
+  return Math.min(10, 2 + Math.round(gap / 25));
 }
 
 export function salvageCredits(loserCredits: number): number {
