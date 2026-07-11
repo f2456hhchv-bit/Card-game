@@ -264,6 +264,8 @@ import { AtlasScorecardCard, DesignHistoryLedger, TechnicalDebtLog, UpdateLifecy
 import { ATLAS_SCORECARD_CATEGORIES, META_EVOLUTION_DOMAINS } from "./game/atlasMetaEvolution/atlasMetaEvolutionData";
 import { purposefulBeautyMet } from "./game/atlasCreator/AtlasCreatorRuntime";
 import { CREATION_CYCLE_STAGES, PURPOSEFUL_BEAUTY_CRITERIA } from "./game/atlasCreator/atlasCreatorData";
+import { standardOfExcellenceAssessment } from "./game/atlasCraftsmanship/AtlasCraftsmanshipRuntime";
+import { CRAFTSMANSHIP_DOMAINS, CRAFT_CYCLE_STAGES, craftCycleRank } from "./game/atlasCraftsmanship/atlasCraftsmanshipData";
 import { LEGACY_DOMAINS } from "./game/atlasLegacyOfTomorrow/atlasLegacyOfTomorrowData";
 import { ShipRuntime } from "./game/ships/ShipRuntime";
 import { SANDBOX_SHIPS } from "./game/ships/shipData";
@@ -2378,6 +2380,23 @@ const creationCycle = new CyclicStageTracker(CREATION_CYCLE_STAGES);
   knowledgeGraph.addEdge({ fromId: "creation-living-city-garden", toId: "artist-of-verdance", kind: "Created", strength: 1, confidence: 1, historicalContext: "The garden's original creator.", dateEstablished: 20 });
   beautyIndex.setLevel("Public spaces", 75);
   creativeHeritage.archive("creation-living-city-garden", ["Museum exhibits", "Public traditions"], 20);
+}
+
+// AF-192: the Atlas Craftsmanship Engine — AF-191's direct sibling; the
+// Creator Engine governs creation, the Craftsmanship Engine governs the
+// pursuit of excellence. Reuses AF-166's real commanderReputation
+// directly for Master Craftsmen, AF-149's real iterationCycles directly
+// for Quality Without Perfection, AF-151's real knowledgeGraph directly
+// for The Maker's Mark, and AF-160's real mentorshipLedger directly for
+// The Craft Guilds. craftCycleRank/standardOfExcellenceAssessment are
+// the genuinely new pieces (see atlasCraftsmanshipData.ts for the full
+// reuse notes).
+{
+  commanderReputation.recognizeFor("engineer-of-verdance", "Precision", 20);
+  iterationCycles.recordCycle("creation-living-city-garden", 20);
+  iterationCycles.recordCycle("creation-living-city-garden", 20);
+  knowledgeGraph.addEdge({ fromId: "creation-living-city-garden", toId: "engineer-of-verdance", kind: "Created", strength: 1, confidence: 1, historicalContext: "Built using adaptive-materials techniques pioneered at the Verdance workshop.", dateEstablished: 20 });
+  mentorshipLedger.assign("engineer-of-verdance", "apprentice-of-verdance", 20);
 }
 
 // ── Ship (AF-031): the ship IS the movement profile + defence seed + energy.
@@ -6348,6 +6367,12 @@ const loop = new GameLoop({
         })(),
         atlasCreator: (() => {
           return `cycle ${creationCycle.currentStage() ?? "none"} (next ${creationCycle.next("Teaching")}) · collaborators ${collaborativeProblems.participantsFor("problem-living-city-restoration").length} · contributions Engineering=${creativeContributions.countForDomain("Engineering")} Art=${creativeContributions.countForDomain("Art")} · network neighbours ${knowledgeGraph.neighbors("creation-living-city-garden").length} · beauty Public spaces=${beautyIndex.levelFor("Public spaces")} · archive outcomes ${creativeHeritage.outcomesFor("creation-living-city-garden").length} · purposeful beauty met=${purposefulBeautyMet(new Set(PURPOSEFUL_BEAUTY_CRITERIA))}`;
+        })(),
+        atlasCraftsmanship: (() => {
+          const domainOverlap = detectOverlap(CRAFTSMANSHIP_DOMAINS, CREATIVE_DOMAINS);
+          const cycleOverlap = detectOverlap(CRAFT_CYCLE_STAGES, CREATION_CYCLE_STAGES);
+          const excellence = standardOfExcellenceAssessment(new Set(["Will it endure?"]));
+          return `master craftsman ${commanderReputation.mostRecognizedQuality("engineer-of-verdance") ?? "none"} · ready to ship=${iterationCycles.readyToShip("creation-living-city-garden")} · maker's mark neighbours ${knowledgeGraph.neighbors("creation-living-city-garden").length} · guild mentees ${mentorshipLedger.menteesOf("engineer-of-verdance").length} · craft cycle rank ${craftCycleRank("Refinement")} · continue refining=${excellence.shouldContinueRefining} · domain overlap[Craft,Creative] ${domainOverlap.shared.length}/${CRAFTSMANSHIP_DOMAINS.length} · cycle overlap[Craft,Creation] ${cycleOverlap.shared.length}/${CRAFT_CYCLE_STAGES.length}`;
         })(),
       });
     }
