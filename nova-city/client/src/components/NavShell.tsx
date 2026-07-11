@@ -1,5 +1,5 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useCallback, useEffect } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../state/AuthContext';
 import { useToast } from '../state/ToastContext';
 import { useNovaSocket } from '../api/ws';
@@ -35,6 +35,12 @@ export function NavShell() {
   const { character, token, refresh, logout } = useAuth();
   const { pushToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   const handleEvent = useCallback(
     (event: WsEvent) => {
@@ -94,9 +100,18 @@ export function NavShell() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="topbar-brand">
-          <Icon name="logo" size={22} />
-          NOVA CITY
+        <div className="topbar-row">
+          <button
+            className="hamburger-btn"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <Icon name={menuOpen ? 'close' : 'menu'} size={20} />
+          </button>
+          <div className="topbar-brand">
+            <Icon name="logo" size={22} />
+            NOVA CITY
+          </div>
         </div>
         <div className="topbar-identity">
           <span className="callsign">{character.callsign}</span>
@@ -131,7 +146,8 @@ export function NavShell() {
         <ResourceBar label="Health" value={character.resources.health} max={100} variant="health" />
       </div>
       <div className="app-body">
-        <nav className="sidenav">
+        {menuOpen && <div className="nav-backdrop" onClick={() => setMenuOpen(false)} />}
+        <nav className={menuOpen ? 'sidenav open' : 'sidenav'}>
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
               <Icon name={item.icon} size={17} />

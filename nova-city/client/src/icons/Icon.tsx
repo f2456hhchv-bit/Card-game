@@ -26,7 +26,9 @@ export type IconName =
   | 'mail'
   | 'leaderboard'
   | 'credits'
-  | 'logo';
+  | 'logo'
+  | 'menu'
+  | 'close';
 
 const PATHS: Record<IconName, ReactNode> = {
   fuel: (
@@ -206,6 +208,16 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <path d="M11 2l2.6 6.4L20 11l-6.4 2.6L11 20l-2.6-6.4L2 11l6.4-2.6z" />
       <circle cx="11" cy="11" r="2" fill="currentColor" stroke="none" />
+    </>
+  ),
+  menu: (
+    <>
+      <path d="M3 6h16M3 11h16M3 16h16" />
+    </>
+  ),
+  close: (
+    <>
+      <path d="M5 5l12 12M17 5 5 17" />
     </>
   ),
 };
