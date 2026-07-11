@@ -74,7 +74,7 @@ export const ENEMY_DEFS: EnemyDef[] = [
     xpValue: 1,
     radius: 15,
     behavior: "kamikaze",
-    behaviorParams: { explodeRadius: 70, explodeDamage: 18 },
+    behaviorParams: { explodeRadius: 65, explodeDamage: 13 },
     shape: {
       kind: "triangle",
       radius: 15,

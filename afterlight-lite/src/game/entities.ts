@@ -30,6 +30,11 @@ export interface Enemy {
   /** SpatialHashGrid liveness flag — kept false whenever `dead` is true. */
   active: boolean;
   hitFlash: number;
+  /** Seconds since this enemy last took damage. Rises every frame it isn't
+   * hit, resets to 0 on any hit. Used to bias target selection so an enemy
+   * that holds its distance (an orbiter, a kiter) can't go ignored forever
+   * just because something else is closer. */
+  neglectTimer: number;
 
   // behavior runtime scratch state (meaning depends on `behavior`)
   stateTimer: number;
@@ -83,6 +88,7 @@ export function createEnemy(params: {
     dead: false,
     active: true,
     hitFlash: 0,
+    neglectTimer: 0,
     stateTimer: 0,
     telegraphTimer: 0,
     behaviorActive: false,
@@ -106,6 +112,11 @@ export interface Projectile {
   friendly: boolean;
   life: number;
   homing: number; // 0 = none, else curve strength
+  /** Enemy id this projectile locks onto for homing, chosen at fire time.
+   * Homing tracks this specific enemy rather than re-querying "nearest to
+   * the projectile" every frame — otherwise a closer enemy spawning mid-
+   * flight distracts the shot away from its intended target entirely. */
+  homingTargetId?: number;
   color: string;
   glow?: string;
   dead: boolean;
@@ -156,6 +167,11 @@ export interface WeaponInstance {
   stackCount: number; // 1-5
   cooldown: number;
   orbitDrones?: OrbitDroneInstance[];
+  /** Sticky target: keeps firing at the same enemy across shots rather than
+   * re-picking "nearest" every time, so an enemy that holds its distance
+   * (an orbiter, a kiter) doesn't get perpetually skipped once something
+   * closer shows up — it stays engaged until it dies or leaves range. */
+  currentTargetId?: number;
 }
 
 export interface Player {

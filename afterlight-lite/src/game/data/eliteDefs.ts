@@ -11,7 +11,7 @@ export const ELITE_DEFS: EnemyDef[] = [
     biome: "asteroidBelt",
     tier: "elite",
     hp: 130,
-    contactDamage: 22,
+    contactDamage: 16,
     moveSpeed: 90,
     xpValue: 14,
     radius: 26,

@@ -26,6 +26,21 @@ import {
 
 export const SPAWN_RADIUS = 850;
 const DESPAWN_RADIUS = 1500;
+/** Distance-equivalent preference per second of neglect in target scoring —
+ * see `findPriorityTarget`. */
+export const NEGLECT_TARGET_WEIGHT = 220;
+/** Distance-equivalent preference (scaled by missing-hp fraction) for
+ * finishing off an already-damaged enemy — see `targetScore`. Without this,
+ * neglect resets to 0 on every hit, so a nearly-dead enemy scores no better
+ * than a full-health one and the weapon wanders off to a "more neglected"
+ * fresh target instead of landing the kill it already started. */
+export const LOW_HP_TARGET_BONUS = 320;
+
+export function targetScore(x: number, y: number, enemy: Enemy): number {
+  const dist = Math.hypot(enemy.x - x, enemy.y - y);
+  const missingHpFrac = 1 - enemy.hp / enemy.maxHp;
+  return enemy.neglectTimer * NEGLECT_TARGET_WEIGHT - dist + missingHpFrac * LOW_HP_TARGET_BONUS;
+}
 
 export class World {
   player: Player;
@@ -170,6 +185,7 @@ export class World {
       enemy.x += enemy.vx * dt;
       enemy.y += enemy.vy * dt;
       if (enemy.hitFlash > 0) enemy.hitFlash = Math.max(0, enemy.hitFlash - dt);
+      enemy.neglectTimer += dt;
     }
 
     this.grid.clear();
@@ -204,7 +220,10 @@ export class World {
         continue;
       }
       if (proj.homing > 0 && proj.friendly) {
-        const target = this.findNearestEnemy(proj.x, proj.y, 500);
+        const target =
+          proj.homingTargetId !== undefined
+            ? (this.enemies.find((e) => e.id === proj.homingTargetId && !e.dead) ?? null)
+            : null;
         if (target) {
           const desiredAngle = Math.atan2(target.y - proj.y, target.x - proj.x);
           const curAngle = Math.atan2(proj.vy, proj.vx);
@@ -423,9 +442,37 @@ export class World {
     return this.grid.findNearest(x, y, maxRadius);
   }
 
+  /** Like `findNearestEnemy`, but biases toward enemies that have gone
+   * longest without taking damage (so an enemy that holds its distance can't
+   * lose the "nearest" comparison to every fresh spawn indefinitely) and
+   * toward already-damaged enemies (so the weapon finishes a kill it
+   * started instead of wandering to a fresher target). See `targetScore`. */
+  findPriorityTarget(x: number, y: number, maxRadius: number): Enemy | null {
+    const candidates = this.grid.query(x, y, maxRadius).filter((e) => e.active && Math.hypot(e.x - x, e.y - y) <= maxRadius);
+    let best: Enemy | null = null;
+    let bestScore = -Infinity;
+    for (const e of candidates) {
+      const score = targetScore(x, y, e);
+      if (score > bestScore) {
+        bestScore = score;
+        best = e;
+      }
+    }
+    return best;
+  }
+
   findNearestEnemies(x: number, y: number, maxRadius: number, count: number): Enemy[] {
     const candidates = this.grid.query(x, y, maxRadius).filter((e) => e.active);
     candidates.sort((a, b) => distSq(a, x, y) - distSq(b, x, y));
+    return candidates.slice(0, count);
+  }
+
+  /** Like `findNearestEnemies`, but ranked by the same neglect-biased score
+   * as `findPriorityTarget` so multi-target weapons don't systematically
+   * skip enemies that hold their distance. */
+  findPriorityTargets(x: number, y: number, maxRadius: number, count: number): Enemy[] {
+    const candidates = this.grid.query(x, y, maxRadius).filter((e) => e.active && Math.hypot(e.x - x, e.y - y) <= maxRadius);
+    candidates.sort((a, b) => targetScore(x, y, b) - targetScore(x, y, a));
     return candidates.slice(0, count);
   }
 
@@ -441,6 +488,7 @@ export class World {
     const dmg = crit ? baseDamage * this.stats.critDamageMult : baseDamage;
     enemy.hp -= dmg;
     enemy.hitFlash = 0.15;
+    enemy.neglectTimer = 0;
     this.effects.push({ kind: "hit", x: enemy.x, y: enemy.y, life: 0.2, maxLife: 0.2, color: crit ? "#ffffff" : enemy.shape.colorSecondary, crit });
     if (this.stats.lifestealPct > 0) this.healPlayer(dmg * this.stats.lifestealPct);
     if (enemy.hp <= 0) this.killEnemy(enemy);
@@ -476,7 +524,7 @@ export class World {
     const reduced = Math.max(1, amount - this.stats.armorFlat);
     this.player.hp -= reduced;
     this.player.hitFlash = 0.15;
-    this.player.invulnTimer = 0.5;
+    this.player.invulnTimer = 0.65;
   }
 
   healPlayer(amount: number): void {

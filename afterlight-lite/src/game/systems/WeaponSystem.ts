@@ -1,4 +1,4 @@
-import type { World } from "../World";
+import { targetScore, type World } from "../World";
 import type { Enemy, WeaponInstance } from "../entities";
 import { allocId } from "../entities";
 import { getUpgradeDef } from "../data/upgradeDefs";
@@ -23,26 +23,26 @@ export function updateWeapons(dt: number, world: World): void {
     weapon.cooldown -= dt;
     if (weapon.cooldown > 0) continue;
 
-    const fired = firePattern(world, resolved);
+    const fired = firePattern(world, weapon, resolved);
     weapon.cooldown = fired ? resolved.interval : NO_TARGET_RETRY;
   }
 }
 
-function firePattern(world: World, resolved: ResolvedWeapon): boolean {
+function firePattern(world: World, weapon: WeaponInstance, resolved: ResolvedWeapon): boolean {
   const { x, y } = world.player;
   switch (resolved.pattern) {
     case "nearestBolt":
-      return fireNearestBolt(world, resolved, x, y);
+      return fireNearestBolt(world, weapon, resolved, x, y);
     case "chainBolt":
-      return fireChainBolt(world, resolved, x, y);
+      return fireChainBolt(world, weapon, resolved, x, y);
     case "spread":
-      return fireSpread(world, resolved, x, y);
+      return fireSpread(world, weapon, resolved, x, y);
     case "homing":
       return fireHoming(world, resolved, x, y);
     case "pulseAoe":
       return firePulseAoe(world, resolved, x, y);
     case "pierceLine":
-      return firePierceLine(world, resolved, x, y);
+      return firePierceLine(world, weapon, resolved, x, y);
     case "rearTurret":
       return fireRearTurret(world, resolved, x, y);
     case "meleeArc":
@@ -54,7 +54,53 @@ function firePattern(world: World, resolved: ResolvedWeapon): boolean {
   }
 }
 
-function spawnBolt(world: World, x: number, y: number, angle: number, resolved: ResolvedWeapon, homing = 0): void {
+/** Small preference margin (matching findPriorityTarget's distance-equivalent
+ * scoring) a candidate needs over the current sticky target before it's
+ * worth switching — prevents flip-flopping over trivial differences while
+ * still letting a genuinely neglected target win. */
+const TARGET_SWITCH_MARGIN = 60;
+
+/** Keeps firing at the same enemy across shots rather than re-aiming at
+ * whatever's nearest every single shot, but still re-checks each time
+ * whether a meaningfully higher-priority target exists (see
+ * `findPriorityTarget`) and switches to it — a pure "stay locked until it
+ * dies" rule would let the weapon get stuck on one target indefinitely
+ * while an enemy that holds its distance (an orbiter, a kiter) sits
+ * neglected the whole time, never getting a chance to be picked at all. */
+function resolveTarget(world: World, weapon: WeaponInstance, x: number, y: number): Enemy | null {
+  const current =
+    weapon.currentTargetId !== undefined ? (world.enemies.find((e) => e.id === weapon.currentTargetId && !e.dead) ?? null) : null;
+  const currentValid = current !== null && Math.hypot(current.x - x, current.y - y) <= ACQUIRE_RANGE;
+
+  const best = world.findPriorityTarget(x, y, ACQUIRE_RANGE);
+  if (!best) return currentValid ? current : null;
+  if (!currentValid) {
+    weapon.currentTargetId = best.id;
+    return best;
+  }
+
+  if (targetScore(x, y, best) > targetScore(x, y, current!) + TARGET_SWITCH_MARGIN) {
+    weapon.currentTargetId = best.id;
+    return best;
+  }
+  return current;
+}
+
+/** Light aim-assist applied to every non-dedicated-homing bolt: the initial
+ * lead-aim angle alone isn't enough against erratic/dashing/teleporting
+ * enemies, so bolts get a modest in-flight course correction. Seeker
+ * Missiles pass their own, much stronger value on top of this. */
+const AIM_ASSIST_HOMING = 0.5;
+
+function spawnBolt(
+  world: World,
+  x: number,
+  y: number,
+  angle: number,
+  resolved: ResolvedWeapon,
+  targetId?: number,
+  homing = AIM_ASSIST_HOMING,
+): void {
   world.projectiles.push({
     id: allocId(),
     x,
@@ -67,6 +113,7 @@ function spawnBolt(world: World, x: number, y: number, angle: number, resolved: 
     friendly: true,
     life: 3,
     homing,
+    homingTargetId: targetId,
     color: "#6fd7ff",
     dead: false,
   });
@@ -85,18 +132,18 @@ function leadAngle(sx: number, sy: number, target: Enemy, projectileSpeed: numbe
   return Math.atan2(py - sy, px - sx);
 }
 
-function fireNearestBolt(world: World, resolved: ResolvedWeapon, x: number, y: number): boolean {
-  const target = world.findNearestEnemy(x, y, ACQUIRE_RANGE);
+function fireNearestBolt(world: World, weapon: WeaponInstance, resolved: ResolvedWeapon, x: number, y: number): boolean {
+  const target = resolveTarget(world, weapon, x, y);
   if (!target) return false;
   const angle = leadAngle(x, y, target, resolved.projectileSpeed);
   for (let i = 0; i < resolved.count; i++) {
-    spawnBolt(world, x, y, angle, resolved);
+    spawnBolt(world, x, y, angle, resolved, target.id);
   }
   return true;
 }
 
-function fireChainBolt(world: World, resolved: ResolvedWeapon, x: number, y: number): boolean {
-  let target: Enemy | null = world.findNearestEnemy(x, y, ACQUIRE_RANGE);
+function fireChainBolt(world: World, weapon: WeaponInstance, resolved: ResolvedWeapon, x: number, y: number): boolean {
+  let target: Enemy | null = resolveTarget(world, weapon, x, y);
   if (!target) return false;
   const hit = new Set<number>();
   let fromX = x;
@@ -114,25 +161,25 @@ function fireChainBolt(world: World, resolved: ResolvedWeapon, x: number, y: num
   return true;
 }
 
-function fireSpread(world: World, resolved: ResolvedWeapon, x: number, y: number): boolean {
-  const target = world.findNearestEnemy(x, y, ACQUIRE_RANGE);
+function fireSpread(world: World, weapon: WeaponInstance, resolved: ResolvedWeapon, x: number, y: number): boolean {
+  const target = resolveTarget(world, weapon, x, y);
   if (!target) return false;
   const baseAngle = leadAngle(x, y, target, resolved.projectileSpeed);
   const spreadArc = 0.55;
   for (let i = 0; i < resolved.count; i++) {
     const t = resolved.count === 1 ? 0 : i / (resolved.count - 1) - 0.5;
-    spawnBolt(world, x, y, baseAngle + t * spreadArc, resolved);
+    spawnBolt(world, x, y, baseAngle + t * spreadArc, resolved, target.id);
   }
   return true;
 }
 
 function fireHoming(world: World, resolved: ResolvedWeapon, x: number, y: number): boolean {
-  const targets = world.findNearestEnemies(x, y, ACQUIRE_RANGE, resolved.count);
+  const targets = world.findPriorityTargets(x, y, ACQUIRE_RANGE, resolved.count);
   if (targets.length === 0) return false;
   for (let i = 0; i < resolved.count; i++) {
     const t = targets[i % targets.length];
     const angle = Math.atan2(t.y - y, t.x - x) + (world.rng.next() - 0.5) * 0.3;
-    spawnBolt(world, x, y, angle, resolved, world.stats.homingStrength + 0.6);
+    spawnBolt(world, x, y, angle, resolved, t.id, world.stats.homingStrength + 0.6);
   }
   return true;
 }
@@ -144,25 +191,25 @@ function firePulseAoe(world: World, resolved: ResolvedWeapon, x: number, y: numb
   return true;
 }
 
-function firePierceLine(world: World, resolved: ResolvedWeapon, x: number, y: number): boolean {
-  const target = world.findNearestEnemy(x, y, ACQUIRE_RANGE);
+function firePierceLine(world: World, weapon: WeaponInstance, resolved: ResolvedWeapon, x: number, y: number): boolean {
+  const target = resolveTarget(world, weapon, x, y);
   if (!target) return false;
   const angle = leadAngle(x, y, target, resolved.projectileSpeed);
   const perpAngle = angle + Math.PI / 2;
   const lanes = resolved.count;
   for (let i = 0; i < lanes; i++) {
     const offset = lanes === 1 ? 0 : (i - (lanes - 1) / 2) * 14;
-    spawnBolt(world, x + Math.cos(perpAngle) * offset, y + Math.sin(perpAngle) * offset, angle, resolved);
+    spawnBolt(world, x + Math.cos(perpAngle) * offset, y + Math.sin(perpAngle) * offset, angle, resolved, target.id);
   }
   return true;
 }
 
 function fireRearTurret(world: World, resolved: ResolvedWeapon, x: number, y: number): boolean {
-  const targets = world.findNearestEnemies(x, y, ACQUIRE_RANGE, resolved.count);
+  const targets = world.findPriorityTargets(x, y, ACQUIRE_RANGE, resolved.count);
   if (targets.length === 0) return false;
   for (const t of targets) {
     const angle = leadAngle(x, y, t, resolved.projectileSpeed);
-    spawnBolt(world, x, y, angle, resolved);
+    spawnBolt(world, x, y, angle, resolved, t.id);
   }
   return true;
 }

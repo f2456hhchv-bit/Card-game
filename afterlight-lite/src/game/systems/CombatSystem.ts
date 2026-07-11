@@ -1,6 +1,10 @@
 import type { World } from "../World";
 
 const PLAYER_RADIUS = 18;
+/** Forgiving hit tolerance for the player's own shots — mobile bullet-heaven
+ * feel expects "close enough" to register, especially against erratic or
+ * fast-moving enemies the lead-aim prediction can't perfectly track. */
+const AIM_ASSIST_TOLERANCE = 14;
 
 export function resolveCombat(world: World): void {
   resolveFriendlyProjectiles(world);
@@ -25,11 +29,11 @@ function resolveFriendlyProjectiles(world: World): void {
     }
 
     if (!proj.hitEnemyIds) proj.hitEnemyIds = new Set();
-    const candidates = world.enemiesWithinRadius(proj.x, proj.y, proj.radius + 24);
+    const candidates = world.enemiesWithinRadius(proj.x, proj.y, proj.radius + 24 + AIM_ASSIST_TOLERANCE);
     for (const enemy of candidates) {
       if (proj.hitEnemyIds.has(enemy.id)) continue;
       const dist = Math.hypot(enemy.x - proj.x, enemy.y - proj.y);
-      if (dist > enemy.radius + proj.radius) continue;
+      if (dist > enemy.radius + proj.radius + AIM_ASSIST_TOLERANCE) continue;
 
       world.dealDamageToEnemy(enemy, proj.damage);
       proj.hitEnemyIds.add(enemy.id);

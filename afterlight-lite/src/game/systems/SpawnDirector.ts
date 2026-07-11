@@ -72,13 +72,13 @@ function startWave(world: World, wave: number): void {
     return;
   }
 
-  s.gruntBudgetRemaining = Math.round(6 + wave * 1.6);
-  s.gruntTrickleTimer = 0.2;
+  s.gruntBudgetRemaining = Math.round(5 + wave * 1.3);
+  s.gruntTrickleTimer = 0.4;
 
   if (isMiniBossWave) {
     const eliteDef = world.rng.pick(ELITE_DEFS);
     const miniCycle = Math.floor(wave / 5);
-    world.spawnEliteAt(eliteDef, 2.6 + miniCycle * 0.4, 1.5 + miniCycle * 0.15, true);
+    world.spawnEliteAt(eliteDef, 2.2 + miniCycle * 0.4, 1.3 + miniCycle * 0.15, true);
   } else if (isEliteWave) {
     const eliteCount = 1 + Math.floor(wave / 12);
     for (let i = 0; i < eliteCount; i++) {
@@ -92,11 +92,11 @@ function hpMultForWave(wave: number): number {
   return 1 + wave * 0.11;
 }
 function dmgMultForWave(wave: number): number {
-  return 1 + wave * 0.07;
+  return 1 + wave * 0.05;
 }
 function speedMultForWave(wave: number): number {
   return Math.min(1.6, 1 + wave * 0.015);
 }
 function trickleIntervalForWave(wave: number): number {
-  return Math.max(0.35, 1.1 - wave * 0.015);
+  return Math.max(0.4, 1.15 - wave * 0.018);
 }

@@ -55,6 +55,7 @@ export class Game {
       enemyCount: this.world?.enemies.length ?? 0,
       pickupCount: this.world?.pickups.length ?? 0,
       motes: this.save.motes,
+      enemyDefIds: this.world?.enemies.map((e) => e.defId) ?? [],
     };
   }
 
