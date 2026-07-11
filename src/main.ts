@@ -626,8 +626,9 @@ let hitCount = 0;
 let critCount = 0;
 
 // ── Sandbox XP & upgrades (AF-022): kills drop gems, gems level you up,
-// levels present real build choices. Placeholder upgrade content — the
-// pool/curve/pickup framework underneath is the deliverable.
+// levels present real build choices. The core stat upgrades each also
+// carry a mechanic-attached secondary bonus (GP-FINAL §Level Ups) via the
+// four fields below.
 const sandboxBuild = {
   weaponBonus: 0,
   critBonus: 0,
@@ -639,6 +640,14 @@ const sandboxBuild = {
   equipmentWeaponBonus: 0, // AF-028 → AF-021 pipeline equipment stage
   passiveLootBonus: 0, // GP-004: standalone Passives, economy category
   passiveXpBonus: 0, // GP-004: standalone Passives, xp category
+  // GP-FINAL §Level Ups: Focused Coils/Rapid Cycler/Precision Optics/Tuned
+  // Thrusters' new secondary mechanic bonuses — statusChance/statusDuration
+  // (weapon status-on-hit, hit resolution below), criticalDamage
+  // (playerPacket's critMultiplier), boostEfficiency (PlayerMovement's dash).
+  statusChanceBonus: 0,
+  statusDurationBonusMs: 0,
+  critDamageBonus: 0,
+  boostCooldownReduction: 0,
 };
 
 // GP-005 §Balance: extracted to src/game/progression/sandboxUpgrades.ts so
@@ -652,7 +661,7 @@ function playerPacket() {
     kind: "direct",
     school: "energy",
     critChance: 0.15 + sandboxBuild.critBonus,
-    critMultiplier: 2 + commanderCritDamage,
+    critMultiplier: 2 + commanderCritDamage + sandboxBuild.critDamageBonus,
   } as const;
 }
 
@@ -704,14 +713,19 @@ function applyUpgrade(id: string): void {
   }
   const effect = def?.effect;
   if (!effect) return;
+  // GP-FINAL §Level Ups: `effect` may now be a single bonus or an array of
+  // them (mechanic-attached secondary bonuses) — normalise once here so
+  // every consumer below stays simple. Passives never use the array form.
+  const effects = Array.isArray(effect) ? effect : [effect];
   const isInstantEffectPassive =
-    (effect.kind === "shieldCapacity" || effect.kind === "shieldRegeneration") &&
+    effects.length === 1 &&
+    (effects[0]!.kind === "shieldCapacity" || effects[0]!.kind === "shieldRegeneration") &&
     SANDBOX_PASSIVES.some((passive) => passive.id === id);
   if (isInstantEffectPassive) {
     heldPassiveIds.add(id);
     return;
   }
-  applyUpgradeEffect(effect);
+  for (const singleEffect of effects) applyUpgradeEffect(singleEffect);
 }
 
 function applyUpgradeEffect(effect: EquipmentBonus): void {
@@ -748,6 +762,22 @@ function applyUpgradeEffect(effect: EquipmentBonus): void {
       break;
     case "experienceGain":
       sandboxBuild.passiveXpBonus += effect.value;
+      break;
+    // GP-FINAL §Level Ups: previously-registered BonusKinds with no
+    // consumer anywhere — wired here as the mechanic-attached half of
+    // Focused Coils/Rapid Cycler/Precision Optics/Tuned Thrusters.
+    case "statusChance":
+      sandboxBuild.statusChanceBonus += effect.value;
+      break;
+    case "statusDuration":
+      sandboxBuild.statusDurationBonusMs += effect.value;
+      break;
+    case "criticalDamage":
+      sandboxBuild.critDamageBonus += effect.value;
+      break;
+    case "boostEfficiency":
+      sandboxBuild.boostCooldownReduction = Math.min(0.75, sandboxBuild.boostCooldownReduction + effect.value);
+      if (movement) movement.boostCooldownScale = 1 - sandboxBuild.boostCooldownReduction;
       break;
     default:
       break; // registered-future bonus kinds (droneEffectiveness/orbitalPower/...) — no consumer system yet, by design.
@@ -5748,11 +5778,16 @@ function updateSandboxCombat(fixedDtMs: number): void {
         bus.emit("DamageDealt", { amount: appliedDamage, critical: result.critical, kind: result.kind, targetId: drone.id });
         commanderRuntime?.notifyDamageDealt(appliedDamage);
         // AF-032: status-on-hit applies through the same StatusEngine every status-inflicting system already uses.
-        if (sourceWeapon.statusOnHit && combatRng.next() < sourceWeapon.statusOnHit.chance) {
+        // GP-FINAL §Level Ups: Focused Coils/Rapid Cycler's mechanic-attached
+        // bonuses raise the chance/duration of whatever the firing weapon already rolls.
+        if (
+          sourceWeapon.statusOnHit &&
+          combatRng.next() < Math.min(1, sourceWeapon.statusOnHit.chance + sandboxBuild.statusChanceBonus)
+        ) {
           drone.status.apply({
             kind: sourceWeapon.statusOnHit.kind,
             strength: sourceWeapon.statusOnHit.strength,
-            durationMs: sourceWeapon.statusOnHit.durationMs,
+            durationMs: sourceWeapon.statusOnHit.durationMs + sandboxBuild.statusDurationBonusMs,
           });
           bus.emit("StatusApplied", { targetId: drone.id, status: sourceWeapon.statusOnHit.kind });
         }
@@ -5967,6 +6002,10 @@ function startRun(): void {
   sandboxBuild.speedStacks = 0;
   sandboxBuild.passiveLootBonus = 0; // GP-004: standalone Passives, economy category
   sandboxBuild.passiveXpBonus = 0; // GP-004: standalone Passives, xp category
+  sandboxBuild.statusChanceBonus = 0; // GP-FINAL: Focused Coils' mechanic-attached bonus is run-scoped too.
+  sandboxBuild.statusDurationBonusMs = 0; // GP-FINAL: Rapid Cycler's mechanic-attached bonus is run-scoped too.
+  sandboxBuild.critDamageBonus = 0; // GP-FINAL: Precision Optics' mechanic-attached bonus is run-scoped too.
+  sandboxBuild.boostCooldownReduction = 0; // GP-FINAL: Tuned Thrusters' mechanic-attached bonus is run-scoped too.
   heldPassiveIds.clear(); // GP-005: instant-effect Passives are held per-run too.
   lowHealthPassiveFired.clear();
   heldDistinctPassiveIds.clear(); // GP-FINAL: the 6-distinct-Passive cap is run-scoped too.

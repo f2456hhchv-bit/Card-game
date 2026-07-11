@@ -1,8 +1,8 @@
 # GP-FINAL — GAMEPLAY AUDIT, BALANCE & FINALISATION
 
-**Module status:** THIRD EXECUTION COMPLETE (2026-07-11) — all three items the second execution left as open, undeferred backlog (Elite reward pool expansion, a new per-wave Reward system, and the 6-weapon/6-passive loadout rework) are now implemented, tested, and browser-verified.
-**Lock status:** STILL NOT LOCKED, but narrowly. GP-FINAL's own §3 lock condition ("GP-001 → GP-005 delivered · referenced content modules pass §1's tests · the emotional curve is measurable in real runs · **the flagged items above are resolved**") is not yet met — three of the original four FAIL/FLAGGED items (Wave rewards, Elite reward pool, the 6-weapon/6-passive build frame) are now real; only the Level-up content law violation (`SANDBOX_UPGRADES`'s plain percentage upgrades) remains open, unaddressed by either scope round. This audit re-runs at the next playable milestone or on the Project Owner's next scope choice, whichever comes first.
-**Produced output:** `docs/GP_FINAL_AUDIT.md` (standing audit contract, now with second- and third-execution records appended)
+**Module status:** FOURTH EXECUTION COMPLETE (2026-07-11) — the last item, the Level-up content law violation, is now closed.
+**Lock status:** **LOCKED.** GP-FINAL's own §3 lock condition ("GP-001 → GP-005 delivered · referenced content modules pass §1's tests · the emotional curve is measurable in real runs · **the flagged items above are resolved**") is now met in full — all four of the original FAIL/FLAGGED items (Level-up content law, Wave rewards, Elite reward pool, the 6-weapon/6-passive build frame) are real, tested, and browser-verified.
+**Produced output:** `docs/GP_FINAL_AUDIT.md` (standing audit contract, now with second-, third-, and fourth-execution records appended)
 
 ---
 
@@ -494,3 +494,23 @@ Closed by:
 **What remains open:** the Level-up content law violation (`SANDBOX_UPGRADES`'s plain stat-percentage entries) — real, flagged since the first execution, not selected by either scope round.
 
 **Review verdict:** Two of GP-FINAL's own three still-open FAIL/FLAGGED items from the second execution (Wave rewards, Elite reward pool) move FAIL → REAL; the third (6-weapon/6-passive build frame, elevated to its own item in the second execution's audit) also moves FAIL → REAL. GP-FINAL remains **NOT LOCKED** — one item (Level-up content law) is still open — but is now one Project Owner scope choice away from meeting its own §3 lock condition.
+
+---
+
+## Fourth execution (2026-07-11) — the last flagged item closed, GP-FINAL LOCKED
+
+The next instruction ("fix the next thing") named the one item the third execution had left open: the Level-up content law violation. `SANDBOX_UPGRADES`'s Focused Coils (+15% damage), Rapid Cycler (+10% fire rate), Precision Optics (+5% crit chance), and Tuned Thrusters (+8% movement speed) were plain percentage stat bonuses with zero build-shaping mechanic attached — the module's own header comment had self-declared them "placeholder upgrade content" since AF-022. Emergency Barrier and Collection Field were left alone — the audit's own language never cited them, and both already produce a real mechanical effect beyond a number (a depletable barrier; a positioning-changing pickup radius).
+
+**Fix:** `UpgradeDefinition.effect` (AF-022, locked) additively widened to accept `EquipmentBonus | readonly EquipmentBonus[]` — every existing single-bonus entry is the exact same shape it always was; only the four flagged entries now carry a second bonus. Each second bonus uses a BonusKind AF-028 had registered but nothing had ever consumed:
+- Focused Coils gains `statusChance` (+3%) — raises the chance that whatever status the firing weapon already rolls actually lands, applied in the exact hit-resolution block the third execution's multi-weapon rework had just touched (`sourceWeapon.statusOnHit`).
+- Rapid Cycler gains `statusDuration` (+300ms) — extends that same status's `durationMs` once it lands.
+- Precision Optics gains `criticalDamage` (+10%) — feeds `playerPacket()`'s `critMultiplier` directly.
+- Tuned Thrusters gains `boostEfficiency` (+12%) — a new additive `boostCooldownScale` field on `PlayerMovement` (AF-020, locked; mirrors `WeaponRuntime.intervalScale`'s own precedent exactly), shortening the real dash/i-frame cooldown; every existing test and caller that never sets it keeps the unscaled 1.0 behaviour.
+
+`applyUpgrade` (main.ts) normalises `effect` into an array once and applies each through the unchanged `applyUpgradeEffect` interpreter — the pre-existing instant-effect-Passive special case (keyed off a singular `shieldCapacity`/`shieldRegeneration` bonus) is preserved exactly since Passives never use the array form. `tests/upgradeBalance.test.ts` (GP-005's dominance-gap guard) was updated, not weakened, to pull the primary bonus out by kind rather than assuming a single bonus — it still asserts the identical dominance property.
+
+**Verification:** new `tests/upgradeMechanics.test.ts` (6 tests: each of the four carries exactly two positive-value bonuses of the right kinds; Emergency Barrier/Collection Field/every Passive-category entry stay single-bonus) and a new `PlayerMovement — boost` test (`boostCooldownScale` defaults to 1, shortens the real cooldown when set). Full suite: 2343 tests passing (213 files, up from 2336/212). `tsc --noEmit`/`vite build` clean. Browser-verified live (Playwright, dev server): a bot run reached a level-up and the offer screen rendered "Rapid Cycler — +10% fire rate, +300ms status-on-hit duration" live; clicking it resumed the run with zero console/runtime errors.
+
+**Lock condition reassessed — all four of §3's own requirements now met** (GP-001→005 delivered; referenced content modules exist and pass §1's tests; the emotional curve is measurable in real runs at this project's current — pre-3D-art — fidelity; all four flagged items resolved). **GP-FINAL is hereby declared LOCKED.**
+
+**Review verdict:** the last of GP-FINAL's own four FAIL/FLAGGED items moves FAIL → REAL. **GP-FINAL: LOCKED**, as a quality-gate self-review verdict (CLAUDE.md's "every AF module self-reviews to 9.5/10 minimum"), consistent with how every other GP-XXX module in this project has been locked. Full record: `docs/GP_FINAL_AUDIT.md` §6.

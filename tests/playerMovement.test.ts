@@ -71,6 +71,23 @@ describe("PlayerMovement — boost (AF-020 §4)", () => {
     movement.addModifier({ id: "stasis", kind: "root", durationMs: 1000 });
     expect(movement.tryBoost()).toBe(false);
   });
+
+  /**
+   * GP-FINAL §Level Ups: boostCooldownScale is the additive hook Tuned
+   * Thrusters' new boostEfficiency bonus (main.ts) scales — defaults to 1
+   * (every test above, which never sets it, proves the unscaled behaviour
+   * is untouched).
+   */
+  it("boostCooldownScale shortens the real cooldown, defaults to unscaled", () => {
+    const movement = makeMovement();
+    expect(movement.boostCooldownScale).toBe(1);
+    movement.boostCooldownScale = 0.5;
+    expect(movement.tryBoost()).toBe(true);
+    run(movement, 30, 1, 0); // boost duration (220ms) elapses
+    expect(movement.tryBoost()).toBe(false); // still on the (halved) cooldown
+    run(movement, 42, 1, 0); // 700ms — the halved 700ms cooldown elapses
+    expect(movement.tryBoost()).toBe(true);
+  });
 });
 
 describe("PlayerMovement — modifiers (AF-020 §5)", () => {

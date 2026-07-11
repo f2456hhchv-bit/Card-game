@@ -15,6 +15,16 @@ import { SANDBOX_UPGRADES } from "../src/game/progression/sandboxUpgrades";
 describe("GP-005 §Balance — Rapid Cycler no longer strictly dominates Focused Coils", () => {
   const focusedCoils = SANDBOX_UPGRADES.find((u) => u.id === "damage")!;
   const rapidCycler = SANDBOX_UPGRADES.find((u) => u.id === "firerate")!;
+  // GP-FINAL §Level Ups: `effect` is now an array (a mechanic-attached
+  // secondary bonus rides alongside each primary stat) — this balance
+  // comparison is only about the primary damage/cooldownReduction value,
+  // so pull it out by kind rather than assuming a single bonus.
+  const primaryValue = (u: typeof focusedCoils, kind: string): number => {
+    const effects = Array.isArray(u.effect) ? u.effect : [u.effect];
+    return effects.find((e) => e?.kind === kind)!.value;
+  };
+  const focusedCoilsDamage = primaryValue(focusedCoils, "damage");
+  const rapidCyclerCooldown = primaryValue(rapidCycler, "cooldownReduction");
 
   it("both cost the same weight and maxStacks — a fair comparison", () => {
     expect(focusedCoils.weight).toBe(rapidCycler.weight);
@@ -24,8 +34,8 @@ describe("GP-005 §Balance — Rapid Cycler no longer strictly dominates Focused
   it("at every stack count up to max, Rapid Cycler's DPS multiplier never meaningfully exceeds Focused Coils'", () => {
     const maxStacks = focusedCoils.maxStacks!;
     for (let stacks = 1; stacks <= maxStacks; stacks += 1) {
-      const damageMultiplier = 1 + focusedCoils.effect!.value * stacks;
-      const fireIntervalScale = (1 - rapidCycler.effect!.value) ** stacks;
+      const damageMultiplier = 1 + focusedCoilsDamage * stacks;
+      const fireIntervalScale = (1 - rapidCyclerCooldown) ** stacks;
       const rateMultiplier = 1 / fireIntervalScale;
       expect(rateMultiplier).toBeLessThanOrEqual(damageMultiplier * 1.05); // no more than a 5% edge — not a dominant strategy
     }
@@ -33,8 +43,8 @@ describe("GP-005 §Balance — Rapid Cycler no longer strictly dominates Focused
 
   it("at max stacks, both land within 10% of each other — no strict dominance either way", () => {
     const maxStacks = focusedCoils.maxStacks!;
-    const damageMultiplier = 1 + focusedCoils.effect!.value * maxStacks;
-    const rateMultiplier = 1 / (1 - rapidCycler.effect!.value) ** maxStacks;
+    const damageMultiplier = 1 + focusedCoilsDamage * maxStacks;
+    const rateMultiplier = 1 / (1 - rapidCyclerCooldown) ** maxStacks;
     const ratio = rateMultiplier / damageMultiplier;
     expect(ratio).toBeGreaterThan(0.9);
     expect(ratio).toBeLessThan(1.1);

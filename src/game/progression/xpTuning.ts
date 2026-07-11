@@ -90,6 +90,14 @@ export interface UpgradeDefinition {
    * Reuses AF-028's EquipmentBonus/BonusKind vocabulary so any future
    * upgrade — including the standalone Passive roster — plugs in with zero
    * main.ts changes as long as it uses an already-registered BonusKind.
+   *
+   * GP-FINAL §Level Ups: additively widened to accept a readonly array —
+   * "never offer boring percentage upgrades unless attached to meaningful
+   * mechanics." A single-bonus entry (the pre-existing shape) is unchanged;
+   * an array lets a plain stat bonus carry a second, mechanic-attached
+   * bonus (statusChance/statusDuration/criticalDamage/boostEfficiency —
+   * previously-registered BonusKinds with no consumer until this) so the
+   * upgrade does something beyond a number, without redesigning the shape.
    */
-  effect?: EquipmentBonus;
+  effect?: EquipmentBonus | readonly EquipmentBonus[];
 }

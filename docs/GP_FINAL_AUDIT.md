@@ -87,4 +87,25 @@ Immediately following the second execution, the Project Owner instructed picking
 
 ---
 
-*First execution recorded 2026-07-06. Second execution recorded 2026-07-11. Third execution recorded 2026-07-11 (same day, second scope round). Next execution: at the next playable milestone or on the Project Owner's next scope choice, whichever comes first.*
+## 6. Fourth execution — 2026-07-11, the last flagged item closed
+
+The third execution left exactly one item open: the Level-up content law violation (§2 item 1, restated unchanged through every execution since) — `SANDBOX_UPGRADES`'s Focused Coils/Rapid Cycler/Precision Optics/Tuned Thrusters were plain percentage stat bonuses, "exactly the boring percentage upgrades GP-FINAL bans," with the module's own header comment self-declaring them placeholder content. The next instruction ("fix the next thing") named this as the target — the only remaining item, so no fresh audit round was needed.
+
+**FAIL/FLAGGED item #1 (the last one) moves FAIL → REAL:**
+- Each of the four now carries a second, mechanic-attached bonus (`UpgradeDefinition.effect` additively widened to accept an array — the pre-existing single-bonus shape is unchanged for every other entry) using a BonusKind that AF-028 had registered but no code anywhere ever consumed: `statusChance`/`statusDuration` (Focused Coils/Rapid Cycler — raises the chance/duration of whatever status the firing weapon already rolls, wired into the hit-resolution code the third execution's weapon rework had just touched), `criticalDamage` (Precision Optics — feeds `playerPacket()`'s `critMultiplier`), and `boostEfficiency` (Tuned Thrusters — a new additive `boostCooldownScale` field on `PlayerMovement`, AF-020, shortening the real dash/i-frame cooldown; every existing caller that never sets it keeps the unscaled 1.0 behaviour). Emergency Barrier and Collection Field were left untouched — the audit's own language only ever cited the four pure-DPS/mobility numbers, and both of those already produce a real mechanical effect (a depletable barrier; a positioning-changing pickup radius), not just a multiplier.
+- Primary stat values are unchanged from GP-005's balance pass; `tests/upgradeBalance.test.ts` was updated (not weakened) to pull the primary bonus out of the now-possibly-array `effect` by kind, so it still guards the exact dominance property it always did.
+- New `tests/upgradeMechanics.test.ts` (6 tests) guards the data shape (each of the four carries exactly two positive-value bonuses of the right kinds; Emergency Barrier/Collection Field/every Passive-category entry stay single-bonus); a new `PlayerMovement — boost` test guards `boostCooldownScale`'s default-unscaled behaviour and its real cooldown-shortening effect.
+- Verified live (Playwright, dev server): a bot run reached a level-up and the offer screen rendered the new description live — "Rapid Cycler — +10% fire rate, +300ms status-on-hit duration" — clicking it resumed the run with zero console/runtime errors.
+- Full suite: 2343 tests passing (213 files, up from 2336/212). `tsc --noEmit` and `vite build` both clean.
+
+**Lock condition reassessed — all four now met:**
+1. GP-001 → GP-005 delivered and reconciled — met since the second execution.
+2. Referenced content modules (Atlas/Museum/Civilisation/galaxy structure/merchants) exist and pass §1's tests — met; each traces to a real, justified module (AF-087/089/090, GP-001/002/003) and the accumulated GP-FINAL executions have exercised pacing, reward density, and system-justification against §1's five tests without a fresh failure.
+3. The emotional curve is measurable in real runs — met at this project's current fidelity (a Canvas-rendered sandbox; real 3D art/audio are separately-scoped future work per `docs/TECHNOLOGY_DECISION.md`'s amendment): Mini/Major Boss cadence, per-wave rewards, Elite reward variety, and now mechanic-attached level-ups all contribute real, observed pacing texture, not placeholder numbers.
+4. The flagged items above are resolved — met: all four of the original FAIL/FLAGGED items (Level-up content law, Wave rewards, Elite reward pool, 6-weapon/6-passive build frame) are now real, tested, and browser-verified.
+
+**GP-FINAL is hereby declared LOCKED** — its own §3 condition is met in full. As with every other locked GP-XXX module in this project, this is a quality-gate self-review verdict (CLAUDE.md's "every AF module self-reviews to 9.5/10 minimum"), not a claim that Afterlight's gameplay is finished — it is the standing audit contract's own bar, met. Future gameplay work continues as new GP-XXX modules or AF modules built on this now-locked foundation, per the Foundation Phase's own "extend, never overwrite" discipline.
+
+---
+
+*First execution recorded 2026-07-06. Second execution recorded 2026-07-11. Third execution recorded 2026-07-11 (same day, second scope round). Fourth execution recorded 2026-07-11 (same day, third scope round) — GP-FINAL LOCKED.*

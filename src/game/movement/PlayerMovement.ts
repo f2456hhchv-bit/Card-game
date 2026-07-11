@@ -54,6 +54,14 @@ export class PlayerMovement {
 
   private boostRemainingMs = 0;
   private boostCooldownMs = 0;
+  /**
+   * GP-FINAL §Level Ups: additive, optional scale over the profile's own
+   * boostCooldownMs — Tuned Thrusters' new boostEfficiency bonus (main.ts)
+   * is the first real consumer; every existing caller that never sets this
+   * keeps the exact 1.0/unscaled behaviour (mirrors WeaponRuntime's own
+   * intervalScale field).
+   */
+  boostCooldownScale = 1;
 
   private impulseX = 0;
   private impulseY = 0;
@@ -91,7 +99,7 @@ export class PlayerMovement {
     if (this.controlLock !== null || this.isRooted()) return false;
     if (this.boostRemainingMs > 0 || this.boostCooldownMs > 0) return false;
     this.boostRemainingMs = this.profile.boostDurationMs;
-    this.boostCooldownMs = this.profile.boostCooldownMs;
+    this.boostCooldownMs = this.profile.boostCooldownMs * this.boostCooldownScale;
     return true;
   }
 
