@@ -1,7 +1,7 @@
 services:
   - type: web
     name: nova-city
-    runtime: node
+    env: node
     rootDir: nova-city
     plan: free
     buildCommand: npm install && npm run build
