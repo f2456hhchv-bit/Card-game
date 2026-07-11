@@ -1,0 +1,46 @@
+[
+  {
+    "id": "ship-scout-skiff",
+    "hullClass": "scout",
+    "name": "Scout Skiff",
+    "flavor": "A stripped-down runabout — fast, cheap, and expendable. Every commander starts with one.",
+    "price": 300,
+    "firepower": 8,
+    "shieldHP": 20,
+    "cargo": 10,
+    "crewCapacity": 4
+  },
+  {
+    "id": "ship-frigate",
+    "hullClass": "frigate",
+    "name": "Frigate",
+    "flavor": "A proper warship. Balanced, reliable, the backbone of any fleet.",
+    "price": 2500,
+    "firepower": 35,
+    "shieldHP": 90,
+    "cargo": 40,
+    "crewCapacity": 12
+  },
+  {
+    "id": "ship-cruiser",
+    "hullClass": "cruiser",
+    "name": "Cruiser",
+    "flavor": "Heavy plating, heavier guns. Cruisers turn sectors.",
+    "price": 9000,
+    "firepower": 90,
+    "shieldHP": 220,
+    "cargo": 90,
+    "crewCapacity": 30
+  },
+  {
+    "id": "ship-dreadnought",
+    "hullClass": "dreadnought",
+    "name": "Dreadnought",
+    "flavor": "A moving fortress. Owning one changes how people talk about you.",
+    "price": 30000,
+    "firepower": 260,
+    "shieldHP": 600,
+    "cargo": 150,
+    "crewCapacity": 80
+  }
+]

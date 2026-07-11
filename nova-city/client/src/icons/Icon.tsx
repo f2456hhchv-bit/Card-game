@@ -28,7 +28,11 @@ export type IconName =
   | 'credits'
   | 'logo'
   | 'menu'
-  | 'close';
+  | 'close'
+  | 'ship'
+  | 'galaxy'
+  | 'station'
+  | 'alignment';
 
 const PATHS: Record<IconName, ReactNode> = {
   fuel: (
@@ -218,6 +222,36 @@ const PATHS: Record<IconName, ReactNode> = {
   close: (
     <>
       <path d="M5 5l12 12M17 5 5 17" />
+    </>
+  ),
+  ship: (
+    <>
+      <path d="M11 2 16 15H6z" />
+      <path d="M8.5 15 6 20h10l-2.5-5" />
+      <path d="M11 2v9" />
+    </>
+  ),
+  galaxy: (
+    <>
+      <ellipse cx="11" cy="11" rx="9" ry="3.4" transform="rotate(-20 11 11)" />
+      <ellipse cx="11" cy="11" rx="5.2" ry="2" transform="rotate(-20 11 11)" opacity="0.6" />
+      <circle cx="11" cy="11" r="1.6" fill="currentColor" stroke="none" />
+    </>
+  ),
+  station: (
+    <>
+      <circle cx="11" cy="11" r="4" />
+      <circle cx="11" cy="11" r="1.4" fill="currentColor" stroke="none" />
+      <path d="M11 2v3.5M11 15.5V19M2 11h3.5M15.5 11H19" />
+      <path d="M4.5 4.5l2.5 2.5M17.5 4.5 15 7M4.5 17.5 7 15M17.5 17.5 15 15" />
+    </>
+  ),
+  alignment: (
+    <>
+      <path d="M11 3v16M6 19h10" />
+      <path d="M3 7h8M14 7h7" />
+      <path d="M3 7c0 2 1.5 3.5 3.5 3.5S10 9 10 7" />
+      <path d="M14 7c0 2 1.5 3.5 3.5 3.5S21 9 21 7" />
     </>
   ),
 };

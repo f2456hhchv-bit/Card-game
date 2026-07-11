@@ -1,18 +1,32 @@
 import type { Response } from 'express';
-import { characters, items } from '../store/collections.js';
+import { characters, items, ships, stations, sectors } from '../store/collections.js';
 import { tickCharacter } from '../domain/regen.js';
 import { effectiveStats } from '../domain/gear.js';
+import { commandRank } from '../domain/commandRank.js';
+import { alignmentLabel } from '../domain/alignment.js';
 import type { Character } from '../types.js';
 
 export function getCharacterByUserId(userId: string): Character | undefined {
   return characters.find((c) => c.userId === userId);
 }
 
+/**
+ * Backfills fields added after some characters were already saved (the JSON
+ * store does raw JSON.parse with no schema validation/migration).
+ */
+export function hydrateCharacter(character: Character): Character {
+  return {
+    ...character,
+    alignment: character.alignment ?? 0,
+    exploredSectorIds: character.exploredSectorIds ?? [],
+  };
+}
+
 /** Settles regen/status and persists the result — the single read path every route should use. */
 export function loadAndSettleCharacter(userId: string): Character | undefined {
   const character = getCharacterByUserId(userId);
   if (!character) return undefined;
-  const ticked = tickCharacter(character, Date.now());
+  const ticked = tickCharacter(hydrateCharacter(character), Date.now());
   characters.put(ticked);
   return ticked;
 }
@@ -40,7 +54,26 @@ export function netWorth(character: Character): number {
   return character.credits + inventoryValue;
 }
 
+export function characterCommandSummary(character: Character) {
+  const ownedShips = ships.filter((s) => s.ownerCharacterId === character.id);
+  const ownedStations = stations.filter((s) => s.ownerCharacterId === character.id);
+  const plunderedSectors = sectors.filter((s) => s.plunderedByCharacterId === character.id);
+  const sectorsControlled = ownedStations.length + plunderedSectors.length;
+  return {
+    shipCount: ownedShips.length,
+    stationCount: ownedStations.length,
+    sectorsControlled,
+    rank: commandRank({
+      shipCount: ownedShips.length,
+      stationCount: ownedStations.length,
+      sectorsControlled,
+      alignment: character.alignment,
+    }),
+  };
+}
+
 export function characterView(character: Character) {
+  const command = characterCommandSummary(character);
   return {
     id: character.id,
     callsign: character.callsign,
@@ -57,6 +90,13 @@ export function characterView(character: Character) {
     equippedArmorId: character.equippedArmorId,
     inventory: character.inventory,
     factionId: character.factionId,
+    alignment: character.alignment,
+    alignmentLabel: alignmentLabel(character.alignment),
+    commandRank: command.rank,
+    shipCount: command.shipCount,
+    stationCount: command.stationCount,
+    sectorsControlled: command.sectorsControlled,
+    exploredSectorIds: character.exploredSectorIds,
   };
 }
 

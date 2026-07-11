@@ -2,6 +2,7 @@ export type Stat = 'strength' | 'defense' | 'speed' | 'dexterity';
 export type ResourceKey = 'fuel' | 'resolve' | 'morale' | 'health';
 export type CharacterStatus = 'ok' | 'jail' | 'hospital' | 'transit';
 export type ItemType = 'weapon' | 'armor' | 'consumable' | 'contraband';
+export type HullClass = 'scout' | 'frigate' | 'cruiser' | 'dreadnought';
 
 export interface User {
   id: string;
@@ -45,6 +46,9 @@ export interface Character {
   inventory: InventoryStack[];
   factionId: string | null;
   medicAssistUsedAt: number | null;
+  /** -100 (ruthless) .. 100 (benevolent), shifted only by rebuild/plunder choices */
+  alignment: number;
+  exploredSectorIds: string[];
   createdAt: number;
 }
 
@@ -132,6 +136,54 @@ export interface CombatLog {
   log: string[];
   salvage: number;
   timestamp: number;
+}
+
+export interface ShipClass {
+  id: string;
+  hullClass: HullClass;
+  name: string;
+  flavor: string;
+  price: number;
+  firepower: number;
+  shieldHP: number;
+  cargo: number;
+  crewCapacity: number;
+}
+
+export interface Ship {
+  id: string;
+  ownerCharacterId: string;
+  shipClassId: string;
+  name: string;
+  builtAt: number;
+}
+
+export interface Sector {
+  id: string;
+  name: string;
+  flavor: string;
+  /** current Hollow-touched hostile presence, settled lazily on read */
+  alienStrength: number;
+  maxAlienStrength: number;
+  alienGrowthPerHour: number;
+  lastTickAt: number;
+  resourceYield: number;
+  scoutFuelCost: number;
+  stationTier: number;
+  stationPrice: number;
+  /** set once someone plunders this sector instead of building — blocks a station here forever */
+  plunderedByCharacterId: string | null;
+}
+
+export interface Station {
+  id: string;
+  sectorId: string;
+  ownerCharacterId: string;
+  tier: number;
+  outputPerHour: number;
+  /** accrued but not yet collected, settled lazily on read */
+  credits: number;
+  lastCollectedAt: number;
 }
 
 export interface SalvageEvent {

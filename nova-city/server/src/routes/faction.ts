@@ -33,14 +33,14 @@ function settleFaction(faction: Faction): Faction {
       sendToUsers(memberUserIds(updated), {
         type: 'faction-war-update',
         factionId: faction.id,
-        message: `Your fleet won the war and the bank gained ${payout} credits.`,
+        message: `Your faction won the war and the bank gained ${payout} credits.`,
       });
       return updated;
     }
     sendToUsers(memberUserIds(faction), {
       type: 'faction-war-update',
       factionId: faction.id,
-      message: 'Your fleet lost the war.',
+      message: 'Your faction lost the war.',
     });
   }
   return faction;
@@ -72,7 +72,7 @@ factionRouter.post('/create', (req: AuthedRequest, res) => {
   const character = requireCharacter(req.userId!, res);
   if (!character) return;
   if (character.factionId) {
-    res.status(409).json({ error: 'Leave your current fleet first' });
+    res.status(409).json({ error: 'Leave your current faction first' });
     return;
   }
   const { name, tag } = req.body ?? {};
@@ -98,12 +98,12 @@ factionRouter.post('/:factionId/join', (req: AuthedRequest, res) => {
   const character = requireCharacter(req.userId!, res);
   if (!character) return;
   if (character.factionId) {
-    res.status(409).json({ error: 'Leave your current fleet first' });
+    res.status(409).json({ error: 'Leave your current faction first' });
     return;
   }
   const faction = factions.get(req.params.factionId);
   if (!faction) {
-    res.status(404).json({ error: 'Fleet not found' });
+    res.status(404).json({ error: 'Faction not found' });
     return;
   }
   const updated = { ...faction, memberIds: [...faction.memberIds, character.id] };
@@ -117,7 +117,7 @@ factionRouter.post('/:factionId/leave', (req: AuthedRequest, res) => {
   if (!character) return;
   const faction = factions.get(req.params.factionId);
   if (!faction || character.factionId !== faction.id) {
-    res.status(409).json({ error: 'You are not in that fleet' });
+    res.status(409).json({ error: 'You are not in that faction' });
     return;
   }
   const remaining = faction.memberIds.filter((id) => id !== character.id);
@@ -136,7 +136,7 @@ factionRouter.post('/:factionId/bank/deposit', (req: AuthedRequest, res) => {
   if (!character) return;
   const faction = factions.get(req.params.factionId);
   if (!faction || character.factionId !== faction.id) {
-    res.status(409).json({ error: 'You are not in that fleet' });
+    res.status(409).json({ error: 'You are not in that faction' });
     return;
   }
   const amount = Math.max(1, Math.round(Number(req.body?.amount) || 0));
@@ -155,16 +155,16 @@ factionRouter.post('/:factionId/bank/withdraw', (req: AuthedRequest, res) => {
   if (!character) return;
   const faction = factions.get(req.params.factionId);
   if (!faction || character.factionId !== faction.id) {
-    res.status(409).json({ error: 'You are not in that fleet' });
+    res.status(409).json({ error: 'You are not in that faction' });
     return;
   }
   if (faction.leaderId !== character.id) {
-    res.status(403).json({ error: 'Only the fleet leader can withdraw' });
+    res.status(403).json({ error: 'Only the faction leader can withdraw' });
     return;
   }
   const amount = Math.max(1, Math.round(Number(req.body?.amount) || 0));
   if (faction.bank < amount) {
-    res.status(409).json({ error: 'The fleet bank is short on credits' });
+    res.status(409).json({ error: 'The faction bank is short on credits' });
     return;
   }
   const updatedFaction = { ...faction, bank: faction.bank - amount };
@@ -178,7 +178,7 @@ factionRouter.get('/:factionId/messages', (req: AuthedRequest, res) => {
   const character = requireCharacter(req.userId!, res);
   if (!character) return;
   if (character.factionId !== req.params.factionId) {
-    res.status(403).json({ error: 'You are not in that fleet' });
+    res.status(403).json({ error: 'You are not in that faction' });
     return;
   }
   const messages = factionMessages
@@ -193,7 +193,7 @@ factionRouter.post('/:factionId/messages', (req: AuthedRequest, res) => {
   if (!character) return;
   const faction = factions.get(req.params.factionId);
   if (!faction || character.factionId !== faction.id) {
-    res.status(403).json({ error: 'You are not in that fleet' });
+    res.status(403).json({ error: 'You are not in that faction' });
     return;
   }
   const body = typeof req.body?.body === 'string' ? req.body.body.trim().slice(0, 500) : '';
@@ -223,24 +223,24 @@ factionRouter.post('/:factionId/war/declare', (req: AuthedRequest, res) => {
   if (!character) return;
   const faction = factions.get(req.params.factionId);
   if (!faction || character.factionId !== faction.id) {
-    res.status(403).json({ error: 'You are not in that fleet' });
+    res.status(403).json({ error: 'You are not in that faction' });
     return;
   }
   if (faction.leaderId !== character.id) {
-    res.status(403).json({ error: 'Only the fleet leader can declare war' });
+    res.status(403).json({ error: 'Only the faction leader can declare war' });
     return;
   }
   const targetFactionId = req.body?.targetFactionId;
   const target = typeof targetFactionId === 'string' ? factions.get(targetFactionId) : undefined;
   if (!target || target.id === faction.id) {
-    res.status(404).json({ error: 'Target fleet not found' });
+    res.status(404).json({ error: 'Target faction not found' });
     return;
   }
   const existing = factionWars.find(
     (w) => !w.resolved && (w.factionAId === faction.id || w.factionBId === faction.id),
   );
   if (existing) {
-    res.status(409).json({ error: 'Your fleet is already at war' });
+    res.status(409).json({ error: 'Your faction is already at war' });
     return;
   }
   const now = Date.now();
@@ -267,12 +267,12 @@ factionRouter.post('/:factionId/war/contribute', (req: AuthedRequest, res) => {
   if (!character) return;
   const faction = factions.get(req.params.factionId);
   if (!faction || character.factionId !== faction.id) {
-    res.status(403).json({ error: 'You are not in that fleet' });
+    res.status(403).json({ error: 'You are not in that faction' });
     return;
   }
   const war = factionWars.find((w) => !w.resolved && (w.factionAId === faction.id || w.factionBId === faction.id));
   if (!war) {
-    res.status(409).json({ error: 'Your fleet is not at war' });
+    res.status(409).json({ error: 'Your faction is not at war' });
     return;
   }
   const amount = Math.max(1, Math.min(character.resources.fuel, Math.round(Number(req.body?.amount) || 10)));

@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { characters, users, HOME_LOCATION_ID } from '../store/collections.js';
+import { characters, users, ships, HOME_LOCATION_ID, STARTER_SHIP_CLASS_ID } from '../store/collections.js';
 import { hashPassword, verifyPassword } from '../auth/password.js';
 import { signToken } from '../auth/jwt.js';
 import { newId } from '../util/ids.js';
-import { characterView } from './helpers.js';
+import { characterView, loadAndSettleCharacter } from './helpers.js';
 import type { Character } from '../types.js';
 
 export const authRouter = Router();
@@ -31,6 +31,8 @@ function createStarterCharacter(userId: string, callsign: string): Character {
     inventory: [],
     factionId: null,
     medicAssistUsedAt: null,
+    alignment: 0,
+    exploredSectorIds: [],
     createdAt: now,
   };
 }
@@ -71,6 +73,13 @@ authRouter.post('/register', (req, res) => {
 
   const character = createStarterCharacter(user.id, callsign.trim());
   characters.put(character);
+  ships.put({
+    id: newId('ship'),
+    ownerCharacterId: character.id,
+    shipClassId: STARTER_SHIP_CLASS_ID,
+    name: `${callsign.trim()}'s Skiff`,
+    builtAt: Date.now(),
+  });
 
   const token = signToken({ userId: user.id });
   res.status(201).json({ token, character: characterView(character) });
@@ -87,7 +96,7 @@ authRouter.post('/login', (req, res) => {
     res.status(401).json({ error: 'Invalid email or password' });
     return;
   }
-  const character = characters.find((c) => c.userId === user.id);
+  const character = loadAndSettleCharacter(user.id);
   if (!character) {
     res.status(404).json({ error: 'No character found for this account' });
     return;

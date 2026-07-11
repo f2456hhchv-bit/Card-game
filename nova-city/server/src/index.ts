@@ -20,6 +20,9 @@ import { factionRouter } from './routes/faction.js';
 import { mailRouter } from './routes/mail.js';
 import { leaderboardRouter } from './routes/leaderboard.js';
 import { salvageRouter } from './routes/salvage.js';
+import { fleetRouter } from './routes/fleet.js';
+import { galaxyRouter } from './routes/galaxy.js';
+import { stationsRouter } from './routes/stations.js';
 
 const app = express();
 app.use(cors());
@@ -40,6 +43,9 @@ app.use('/api/faction', factionRouter);
 app.use('/api/mail', mailRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/salvage', salvageRouter);
+app.use('/api/fleet', fleetRouter);
+app.use('/api/galaxy', galaxyRouter);
+app.use('/api/stations', stationsRouter);
 
 // If a built client (client/dist) is present alongside this checkout, serve it —
 // this lets a single deployed process host both the API/WebSocket and the SPA

@@ -129,6 +129,28 @@ export function Dashboard() {
           <StatBlock stats={character.effectiveStats} baseStats={character.stats} />
         </Card>
       </div>
+      <Card
+        title={
+          <span className="card-title-with-icon">
+            <Icon name="alignment" size={16} />
+            Command Profile
+          </span>
+        }
+      >
+        <p>
+          <Icon name="galaxy" size={15} /> Rank: <strong>{character.commandRank}</strong>
+        </p>
+        <p>
+          Alignment: <strong>{character.alignmentLabel}</strong>
+        </p>
+        <div className="alignment-track">
+          <div className="alignment-marker" style={{ left: `${((character.alignment + 100) / 200) * 100}%` }} />
+        </div>
+        <p className="small muted">
+          {character.shipCount} ships · {character.stationCount} stations · {character.sectorsControlled} sectors
+          controlled
+        </p>
+      </Card>
       <SalvageEventCard />
       <Card title="What to do next" className="tips">
         <ul>
@@ -136,7 +158,9 @@ export function Dashboard() {
           <li>Run Ops around the sprawl for credits — mind the jail risk.</li>
           <li>Gear up at the Trade Hub, then look for a fight in Combat.</li>
           <li>Travel to unlock location-exclusive Ops and gear.</li>
-          <li>Join or found a Fleet for backup, a shared bank, and fleet wars.</li>
+          <li>Join or found a Faction for backup, a shared bank, and faction wars.</li>
+          <li>Build your Fleet, scout the Galaxy, and clear sectors of the Hollow.</li>
+          <li>Choose to rebuild what you clear, or plunder it — every sector is a step toward who you become.</li>
         </ul>
       </Card>
     </div>

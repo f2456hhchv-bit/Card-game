@@ -19,7 +19,8 @@ const NAV_ITEMS: { to: string; label: string; icon: IconName }[] = [
   { to: '/market', label: 'Trade Hub', icon: 'market' },
   { to: '/inventory', label: 'Inventory', icon: 'inventory' },
   { to: '/travel', label: 'Travel', icon: 'travel' },
-  { to: '/faction', label: 'Fleet', icon: 'faction' },
+  { to: '/galaxy', label: 'Galaxy', icon: 'galaxy' },
+  { to: '/faction', label: 'Faction', icon: 'faction' },
   { to: '/mail', label: 'Mail', icon: 'mail' },
   { to: '/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
 ];
@@ -69,7 +70,7 @@ export function NavShell() {
           pushToast(`New mail from ${event.fromCallsign}: ${event.subject}`);
           break;
         case 'faction-message':
-          pushToast(`[Fleet] ${event.authorCallsign}: ${event.body}`);
+          pushToast(`[Faction] ${event.authorCallsign}: ${event.body}`);
           break;
         case 'faction-war-update':
           pushToast(event.message, 'info');
@@ -116,6 +117,9 @@ export function NavShell() {
         <div className="topbar-identity">
           <span className="callsign">{character.callsign}</span>
           <span className="level-badge">Lv {character.level}</span>
+          <span className="rank-badge" title={`Alignment: ${character.alignmentLabel}`}>
+            {character.commandRank}
+          </span>
           <span className="credits">
             <Icon name="credits" size={15} /> {character.credits.toLocaleString()} cr
           </span>

@@ -110,8 +110,8 @@ npm run dev         # runs the server (:4000) and client (:5183) together
 ```
 
 Then open `http://localhost:5183` — register a pilot and play. To test
-multiplayer features (Combat, Fleets, Mail), register a second pilot in another
-browser profile/incognito window.
+multiplayer features (Combat, Factions, Mail), register a second pilot in
+another browser profile/incognito window.
 
 Other scripts:
 
@@ -153,14 +153,31 @@ friends" above.
   decaying contraband
 - **Travel** — 8 stations/planets with travel time and location-exclusive Ops
   and gear
-- **Fleets** — create/join, shared bank, live chat, simplified Fleet Wars
+- **Factions** — create/join, shared bank, live chat, simplified Faction Wars
   (declare → contribute Fuel → payout)
 - **Mail** — player-to-player inbox
 - **Leaderboard** — by level, net worth, Combat Rating
 - **Derelict Salvage** — a shared world event anyone can trigger; players commit
   Fuel and split a fixed credit pool by contribution
+- **Galaxy Command** — the bigger "space frontier" layer, in AFTERLIGHT's
+  spirit (a universe that lost its light and is rebuilding):
+  - **Fleet** — every pilot starts with one Scout Skiff; buy Frigates,
+    Cruisers, and Dreadnoughts from the Shipyard to grow your fleet power
+  - **Sectors** — ~10 shared sectors with Hollow-touched hostile presence
+    that grows over real time the longer it goes unchecked (fog-of-war until
+    scouted)
+  - **Fighting the Hollow** — your fleet (plus a small personal-command
+    assist) chips away at a sector's alien strength; badly-outmatched
+    attacks cost you Health instead
+  - **The choice** — once a sector is cleared, **build a station** there
+    (steady income, raises your standing) or **plunder it** (an immediate
+    payout that costs your standing) — permanent, one-time, per sector
+  - **Alignment & Command Rank** — a −100..100 alignment score and a derived
+    rank (Drifter → Ship Captain → Squadron Leader → Fleet Commander →
+    Sector Warlord/Steward → Galactic Commander) track your growth from one
+    ship to commanding the frontier
 - All of the above push **real-time WebSocket notifications** (attacked,
-  sprung, mail, fleet chat, war updates, salvage events)
+  sprung, mail, faction chat, war updates, salvage events)
 
 ## Project layout
 

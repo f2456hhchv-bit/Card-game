@@ -14,6 +14,7 @@ import { Combat } from './screens/Combat';
 import { Market } from './screens/Market';
 import { Inventory } from './screens/Inventory';
 import { Travel } from './screens/Travel';
+import { Galaxy } from './screens/Galaxy';
 import { Faction } from './screens/Faction';
 import { Mail } from './screens/Mail';
 import { Leaderboard } from './screens/Leaderboard';
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="/market" element={<Market />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/travel" element={<Travel />} />
+            <Route path="/galaxy" element={<Galaxy />} />
             <Route path="/faction" element={<Faction />} />
             <Route path="/mail" element={<Mail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />

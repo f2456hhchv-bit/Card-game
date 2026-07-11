@@ -50,9 +50,9 @@ export function Faction() {
       await api.post('/faction/create', { name, tag });
       await refresh();
       await loadFactions();
-      pushToast('Fleet founded.', 'success');
+      pushToast('Faction founded.', 'success');
     } catch (err) {
-      pushToast(err instanceof ApiError ? err.message : 'Could not create fleet', 'danger');
+      pushToast(err instanceof ApiError ? err.message : 'Could not create faction', 'danger');
     } finally {
       setBusy(false);
     }
@@ -64,9 +64,9 @@ export function Faction() {
       await api.post(`/faction/${factionId}/join`);
       await refresh();
       await loadFactions();
-      pushToast('Joined the fleet.', 'success');
+      pushToast('Joined the faction.', 'success');
     } catch (err) {
-      pushToast(err instanceof ApiError ? err.message : 'Could not join fleet', 'danger');
+      pushToast(err instanceof ApiError ? err.message : 'Could not join faction', 'danger');
     } finally {
       setBusy(false);
     }
@@ -79,9 +79,9 @@ export function Faction() {
       await api.post(`/faction/${own.id}/leave`);
       await refresh();
       await loadFactions();
-      pushToast('Left the fleet.', 'info');
+      pushToast('Left the faction.', 'info');
     } catch (err) {
-      pushToast(err instanceof ApiError ? err.message : 'Could not leave fleet', 'danger');
+      pushToast(err instanceof ApiError ? err.message : 'Could not leave faction', 'danger');
     } finally {
       setBusy(false);
     }
@@ -154,8 +154,8 @@ export function Faction() {
   if (!own) {
     return (
       <div className="screen">
-        <h1 className="screen-title">Fleets</h1>
-        <Card title="Found a Fleet">
+        <h1 className="screen-title">Factions</h1>
+        <Card title="Found a Faction">
           <form onSubmit={create} className="stacked-form">
             <label>
               Name
@@ -166,11 +166,11 @@ export function Faction() {
               <input value={tag} onChange={(e) => setTag(e.target.value)} maxLength={6} required />
             </label>
             <button className="btn-primary" type="submit" disabled={busy}>
-              Found Fleet
+              Found Faction
             </button>
           </form>
         </Card>
-        <h2 className="section-title">Browse Fleets</h2>
+        <h2 className="section-title">Browse Factions</h2>
         <div className="grid two-col">
           {factions.map((f) => (
             <Card key={f.id}>
@@ -186,7 +186,7 @@ export function Faction() {
               </button>
             </Card>
           ))}
-          {factions.length === 0 && <p className="muted">No fleets founded yet — be the first.</p>}
+          {factions.length === 0 && <p className="muted">No factions founded yet — be the first.</p>}
         </div>
       </div>
     );
@@ -203,7 +203,7 @@ export function Faction() {
         </h1>
       </div>
       <div className="grid two-col">
-        <Card title="Fleet">
+        <Card title="Faction">
           <p>{own.memberCount} members</p>
           <p>Bank: {(own.bank ?? 0).toLocaleString()} cr</p>
           <div className="button-row">
@@ -224,13 +224,13 @@ export function Faction() {
             )}
           </div>
           <button className="btn-ghost" onClick={leave}>
-            Leave Fleet
+            Leave Faction
           </button>
         </Card>
         <Card title="War">
           {own.war ? (
             <>
-              <p>At war with {factions.find((f) => f.id === own.war!.opponentFactionId)?.name ?? 'unknown fleet'}</p>
+              <p>At war with {factions.find((f) => f.id === own.war!.opponentFactionId)?.name ?? 'unknown faction'}</p>
               <p>
                 Ends in <Timer target={own.war.endsAt} onComplete={loadFactions} />
               </p>
@@ -241,7 +241,7 @@ export function Faction() {
           ) : isLeader ? (
             <>
               <select value={warTarget} onChange={(e) => setWarTarget(e.target.value)}>
-                <option value="">Choose a target fleet…</option>
+                <option value="">Choose a target faction…</option>
                 {factions
                   .filter((f) => f.id !== own.id)
                   .map((f) => (
@@ -259,7 +259,7 @@ export function Faction() {
           )}
         </Card>
       </div>
-      <Card title="Fleet Chat">
+      <Card title="Faction Chat">
         <div className="chat-log">
           {messages.map((m) => (
             <p key={m.id}>

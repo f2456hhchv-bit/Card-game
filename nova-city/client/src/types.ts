@@ -2,6 +2,7 @@ export type Stat = 'strength' | 'defense' | 'speed' | 'dexterity';
 export type ResourceKey = 'fuel' | 'resolve' | 'morale' | 'health';
 export type CharacterStatus = 'ok' | 'jail' | 'hospital' | 'transit';
 export type ItemType = 'weapon' | 'armor' | 'consumable' | 'contraband';
+export type HullClass = 'scout' | 'frigate' | 'cruiser' | 'dreadnought';
 
 export interface ResourcePool {
   fuel: number;
@@ -33,6 +34,13 @@ export interface Character {
   equippedArmorId: string | null;
   inventory: InventoryStack[];
   factionId: string | null;
+  alignment: number;
+  alignmentLabel: string;
+  commandRank: string;
+  shipCount: number;
+  stationCount: number;
+  sectorsControlled: number;
+  exploredSectorIds: string[];
 }
 
 export interface PublicCharacter {
@@ -123,6 +131,72 @@ export interface SalvageEventSummary {
   id: string;
   endsAt: number;
   totalFuel: number;
+}
+
+export interface ShipClass {
+  id: string;
+  hullClass: HullClass;
+  name: string;
+  flavor: string;
+  price: number;
+  firepower: number;
+  shieldHP: number;
+  cargo: number;
+  crewCapacity: number;
+}
+
+export interface Ship {
+  id: string;
+  ownerCharacterId: string;
+  shipClassId: string;
+  name: string;
+  builtAt: number;
+  shipClass?: ShipClass;
+}
+
+export interface FleetSummary {
+  shipCount: number;
+  firepower: number;
+  shieldHP: number;
+  cargo: number;
+  crewCapacity: number;
+}
+
+export interface SectorView {
+  id: string;
+  name: string;
+  flavor: string;
+  scoutFuelCost: number;
+  stationTier: number;
+  stationPrice: number;
+  explored: boolean;
+  alienStrength: number | null;
+  maxAlienStrength: number | null;
+  resourceYield: number | null;
+  cleared: boolean | null;
+  plundered: boolean;
+  hasStation: boolean;
+  controlledByMe: boolean;
+}
+
+export interface SectorAttackOutcome {
+  attackPower: number;
+  damageDealt: number;
+  remainingStrength: number;
+  cleared: boolean;
+  outmatched: boolean;
+  characterDamage: number;
+}
+
+export interface OwnedStation {
+  id: string;
+  sectorId: string;
+  ownerCharacterId: string;
+  tier: number;
+  outputPerHour: number;
+  credits: number;
+  lastCollectedAt: number;
+  sector?: SectorView;
 }
 
 export type WsEvent =
