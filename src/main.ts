@@ -60,6 +60,7 @@ import { GroundLoot } from "./game/loot/GroundLoot";
 import { DEFAULT_LOOT_TUNING, RARITY_LADDER, RARITY_TABLE, type Rarity } from "./game/loot/lootTuning";
 import { applyEliteRewardPackage } from "./game/loot/eliteRewards";
 import { ELITE_REWARD_POOL, pickEliteReward, type EliteRewardDef } from "./game/loot/eliteRewardPool";
+import { SANDBOX_WAVE_REWARDS, pickWaveReward, type WaveRewardDef } from "./game/progression/waveRewards";
 import { HitStopController } from "./engine/feel/HitStop";
 import { DEFAULT_HITSTOP_TUNING } from "./engine/feel/hitStopTuning";
 import { burstCount, createParticle, initParticleForBurst, particleAlpha, resetParticle, stepParticle, type Particle } from "./engine/vfx/Particles";
@@ -4389,6 +4390,7 @@ function executeWave(directive: SpawnDirective): void {
     conductor?.notifyWaveLanded(6);
     wavesLanded += 1; // GP-001: every landed wave counts toward the Build-Defining Path cadence
     checkBossCadence();
+  grantWaveReward(); // GP-FINAL §Wave Rewards: every landed wave, not just the boss-cadence ones.
     return;
   }
   // Remaining generic waves (SwarmWave, MiniBossWave overflow, etc.) — never
@@ -4404,6 +4406,7 @@ function executeWave(directive: SpawnDirective): void {
   conductor?.notifyWaveLanded(count);
   wavesLanded += 1; // GP-001: every landed wave counts toward the Build-Defining Path cadence
   checkBossCadence();
+  grantWaveReward(); // GP-FINAL §Wave Rewards: every landed wave, not just the boss-cadence ones.
 }
 
 /**
@@ -4427,6 +4430,60 @@ function checkBossCadence(): void {
   }
   spawnBoss();
   director?.pauseForBoss();
+}
+
+/**
+ * GP-FINAL §Wave Rewards: the standalone eight-category roster's generic
+ * interpreter — every kind dispatches onto a real, already-existing
+ * mechanism. "reroll" is the first real caller of AF-022's own
+ * `UpgradePool.reroll()`, a framework method its doc comment flagged as
+ * "awaiting its content buyer" — only fires while a level-up offer is
+ * actually showing, a safe no-op otherwise (never a crash, never a wasted
+ * currency spend).
+ */
+function applyWaveReward(reward: WaveRewardDef): void {
+  switch (reward.kind) {
+    case "healHull":
+      playerDefence?.healHull(reward.value);
+      break;
+    case "grantCredits":
+      awardCredits(Math.round(reward.value));
+      break;
+    case "pickupRadius":
+      sandboxBuild.magnetBonus += reward.value;
+      break;
+    case "weaponDamage":
+      sandboxBuild.weaponBonus += reward.value;
+      break;
+    case "passiveUpgrade":
+      if (combatRng) applyUpgrade(combatRng.pick(SANDBOX_PASSIVES.map((p) => p.id)));
+      break;
+    case "reroll":
+      if (currentOffer.length > 0 && upgradePool) currentOffer = upgradePool.reroll(currentOffer.length).choices;
+      break;
+    case "atlasFragment":
+      crafting.addMaterial("atlasFragments", reward.value);
+      persistCrafting();
+      break;
+    case "temporarySpeed":
+      movement?.addModifier({
+        id: "wave-reward-overdrive",
+        kind: "speedMultiplier",
+        multiplier: 1 + reward.value,
+        durationMs: 6000,
+      });
+      break;
+  }
+}
+
+/** GP-FINAL §Wave Rewards: granted automatically on every landed wave — see
+ * waveRewards.ts's own header comment for why this is auto-granted rather
+ * than a modal choice overlay (pacing/"No Dead Time" reasoning). */
+function grantWaveReward(): void {
+  if (!combatRng) return;
+  const reward = pickWaveReward(SANDBOX_WAVE_REWARDS, combatRng.next());
+  applyWaveReward(reward);
+  lootNotices.push({ text: `WAVE REWARD · ${reward.name.toUpperCase()}`, colour: "#7fe0ff", ttlMs: 1800 });
 }
 
 /** AF-035/GP-FINAL: the Boss spawns once per encounter — the Director pauses ordinary spawning for its duration via pauseForBoss/resumeAfterBoss. */

@@ -8,6 +8,8 @@
  * already proven elsewhere in this codebase — no new mechanic invented
  * where one already exists.
  */
+import { pickWeighted } from "../../core/rng/weightedPick";
+
 export const ELITE_REWARD_KINDS = [
   "largeXpCrystal",
   "xpMagnet",
@@ -49,13 +51,7 @@ export const ELITE_REWARD_POOL: readonly EliteRewardDef[] = [
   { id: "elite-reward-ultra-rare-event", name: "Ultra Rare Event Trigger", description: "Something the galaxy rarely allows fires immediately.", kind: "ultraRareEventTrigger", weight: 4, value: 0 },
 ];
 
-/** Weighted pick — the exact algorithm AF-022's UpgradePool.offer() already uses, over a fixed 0..1 roll instead of a live Rng, so it stays a pure function. */
+/** Weighted pick — see pickWeighted (core/rng/weightedPick.ts). */
 export function pickEliteReward(pool: readonly EliteRewardDef[], roll: number): EliteRewardDef {
-  const totalWeight = pool.reduce((sum, reward) => sum + reward.weight, 0);
-  let remaining = roll * totalWeight;
-  for (const reward of pool) {
-    remaining -= reward.weight;
-    if (remaining <= 0) return reward;
-  }
-  return pool[pool.length - 1]!;
+  return pickWeighted(pool, roll);
 }
