@@ -54,6 +54,10 @@ import { generateDrop, type DropTableEntry, type LootDrop } from "./game/loot/Lo
 import { GroundLoot } from "./game/loot/GroundLoot";
 import { DEFAULT_LOOT_TUNING, RARITY_LADDER, RARITY_TABLE, type Rarity } from "./game/loot/lootTuning";
 import { applyEliteRewardPackage } from "./game/loot/eliteRewards";
+import { HitStopController } from "./engine/feel/HitStop";
+import { DEFAULT_HITSTOP_TUNING } from "./engine/feel/hitStopTuning";
+import { burstCount, createParticle, initParticleForBurst, particleAlpha, resetParticle, stepParticle, type Particle } from "./engine/vfx/Particles";
+import type { ParticleBurstKind, ParticleQualityTier } from "./engine/vfx/particleTuning";
 import { SaveSlice } from "./core/save/SaveSlice";
 import { LocalStorageAdapter } from "./core/save/SaveStorage";
 import { ResearchTree, type ResearchSaveData } from "./game/research/ResearchTree";
@@ -449,6 +453,10 @@ const ARENA_OBSTACLES: readonly Obstacle[] = [
 ];
 
 const camera = new Camera(DEFAULT_CAMERA_TUNING, 32, 18);
+// GP-001 §Game Feel: a brief simulation freeze on an impactful moment —
+// deterministic since every trigger site is itself deterministic (a seeded
+// combatRng crit roll, a seeded elite kill, a boss phase advance).
+const hitStop = new HitStopController(DEFAULT_HITSTOP_TUNING);
 let movement: PlayerMovement | null = null;
 let sandboxCanvas: HTMLCanvasElement | null = null;
 
@@ -570,10 +578,17 @@ const popupPool = new Pool<DamagePopup>({
   create: () => ({ x: 0, y: 0, text: "", critical: false, ttlMs: 0, live: false }),
   reset: (p) => (p.live = false),
 });
+// GP-001 §Game Feel: pooled particle bursts — mirrors the popup/projectile
+// pooling above exactly (AF-001 §10). particleRng is its own seeded fork,
+// never combatRng/lootRng, so cosmetic-only spawns never perturb any
+// gameplay-affecting deterministic stream.
+const particlePool = new Pool<Particle>({ create: createParticle, reset: resetParticle });
+let particleRng: Rng | null = null;
 
 let drones: Drone[] = [];
 let projectiles: TestProjectile[] = [];
 let popups: DamagePopup[] = [];
+let particles: Particle[] = [];
 let playerDefence: DefenceState | null = null;
 /** AF-033: enemy status-on-hit applies here — bridges into AF-020 movement exactly as StatusEngine already documents. */
 let playerStatus: StatusEngine | null = null;
@@ -710,7 +725,7 @@ function missionResultsSummary(): string {
 
 /** GP-001 §DEBUG: one combined summary line, extended as each mechanic lands. */
 function gpCoreLoopDebugLine(): string {
-  return `waves ${wavesLanded} · next path offer at wave ${buildPathOfferedAtWave + 5} · chosen [${buildPathRuntime.chosenIds.join(", ") || "none"}] · paths ${BUILD_PATHS.length} · merchant visits ${midRunMerchantVisits} · extraction depth ${extractionDepth} · boss artifacts [${bossArtifactRuntime.heldIds.join(", ") || "none"}]/${BOSS_ARTIFACTS.length}`;
+  return `waves ${wavesLanded} · next path offer at wave ${buildPathOfferedAtWave + 5} · chosen [${buildPathRuntime.chosenIds.join(", ") || "none"}] · paths ${BUILD_PATHS.length} · merchant visits ${midRunMerchantVisits} · extraction depth ${extractionDepth} · boss artifacts [${bossArtifactRuntime.heldIds.join(", ") || "none"}]/${BOSS_ARTIFACTS.length} · hitstop active=${hitStop.isActive} · particles ${particles.length} (pool ${particlePool.freeCount} free) · haptics ${Math.round(gamepad.hapticIntensity * 100)}%`;
 }
 
 // ── Sandbox loot (AF-023): elites always drop, drones sometimes; beams on
@@ -757,6 +772,12 @@ function persistSettings(): void {
   void settingsSlice.save(settings);
   saveCoordinator.recordSave("settings");
   audioMixer.syncFromSettings(settings.audio);
+  // GP-001 §Game Feel: accessibility scales, applied the moment the player
+  // toggles them — mirrors audioMixer.syncFromSettings's own pattern exactly.
+  gamepad.hapticIntensity = settings.accessibility.hapticIntensity;
+  const screenEffectsScale = settings.accessibility.reducedScreenEffects ? 0 : 1;
+  camera.shakeScale = screenEffectsScale;
+  hitStop.intensityScale = screenEffectsScale;
 }
 saveCoordinator.register({
   id: "settings",
@@ -2776,6 +2797,19 @@ function equipmentEffects() {
   return aggregateLoadout(sandboxLoadoutSlots, sandboxEquipmentById, ROSTER_EQUIPMENT_SETS);
 }
 
+/** GP-001 §Game Feel: spawns a burst from the pool at (x, y), scaled by the
+ * player's own settings.performance.particleQuality — AF-044's own
+ * registered field, with no producer until now. */
+function spawnParticleBurst(kind: ParticleBurstKind, x: number, y: number): void {
+  if (!particleRng) return;
+  const count = burstCount(kind, settings.performance.particleQuality as ParticleQualityTier);
+  for (let i = 0; i < count; i += 1) {
+    const particle = particlePool.acquire();
+    initParticleForBurst(particle, kind, x, y, particleRng);
+    particles.push(particle);
+  }
+}
+
 /** GP-001: player-sourced area damage against nearby drones — mirrors AF-034's
  * own mutationEffects.explosionOnDeath packet shape exactly, just aimed the
  * other way. `pullFraction` (Graviton Heart) additionally drags hit drones a
@@ -3381,6 +3415,12 @@ function killDrone(drone: Drone): void {
   bus.emit("EnemyKilled", { enemyId: drone.id, elite: drone.elite, boss: false });
   commanderRuntime?.notifyKill();
   director?.notifyEnemiesRemoved(1, drone.elite ? 1 : 0);
+  if (drone.elite) {
+    // GP-001 §Game Feel: an Elite's death is a real moment — freeze, burst, pulse.
+    hitStop.trigger("eliteKill");
+    spawnParticleBurst("eliteDeath", drone.x, drone.y);
+    gamepad.vibrate("eliteKill");
+  }
   // AF-033: Death Events are configuration over this same unconditional EnemyKilled fact.
   if (hasDeathEvent(drone.def, "xp")) {
     xpPickups?.spawn(drone.elite ? "elite" : drone.def.xpTier, drone.x, drone.y);
@@ -4358,10 +4398,18 @@ function updateSandboxCombat(fixedDtMs: number): void {
         bossDirector.notifyPhaseChanged(lastBossPhaseIndex);
         bossHazardZone.radius = BOSS_HAZARD_BASE_RADIUS * bossDirector.hazardRadiusScaleFor(lastBossPhaseIndex);
         lootNotices.push({ text: "THE ARENA EVOLVES — HOLD YOUR GROUND", colour: "#ffc652", ttlMs: 2600 });
+        // GP-001 §Game Feel: a boss phase change is one of the biggest single beats in a run.
+        hitStop.trigger("bossPhaseChange");
+        spawnParticleBurst("bossPhaseChange", bossMotion.x, bossMotion.y);
+        gamepad.vibrate("bossPhaseChange");
       }
       if (bossRuntime.snapshot.state === "deathSequence") {
         if (!bossRewardsGranted) {
           bossRewardsGranted = true;
+          // GP-001 §Game Feel: the biggest beat in the run.
+          hitStop.trigger("bossDefeated");
+          spawnParticleBurst("explosion", bossMotion.x, bossMotion.y);
+          gamepad.vibrate("bossDefeated");
           grantBossRewards();
           // AF-057 §Boss Memory: victories + fastest kill persist through AF-026's stats.
           if (bossDirector) {
@@ -4671,7 +4719,12 @@ function updateSandboxCombat(fixedDtMs: number): void {
         const weakPoint = sandboxBoss.weakPoints[0];
         if (weakPoint) bossRuntime.applyWeakPointDamage(weakPoint.id, finalDamage * 0.15);
         hitCount += 1;
-        if (result.critical) critCount += 1;
+        if (result.critical) {
+          critCount += 1;
+          hitStop.trigger("criticalHit"); // GP-001 §Game Feel
+          spawnParticleBurst("hitImpact", bossMotion.x, bossMotion.y);
+          gamepad.vibrate("criticalHit");
+        }
         weaponMastery.recordHit(result.critical); // AF-075
         weaponMastery.recordBossDamage(finalDamage);
         bus.emit("DamageDealt", { amount: finalDamage, critical: result.critical, kind: "boss", targetId: sandboxBoss.id });
@@ -4747,7 +4800,12 @@ function updateSandboxCombat(fixedDtMs: number): void {
         if (droneConstellation) appliedDamage *= 1 - droneConstellation.incomingDamageReductionFor(drone.id);
         drone.hull -= appliedDamage;
         hitCount += 1;
-        if (result.critical) critCount += 1;
+        if (result.critical) {
+          critCount += 1;
+          hitStop.trigger("criticalHit"); // GP-001 §Game Feel
+          spawnParticleBurst("hitImpact", drone.x, drone.y);
+          gamepad.vibrate("criticalHit");
+        }
         weaponMastery.recordHit(result.critical); // AF-075
         bus.emit("DamageDealt", { amount: appliedDamage, critical: result.critical, kind: result.kind, targetId: drone.id });
         commanderRuntime?.notifyDamageDealt(appliedDamage);
@@ -4791,6 +4849,11 @@ function updateSandboxCombat(fixedDtMs: number): void {
   }
   projectiles = projectiles.filter((p) => (p.live ? true : (projectilePool.release(p), false)));
   popups = popups.filter((p) => (p.live ? true : (popupPool.release(p), false)));
+  // GP-001 §Game Feel: particle lifetimes + list compaction back into the pool.
+  for (const particle of particles) {
+    if (particle.live && !stepParticle(particle, fixedDtMs)) particle.live = false;
+  }
+  particles = particles.filter((p) => (p.live ? true : (particlePool.release(p), false)));
   drones = drones.filter((d) => d.alive);
 
   playerDefence.update(fixedDtMs);
@@ -4924,9 +4987,11 @@ function startRun(): void {
     onTickDamage: (_kind, amount) => playerDefence?.takeDamage(amount),
   });
   combatRng = new Rng(seed).fork("combat");
+  particleRng = new Rng(seed).fork("particles");
   drones = [];
   projectiles = [];
   popups = [];
+  particles = [];
   hitCount = 0;
   critCount = 0;
   bossRuntime = null; // AF-035: fresh run, fresh Boss — respawns when MiniBoss phase is reached again.
@@ -5047,6 +5112,13 @@ function startRun(): void {
 
 function endRun(result: "victory" | "defeat"): void {
   if (!session) return;
+  if (result === "defeat") {
+    // GP-001 §Game Feel: the run ending is a real moment too — one source of
+    // truth for every defeat path rather than duplicating this at each intake.defeated call site.
+    hitStop.trigger("playerDefeated");
+    gamepad.vibrate("playerDefeated");
+    if (movement) spawnParticleBurst("explosion", movement.snapshot.x, movement.snapshot.y);
+  }
   session.result = result;
   session.playTimeMs = sessionMs;
   director = null;
@@ -5361,6 +5433,17 @@ function drawSandbox(): void {
   ctx.closePath();
   ctx.fill();
   ctx.restore();
+
+  // GP-001 §Game Feel: particle bursts — small fading squares, cheap to draw
+  // in bulk, scaled by settings.performance.particleQuality at spawn time.
+  for (const particle of particles) {
+    if (!particle.live) continue;
+    ctx.globalAlpha = particleAlpha(particle);
+    ctx.fillStyle = particle.colour;
+    const half = particle.size * scale;
+    ctx.fillRect(toX(particle.x) - half, toY(particle.y) - half, half * 2, half * 2);
+    ctx.globalAlpha = 1;
+  }
 
   // Damage numbers: tabular feel, crits gold and larger (AF-002 §9 / AF-003 §4).
   for (const popup of popups) {
@@ -5943,6 +6026,26 @@ function render(): void {
               render();
             },
           ],
+          [
+            // GP-001 §Game Feel: one accessibility switch disables screen
+            // shake AND hit-stop together (AF-018/GP-001's own "disable
+            // camera shake"/"reduce motion" vocabulary, finally wired to a real toggle).
+            `Toggle Reduced Screen Effects (currently ${settings.accessibility.reducedScreenEffects ? "on" : "off"})`,
+            () => {
+              settings = { ...settings, accessibility: { ...settings.accessibility, reducedScreenEffects: !settings.accessibility.reducedScreenEffects } };
+              persistSettings();
+              render();
+            },
+          ],
+          [
+            `Cycle Controller Vibration (currently ${Math.round(settings.accessibility.hapticIntensity * 100)}%)`,
+            () => {
+              const next = settings.accessibility.hapticIntensity >= 1 ? 0 : Math.min(1, settings.accessibility.hapticIntensity + 0.35);
+              settings = { ...settings, accessibility: { ...settings.accessibility, hapticIntensity: next } };
+              persistSettings();
+              render();
+            },
+          ],
           ...(featuredEntry
             ? [
                 [
@@ -5985,6 +6088,13 @@ let fpsWindowStart = performance.now();
 const loop = new GameLoop({
   update: (fixedDtMs) => {
     input.update(fixedDtMs);
+    // GP-001 §Game Feel: hit-stop briefly freezes the entire simulation tick
+    // on an impactful moment. Deterministic: every trigger site is itself
+    // deterministic (a seeded combatRng crit roll, a seeded elite kill, a
+    // boss phase advance), so the same seed always produces the same freeze
+    // pattern — skipping ambient galaxy/faction/economy ticks for at most
+    // 260ms is imperceptible and never varies between replays of the same run.
+    if (hitStop.tick(fixedDtMs)) return;
     // AF-038: the galaxy evolves independent of whatever screen the player is on.
     galaxyRuntime.update(fixedDtMs);
     const galaxyEvent = galaxyRuntime.tryTriggerEvent();

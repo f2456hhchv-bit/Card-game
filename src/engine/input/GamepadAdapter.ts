@@ -5,6 +5,8 @@
  * layout maps drive dynamic button prompts.
  */
 import type { ActionInput } from "./ActionInput";
+import type { HitStopSource } from "../feel/hitStopTuning";
+import { hapticEffectFor } from "./hapticTuning";
 
 /** Standard-mapping button indices → semantic pad codes (layout-agnostic). */
 const BUTTON_CODES: Readonly<Record<number, string>> = {
@@ -48,7 +50,31 @@ export class GamepadAdapter {
 
   layout: PadLayout = "generic";
 
+  /** Accessibility scale, 0–1 (0 disables vibration entirely). Mirrors Camera.shakeScale / HitStopController.intensityScale. */
+  hapticIntensity = 0.7;
+
   constructor(private readonly input: ActionInput) {}
+
+  /**
+   * Best-effort controller vibration on an impactful moment — the same
+   * HitStopSource vocabulary that freezes a frame and shakes the camera.
+   * Silently does nothing on unsupported browsers/pads, no active pad, or
+   * when `hapticIntensity` is 0 (an explicit accessibility off-switch).
+   */
+  vibrate(source: HitStopSource): void {
+    const effect = hapticEffectFor(source, this.hapticIntensity);
+    if (!effect || this.activePadIndex === null) return;
+    const pads = navigator.getGamepads?.() ?? [];
+    const pad = pads[this.activePadIndex];
+    const actuator = (pad as Gamepad & { vibrationActuator?: { playEffect: (type: string, params: Record<string, number>) => Promise<unknown> } })?.vibrationActuator;
+    actuator
+      ?.playEffect("dual-rumble", {
+        duration: effect.durationMs,
+        strongMagnitude: effect.strongMagnitude,
+        weakMagnitude: effect.weakMagnitude,
+      })
+      .catch(() => {});
+  }
 
   /** Poll once per rendered frame. */
   poll(): void {

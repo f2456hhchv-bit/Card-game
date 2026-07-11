@@ -35,6 +35,10 @@ export interface SettingsData {
     /** AF-041 §Accessibility registered this with no producer until now. */
     reducedNotificationMode: boolean;
     largeText: boolean;
+    /** GP-001 §Game Feel: 0 disables controller vibration entirely. */
+    hapticIntensity: number;
+    /** GP-001 §Game Feel: scales screen shake and hit-stop together; 0 disables both. */
+    reducedScreenEffects: boolean;
   };
   controls: {
     invertY: boolean;
@@ -60,7 +64,14 @@ export interface SettingsData {
 export const DEFAULT_SETTINGS: SettingsData = {
   graphics: { resolution: "auto", vsync: true },
   audio: { masterVolume: 0.8, musicVolume: 0.7, sfxVolume: 0.8, muted: false },
-  accessibility: { highContrast: false, colourBlindMode: "none", reducedNotificationMode: false, largeText: false },
+  accessibility: {
+    highContrast: false,
+    colourBlindMode: "none",
+    reducedNotificationMode: false,
+    largeText: false,
+    hapticIntensity: 0.7,
+    reducedScreenEffects: false,
+  },
   controls: { invertY: false, sensitivity: 1 },
   hud: { showDamageNumbers: true, showMinimap: true },
   language: { locale: "en" },
