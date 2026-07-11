@@ -23,7 +23,7 @@ import {
   type RunSessionRecord,
 } from "./game/session/RunSession";
 import { EnemyDirector } from "./game/director/EnemyDirector";
-import { DEFAULT_DIRECTOR_TUNING } from "./game/director/directorTuning";
+import { DEFAULT_DIRECTOR_TUNING, ENVIRONMENTAL_EVENTS } from "./game/director/directorTuning";
 import { ActionInput } from "./engine/input/ActionInput";
 import { KeyboardMouseAdapter } from "./engine/input/KeyboardMouseAdapter";
 import { GamepadAdapter } from "./engine/input/GamepadAdapter";
@@ -59,6 +59,7 @@ import { generateDrop, type DropTableEntry, type LootDrop } from "./game/loot/Lo
 import { GroundLoot } from "./game/loot/GroundLoot";
 import { DEFAULT_LOOT_TUNING, RARITY_LADDER, RARITY_TABLE, type Rarity } from "./game/loot/lootTuning";
 import { applyEliteRewardPackage } from "./game/loot/eliteRewards";
+import { ELITE_REWARD_POOL, pickEliteReward, type EliteRewardDef } from "./game/loot/eliteRewardPool";
 import { HitStopController } from "./engine/feel/HitStop";
 import { DEFAULT_HITSTOP_TUNING } from "./engine/feel/hitStopTuning";
 import { burstCount, createParticle, initParticleForBurst, particleAlpha, resetParticle, stepParticle, type Particle } from "./engine/vfx/Particles";
@@ -765,6 +766,95 @@ function checkLowHealthPassives(): void {
     if (passive.bonus.kind === "shieldRegeneration") playerDefence.healHull(passive.bonus.value);
     else if (passive.bonus.kind === "shieldCapacity") playerDefence.addBarrier(passive.bonus.value);
   }
+}
+
+// GP-FINAL §Elite Rewards: multi-tick reward effects (Temporary Ally,
+// Repair Drone) fire once per second for a few seconds, ticked from the
+// same per-tick location as checkLowHealthPassives — reusing the exact
+// clock-array pattern already established for boss artifacts/passives
+// rather than inventing a second timer mechanism.
+interface ActiveEliteRewardEffect {
+  kind: "temporaryAlly" | "repairDrone";
+  ticksRemaining: number;
+  tickClockMs: number;
+  value: number;
+}
+let activeEliteRewardEffects: ActiveEliteRewardEffect[] = [];
+
+/** GP-FINAL §Elite Rewards: the standalone pool's generic interpreter — every
+ * kind dispatches onto a real, already-existing mechanism (dealAreaDamageToEnemies,
+ * StatusEngine, xpPickups, dropLoot, applyUpgrade, crafting materials,
+ * EnvironmentalEventTriggered) — no new mechanic invented where one exists. */
+function applyEliteReward(reward: EliteRewardDef, x: number, y: number): void {
+  switch (reward.kind) {
+    case "largeXpCrystal":
+      xpPickups?.spawn("ancient", x, y, reward.value);
+      break;
+    case "xpMagnet":
+      if (xpPickups && movement) {
+        const player = movement.snapshot;
+        xpPickups.update(0, player.x, player.y, { pickupRadius: 999, magnetRadius: 999 });
+      }
+      break;
+    case "screenClear":
+      if (movement) {
+        const player = movement.snapshot;
+        dealAreaDamageToEnemies(player.x, player.y, 30, reward.value);
+      }
+      break;
+    case "screenStun":
+      if (movement) {
+        const player = movement.snapshot;
+        for (const other of drones) {
+          if (!other.alive) continue;
+          if (Math.hypot(other.x - player.x, other.y - player.y) <= 30) {
+            other.status.apply({ kind: "stasis", strength: 1, durationMs: reward.value });
+          }
+        }
+      }
+      break;
+    case "rareCache":
+      dropLoot(x, y, { rewardMultiplier: 1, rarityFloor: "epic" });
+      break;
+    case "epicUpgrade":
+      if (combatRng) applyUpgrade(combatRng.pick(SANDBOX_UPGRADES.map((u) => u.id)));
+      break;
+    case "legendaryChance":
+      if (combatRng && combatRng.next() < reward.value) dropLoot(x, y, { rewardMultiplier: 1, rarityFloor: "legendary" });
+      break;
+    case "temporaryAlly":
+    case "repairDrone":
+      activeEliteRewardEffects.push({ kind: reward.kind, ticksRemaining: 3, tickClockMs: 0, value: reward.value });
+      break;
+    case "atlasFragment":
+      crafting.addMaterial("atlasFragments", reward.value);
+      persistCrafting();
+      break;
+    case "ultraRareEventTrigger":
+      if (combatRng) bus.emit("EnvironmentalEventTriggered", { eventType: combatRng.pick(ENVIRONMENTAL_EVENTS) });
+      break;
+  }
+}
+
+/** GP-FINAL §Elite Rewards: ticks Temporary Ally/Repair Drone once per second. */
+function updateEliteRewardEffects(fixedDtMs: number): void {
+  if (activeEliteRewardEffects.length === 0) return;
+  const remaining: ActiveEliteRewardEffect[] = [];
+  for (const effect of activeEliteRewardEffects) {
+    effect.tickClockMs += fixedDtMs;
+    while (effect.tickClockMs >= 1000 && effect.ticksRemaining > 0) {
+      effect.tickClockMs -= 1000;
+      effect.ticksRemaining -= 1;
+      if (effect.kind === "temporaryAlly" && movement) {
+        const player = movement.snapshot;
+        dealAreaDamageToEnemies(player.x, player.y, 6, effect.value);
+      } else if (effect.kind === "repairDrone") {
+        playerDefence?.healHull(effect.value);
+      }
+    }
+    if (effect.ticksRemaining > 0) remaining.push(effect);
+  }
+  activeEliteRewardEffects = remaining;
 }
 
 let xpSystem: XpSystem | null = null;
@@ -3979,6 +4069,14 @@ function killDrone(drone: Drone): void {
       bus.emit("RelicAcquired", { relicId });
     }
   }
+  // GP-FINAL §Elite Rewards: the standalone eleven-entry pool — an EXTRA,
+  // weighted-random, kind-based reward per Elite kill, additive on top of
+  // the guaranteed rarity/power-boosted drop above.
+  if (drone.elite && combatRng) {
+    const reward = pickEliteReward(ELITE_REWARD_POOL, combatRng.next());
+    applyEliteReward(reward, drone.x, drone.y);
+    lootNotices.push({ text: `ELITE REWARD · ${reward.name.toUpperCase()}`, colour: "#ffb454", ttlMs: 2400 });
+  }
   // AF-033: Status Explosion — StatusEngine.apply() in a radius, reusing AF-021's engine exactly.
   if (hasDeathEvent(drone.def, "statusExplosion") && drone.def.attack.mechanism.kind === "ranged") {
     const statusOnHit = drone.def.attack.mechanism.weapon.statusOnHit;
@@ -4471,6 +4569,9 @@ function updateSandboxCombat(fixedDtMs: number): void {
   // edge-triggered proc here — the same per-tick health read as the Near
   // Death check just above, reused rather than duplicated.
   checkLowHealthPassives();
+
+  // GP-FINAL §Elite Rewards: Temporary Ally/Repair Drone tick here.
+  updateEliteRewardEffects(fixedDtMs);
 
   // GP-001 Living Reactor: a slow, steady hull regen pulse — and every pulse
   // detonates, damaging anything standing near the player when it lands.
@@ -5754,6 +5855,7 @@ function startRun(): void {
   sandboxBuild.passiveXpBonus = 0; // GP-004: standalone Passives, xp category
   heldPassiveIds.clear(); // GP-005: instant-effect Passives are held per-run too.
   lowHealthPassiveFired.clear();
+  activeEliteRewardEffects = []; // GP-FINAL: Elite Reward effects are run-scoped too.
   const research = researchEffects();
   sandboxBuild.magnetBonus = research.magnetBonus;
   sandboxBuild.researchWeaponBonus = research.weaponBonus;
