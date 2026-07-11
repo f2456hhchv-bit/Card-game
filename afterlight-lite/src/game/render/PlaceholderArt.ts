@@ -130,3 +130,39 @@ export function drawEntitySprite(
 
   ctx.restore();
 }
+
+/**
+ * Draws a "billboard" entity that always faces the camera (front-on creature
+ * art, as opposed to a top-down directional sprite like a ship). Never
+ * rotates — full rotation would show it upside-down or sideways whenever the
+ * player is above/beside it. Only mirrors horizontally so it still reads as
+ * "facing" left or right.
+ */
+export function drawCreatureSprite(
+  ctx: CanvasRenderingContext2D,
+  artId: string,
+  shape: PlaceholderShape,
+  screenX: number,
+  screenY: number,
+  facingDx: number,
+  scale = 1,
+  flash = 0,
+): void {
+  ctx.save();
+  ctx.translate(screenX, screenY);
+  if (facingDx < 0) ctx.scale(-1, 1);
+  if (flash > 0) ctx.filter = `brightness(${100 + flash * 180}%)`;
+
+  const img = getManifestedImage(artId);
+  if (img) {
+    const maxDim = shape.radius * 2 * scale;
+    const aspect = img.naturalWidth / img.naturalHeight || 1;
+    const w = aspect >= 1 ? maxDim : maxDim * aspect;
+    const h = aspect >= 1 ? maxDim / aspect : maxDim;
+    ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  } else {
+    drawPlaceholderShape(ctx, shape, scale);
+  }
+
+  ctx.restore();
+}

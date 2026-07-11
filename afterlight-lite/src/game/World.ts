@@ -2,6 +2,7 @@ import type { AttachmentSlot, BossDef, BossPhase, EnemyDef } from "./types";
 import { getShipDef } from "./data/shipDefs";
 import { ENEMY_DEFS } from "./data/enemyDefs";
 import { ELITE_DEFS } from "./data/eliteDefs";
+import { BOSS_DEFS } from "./data/bossDefs";
 import { getUpgradeDef } from "./data/upgradeDefs";
 import { computePlayerStats, type AggregatedStats } from "./systems/StatEngine";
 import { updateEnemyBehavior, explodeEnemy, type BehaviorContext } from "./systems/EnemyAI";
@@ -383,6 +384,30 @@ export class World {
         xpValue: def.xpValue,
       }),
     );
+  }
+
+  /** Dev/test helper (see main.ts `#dev`): force-spawns any grunt/elite/boss
+   * by id near the player, regardless of wave. Not used by normal gameplay. */
+  debugSpawnByDefId(defId: string): void {
+    const grunt = ENEMY_DEFS.find((e) => e.id === defId);
+    if (grunt) {
+      this.spawnMinionByDefId(defId, this.player.x + 150, this.player.y);
+      return;
+    }
+    const elite = ELITE_DEFS.find((e) => e.id === defId);
+    if (elite) {
+      const enemy = this.spawnEliteAt(elite, 1, 1, false);
+      enemy.x = this.player.x + 250;
+      enemy.y = this.player.y;
+      return;
+    }
+    const boss = BOSS_DEFS.find((b) => b.id === defId);
+    if (boss) {
+      const enemy = this.spawnBoss(boss, 1, 1);
+      enemy.x = this.player.x + 350;
+      enemy.y = this.player.y;
+      return;
+    }
   }
 
   private randomSpawnPoint(closer = false): { x: number; y: number } {

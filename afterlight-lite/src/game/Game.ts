@@ -54,6 +54,11 @@ export class Game {
     };
   }
 
+  /** Dev/test helper (see main.ts `#dev`): force-spawns an enemy/elite/boss by id. */
+  debugSpawn(defId: string): void {
+    this.world?.debugSpawnByDefId(defId);
+  }
+
   start(): void {
     this.loop.start();
     this.goToShipSelect();

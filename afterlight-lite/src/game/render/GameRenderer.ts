@@ -2,7 +2,7 @@ import type { Renderer } from "../../engine/Renderer";
 import type { Camera } from "../../engine/Camera";
 import type { Input } from "../../engine/Input";
 import type { World } from "../World";
-import { drawEntitySprite } from "./PlaceholderArt";
+import { drawCreatureSprite, drawEntitySprite } from "./PlaceholderArt";
 import { getShipDef } from "../data/shipDefs";
 import { getUpgradeDef } from "../data/upgradeDefs";
 
@@ -77,7 +77,7 @@ function drawStarfield(ctx: CanvasRenderingContext2D, camera: Camera, renderer: 
 function drawEnemy(ctx: CanvasRenderingContext2D, camera: Camera, enemy: World["enemies"][number]): void {
   const sx = camera.worldToScreenX(enemy.x);
   const sy = camera.worldToScreenY(enemy.y);
-  drawEntitySprite(ctx, `enemy.${enemy.defId}`, enemy.shape, sx, sy, enemy.facingAngle, 1, enemy.hitFlash / 0.15);
+  drawCreatureSprite(ctx, `enemy.${enemy.defId}`, enemy.shape, sx, sy, Math.cos(enemy.facingAngle), 1, enemy.hitFlash / 0.15);
 
   if (enemy.tier !== "grunt") {
     const barWidth = enemy.radius * 2.2;

@@ -10,6 +10,11 @@ export const ART_MANIFEST: Record<string, string> = {
   "ship.warhawk": "/art/ships/warhawk.png",
   "ship.specter": "/art/ships/specter.png",
   "ship.voltaic": "/art/ships/voltaic.png",
+
+  // Asteroid Belt
+  "enemy.rockSkitterer": "/art/enemies/rockSkitterer.png",
+  "enemy.asteroidCrusher": "/art/elites/asteroidCrusher.png",
+  "enemy.fractureKing": "/art/bosses/fractureKing.png",
 };
 
 const imageCache = new Map<string, HTMLImageElement | null>();

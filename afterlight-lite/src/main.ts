@@ -13,8 +13,12 @@ function bootGame(): void {
   game.start();
 
   if (location.hash.includes("dev")) {
-    (window as unknown as { __AL_DEBUG__: () => Record<string, unknown> }).__AL_DEBUG__ = () =>
-      game.debugSnapshot();
+    const win = window as unknown as {
+      __AL_DEBUG__: () => Record<string, unknown>;
+      __AL_SPAWN__: (defId: string) => void;
+    };
+    win.__AL_DEBUG__ = () => game.debugSnapshot();
+    win.__AL_SPAWN__ = (defId: string) => game.debugSpawn(defId);
   }
 
   bootScreen?.classList.add("hidden");
