@@ -22,3 +22,6 @@ coverage/
 # Stray local scratch
 scratchpad/
 smoke*.mjs
+
+# NOVA CITY server-local save data (JSON-file datastore)
+nova-city/server/.data/

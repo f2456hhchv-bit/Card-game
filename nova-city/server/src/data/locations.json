@@ -1,0 +1,10 @@
+[
+  { "id": "nova-city", "name": "Nova City Docks", "flavor": "The lawless orbital sprawl you call home. Everything starts and ends here.", "travelMinutes": 0 },
+  { "id": "rust-ring", "name": "The Rust Ring", "flavor": "A derelict shipbreaking ring where salvagers pick over the bones of dead freighters.", "travelMinutes": 5 },
+  { "id": "keth-station", "name": "Keth Station", "flavor": "A grey-market waystation where nobody asks where the cargo came from.", "travelMinutes": 12 },
+  { "id": "verdant-belt", "name": "Verdant Belt", "flavor": "An agri-drone colony ring, greenhouses under glass, quietly rich.", "travelMinutes": 8 },
+  { "id": "obsidian-drift", "name": "Obsidian Drift", "flavor": "A pirate haven lashed together from stolen hulls. Trust no one.", "travelMinutes": 20 },
+  { "id": "halcyon-spire", "name": "Halcyon Spire", "flavor": "A gleaming corporate tower-station. Security is excellent; so is the loot.", "travelMinutes": 15 },
+  { "id": "the-hollows", "name": "The Hollows", "flavor": "A vast wreck field swallowed by a dead nebula. Things still move out there.", "travelMinutes": 25 },
+  { "id": "frostgate", "name": "Frostgate", "flavor": "An ice-mining outpost on a frozen moon, cold enough to crack hull plating.", "travelMinutes": 18 }
+]

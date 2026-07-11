@@ -1,0 +1,25 @@
+[
+  { "id": "item-pipe-wrench", "name": "Rusted Pipe Wrench", "type": "weapon", "tier": 1, "price": 50, "flavor": "Blunt, heavy, effective.", "statBonus": { "strength": 2 } },
+  { "id": "item-mag-pistol", "name": "Mag-Pistol", "type": "weapon", "tier": 1, "price": 120, "flavor": "A coilgun sidearm favored by dock runners.", "statBonus": { "dexterity": 3 } },
+  { "id": "item-vibro-blade", "name": "Vibro Blade", "type": "weapon", "tier": 2, "price": 400, "flavor": "An ultrasonic edge that hums through plating.", "statBonus": { "strength": 5, "dexterity": 2 } },
+  { "id": "item-pulse-rifle", "name": "Pulse Rifle", "type": "weapon", "tier": 2, "price": 650, "flavor": "Standard-issue Halcyon security hardware, off the books.", "statBonus": { "dexterity": 6 } },
+  { "id": "item-graviton-hammer", "name": "Graviton Hammer", "type": "weapon", "tier": 3, "price": 2200, "flavor": "Warps its own inertia on the swing.", "statBonus": { "strength": 12 } },
+  { "id": "item-railgun-mk4", "name": "Railgun MK-IV", "type": "weapon", "tier": 3, "price": 2600, "flavor": "One shot, one hull breach.", "statBonus": { "dexterity": 14 } },
+  { "id": "item-singularity-blade", "name": "Singularity Blade", "type": "weapon", "tier": 4, "price": 9000, "flavor": "A sliver of collapsed matter, folded into an edge.", "statBonus": { "strength": 25, "dexterity": 10 } },
+
+  { "id": "item-scavenger-plating", "name": "Scavenger Plating", "type": "armor", "tier": 1, "price": 90, "flavor": "Scrap plate welded over a flight suit.", "statBonus": { "defense": 3 } },
+  { "id": "item-vac-suit", "name": "Reinforced Vac-Suit", "type": "armor", "tier": 1, "price": 150, "flavor": "Keeps the vacuum out and the punches off.", "statBonus": { "defense": 4, "speed": 1 } },
+  { "id": "item-ceramic-rig", "name": "Ceramic Composite Rig", "type": "armor", "tier": 2, "price": 500, "flavor": "Layered ceramic plate, corporate surplus.", "statBonus": { "defense": 8 } },
+  { "id": "item-void-exosuit", "name": "Void-Forged Exosuit", "type": "armor", "tier": 3, "price": 2400, "flavor": "Powered armor forged in a dead star's shadow.", "statBonus": { "defense": 16, "speed": 3 } },
+  { "id": "item-aegis-mantle", "name": "Aegis Shard Mantle", "type": "armor", "tier": 4, "price": 8500, "flavor": "Legend says it turned a boarding torpedo once.", "statBonus": { "defense": 30 } },
+
+  { "id": "item-fuel-cell", "name": "Fuel Cell", "type": "consumable", "tier": 1, "price": 30, "flavor": "Restores Fuel.", "resourceRestore": { "resource": "fuel", "amount": 40 } },
+  { "id": "item-stim-patch", "name": "Stim Patch", "type": "consumable", "tier": 1, "price": 40, "flavor": "Restores Health.", "healAmount": 40 },
+  { "id": "item-synth-ale", "name": "Synth-Ale", "type": "consumable", "tier": 1, "price": 25, "flavor": "Restores Morale.", "resourceRestore": { "resource": "morale", "amount": 30 } },
+  { "id": "item-adrenal-shot", "name": "Adrenal Shot", "type": "consumable", "tier": 2, "price": 60, "flavor": "Restores Resolve.", "resourceRestore": { "resource": "resolve", "amount": 25 } },
+  { "id": "item-trauma-kit", "name": "Trauma Kit", "type": "consumable", "tier": 2, "price": 150, "flavor": "Restores a large chunk of Health.", "healAmount": 100 },
+
+  { "id": "item-zenith-shard", "name": "Zenith Crystal Shard", "type": "contraband", "tier": 2, "price": 300, "flavor": "Glows faintly. Best sold quickly.", "decays": true },
+  { "id": "item-stolen-datacore", "name": "Stolen Datacore", "type": "contraband", "tier": 2, "price": 250, "flavor": "Encrypted. Someone will pay for this — soon.", "decays": true },
+  { "id": "item-black-isotope", "name": "Black-Market Isotope", "type": "contraband", "tier": 3, "price": 900, "flavor": "Half-life means half its value by next week.", "decays": true }
+]
