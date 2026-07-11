@@ -163,6 +163,9 @@ export interface ShipClass {
   shieldHP: number;
   cargo: number;
   crewCapacity: number;
+  /** sum of strength+defense+speed+dexterity required to buy this class — ties Shipyard access to Training Bay progress */
+  requiredTotalStats: number;
+  certification: string | null;
 }
 
 export interface Ship {

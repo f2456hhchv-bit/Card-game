@@ -159,6 +159,8 @@ export interface ShipClass {
   shieldHP: number;
   cargo: number;
   crewCapacity: number;
+  requiredTotalStats: number;
+  certification: string | null;
 }
 
 export interface Ship {

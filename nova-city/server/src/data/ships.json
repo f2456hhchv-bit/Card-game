@@ -8,7 +8,9 @@
     "firepower": 8,
     "shieldHP": 20,
     "cargo": 10,
-    "crewCapacity": 4
+    "crewCapacity": 4,
+    "requiredTotalStats": 0,
+    "certification": null
   },
   {
     "id": "ship-frigate",
@@ -19,7 +21,9 @@
     "firepower": 35,
     "shieldHP": 90,
     "cargo": 40,
-    "crewCapacity": 12
+    "crewCapacity": 12,
+    "requiredTotalStats": 80,
+    "certification": "Basic Flight Certification"
   },
   {
     "id": "ship-cruiser",
@@ -30,7 +34,9 @@
     "firepower": 90,
     "shieldHP": 220,
     "cargo": 90,
-    "crewCapacity": 30
+    "crewCapacity": 30,
+    "requiredTotalStats": 200,
+    "certification": "Advanced Flight Certification"
   },
   {
     "id": "ship-dreadnought",
@@ -41,6 +47,8 @@
     "firepower": 260,
     "shieldHP": 600,
     "cargo": 150,
-    "crewCapacity": 80
+    "crewCapacity": 80,
+    "requiredTotalStats": 400,
+    "certification": "Command Certification"
   }
 ]

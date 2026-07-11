@@ -42,6 +42,9 @@ export function Galaxy() {
 
   if (!character) return null;
 
+  const trainedStats =
+    character.stats.strength + character.stats.defense + character.stats.speed + character.stats.dexterity;
+
   const run = async <T,>(key: string, action: () => Promise<T>) => {
     setBusy(key);
     try {
@@ -169,23 +172,35 @@ export function Galaxy() {
       <h2 className="section-title">
         <Icon name="ship" size={14} /> Shipyard
       </h2>
+      <p className="muted">
+        Higher hull classes require Training Bay progress — total trained stats: <strong>{trainedStats}</strong>
+      </p>
       <div className="grid three-col">
-        {catalog.map((cls) => (
-          <Card key={cls.id} title={cls.name}>
-            <p className="muted small">{cls.flavor}</p>
-            <p className="small">
-              {cls.firepower} firepower · {cls.shieldHP} shields · {cls.crewCapacity} crew
-            </p>
-            <p>{cls.price.toLocaleString()} cr</p>
-            <button
-              className="btn-primary"
-              disabled={busy !== null || character.credits < cls.price}
-              onClick={() => buyShip(cls)}
-            >
-              {busy === `buy-${cls.id}` ? 'Building…' : 'Build'}
-            </button>
-          </Card>
-        ))}
+        {catalog.map((cls) => {
+          const locked = trainedStats < cls.requiredTotalStats;
+          return (
+            <Card key={cls.id} title={cls.name}>
+              <p className="muted small">{cls.flavor}</p>
+              <p className="small">
+                {cls.firepower} firepower · {cls.shieldHP} shields · {cls.crewCapacity} crew
+              </p>
+              {cls.certification && (
+                <p className={locked ? 'small warn' : 'small muted'}>
+                  {cls.certification} — {cls.requiredTotalStats} total stats
+                  {locked ? ` (you're at ${trainedStats})` : ' ✓'}
+                </p>
+              )}
+              <p>{cls.price.toLocaleString()} cr</p>
+              <button
+                className="btn-primary"
+                disabled={busy !== null || locked || character.credits < cls.price}
+                onClick={() => buyShip(cls)}
+              >
+                {busy === `buy-${cls.id}` ? 'Building…' : locked ? 'Training required' : 'Build'}
+              </button>
+            </Card>
+          );
+        })}
       </div>
 
       {stations.length > 0 && (

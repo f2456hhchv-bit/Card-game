@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { trainingGain } from '../src/domain/training.js';
+import { totalStatPoints, trainingGain } from '../src/domain/training.js';
 
 describe('trainingGain', () => {
   it('grants more gain for the same fuel at a lower current stat value', () => {
@@ -16,5 +16,11 @@ describe('trainingGain', () => {
 
   it('never returns less than 1', () => {
     expect(trainingGain(100_000, 1)).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('totalStatPoints', () => {
+  it('sums all four stats', () => {
+    expect(totalStatPoints({ strength: 10, defense: 20, speed: 5, dexterity: 15 })).toBe(50);
   });
 });

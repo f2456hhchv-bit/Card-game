@@ -4,6 +4,7 @@ import { requireAuth } from '../auth/middleware.js';
 import { requireCharacter, characterView } from './helpers.js';
 import { characters, ships, shipClasses } from '../store/collections.js';
 import { summarizeFleet } from '../domain/fleet.js';
+import { totalStatPoints } from '../domain/training.js';
 import { newId } from '../util/ids.js';
 
 export const fleetRouter = Router();
@@ -31,6 +32,13 @@ fleetRouter.post('/ships', (req: AuthedRequest, res) => {
   const shipClass = typeof shipClassId === 'string' ? shipClasses.get(shipClassId) : undefined;
   if (!shipClass) {
     res.status(404).json({ error: 'Unknown ship class' });
+    return;
+  }
+  const trained = totalStatPoints(character.stats);
+  if (trained < shipClass.requiredTotalStats) {
+    res.status(409).json({
+      error: `${shipClass.certification ?? 'More training'} required — train up to ${shipClass.requiredTotalStats} total stats first (you're at ${trained}).`,
+    });
     return;
   }
   if (character.credits < shipClass.price) {

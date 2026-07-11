@@ -164,7 +164,11 @@ friends" above.
 - **Galaxy Command** — the bigger "space frontier" layer, in AFTERLIGHT's
   spirit (a universe that lost its light and is rebuilding):
   - **Fleet** — every pilot starts with one Scout Skiff; buy Frigates,
-    Cruisers, and Dreadnoughts from the Shipyard to grow your fleet power
+    Cruisers, and Dreadnoughts from the Shipyard to grow your fleet power.
+    Higher hull classes are gated behind Training Bay progress (total
+    trained stats: 80 / 200 / 400), so ship access tiers with active play
+    the same way Torn's education/certification gates do — not idle
+    waiting, since stats only grow by actually training
   - **Sectors** — ~10 shared sectors with Hollow-touched hostile presence
     that grows over real time the longer it goes unchecked (fog-of-war until
     scouted)
