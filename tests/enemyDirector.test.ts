@@ -231,3 +231,47 @@ describe("EnemyDirector — simulated mission invariants (AF-017 self-review, 30
     expect(director.snapshot.phase).toBe("Reward");
   });
 });
+
+/**
+ * GP-FINAL §Run Structure — the audit found the phase cycle terminated into
+ * a permanent BossHandoff after one ~128s pass, with no wave-count-driven
+ * boss cadence and no way for ordinary pacing to resume after a boss dies.
+ * `loop` and pauseForBoss/resumeAfterBoss are additive: every test above
+ * (default loop:false) is untouched — these tests guard the new opt-in path.
+ */
+describe("EnemyDirector — loop + externally-triggered boss encounters (GP-FINAL §Run Structure)", () => {
+  it("without loop, the cycle still terminates into BossHandoff exactly as before (default unchanged)", () => {
+    const director = new EnemyDirector({ tuning: fastTuning, rng: new Rng(11).fork("director"), threatInputs: baseInputs });
+    for (let i = 0; i < 5000 && director.snapshot.phase !== "BossHandoff"; i += 1) director.update(16);
+    expect(director.snapshot.phase).toBe("BossHandoff");
+  });
+
+  it("with loop:true, the cycle never reaches BossHandoff — it wraps back to the start indefinitely", () => {
+    const director = new EnemyDirector({ tuning: fastTuning, rng: new Rng(11).fork("director"), threatInputs: baseInputs, loop: true });
+    const phasesSeen = new Set<DirectorPhase>();
+    for (let i = 0; i < 20000; i += 1) {
+      director.update(16);
+      phasesSeen.add(director.snapshot.phase);
+    }
+    expect(director.snapshot.phase).not.toBe("BossHandoff");
+    // the cycle genuinely repeats — Recovery (the first phase) is revisited many times over 20000 ticks.
+    expect(phasesSeen.has("Recovery")).toBe(true);
+    expect(phasesSeen.size).toBeGreaterThan(1);
+  });
+
+  it("pauseForBoss stops the budget/decision loop without moving the phase sequence's own position", () => {
+    const director = new EnemyDirector({ tuning: fastTuning, rng: new Rng(3).fork("director"), threatInputs: baseInputs, loop: true });
+    for (let i = 0; i < 50; i += 1) director.update(16);
+    const phaseBefore = director.snapshot.phase;
+    const budgetBefore = director.snapshot.budget;
+    director.pauseForBoss();
+    expect(director.snapshot.bossActive).toBe(true);
+    for (let i = 0; i < 500; i += 1) director.update(16);
+    expect(director.snapshot.phase).toBe(phaseBefore); // frozen — no phase advancement while paused
+    expect(director.snapshot.budget).toBeCloseTo(budgetBefore, 5); // frozen — no budget accrual either
+    director.resumeAfterBoss();
+    expect(director.snapshot.bossActive).toBe(false);
+    director.update(16);
+    expect(director.snapshot.budget).toBeGreaterThan(budgetBefore); // resumes accruing immediately
+  });
+});

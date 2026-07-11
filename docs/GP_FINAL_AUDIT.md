@@ -43,4 +43,25 @@ GP-FINAL locks when: GP-001 → GP-005 are delivered and reconciled · the refer
 
 ---
 
-*First execution recorded 2026-07-06. Next execution: at the next playable milestone or on arrival of the missing packs, whichever comes first.*
+## 4. Second execution — 2026-07-11, GP-001 → GP-005 now delivered and reconciled
+
+Prerequisite met: GP-001 (core gameplay loop), GP-002 (enemy/wave/difficulty), GP-003 (meta progression), GP-004 (content engine), GP-005 (balance + passive triggers) are all complete and locked (`docs/modules/STATUS.md`). A fresh three-part audit re-ran specifically against **Run Structure**, the item §2's first execution named "tuning data changes once wave-based content arrives."
+
+**Run Structure moves PARTIAL → REAL**, for the pieces the Project Owner chose to fix this round:
+- Mini Boss every 5 waves, Major Boss every 10 — both now real, wave-count-driven, decoupled from the Director's own pacing phase (which the audit found terminated after one ~128s pass with no repeat mechanism at all — now loops for the run's whole length via a new additive `EnemyDirector` `loop` option).
+- Extraction after each Major Boss — now real; a Mini Boss defeat correctly does NOT satisfy the mission's primary objective (a new `bossTier` field on the `EnemyKilled` event lets the mission-objective listener tell the tiers apart).
+- 10-15 minute run length — addressed structurally (the run can now genuinely last that long across several boss cycles) rather than by a hardcoded timer, preserving the Extraction Decision's own player-agency framing.
+
+**Still FAIL/FLAGGED, unchanged by this execution (real, open, not re-scoped away):**
+1. Level-up content law violation — `SANDBOX_UPGRADES`' plain stat-percentage entries are still declared placeholders; unchanged.
+2. Wave rewards do not exist — audited again this round, confirmed still MISSING, not selected for this pass.
+3. Elite reward pool — audited again this round: only 1 of 11 named types has a real mechanism (a rarity/power-boosted drop); the other 10 (Screen Clear, Screen Stun, XP Magnet, Temporary Ally, Repair Drone, etc.) remain MISSING, not selected for this pass.
+4. The 6-weapon/6-passive build frame — newly confirmed by this execution's audit to be entirely unbuilt: combat runs on exactly one hardcoded weapon (`SANDBOX_WEAPONS[0]`), never swapped; no passive-slot cap exists either. This is now understood to be a core-combat-loop rework, not a bounded content addition — recommended as its own dedicated future module rather than a GP-FINAL bucket.
+
+**Full details, implementation record, and verification:** `docs/modules/GP-FINAL-gameplay-audit.md`'s "Second execution" section (2026-07-11).
+
+**Lock condition still not met** — §3's own bar ("the flagged items above are resolved") requires all four FAIL/FLAGGED items closed; only Run Structure (a PARTIAL item, not one of the four FAIL/FLAGGED items) was addressed this round, and even that only to the extent of the Project Owner's chosen scope. GP-FINAL remains open.
+
+---
+
+*First execution recorded 2026-07-06. Second execution recorded 2026-07-11. Next execution: at the next playable milestone or on the Project Owner's next scope choice, whichever comes first.*

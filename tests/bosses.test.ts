@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BOSS_TRANSITIONS, createBossStateMachine } from "../src/game/bosses/BossAI";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "../src/game/bosses/BossArena";
-import { SANDBOX_BOSSES, WORLD_BOSS, createWorldBossVariant } from "../src/game/bosses/bossData";
+import { MINI_BOSS, SANDBOX_BOSSES, WORLD_BOSS, createMiniBossVariant, createWorldBossVariant } from "../src/game/bosses/bossData";
 import { BossRuntime } from "../src/game/bosses/BossRuntime";
 import { DEFAULT_COMBAT_TUNING } from "../src/game/combat/combatTuning";
 
@@ -205,5 +205,51 @@ describe("GP-002 — World Boss variant (§Enemy Hierarchy)", () => {
     boss.begin();
     expect(boss.snapshot.state).toBe("engaging");
     expect(boss.snapshot.maxHull).toBe(WORLD_BOSS.hull);
+  });
+});
+
+/**
+ * GP-FINAL §Run Structure — the audit found only one boss tier existed (the
+ * ordinary Boss, once per run, on a fixed timer, never wave-count-driven).
+ * createMiniBossVariant is createWorldBossVariant's own scaling pattern
+ * inverted — fewer phases and reduced hull, over the exact same engine.
+ */
+describe("GP-FINAL — Mini Boss variant (§Run Structure)", () => {
+  it("createMiniBossVariant reduces hull and truncates phases while reusing weak-points/enrage/mastery unchanged", () => {
+    const miniBoss = createMiniBossVariant(bossDef, 0.4, 2);
+    expect(miniBoss.hull).toBe(bossDef.hull * 0.4);
+    expect(miniBoss.phases.length).toBe(2);
+    expect(miniBoss.phases).toEqual(bossDef.phases.slice(0, 2));
+    expect(miniBoss.threatRating).toBeLessThan(bossDef.threatRating);
+    expect(miniBoss.weakPoints).toBe(bossDef.weakPoints);
+    expect(miniBoss.enrage).toBe(bossDef.enrage);
+    expect(miniBoss.masteryChallenges).toBe(bossDef.masteryChallenges);
+    expect(miniBoss.id).not.toBe(bossDef.id);
+    expect(miniBoss.id).not.toBe(WORLD_BOSS.id);
+    expect(miniBoss.codexId).not.toBe(bossDef.codexId);
+  });
+
+  it("does not mutate the base BossDef", () => {
+    const hullBefore = bossDef.hull;
+    const phasesBefore = bossDef.phases;
+    createMiniBossVariant(bossDef, 0.2, 1);
+    expect(bossDef.hull).toBe(hullBefore);
+    expect(bossDef.phases).toBe(phasesBefore);
+  });
+
+  it("phaseCount is clamped to at least one phase — never an empty, unplayable boss", () => {
+    const miniBoss = createMiniBossVariant(bossDef, 0.3, 0);
+    expect(miniBoss.phases.length).toBe(1);
+    expect(miniBoss.phaseSystem).toBe("onePhase");
+  });
+
+  it("MINI_BOSS is a real, distinct, playable, genuinely lighter BossDef than the ordinary Boss and the World Boss", () => {
+    expect(MINI_BOSS.hull).toBeLessThan(SANDBOX_BOSSES[0]!.hull);
+    expect(MINI_BOSS.hull).toBeLessThan(WORLD_BOSS.hull);
+    expect(MINI_BOSS.phases.length).toBeLessThan(SANDBOX_BOSSES[0]!.phases.length);
+    const boss = new BossRuntime(MINI_BOSS, DEFAULT_COMBAT_TUNING);
+    boss.begin();
+    expect(boss.snapshot.state).toBe("engaging");
+    expect(boss.snapshot.maxHull).toBe(MINI_BOSS.hull);
   });
 });

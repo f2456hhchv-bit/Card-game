@@ -26,8 +26,11 @@ export interface GameEvents extends Record<string, unknown> {
   SpawnDirectiveIssued: { waveType: string; budgetCost: number; eliteCount: number };
   /** The Enemy Director triggered an environmental event (AF-017 §5). */
   EnvironmentalEventTriggered: { eventType: string };
-  /** An enemy was defeated (AF-021 §7) — XP/loot/research/achievements subscribe. */
-  EnemyKilled: { enemyId: string; elite: boolean; boss: boolean };
+  /** An enemy was defeated (AF-021 §7) — XP/loot/research/achievements subscribe.
+   * GP-FINAL §Run Structure: bossTier is optional and boss-kills-only — a
+   * Mini Boss defeat must not satisfy "missionBossDefeated" (only a Major
+   * Boss should), so the listener needs to tell them apart. */
+  EnemyKilled: { enemyId: string; elite: boolean; boss: boolean; bossTier?: "mini" | "major" };
   /** The player took hull/shield damage (AF-021 §4). */
   PlayerDamaged: { amount: number; source: string };
   /** A damage resolution landed on a target (AF-021 §1). */

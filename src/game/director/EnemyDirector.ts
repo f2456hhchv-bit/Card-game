@@ -76,6 +76,15 @@ export interface EnemyDirectorOptions {
   onDirective?: (directive: SpawnDirective) => void;
   onPhaseChanged?: (from: DirectorPhase, to: DirectorPhase) => void;
   onEnvironmentalEvent?: (event: EnvironmentalEventType) => void;
+  /**
+   * GP-FINAL §Run Structure: when true, the phase cycle wraps back to its
+   * start once exhausted instead of handing off to BossHandoff — boss
+   * encounters are triggered externally, by wave count, via pauseForBoss/
+   * resumeAfterBoss below. Defaults to false, so every existing caller's
+   * terminate-into-BossHandoff behaviour (and the tests asserting it) is
+   * unchanged unless a caller opts in.
+   */
+  loop?: boolean;
 }
 
 export class EnemyDirector implements System {
@@ -99,11 +108,17 @@ export class EnemyDirector implements System {
   private lastWave: WaveType | null = null;
   private lastEnvironmentalEvent: EnvironmentalEventType | null = null;
   private bossActive = false;
+  private readonly loop: boolean;
+  /** GP-FINAL §Run Structure: true while an externally-triggered (wave-count
+   * driven) boss encounter is live — spawning pauses without touching the
+   * phase sequence's own position, so it resumes exactly where it left off. */
+  private externallyPaused = false;
 
   constructor(options: EnemyDirectorOptions) {
     this.tuning = options.tuning;
     this.rng = options.rng;
     this.threatInputs = options.threatInputs;
+    this.loop = options.loop ?? false;
     this.onDirective = options.onDirective;
     this.onPhaseChanged = options.onPhaseChanged;
     this.onEnvironmentalEvent = options.onEnvironmentalEvent;
@@ -115,7 +130,7 @@ export class EnemyDirector implements System {
   }
 
   update(fixedDtMs: number): void {
-    if (this.phase === "BossHandoff" || this.phase === "Reward") return;
+    if (this.externallyPaused || this.phase === "BossHandoff" || this.phase === "Reward") return;
 
     this.elapsedMs += fixedDtMs;
     const intensity = this.tuning.phaseIntensity[this.phase];
@@ -169,6 +184,23 @@ export class EnemyDirector implements System {
     this.setPhase("Reward");
   }
 
+  /**
+   * GP-FINAL §Run Structure: pause spawning for an externally-triggered
+   * (wave-count driven) boss encounter — Mini/Major Boss, or the existing
+   * Push-Deeper World Boss roll — without touching the phase sequence's own
+   * position, so ordinary pacing resumes exactly where it left off after.
+   */
+  pauseForBoss(): void {
+    this.externallyPaused = true;
+    this.bossActive = true;
+  }
+
+  /** GP-FINAL §Run Structure: resume ordinary spawning once the boss encounter ends. */
+  resumeAfterBoss(): void {
+    this.externallyPaused = false;
+    this.bossActive = false;
+  }
+
   private decide(): void {
     const options = this.tuning.wavesByPhase[this.phase];
     if (!options || options.length === 0) return;
@@ -213,6 +245,17 @@ export class EnemyDirector implements System {
     this.stepIndex += 1;
     const step = this.tuning.phaseSequence[this.stepIndex];
     if (!step) {
+      // GP-FINAL §Run Structure: looping directors wrap back to the start of
+      // the cycle instead of terminating — boss encounters are triggered
+      // externally, by wave count, via pauseForBoss/resumeAfterBoss, so the
+      // ordinary pacing cycle keeps running for the whole (now longer) run.
+      if (this.loop) {
+        this.stepIndex = 0;
+        const first = this.tuning.phaseSequence[0]!;
+        this.phaseRemainingMs = this.jitteredDuration(first.durationMs);
+        this.setPhase(first.phase);
+        return;
+      }
       // Cycle complete: hand the encounter to the Boss (AF-017 §5).
       this.bossActive = true;
       this.onDirective?.(this.makeDirective("BossWave", 0, 0));

@@ -356,3 +356,30 @@ export function createWorldBossVariant(base: BossDef, hullMultiplier: number): B
 
 /** The one World Boss content actually authored today — a scaled Hollow Sentinel. */
 export const WORLD_BOSS: BossDef = createWorldBossVariant(SANDBOX_BOSSES[0]!, 1.75);
+
+/**
+ * GP-FINAL §Run Structure: "Mini Boss every 5 waves, Major Boss every 10" —
+ * the audit found only one boss tier existed (the ordinary Boss, once per
+ * run, on a fixed timer, never wave-count-driven). A Mini Boss reuses this
+ * exact scaling pattern INVERTED — fewer phases (a genuinely shorter, less
+ * dangerous fight, not a re-skinned identical encounter) and reduced hull —
+ * over the same phase/weak-point/enrage/mastery-challenge/reward engine, no
+ * second boss-content model.
+ */
+export function createMiniBossVariant(base: BossDef, hullMultiplier: number, phaseCount: number): BossDef {
+  const phases = base.phases.slice(0, Math.max(1, phaseCount));
+  return {
+    ...base,
+    id: `${base.id}-mini-boss`,
+    name: `${base.name} Vanguard`,
+    title: `Lesser ${base.title}`,
+    threatRating: Math.max(1, base.threatRating - 2),
+    hull: base.hull * hullMultiplier,
+    phaseSystem: phases.length >= 2 ? "twoPhase" : "onePhase",
+    phases,
+    codexId: `${base.codexId}-mini-boss`,
+  };
+}
+
+/** The one Mini Boss content authored today — a lighter, two-phase Hollow Sentinel encounter. */
+export const MINI_BOSS: BossDef = createMiniBossVariant(SANDBOX_BOSSES[0]!, 0.35, 2);

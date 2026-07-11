@@ -16,6 +16,7 @@ import {
   type GameStateId,
 } from "./game/states/GameStates";
 import {
+  RUN_PHASES,
   advancePhase,
   createRunSession,
   type RunPhase,
@@ -354,7 +355,7 @@ import { DirectorConductor } from "./game/director/DirectorConductor";
 import { WAVE_TYPE_TO_ENCOUNTER_TYPE, pressureFor } from "./game/director/conductorData";
 import { BossDirectorRuntime } from "./game/bosses/BossDirector";
 import { SANDBOX_BOSS_SUMMON_PLAN, beatFor } from "./game/bosses/bossDirectorData";
-import { SANDBOX_BOSSES, WORLD_BOSS } from "./game/bosses/bossData";
+import { MINI_BOSS, SANDBOX_BOSSES, WORLD_BOSS } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
 import { SANDBOX_BIOMES, type BiomeDef } from "./game/biomes/biomeData";
@@ -1157,7 +1158,7 @@ function persistMeta(): void {
 saveCoordinator.register({ id: "meta", toSave: () => meta.toSave(), loadSave: (data) => meta.loadSave(data) });
 
 // The ledger listens; gameplay systems never know meta exists (AF-001 §7).
-bus.on("EnemyKilled", ({ enemyId, elite, boss }) => {
+bus.on("EnemyKilled", ({ enemyId, elite, boss, bossTier }) => {
   // AF-056: breathing room after Elite Battles and Boss Phases — pacing, not stats.
   if (elite) conductor?.openRecoveryWindow("eliteBattles");
   if (boss) conductor?.openRecoveryWindow("bossPhases");
@@ -1174,8 +1175,11 @@ bus.on("EnemyKilled", ({ enemyId, elite, boss }) => {
   meta.discover("enemies", killedDrone?.codexId ?? enemyId);
   if (!boss) audioEngine.play(elite ? "cue-elite-death" : "cue-enemy-death"); // AF-045.
   // AF-037: mission objective progress — the same EnemyKilled fact every prior module already reads.
-  if (boss) missionRuntime?.recordProgress("missionBossDefeated");
-  else {
+  // GP-FINAL §Run Structure: a Mini Boss defeat must not satisfy the
+  // mission's primary objective — only a Major Boss (or World Boss, also
+  // "major" tier) should make Extraction reachable.
+  if (boss && bossTier !== "mini") missionRuntime?.recordProgress("missionBossDefeated");
+  else if (!boss) {
     missionRuntime?.recordProgress("missionKills");
     if (elite) missionRuntime?.recordProgress("missionElitesKilled");
   }
@@ -1313,10 +1317,16 @@ bus.on("LootDropped", ({ rarity }) => {
     audioEngine.play("cue-legendary-drop"); // AF-045: Player Feedback.
   }
 });
-// AF-035: the Boss spawns when the Director's existing MiniBoss phase begins — no Director change.
 // AF-037: automatic RunPhase advancement replaces the placeholder manual "Advance Run Phase" button.
+// GP-FINAL §Run Structure: the Boss used to spawn here, once, when the
+// Director's pacing cycle first reached its "MiniBoss" phase — now the
+// Director loops that same pacing cycle for the run's whole length, and
+// boss encounters (real Mini/Major tiers) are triggered by wave count
+// instead (checkBossCadence, called from executeWave). This listener still
+// syncs the coarse RunPhase narrative label to the pacing cycle's own
+// phase names — harmless to keep firing every time the cycle loops back
+// through them, since advanceRunPhaseTo only ever moves forward once.
 bus.on("DirectorPhaseChanged", ({ to }) => {
-  if (to === "MiniBoss" && !bossRuntime) spawnBoss();
   if (to === "LightContact") advanceRunPhaseTo("EarlyExploration");
   else if (to === "Combat" || to === "HeavyCombat") advanceRunPhaseTo("EnemyEscalation");
   else if (to === "ElitePressure") advanceRunPhaseTo("EliteEncounters");
@@ -3049,6 +3059,9 @@ let weaponRuntime: WeaponRuntime | null = null;
 // sandboxBoss below already reads it dynamically, never a captured snapshot.
 let sandboxBoss = SANDBOX_BOSSES[0]!;
 let bossRuntime: BossRuntime | null = null;
+// GP-FINAL §Run Structure: which tier the currently-live (or most recently
+// resolved) boss encounter is — only a "major" defeat re-offers Extraction.
+let currentBossTier: "mini" | "major" = "major";
 let bossMotion = { x: 0, y: 0, elapsedMs: 0, strafeDirection: 1 as 1 | -1, phase: "hidden" as "hidden" | "active" };
 let bossIntroRemainingMs = 0;
 let bossRewardsGranted = false;
@@ -4277,6 +4290,7 @@ function executeWave(directive: SpawnDirective): void {
     // AF-056: a full faction group is a Large Enemy Wave — it earns breathing room.
     conductor?.notifyWaveLanded(6);
     wavesLanded += 1; // GP-001: every landed wave counts toward the Build-Defining Path cadence
+    checkBossCadence();
     return;
   }
   // Remaining generic waves (SwarmWave, MiniBossWave overflow, etc.) — never
@@ -4291,9 +4305,33 @@ function executeWave(directive: SpawnDirective): void {
   director.notifyEnemiesSpawned(count, 0);
   conductor?.notifyWaveLanded(count);
   wavesLanded += 1; // GP-001: every landed wave counts toward the Build-Defining Path cadence
+  checkBossCadence();
 }
 
-/** AF-035: the Boss spawns once per run, triggered by the Director's existing MiniBoss phase. */
+/**
+ * GP-FINAL §Run Structure: "Mini Boss every 5 waves, Major Boss every 10" —
+ * the audit found only one boss tier existed, spawned once per run on a
+ * fixed timer, never wave-count-driven. Wave-count-driven and decoupled
+ * from the Director's own (now-looping) pacing phase; only fires when no
+ * boss fight is currently live, reusing the exact "bossAvailable" guard the
+ * Push-Deeper World Boss roll already established.
+ */
+function checkBossCadence(): void {
+  if (wavesLanded === 0 || wavesLanded % 5 !== 0) return;
+  const bossAvailable = !bossRuntime || bossRuntime.snapshot.state === "rewardCeremony";
+  if (!bossAvailable) return;
+  if (wavesLanded % 10 === 0) {
+    currentBossTier = "major";
+    sandboxBoss = SANDBOX_BOSSES[0]!;
+  } else {
+    currentBossTier = "mini";
+    sandboxBoss = MINI_BOSS;
+  }
+  spawnBoss();
+  director?.pauseForBoss();
+}
+
+/** AF-035/GP-FINAL: the Boss spawns once per encounter — the Director pauses ordinary spawning for its duration via pauseForBoss/resumeAfterBoss. */
 function spawnBoss(): void {
   if (!movement) return;
   const player = movement.snapshot;
@@ -5063,9 +5101,23 @@ function updateSandboxCombat(fixedDtMs: number): void {
               `TIME ${(bossFightElapsedMs / 1000).toFixed(1)}s · BEST ${(meta.stat(bestKey) / 1000).toFixed(1)}s`,
             ]);
           }
-          bus.emit("EnemyKilled", { enemyId: sandboxBoss.id, elite: false, boss: true });
+          bus.emit("EnemyKilled", { enemyId: sandboxBoss.id, elite: false, boss: true, bossTier: currentBossTier });
           conductor?.recordKill(); // GP-002: a boss kill counts toward Average Kill Speed too.
-          advanceRunPhaseTo("RewardPhase");
+          director?.resumeAfterBoss(); // GP-FINAL §Run Structure: ordinary spawning resumes now the fight is over.
+          if (session && RUN_PHASES.indexOf(session.phase) < RUN_PHASES.indexOf("RewardPhase")) {
+            // First boss encounter this run — drives the one-time RunSession
+            // lifecycle forward exactly as before (Spawn→…→Extraction→Results).
+            advanceRunPhaseTo("RewardPhase");
+          } else if (
+            currentBossTier === "major" &&
+            session?.phase === "Extraction" &&
+            machine.overlays.at(-1) !== "ExtractionDecision"
+          ) {
+            // GP-FINAL §Run Structure: a repeat Major Boss defeat re-offers
+            // Extraction directly — the one-time RunSession lifecycle
+            // already reached its resting phase, so it isn't walked again.
+            machine.pushOverlay("ExtractionDecision");
+          }
         }
         bossRuntime.ai.transitionTo("rewardCeremony");
       } else {
@@ -5669,8 +5721,9 @@ function startRun(): void {
   particles = [];
   hitCount = 0;
   critCount = 0;
-  bossRuntime = null; // AF-035: fresh run, fresh Boss — respawns when MiniBoss phase is reached again.
+  bossRuntime = null; // AF-035: fresh run, fresh Boss — respawns on the next wave-count cadence hit.
   sandboxBoss = SANDBOX_BOSSES[0]!; // GP-002: a fresh run always starts with the ordinary boss, never a leftover World Boss.
+  currentBossTier = "major"; // GP-FINAL: fresh run, fresh tier tracking.
   bossDirector = null; // AF-057: the director lives and dies with its encounter.
   outlawSquads = []; // AF-046: squads and mines are run-scoped, like every combat structure here.
   outlawMines = [];
@@ -5767,6 +5820,11 @@ function startRun(): void {
     tuning: missionRuntime.eliteSquadSizeBonus !== 0
       ? { ...DEFAULT_DIRECTOR_TUNING, eliteSquadSize: DEFAULT_DIRECTOR_TUNING.eliteSquadSize + missionRuntime.eliteSquadSizeBonus }
       : DEFAULT_DIRECTOR_TUNING,
+    // GP-FINAL §Run Structure: the pacing cycle now runs for the whole
+    // (10-15 minute) run instead of terminating after one ~2min pass — real
+    // boss encounters are wave-count-driven (checkBossCadence), decoupled
+    // from this cycle's own position, so it just keeps looping between them.
+    loop: true,
     rng: new Rng(seed).fork("director"),
     threatInputs: {
       // GP-003 §Enemy Scaling / §Galaxy Progression: campaign-depth difficulty
@@ -6720,8 +6778,10 @@ function render(): void {
               const bossChance = Math.min(0.6, extractionDepth * 0.15);
               const bossAvailable = !bossRuntime || bossRuntime.snapshot.state === "rewardCeremony";
               if (bossAvailable && combatRng && combatRng.next() < bossChance) {
+                currentBossTier = "major"; // GP-FINAL: a World Boss is a major-tier encounter — its defeat re-offers Extraction too.
                 sandboxBoss = WORLD_BOSS;
                 spawnBoss();
+                director?.pauseForBoss();
                 lootNotices.push({ text: "WORLD BOSS DETECTED", colour: "#ffc652", ttlMs: 3200 });
               }
               machine.popOverlay();
