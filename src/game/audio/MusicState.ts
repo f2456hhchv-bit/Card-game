@@ -20,7 +20,14 @@ export function resolveMusicState(inputs: MusicStateInputs): MusicState {
   if (inputs.runResult === "victory") return "victory";
   if (inputs.runResult === "defeat") return "defeat";
   if (inputs.gameState !== "Gameplay") return "galaxyCommand";
-  if (inputs.bossActive) return inputs.bossPhase !== null && inputs.bossPhase > 1 ? "bossPhase" : "bossIntroduction";
+  if (inputs.bossActive) {
+    if (inputs.bossPhase === null || inputs.bossPhase <= 1) return "bossIntroduction";
+    if (inputs.bossPhase === 2) return "bossPhase";
+    // GP-002: phase 3 ("Chaos") and phase 4+ ("Signature") each get their own
+    // distinct cue — the boss's own biggest beats no longer share one generic state.
+    if (inputs.bossPhase === 3) return "bossPhaseChaos";
+    return "bossPhaseSignature";
+  }
   if (inputs.directorPhase === "ElitePressure") return "eliteEncounter";
   if (inputs.directorPhase === "HeavyCombat") return "heavyCombat";
   if (inputs.directorPhase === "Combat" || inputs.directorPhase === "LightContact") return "combat";

@@ -143,8 +143,8 @@ describe("AudioEngine — cue routing (AF-045 §Weapon/Enemy/Boss/UI Audio)", ()
 });
 
 describe("resolveMusicState — Adaptive Music (AF-045 §Adaptive Music)", () => {
-  it("registers all twelve Adaptive Music states", () => {
-    expect(MUSIC_STATES.length).toBe(12);
+  it("registers all fourteen Adaptive Music states", () => {
+    expect(MUSIC_STATES.length).toBe(14);
   });
 
   it("resolves to galaxyCommand outside Gameplay", () => {
@@ -164,6 +164,12 @@ describe("resolveMusicState — Adaptive Music (AF-045 §Adaptive Music)", () =>
   it("a boss fight overrides Director phase, distinguishing introduction from later phases", () => {
     expect(resolveMusicState({ gameState: "Gameplay", directorPhase: "HeavyCombat", bossActive: true, bossPhase: 1, runResult: null })).toBe("bossIntroduction");
     expect(resolveMusicState({ gameState: "Gameplay", directorPhase: "HeavyCombat", bossActive: true, bossPhase: 2, runResult: null })).toBe("bossPhase");
+  });
+
+  it("GP-002: phase 3 (Chaos) and phase 4+ (Signature) each get their own distinct cue, not the shared bossPhase state", () => {
+    expect(resolveMusicState({ gameState: "Gameplay", directorPhase: "HeavyCombat", bossActive: true, bossPhase: 3, runResult: null })).toBe("bossPhaseChaos");
+    expect(resolveMusicState({ gameState: "Gameplay", directorPhase: "HeavyCombat", bossActive: true, bossPhase: 4, runResult: null })).toBe("bossPhaseSignature");
+    expect(resolveMusicState({ gameState: "Gameplay", directorPhase: "HeavyCombat", bossActive: true, bossPhase: 5, runResult: null })).toBe("bossPhaseSignature"); // any further phase stays Signature
   });
 
   it("a run result always wins, regardless of any other input", () => {

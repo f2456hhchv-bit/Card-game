@@ -46,6 +46,11 @@ export const MUSIC_STATES = [
   "research",
   "crafting",
   "credits",
+  // GP-002: "bossPhase" was the one generic cue for every phase past the
+  // first two — with a real 3rd/4th boss phase now, "Chaos"/"Signature" each
+  // get their own distinct cue instead of sharing the second phase's music.
+  "bossPhaseChaos",
+  "bossPhaseSignature",
 ] as const;
 export type MusicState = (typeof MUSIC_STATES)[number];
 

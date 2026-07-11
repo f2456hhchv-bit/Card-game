@@ -40,12 +40,12 @@ const ALL_PHASES: readonly DirectorPhase[] = [
 ];
 
 describe("Conductor vocabulary — registered shelves (AF-056 §Responsibilities / §Encounter Types / §Pacing)", () => {
-  it("registers nine responsibilities, ten encounter types, six pressures, five recovery triggers, seven adaptive inputs, six mix kinds", () => {
+  it("registers nine responsibilities, ten encounter types, six pressures, five recovery triggers, eight adaptive inputs, six mix kinds", () => {
     expect(DIRECTOR_RESPONSIBILITIES.length).toBe(9);
     expect(ENCOUNTER_TYPES_AF056.length).toBe(10);
     expect(PACING_PRESSURES.length).toBe(6);
     expect(RECOVERY_TRIGGERS.length).toBe(5);
-    expect(ADAPTIVE_RESPONSE_INPUTS.length).toBe(7);
+    expect(ADAPTIVE_RESPONSE_INPUTS.length).toBe(8);
     expect(FACTION_MIX_KINDS.length).toBe(6);
   });
 
@@ -169,6 +169,58 @@ describe("DirectorConductor — Adaptive Response (AF-056 §Adaptive Response)",
     const conductor = new DirectorConductor<string>();
     conductor.update(16, 0.25);
     expect(conductor.struggleScore).toBeCloseTo(0.75, 5);
+  });
+});
+
+describe("GP-002 — Average Kill Speed and Near Deaths, now live Adaptive Response inputs", () => {
+  it("zero kills read as zero struggle before the warmup period elapses", () => {
+    const conductor = new DirectorConductor<string>();
+    conductor.update(CONDUCTOR_TUNING.killSpeedWarmupMs - 1, 1);
+    expect(conductor.struggleScore).toBe(0);
+  });
+
+  it("zero kills past the warmup period reads as full clear-speed struggle", () => {
+    const conductor = new DirectorConductor<string>();
+    conductor.update(CONDUCTOR_TUNING.killSpeedWarmupMs + 1, 1);
+    expect(conductor.struggleScore).toBe(1);
+  });
+
+  it("a real, steady kill rate keeps clear-speed struggle low even past warmup", () => {
+    const conductor = new DirectorConductor<string>();
+    // Simulate steady kills every second past the warmup point — a real pace, not one long-decayed burst.
+    for (let ms = 0; ms < CONDUCTOR_TUNING.killSpeedWarmupMs + 5000; ms += 1000) {
+      conductor.recordKill();
+      conductor.update(1000, 1);
+    }
+    expect(conductor.struggleScore).toBeLessThan(0.2);
+  });
+
+  it("near deaths raise struggle immediately, regardless of warmup, and decay over time", () => {
+    const conductor = new DirectorConductor<string>();
+    conductor.recordNearDeath();
+    conductor.recordNearDeath();
+    expect(conductor.struggleScore).toBe(1); // 2/2 reference — maxed
+    conductor.update(CONDUCTOR_TUNING.nearDeathHalfLifeMs, 1);
+    expect(conductor.struggleScore).toBeCloseTo(0.5, 5);
+  });
+
+  it("nearDeathCount on the snapshot is a permanent tally, never decayed", () => {
+    const conductor = new DirectorConductor<string>();
+    conductor.recordNearDeath();
+    conductor.update(CONDUCTOR_TUNING.nearDeathHalfLifeMs * 10, 1);
+    conductor.recordNearDeath();
+    expect(conductor.snapshot.nearDeathCount).toBe(2);
+  });
+
+  it("holds no RNG at all for the two new inputs either — identical inputs produce identical outputs", () => {
+    const run = () => {
+      const conductor = new DirectorConductor<string>();
+      conductor.recordKill();
+      conductor.recordNearDeath();
+      conductor.update(1000, 0.9);
+      return conductor.snapshot;
+    };
+    expect(run()).toEqual(run());
   });
 });
 

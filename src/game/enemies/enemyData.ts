@@ -42,6 +42,16 @@ export const ENEMY_ROLES = [
   "areaDenial",
   "elite",
   "bossSupport",
+  // GP-002: seven spec-named roles with no prior tag at all — additive,
+  // never renumbering the twelve above. Assigned to existing enemies whose
+  // real, already-shipped kit already plays the role (never a new enemy).
+  "assassin",
+  "commander",
+  "charger",
+  "ambusher",
+  "burrower",
+  "exploder",
+  "shieldUnit",
 ] as const;
 export type EnemyRole = (typeof ENEMY_ROLES)[number];
 
@@ -203,7 +213,7 @@ export const SANDBOX_ENEMIES: readonly EnemyDef[] = [
     id: "wisp-chaser",
     name: "Wisp Chaser",
     family: "scout",
-    roles: ["chaser"],
+    roles: ["chaser", "charger"], // GP-002: fast direct-pursuit melee rush IS the charger role, already real
     lore: "Cheap, disposable, and everywhere. The galaxy's most successful design is the one nobody remembers dying.",
     strengths: ["Fast to close distance"],
     weaknesses: ["No ranged threat — dies the instant it's caught"],
@@ -238,7 +248,7 @@ export const SANDBOX_ENEMIES: readonly EnemyDef[] = [
     id: "flak-orbiter",
     name: "Flak Orbiter",
     family: "drone",
-    roles: ["flanker", "sniper"],
+    roles: ["flanker", "sniper", "exploder"], // GP-002: its own statusExplosion death event IS the exploder role, already real
     lore: "It never gets close. It doesn't need to.",
     strengths: ["Keeps range, hard to punish while it's orbiting"],
     weaknesses: ["Slow projectiles — easy to dodge if you're not standing still"],

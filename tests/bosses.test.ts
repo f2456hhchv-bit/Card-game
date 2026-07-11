@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BOSS_TRANSITIONS, createBossStateMachine } from "../src/game/bosses/BossAI";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "../src/game/bosses/BossArena";
-import { SANDBOX_BOSSES } from "../src/game/bosses/bossData";
+import { SANDBOX_BOSSES, WORLD_BOSS, createWorldBossVariant } from "../src/game/bosses/bossData";
 import { BossRuntime } from "../src/game/bosses/BossRuntime";
 import { DEFAULT_COMBAT_TUNING } from "../src/game/combat/combatTuning";
 
@@ -177,5 +177,33 @@ describe("Bosses — self-review: the sandbox boss runs a full encounter without
     }
     expect(deathTransitions).toBe(1);
     expect(boss.snapshot.state).toBe("deathSequence");
+  });
+});
+
+describe("GP-002 — World Boss variant (§Enemy Hierarchy)", () => {
+  it("createWorldBossVariant scales hull and threat while reusing every phase/weak-point/enrage/mastery unchanged", () => {
+    const worldBoss = createWorldBossVariant(bossDef, 2);
+    expect(worldBoss.hull).toBe(bossDef.hull * 2);
+    expect(worldBoss.threatRating).toBe(bossDef.threatRating + 2);
+    expect(worldBoss.phases).toBe(bossDef.phases); // same reference — no duplicated content
+    expect(worldBoss.weakPoints).toBe(bossDef.weakPoints);
+    expect(worldBoss.enrage).toBe(bossDef.enrage);
+    expect(worldBoss.masteryChallenges).toBe(bossDef.masteryChallenges);
+    expect(worldBoss.id).not.toBe(bossDef.id);
+    expect(worldBoss.codexId).not.toBe(bossDef.codexId);
+  });
+
+  it("does not mutate the base BossDef", () => {
+    const hullBefore = bossDef.hull;
+    createWorldBossVariant(bossDef, 5);
+    expect(bossDef.hull).toBe(hullBefore);
+  });
+
+  it("WORLD_BOSS is a real, distinct, playable BossDef built from the sandbox boss", () => {
+    expect(WORLD_BOSS.hull).toBeGreaterThan(SANDBOX_BOSSES[0]!.hull);
+    const boss = new BossRuntime(WORLD_BOSS, DEFAULT_COMBAT_TUNING);
+    boss.begin();
+    expect(boss.snapshot.state).toBe("engaging");
+    expect(boss.snapshot.maxHull).toBe(WORLD_BOSS.hull);
   });
 });

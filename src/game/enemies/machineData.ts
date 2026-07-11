@@ -212,7 +212,7 @@ export const MACHINE_ENEMIES: readonly EnemyDef[] = [
     id: "machine-shield-generator",
     name: "Machine Shield Generator",
     family: "supportUnit",
-    roles: ["support"],
+    roles: ["support", "shieldUnit"], // GP-002: projecting the network's own shield lattice IS the shieldUnit role, already real
     lore: "A hexagonal lattice projected across the whole formation — the network wears one armour.",
     strengths: ["Shared Shields — networked machines take reduced damage while it operates"],
     weaknesses: ["No meaningful weapon of its own", "The lattice dies with it"],

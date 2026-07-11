@@ -283,7 +283,7 @@ export const NOMAD_ENEMIES: readonly EnemyDef[] = [
     id: "nomad-flagship",
     name: "Nomad Flagship",
     family: "destroyer",
-    roles: ["elite", "tank"],
+    roles: ["elite", "tank", "commander"], // GP-002: a flagship IS the fleet's command vessel — the commander role, already real
     lore: "It has been rebuilt so many times the fleet stopped calling it by its old name. It is simply the ship that doesn't sink.",
     strengths: ["Missile Barrage covers a wide arc; vanishes the instant the fight turns"],
     weaknesses: ["Its command authority is the fleet's real strength — alone, it's just a very tough ship"],

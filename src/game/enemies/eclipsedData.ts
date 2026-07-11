@@ -131,7 +131,7 @@ export const ECLIPSED_ENEMIES: readonly EnemyDef[] = [
     id: "lost-scout",
     name: "Lost Scout",
     family: "scout",
-    roles: ["chaser"],
+    roles: ["chaser", "ambusher"], // GP-002: its own ambush movementBehaviour IS the ambusher role, already real
     lore: "Still flying its original survey pattern, decades after the survey ended. It only breaks pattern when something comes close.",
     strengths: ["Ghost-quiet until approached — then it closes fast"],
     weaknesses: ["Paper-thin; whatever it was protecting itself for is long gone"],
@@ -291,7 +291,7 @@ export const ECLIPSED_ENEMIES: readonly EnemyDef[] = [
     id: "eclipsed-champion",
     name: "Eclipsed Champion",
     family: "heavyAssault",
-    roles: ["elite", "tank"],
+    roles: ["elite", "tank", "commander"], // GP-002: its own lore ("A Commander, once") IS the commander role, already real
     lore: "A Commander, once. The service record is still legible on the hull. The name on it is the reward for winning.",
     strengths: ["Fights like the player fights — mixed weapons, commander instincts, everything you'd do, done back to you"],
     weaknesses: ["Its strength mirrors yours — meet it early in your run and it is only what you were"],

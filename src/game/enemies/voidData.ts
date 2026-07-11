@@ -240,7 +240,7 @@ export const VOID_ENEMIES: readonly EnemyDef[] = [
     id: "shadow-hunter",
     name: "Shadow Hunter",
     family: "voidEntity",
-    roles: ["flanker"],
+    roles: ["flanker", "assassin"], // GP-002: teleport-mobility glass-cannon burst melee IS the assassin role, already real
     lore: "It is not fast. It is simply not where you last checked.",
     strengths: ["Teleports on a fixed interval — genuinely impossible movement, still fully readable"],
     weaknesses: ["Predictable cadence once you know the interval"],

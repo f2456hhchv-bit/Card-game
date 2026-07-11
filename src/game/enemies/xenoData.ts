@@ -169,7 +169,7 @@ export const XENO_ENEMIES: readonly EnemyDef[] = [
     id: "hive-drone",
     name: "Hive Drone",
     family: "swarm",
-    roles: ["chaser"],
+    roles: ["chaser", "burrower"], // GP-002: its own burrow movementBehaviour IS the burrower role, already real
     lore: "Grown for one purpose and grown quickly — the Hive spends drones the way other species spend ammunition.",
     strengths: ["Surfaces without warning, close and fast"],
     weaknesses: ["Thin chitin — built for numbers, not survival"],

@@ -84,8 +84,11 @@ export function pressureFor(phase: DirectorPhase, recoveryWindowOpen: boolean): 
 export const RECOVERY_TRIGGERS = ["eliteBattles", "majorEvents", "bossPhases", "largeEnemyWaves", "resourceDiscoveries"] as const;
 export type RecoveryTrigger = (typeof RECOVERY_TRIGGERS)[number];
 
-/** The seven Adaptive Response inputs (AF-056 §Adaptive Response) — two live
- * (playerHealth, damageTaken), five registered analysis surfaces. */
+/** The Adaptive Response inputs (AF-056 §Adaptive Response) — GP-002 gives
+ * averageKillSpeed a real producer and additively registers nearDeaths (the
+ * spec's own named input with no prior slot at all) as its own eighth entry,
+ * also now live. Four live (playerHealth, damageTaken, averageKillSpeed,
+ * nearDeaths), four still registered analysis surfaces. */
 export const ADAPTIVE_RESPONSE_INPUTS = [
   "playerHealth",
   "damageTaken",
@@ -94,6 +97,7 @@ export const ADAPTIVE_RESPONSE_INPUTS = [
   "movementEfficiency",
   "missionTime",
   "resourceEconomy",
+  "nearDeaths",
 ] as const;
 export type AdaptiveResponseInput = (typeof ADAPTIVE_RESPONSE_INPUTS)[number];
 
@@ -118,4 +122,15 @@ export const CONDUCTOR_TUNING = {
   largeWaveThreshold: 6,
   /** Soft-lock prevention: the queue never holds more than this; overflow flushes oldest immediately. */
   maxQueuedDirectives: 3,
+  // GP-002: two more real Adaptive Response inputs, same decaying-accumulator
+  // shape as struggleReferenceDamage/struggleHalfLifeMs above — pacing-only,
+  // never touching an enemy stat or the phase engine (the same structural guarantee).
+  /** Clear-speed struggle only evaluates once the encounter has run this long — avoids a false "struggling" read at the very start, before any kill was possible yet. */
+  killSpeedWarmupMs: 20000,
+  /** Recent-kills reference: at/above this many decayed kills, clear-speed struggle is zero. */
+  killSpeedReference: 3,
+  killSpeedHalfLifeMs: 8000,
+  /** Near-death impulses: reaching this many decayed impulses maxes out near-death struggle. */
+  nearDeathReference: 2,
+  nearDeathHalfLifeMs: 15000,
 } as const;

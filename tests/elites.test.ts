@@ -114,6 +114,64 @@ describe("generateElite — the deterministic pipeline (AF-034)", () => {
   });
 });
 
+describe("GP-002 — six previously-dormant mutations are now mechanically live", () => {
+  function eliteWith(kind: string): ReturnType<typeof generateElite> {
+    let elite = generateElite(base, "mythic", new Rng(0));
+    for (let seed = 0; seed < 500 && !elite.mutations.includes(kind as never); seed += 1) {
+      elite = generateElite(base, "mythic", new Rng(seed));
+    }
+    if (!elite.mutations.includes(kind as never)) throw new Error(`never rolled ${kind} in 500 seeds`);
+    return elite;
+  }
+
+  it("reflectiveArmour sets a positive reflectDamageFraction", () => {
+    expect(eliteWith("reflectiveArmour").mutationEffects.reflectDamageFraction).toBeGreaterThan(0);
+  });
+
+  it("gravityField sets a positive gravityPullFraction", () => {
+    expect(eliteWith("gravityField").mutationEffects.gravityPullFraction).toBeGreaterThan(0);
+  });
+
+  it("summoner sets a positive summonIntervalMs", () => {
+    expect(eliteWith("summoner").mutationEffects.summonIntervalMs).toBeGreaterThan(0);
+  });
+
+  it("quantumShift sets a positive quantumShiftChance", () => {
+    expect(eliteWith("quantumShift").mutationEffects.quantumShiftChance).toBeGreaterThan(0);
+  });
+
+  it("temporalEcho sets spawnsDecoy", () => {
+    expect(eliteWith("temporalEcho").mutationEffects.spawnsDecoy).toBe(true);
+  });
+
+  it("adaptiveArmour sets a positive adaptiveResistFraction", () => {
+    expect(eliteWith("adaptiveArmour").mutationEffects.adaptiveResistFraction).toBeGreaterThan(0);
+  });
+});
+
+describe("GP-002 — three new modifiers with no prior equivalent (Electric/Cloaked/Vampiric)", () => {
+  function eliteWith(kind: string): ReturnType<typeof generateElite> {
+    let elite = generateElite(base, "mythic", new Rng(0));
+    for (let seed = 0; seed < 500 && !elite.mutations.includes(kind as never); seed += 1) {
+      elite = generateElite(base, "mythic", new Rng(seed));
+    }
+    if (!elite.mutations.includes(kind as never)) throw new Error(`never rolled ${kind} in 500 seeds`);
+    return elite;
+  }
+
+  it("electric applies a Shock attackStatusOnHit", () => {
+    expect(eliteWith("electric").mutationEffects.attackStatusOnHit?.kind).toBe("shock");
+  });
+
+  it("cloaked sets a positive cloakCycleMs", () => {
+    expect(eliteWith("cloaked").mutationEffects.cloakCycleMs).toBeGreaterThan(0);
+  });
+
+  it("vampiric sets a positive lifeStealFraction", () => {
+    expect(eliteWith("vampiric").mutationEffects.lifeStealFraction).toBeGreaterThan(0);
+  });
+});
+
 describe("Elites — self-review: thousands of combinations stay internally consistent", () => {
   it("every generated elite across every tier and a wide seed range is schema-valid and deterministic", () => {
     for (const tier of ELITE_TIERS) {

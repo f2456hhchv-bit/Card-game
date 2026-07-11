@@ -52,6 +52,11 @@ export const MUTATION_KINDS = [
   "quantumShift",
   "temporalEcho",
   "adaptiveArmour",
+  // GP-002: three spec-named modifiers (Electric/Invisible/Vampiric) with no
+  // prior equivalent at all — additive, never renumbering the fourteen above.
+  "electric",
+  "cloaked",
+  "vampiric",
 ] as const;
 export type MutationKind = (typeof MUTATION_KINDS)[number];
 
@@ -116,7 +121,7 @@ export const MUTATION_DEFS: Readonly<Record<MutationKind, MutationDef>> = {
     threatRating: 3,
     exclusionGroup: "defensive-mutation",
     stackBehaviour: "refresh",
-    mechanicallyLive: false,
+    mechanicallyLive: true,
   },
   rapidAssault: {
     kind: "rapidAssault",
@@ -135,7 +140,7 @@ export const MUTATION_DEFS: Readonly<Record<MutationKind, MutationDef>> = {
     threatRating: 4,
     exclusionGroup: "movement-mutation",
     stackBehaviour: "refresh",
-    mechanicallyLive: false,
+    mechanicallyLive: true,
   },
   summoner: {
     kind: "summoner",
@@ -144,7 +149,7 @@ export const MUTATION_DEFS: Readonly<Record<MutationKind, MutationDef>> = {
     counterplay: "Kill it first to stop the reinforcement clock, or clear adds and ignore it.",
     threatRating: 4,
     stackBehaviour: "stackDuration",
-    mechanicallyLive: false,
+    mechanicallyLive: true,
   },
   berserker: {
     kind: "berserker",
@@ -194,7 +199,7 @@ export const MUTATION_DEFS: Readonly<Record<MutationKind, MutationDef>> = {
     threatRating: 4,
     exclusionGroup: "movement-mutation",
     stackBehaviour: "refresh",
-    mechanicallyLive: false,
+    mechanicallyLive: true,
   },
   temporalEcho: {
     kind: "temporalEcho",
@@ -203,7 +208,7 @@ export const MUTATION_DEFS: Readonly<Record<MutationKind, MutationDef>> = {
     counterplay: "Ignore the decoy; it has no reward on its own — focus the real one.",
     threatRating: 2,
     stackBehaviour: "stackDuration",
-    mechanicallyLive: false,
+    mechanicallyLive: true,
   },
   adaptiveArmour: {
     kind: "adaptiveArmour",
@@ -213,7 +218,36 @@ export const MUTATION_DEFS: Readonly<Record<MutationKind, MutationDef>> = {
     threatRating: 3,
     exclusionGroup: "defensive-mutation",
     stackBehaviour: "refresh",
-    mechanicallyLive: false,
+    mechanicallyLive: true,
+  },
+  // GP-002: three spec-named modifiers with no prior equivalent at all.
+  electric: {
+    kind: "electric",
+    visualIndicator: "Crackling arcs across the hull",
+    gameplayEffect: "Its attacks apply Shock.",
+    counterplay: "Break line of sight to let Shock's control window expire before engaging again.",
+    threatRating: 3,
+    exclusionGroup: "status-mutation",
+    stackBehaviour: "stackIntensity",
+    mechanicallyLive: true,
+  },
+  cloaked: {
+    kind: "cloaked",
+    visualIndicator: "Fades to a faint outline on a visible cycle",
+    gameplayEffect: "Periodically turns untargetable by auto-aim while hidden.",
+    counterplay: "Track its position through the cycle; area damage still lands even while it's untargeted.",
+    threatRating: 3,
+    stackBehaviour: "refresh",
+    mechanicallyLive: true,
+  },
+  vampiric: {
+    kind: "vampiric",
+    visualIndicator: "Draws a red tether from the player on every hit",
+    gameplayEffect: "Heals a fraction of the damage it deals to the player back to itself.",
+    counterplay: "Deny it hits entirely — a vampiric elite that never connects never heals.",
+    threatRating: 3,
+    stackBehaviour: "stackIntensity",
+    mechanicallyLive: true,
   },
 };
 
@@ -248,10 +282,34 @@ export interface MutationEffects {
   explosionOnDeath: { damage: number; radius: number } | null;
   /** Applies on any successful attack (melee or ranged) — melee has no statusOnHit field of its own to override. */
   attackStatusOnHit: StatusOnHit | null;
+  /** GP-002 reflectiveArmour: fraction of incoming damage reflected back to the attacker. */
+  reflectDamageFraction: number;
+  /** GP-002 gravityField: pulls the player toward this drone by this fraction per tick while in range. */
+  gravityPullFraction: number;
+  /** GP-002 summoner: periodically summons one reinforcement through the shared spawn path. */
+  summonIntervalMs: number | null;
+  /** GP-002 quantumShift: chance to teleport away the instant it's hit. */
+  quantumShiftChance: number;
+  /** GP-002 adaptiveArmour: damage-reduction fraction against a damage school it was just hit by. */
+  adaptiveResistFraction: number;
+  /** GP-002 cloaked: visible/hidden cycle length — untargetable by auto-aim for the hidden half. */
+  cloakCycleMs: number | null;
+  /** GP-002 vampiric: fraction of damage dealt to the player healed back to this drone. */
+  lifeStealFraction: number;
+  /** GP-002 temporalEcho: spawns one weaker decoy of the same base enemy alongside it. */
+  spawnsDecoy: boolean;
 }
 
 export const EMPTY_MUTATION_EFFECTS: MutationEffects = {
   regenPerSecond: 0,
   explosionOnDeath: null,
   attackStatusOnHit: null,
+  reflectDamageFraction: 0,
+  gravityPullFraction: 0,
+  summonIntervalMs: null,
+  quantumShiftChance: 0,
+  adaptiveResistFraction: 0,
+  cloakCycleMs: null,
+  lifeStealFraction: 0,
+  spawnsDecoy: false,
 };

@@ -130,9 +130,38 @@ export function generateElite(base: EnemyDef, tierId: EliteTier, rng: Rng): Elit
       case "explosive":
         mutationEffects.explosionOnDeath = { damage: base.hull * 0.4, radius: 3 };
         break;
-      // reflectiveArmour, gravityField, summoner, quantumShift, temporalEcho, adaptiveArmour:
-      // schema-complete (MUTATION_DEFS), no consumer yet — same "registered future" pattern
-      // AF-028 used for droneEffectiveness/orbitalPower.
+      // GP-002: the six mutations below were schema-complete (MUTATION_DEFS)
+      // with no consumer — the exact "generated then discarded" gap GP-001
+      // already fixed once for EliteGenerator's own rewardMultiplier/
+      // rarityFloor fields. Consumed by main.ts at the drone-hit/update path.
+      case "reflectiveArmour":
+        mutationEffects.reflectDamageFraction = 0.25;
+        break;
+      case "gravityField":
+        mutationEffects.gravityPullFraction = 0.18;
+        break;
+      case "summoner":
+        mutationEffects.summonIntervalMs = 8000;
+        break;
+      case "quantumShift":
+        mutationEffects.quantumShiftChance = 0.35;
+        break;
+      case "temporalEcho":
+        mutationEffects.spawnsDecoy = true;
+        break;
+      case "adaptiveArmour":
+        mutationEffects.adaptiveResistFraction = 0.3;
+        break;
+      // GP-002: three spec-named modifiers with no prior equivalent at all.
+      case "electric":
+        mutationEffects.attackStatusOnHit = { kind: "shock", chance: 0.5, strength: 5, durationMs: 1200 };
+        break;
+      case "cloaked":
+        mutationEffects.cloakCycleMs = 3000;
+        break;
+      case "vampiric":
+        mutationEffects.lifeStealFraction = 0.3;
+        break;
       default:
         break;
     }

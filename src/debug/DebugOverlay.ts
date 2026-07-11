@@ -243,6 +243,9 @@ export interface DebugSnapshot {
    * mid-run merchant/extraction-decision state, and elite/boss reward content —
    * one combined line, extended as each GP-001 mechanic lands. */
   gpCoreLoop: string | null;
+  /** GP-002 Enemy, Wave & Difficulty Framework summary — one combined line,
+   * extended as each of its 9 audited-gap deliverables lands. */
+  gpEnemyWave: string | null;
 }
 
 export class DebugOverlay {
@@ -396,6 +399,7 @@ export class DebugOverlay {
       `civWisdom  ${snapshot.atlasCivilisationalWisdom ?? "—"}`,
       `atlasConst ${snapshot.atlasConstitution ?? "—"}`,
       `gpCoreLoop ${snapshot.gpCoreLoop ?? "—"}`,
+      `gpEnemyWave ${snapshot.gpEnemyWave ?? "—"}`,
       `session    ${snapshot.sessionSeconds.toFixed(1)}s`,
       `fps        ${snapshot.fps.toFixed(0)}`,
       `transition ${snapshot.lastTransitionMs.toFixed(2)}ms (budget 250)`,

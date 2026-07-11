@@ -316,12 +316,15 @@ import { stepProjectile } from "./game/weapons/ProjectileBehaviour";
 import { computeShotAngles } from "./game/weapons/FirePattern";
 import { StatusEngine } from "./game/combat/StatusEngine";
 import type { DamageSchool, DamageSourceKind } from "./game/combat/combatTuning";
-import { SANDBOX_ENEMIES, type EnemyDef } from "./game/enemies/enemyData";
+import { ENEMY_ROLES, SANDBOX_ENEMIES, type EnemyDef } from "./game/enemies/enemyData";
+import { sniperStillnessMultiplier } from "./game/enemies/sniperSynergy";
+import { cameraViewportRect, pickSpawnOutsideViewport } from "./game/director/spawnPlacement";
+import { METEOR_SHOWER_TUNING, createMeteorImpact } from "./game/director/meteorShower";
 import { EnemyRuntime } from "./game/enemies/EnemyRuntime";
 import { stepEnemyMovement } from "./game/enemies/EnemyMovement";
 import { hasDeathEvent } from "./game/enemies/DeathEvents";
 import { generateElite } from "./game/enemies/EliteGenerator";
-import { ELITE_TIERS, EMPTY_MUTATION_EFFECTS, type MutationEffects } from "./game/enemies/eliteData";
+import { ELITE_TIERS, EMPTY_MUTATION_EFFECTS, MUTATION_DEFS, MUTATION_KINDS, type MutationEffects } from "./game/enemies/eliteData";
 import { LORE_MERCENARY_GUILD_CODEX, OUTLAW_CALLSIGNS, OUTLAW_ENEMIES, OUTLAW_MINE_TUNING, createOutlawMine } from "./game/enemies/outlawData";
 import { OutlawSquadRuntime } from "./game/enemies/OutlawSquad";
 import { LORE_MACHINE_NETWORK_DOCTRINE, MACHINE_ENEMIES, MACHINE_NETWORK_TUNING } from "./game/enemies/machineData";
@@ -346,7 +349,7 @@ import { DirectorConductor } from "./game/director/DirectorConductor";
 import { WAVE_TYPE_TO_ENCOUNTER_TYPE, pressureFor } from "./game/director/conductorData";
 import { BossDirectorRuntime } from "./game/bosses/BossDirector";
 import { SANDBOX_BOSS_SUMMON_PLAN, beatFor } from "./game/bosses/bossDirectorData";
-import { SANDBOX_BOSSES } from "./game/bosses/bossData";
+import { SANDBOX_BOSSES, WORLD_BOSS } from "./game/bosses/bossData";
 import { BossRuntime } from "./game/bosses/BossRuntime";
 import { isInsideHazard, stepHazardZone, type HazardZoneDef, type HazardZoneState } from "./game/bosses/BossArena";
 import { SANDBOX_BIOMES, type BiomeDef } from "./game/biomes/biomeData";
@@ -452,7 +455,11 @@ const ARENA_OBSTACLES: readonly Obstacle[] = [
   { minX: 26, minY: 26, maxX: 34, maxY: 28 },
 ];
 
-const camera = new Camera(DEFAULT_CAMERA_TUNING, 32, 18);
+// GP-002 §Spawning: shared with the Camera constructor below so spawn
+// placement's "outside the viewport" check reads the exact same visible
+// extent the player actually sees, never a second guessed-at size.
+const CAMERA_VIEWPORT = { width: 32, height: 18 };
+const camera = new Camera(DEFAULT_CAMERA_TUNING, CAMERA_VIEWPORT.width, CAMERA_VIEWPORT.height);
 // GP-001 §Game Feel: a brief simulation freeze on an impactful moment —
 // deterministic since every trigger site is itself deterministic (a seeded
 // combatRng crit roll, a seeded elite kill, a boss phase advance).
@@ -488,6 +495,10 @@ interface Drone {
   /** GP-001: AF-034's own reward-package fields, previously generated then discarded. */
   eliteRewardMultiplier: number;
   eliteRarityFloor: Rarity | null;
+  /** GP-002 adaptiveArmour: the damage school it was most recently hit by. */
+  lastDamageSchoolTaken: DamageSchool | null;
+  /** GP-002 summoner: ticks toward mutationEffects.summonIntervalMs. */
+  summonClockMs: number;
   /** AF-046: Outlaw squad membership — null for every non-squad enemy. */
   squadId: string | null;
   /** AF-047: Machine network membership + assigned formation slot — null for every non-networked enemy. */
@@ -680,11 +691,23 @@ let currentBuildPathOffer: readonly BuildPathDef[] = [];
 // fired (AF-037); it now actually opens the same persistent AF-040
 // MarketRuntime/"lucent-gate-trader" merchant as a real overlay mid-mission.
 let midRunMerchantVisits = 0;
+// GP-002 §Wave Structure: which wave the merchant was last offered at, via
+// the wave-milestone trigger path — dedupes exactly like buildPathOfferedAtWave.
+let lastMerchantWaveOffered = 0;
 
 // ── GP-001: Extraction as a real risk/reward decision — times "Push Deeper"
 // was chosen this run; feeds both real danger (EnemyDirector.missionDifficulty)
 // and real reward (dropLoot's difficulty context) rather than a cosmetic timer.
 let extractionDepth = 0;
+
+// ── GP-002 §Synergy: how long (ms) the player has held still — feeds
+// "Snipers punish standing still," the one named synergy example with no
+// prior equivalent at all.
+let playerStationaryMs = 0;
+// ── GP-002 §Director Intelligence: edge-detect state for the Near Deaths
+// Adaptive Response input — true while under the critical threshold, so the
+// conductor is only ever notified once per crossing.
+let playerWasNearDeath = false;
 
 // ── GP-001: Boss Game-Changing Rewards — a real, permanent, mechanically-
 // active passive chosen after the boss dies, replacing the pacing-only
@@ -726,6 +749,12 @@ function missionResultsSummary(): string {
 /** GP-001 §DEBUG: one combined summary line, extended as each mechanic lands. */
 function gpCoreLoopDebugLine(): string {
   return `waves ${wavesLanded} · next path offer at wave ${buildPathOfferedAtWave + 5} · chosen [${buildPathRuntime.chosenIds.join(", ") || "none"}] · paths ${BUILD_PATHS.length} · merchant visits ${midRunMerchantVisits} · extraction depth ${extractionDepth} · boss artifacts [${bossArtifactRuntime.heldIds.join(", ") || "none"}]/${BOSS_ARTIFACTS.length} · hitstop active=${hitStop.isActive} · particles ${particles.length} (pool ${particlePool.freeCount} free) · haptics ${Math.round(gamepad.hapticIntensity * 100)}%`;
+}
+
+/** GP-002 §DEBUG: one combined summary line, extended as each of the 9 audited-gap deliverables lands. */
+function gpEnemyWaveDebugLine(): string {
+  const liveMutations = MUTATION_KINDS.filter((k) => MUTATION_DEFS[k].mechanicallyLive).length;
+  return `mutations ${liveMutations}/${MUTATION_KINDS.length} live · roles ${ENEMY_ROLES.length} · stationary ${(playerStationaryMs / 1000).toFixed(1)}s · conductor kills=${conductor?.snapshot.recentKills.toFixed(1) ?? "—"} nearDeaths=${conductor?.snapshot.nearDeathCount ?? "—"} struggle=${conductor?.snapshot.struggleScore.toFixed(2) ?? "—"} · boss ${sandboxBoss.id} (${sandboxBoss.phases.length} phases) · world boss chance ${Math.round(Math.min(0.6, extractionDepth * 0.15) * 100)}%`;
 }
 
 // ── Sandbox loot (AF-023): elites always drop, drones sometimes; beams on
@@ -1065,6 +1094,54 @@ bus.on("EnvironmentalEventTriggered", ({ eventType }) => {
   // AF-054: Solar Flare is one of AF-017's existing EnvironmentalEvent
   // outcomes — a perfect thematic fit for a living-star formation's entrance.
   if (eventType === "SolarFlare") spawnConstellationFromEvent();
+  // GP-002 §Events: three environmental events fired the bus fact + a
+  // generic toast but had no dedicated gameplay handler at all — the exact
+  // gap the other four branches above already closed for their own events.
+  if (eventType === "MeteorShower" && movement && combatRng) {
+    const impactOrigin = movement.snapshot;
+    for (let i = 0; i < METEOR_SHOWER_TUNING.impactCount; i += 1) {
+      meteorImpactCounter += 1;
+      const angle = combatRng.float(0, Math.PI * 2);
+      const distance = combatRng.float(1, METEOR_SHOWER_TUNING.scatterRadius);
+      meteorImpacts.push({
+        zone: createMeteorImpact(
+          `meteor-impact-${meteorImpactCounter}`,
+          impactOrigin.x + Math.cos(angle) * distance,
+          impactOrigin.y + Math.sin(angle) * distance,
+        ),
+        state: { tickClockMs: 0 },
+        ttlMs: METEOR_SHOWER_TUNING.ttlMs,
+      });
+    }
+  }
+  // AF-048's own Crystal Growth hazard, seeded directly instead of only
+  // through its usual per-drone growth-seeder clock — the same shared array/engine either way.
+  if (eventType === "CrystalGrowth" && movement && combatRng) {
+    crystalGrowthCounter += 1;
+    const growthOrigin = movement.snapshot;
+    const angle = combatRng.float(0, Math.PI * 2);
+    const distance = combatRng.float(2, 6);
+    crystalGrowths.push({
+      zone: createCrystalGrowth(`crystal-growth-event-${crystalGrowthCounter}`, growthOrigin.x + Math.cos(angle) * distance, growthOrigin.y + Math.sin(angle) * distance),
+      state: { tickClockMs: 0 },
+    });
+  }
+  // AF-047's own reinforcement doctrine — a direct arrival through the exact
+  // shared spawn path every other faction entrance already uses.
+  if (eventType === "MachineReinforcements" && movement && combatRng && director) {
+    const reinforceOrigin = movement.snapshot;
+    for (let i = 0; i < 2; i += 1) {
+      const angle = combatRng.float(0, Math.PI * 2);
+      const distance = combatRng.float(6, 10);
+      spawnEnemyInstance(
+        MACHINE_ENEMIES.find((d) => d.id === "machine-combat-drone")!,
+        reinforceOrigin.x + Math.cos(angle) * distance,
+        reinforceOrigin.y + Math.sin(angle) * distance,
+        false,
+      );
+    }
+    director.notifyEnemiesSpawned(2, 0);
+  }
 });
 bus.on("LootDropped", ({ rarity }) => {
   if (rarity === "legendary" || rarity === "ancient" || rarity === "mythic" || rarity === "singularity") {
@@ -2718,7 +2795,11 @@ let weaponRuntime: WeaponRuntime | null = null;
 // ── Boss (AF-035): reuses DefenceState for hull/shield/armour and
 // EnemyRuntime for attack telegraph/cooldown gating — spawned when the
 // Director's existing MiniBoss phase begins.
-const sandboxBoss = SANDBOX_BOSSES[0]!;
+// GP-002 §Mission End: mutable so a deep-extraction "boss chance" roll can
+// swap in WORLD_BOSS and re-run the exact same spawnBoss()/grantBossRewards()
+// pipeline for a second, real encounter — every other reference to
+// sandboxBoss below already reads it dynamically, never a captured snapshot.
+let sandboxBoss = SANDBOX_BOSSES[0]!;
 let bossRuntime: BossRuntime | null = null;
 let bossMotion = { x: 0, y: 0, elapsedMs: 0, strafeDirection: 1 as 1 | -1, phase: "hidden" as "hidden" | "active" };
 let bossIntroRemainingMs = 0;
@@ -2810,6 +2891,16 @@ function spawnParticleBurst(kind: ParticleBurstKind, x: number, y: number): void
   }
 }
 
+/** GP-002 cloaked mutation: untargetable by the player's own auto-aim for the
+ * hidden half of each visible/hidden cycle — reads drone.elapsedMs, the same
+ * clock stepEnemyMovement already ticks unconditionally every frame for
+ * every drone, without touching that locked AF-033 module at all. */
+function isDroneCloaked(drone: Drone): boolean {
+  const cycle = drone.mutationEffects.cloakCycleMs;
+  if (!cycle) return false;
+  return Math.floor(drone.elapsedMs / cycle) % 2 === 1;
+}
+
 /** GP-001: player-sourced area damage against nearby drones — mirrors AF-034's
  * own mutationEffects.explosionOnDeath packet shape exactly, just aimed the
  * other way. `pullFraction` (Graviton Heart) additionally drags hit drones a
@@ -2843,11 +2934,12 @@ function dropLoot(x: number, y: number, eliteReward?: { rewardMultiplier: number
     SANDBOX_DROP_TABLE,
     {
       itemLevel: xpSystem.snapshot.level,
-      // GP-001: pushing deeper during Extraction is real reward, not just real risk.
+      // GP-001/GP-002: pushing deeper during Extraction is real reward, not
+      // just real risk — loot rarity AND research yield both scale with depth.
       difficulty: 1 + extractionDepth * 0.35,
       ascension: session.ascension,
       mutatorBonus: missionRuntime?.lootMutatorBonus ?? 0,
-      researchBonus: sandboxBuild.researchLootBonus,
+      researchBonus: sandboxBuild.researchLootBonus + extractionDepth * 0.1,
       // AF-036: Resource Distribution feeds AF-023's own reserved-but-unused hook.
       smartLoot: biomeRuntime ? { categoryWeights: biomeRuntime.resourceWeights } : undefined,
     },
@@ -2959,6 +3051,8 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     eliteMutations,
     eliteRewardMultiplier,
     eliteRarityFloor,
+    lastDamageSchoolTaken: null,
+    summonClockMs: 0,
     squadId: null,
     networkId: null,
     networkOffsetX: null,
@@ -2972,6 +3066,17 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
     constellationId: null,
     eclipsedId: null,
   });
+  // GP-002 temporalEcho: a real, weaker second entity through the same shared
+  // spawn path — not a visual-only trick. Recurses with elite=false, so it
+  // never rolls its own mutation set (a decoy has no mutations of its own).
+  if (mutationEffects.spawnsDecoy) {
+    const decoyId = spawnEnemyInstance(baseDef, x + 1, y + 1, false);
+    const decoy = drones.find((d) => d.id === decoyId);
+    if (decoy) {
+      decoy.maxHull *= 0.35;
+      decoy.hull = decoy.maxHull;
+    }
+  }
   return droneId;
 }
 
@@ -2979,6 +3084,12 @@ function spawnEnemyInstance(baseDef: EnemyDef, x: number, y: number, elite: bool
 // other combat structure in this file. Mines reuse AF-035's exact hazard engine.
 let outlawSquads: OutlawSquadRuntime[] = [];
 let outlawMines: Array<{ zone: HazardZoneDef; state: HazardZoneState; ttlMs: number }> = [];
+// GP-002 §Events: Meteor Shower — the one named environmental event with no
+// faction-entrance equivalent; a pure ambient hazard burst, same array/tick/
+// filter shape as outlawMines above, just triggered by the bus event instead
+// of a per-tick drop clock.
+let meteorImpacts: Array<{ zone: HazardZoneDef; state: HazardZoneState; ttlMs: number }> = [];
+let meteorImpactCounter = 0;
 let outlawMineDropClockMs = 0;
 let outlawMineCounter = 0;
 let outlawSquadCounter = 0;
@@ -3415,6 +3526,7 @@ function killDrone(drone: Drone): void {
   bus.emit("EnemyKilled", { enemyId: drone.id, elite: drone.elite, boss: false });
   commanderRuntime?.notifyKill();
   director?.notifyEnemiesRemoved(1, drone.elite ? 1 : 0);
+  conductor?.recordKill(); // GP-002: Average Kill Speed, a real Adaptive Response input at last.
   if (drone.elite) {
     // GP-001 §Game Feel: an Elite's death is a real moment — freeze, burst, pulse.
     hitStop.trigger("eliteKill");
@@ -3661,6 +3773,34 @@ function killDrone(drone: Drone): void {
   }
 }
 
+/** GP-002 §Spawning: draws a handful of candidate positions around the
+ * player at the wave's own minDistance/edgeMargin, then prefers whichever
+ * one lands outside the camera's actual visible extent — "spawn outside
+ * camera where possible," never a blind single draw. Falls back to the
+ * first candidate if the arena is too small to clear the viewport, exactly
+ * as pickSpawnOutsideViewport documents. */
+function pickWaveSpawnXY(playerX: number, playerY: number, minDistance: number, edgeMargin: number): { x: number; y: number } {
+  if (!combatRng) return { x: playerX, y: playerY };
+  const candidates: Array<{ x: number; y: number }> = [];
+  for (let i = 0; i < 6; i += 1) {
+    const angle = combatRng.float(0, Math.PI * 2);
+    const distance = minDistance + combatRng.float(0, 4);
+    candidates.push({
+      x: Math.min(ARENA.maxX - edgeMargin, Math.max(ARENA.minX + edgeMargin, playerX + Math.cos(angle) * distance)),
+      y: Math.min(ARENA.maxY - edgeMargin, Math.max(ARENA.minY + edgeMargin, playerY + Math.sin(angle) * distance)),
+    });
+  }
+  const cameraSnap = camera.snapshot;
+  const viewport = cameraViewportRect(
+    cameraSnap.x,
+    cameraSnap.y,
+    CAMERA_VIEWPORT.width / 2 / cameraSnap.zoom,
+    CAMERA_VIEWPORT.height / 2 / cameraSnap.zoom,
+    1,
+  );
+  return pickSpawnOutsideViewport(candidates, viewport);
+}
+
 /** AF-056: the Conductor's gate — ordinary directives can wait out a Recovery
  * Window in the Spawn Queue; boss timing is AF-017/035's own domain and is
  * never deferred. Deferred directives flush from the per-tick update. */
@@ -3701,10 +3841,7 @@ function executeWave(directive: SpawnDirective): void {
     directive.waveType === "AmbientPatrol" ||
     directive.waveType === "EliteSquad"
   ) {
-    const angle = combatRng.float(0, Math.PI * 2);
-    const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
-    const x = Math.min(ARENA.maxX - 3, Math.max(ARENA.minX + 3, player.x + Math.cos(angle) * distance));
-    const y = Math.min(ARENA.maxY - 3, Math.max(ARENA.minY + 3, player.y + Math.sin(angle) * distance));
+    const { x, y } = pickWaveSpawnXY(player.x, player.y, directive.placement.minDistanceFromPlayer, 3);
     if (directive.waveType === "AmbushEvent") {
       spawnOutlawSquad(x, y);
       director.notifyEnemiesSpawned(5, 1); // captain spawns as an AF-034 Elite
@@ -3734,10 +3871,7 @@ function executeWave(directive: SpawnDirective): void {
   // branch above, so the census's elite column is theirs alone.
   const count = Math.max(1, Math.round(directive.budgetCost / 4));
   for (let i = 0; i < count; i += 1) {
-    const angle = combatRng.float(0, Math.PI * 2);
-    const distance = directive.placement.minDistanceFromPlayer + combatRng.float(0, 4);
-    const x = Math.min(ARENA.maxX - 1, Math.max(ARENA.minX + 1, player.x + Math.cos(angle) * distance));
-    const y = Math.min(ARENA.maxY - 1, Math.max(ARENA.minY + 1, player.y + Math.sin(angle) * distance));
+    const { x, y } = pickWaveSpawnXY(player.x, player.y, directive.placement.minDistanceFromPlayer, 1);
     const baseDef = combatRng.pick(SANDBOX_ENEMIES);
     spawnEnemyInstance(baseDef, x, y, false);
   }
@@ -3787,7 +3921,7 @@ function grantBossRewards(): void {
             difficulty: 1,
             ascension: session.ascension,
             mutatorBonus: missionRuntime?.lootMutatorBonus ?? 0,
-            researchBonus: sandboxBuild.researchLootBonus,
+            researchBonus: sandboxBuild.researchLootBonus + extractionDepth * 0.1, // GP-002: a World Boss defeated deep in extraction pays out too.
             smartLoot: biomeRuntime ? { categoryWeights: biomeRuntime.resourceWeights } : undefined,
           },
           DEFAULT_LOOT_TUNING,
@@ -3842,6 +3976,23 @@ function updateSandboxCombat(fixedDtMs: number): void {
   const dt = fixedDtMs / 1000;
   const player = movement.snapshot;
 
+  // GP-002 §Synergy: how long the player has held still — the real input
+  // "Snipers punish standing still" needs. A tiny speed epsilon absorbs
+  // floating-point drift from a fully-released stick, not genuine movement.
+  playerStationaryMs = Math.hypot(player.velocityX, player.velocityY) < 0.05 ? playerStationaryMs + fixedDtMs : 0;
+
+  // GP-002 §Director Intelligence: Near Deaths — a real Adaptive Response
+  // input, fired once per edge crossing below the critical threshold (never
+  // once per tick spent under it), with hysteresis so recovering just above
+  // the line doesn't immediately re-arm the trigger.
+  const playerHullFraction = playerDefence.snapshot.hull / playerDefence.snapshot.maxHull;
+  if (playerHullFraction < 0.2 && !playerWasNearDeath) {
+    playerWasNearDeath = true;
+    conductor?.recordNearDeath();
+  } else if (playerHullFraction > 0.35) {
+    playerWasNearDeath = false;
+  }
+
   // GP-001 Living Reactor: a slow, steady hull regen pulse — and every pulse
   // detonates, damaging anything standing near the player when it lands.
   if (bossArtifactRuntime.has("livingReactor")) {
@@ -3881,6 +4032,20 @@ function updateSandboxCombat(fixedDtMs: number): void {
     }
   }
   outlawMines = outlawMines.filter((m) => m.ttlMs > 0);
+
+  // GP-002 §Events: Meteor Shower impacts — same tick/damage/expiry shape as outlawMines above.
+  for (const impact of meteorImpacts) {
+    impact.ttlMs -= fixedDtMs;
+    if (playerDefence && stepHazardZone(impact.zone, impact.state, fixedDtMs) && isInsideHazard(impact.zone, player.x, player.y) && !player.invulnerable) {
+      const intake = playerDefence.takeDamage(impact.zone.damagePerTick);
+      bus.emit("PlayerDamaged", { amount: impact.zone.damagePerTick, source: impact.zone.id });
+      if (intake.defeated) {
+        endRun("defeat");
+        return;
+      }
+    }
+  }
+  meteorImpacts = meteorImpacts.filter((m) => m.ttlMs > 0);
 
   // AF-047: network clocks tick; Self Repair regenerates linked machines while
   // the Repair Drone operates; the Drone Factory manufactures Combat Drones
@@ -4188,6 +4353,28 @@ function updateSandboxCombat(fixedDtMs: number): void {
       drone.hull = Math.min(drone.maxHull, drone.hull + drone.mutationEffects.regenPerSecond * dt);
     }
 
+    // GP-002 gravityField: a continuous pull, reusing PlayerMovement's own
+    // impulse channel exactly as melee knockback already does — never a
+    // second movement-override mechanism.
+    if (drone.mutationEffects.gravityPullFraction > 0) {
+      const pdx = drone.x - player.x;
+      const pdy = drone.y - player.y;
+      const pDistance = Math.hypot(pdx, pdy) || 0.0001;
+      if (pDistance <= 10) {
+        movement.applyImpulse((pdx / pDistance) * drone.mutationEffects.gravityPullFraction * 6 * dt, (pdy / pDistance) * drone.mutationEffects.gravityPullFraction * 6 * dt);
+      }
+    }
+    // GP-002 summoner: periodically reinforces through the exact shared spawn path.
+    if (drone.mutationEffects.summonIntervalMs && combatRng) {
+      drone.summonClockMs += fixedDtMs;
+      if (drone.summonClockMs >= drone.mutationEffects.summonIntervalMs) {
+        drone.summonClockMs -= drone.mutationEffects.summonIntervalMs;
+        const reinforcement = combatRng.pick(SANDBOX_ENEMIES);
+        spawnEnemyInstance(reinforcement, drone.x + combatRng.float(-2, 2), drone.y + combatRng.float(-2, 2), false);
+        lootNotices.push({ text: "REINFORCEMENTS SUMMONED", colour: "#ff8c1a", ttlMs: 1800 });
+      }
+    }
+
     const hullFraction = drone.hull / drone.maxHull;
 
     // AF-034: Elite AI gains Retreat Logic — disengage below a critical-health
@@ -4341,6 +4528,10 @@ function updateSandboxCombat(fixedDtMs: number): void {
           playerStatus.apply({ kind: status.kind, strength: status.strength, durationMs: status.durationMs });
           bus.emit("StatusApplied", { targetId: "player", status: status.kind });
         }
+        // GP-002 vampiric: heals a fraction of the damage just dealt back to the attacker.
+        if (drone.mutationEffects.lifeStealFraction > 0) {
+          drone.hull = Math.min(drone.maxHull, drone.hull + result.finalDamage * drone.mutationEffects.lifeStealFraction);
+        }
         if (intake.defeated) {
           endRun("defeat");
           return;
@@ -4353,7 +4544,9 @@ function updateSandboxCombat(fixedDtMs: number): void {
         drone.runtime.ai.transitionTo("attack");
         const angle = Math.atan2(dy, dx);
         // AF-034: an elite's mutation status takes priority over the base weapon's own.
-        fireHostileProjectiles(drone.x, drone.y, weapon, angle, damageMultiplier, drone.mutationEffects.attackStatusOnHit);
+        // GP-002 §Synergy: "Snipers punish standing still" — a real damage bonus, not flavour text.
+        const sniperBonus = sniperStillnessMultiplier(drone.def.roles, playerStationaryMs);
+        fireHostileProjectiles(drone.x, drone.y, weapon, angle, damageMultiplier * sniperBonus, drone.mutationEffects.attackStatusOnHit);
       }
     }
   }
@@ -4428,6 +4621,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
             ]);
           }
           bus.emit("EnemyKilled", { enemyId: sandboxBoss.id, elite: false, boss: true });
+          conductor?.recordKill(); // GP-002: a boss kill counts toward Average Kill Speed too.
           advanceRunPhaseTo("RewardPhase");
         }
         bossRuntime.ai.transitionTo("rewardCeremony");
@@ -4523,6 +4717,16 @@ function updateSandboxCombat(fixedDtMs: number): void {
         return;
       }
     }
+    // GP-002 §Wave Structure: merchant timing also linked to wave milestones
+    // (the spec's own "Wave 7: Merchant" pacing example) — a second real
+    // trigger path alongside AF-037's flat event timer above, never a
+    // replacement for it.
+    if (wavesLanded > 0 && wavesLanded % 7 === 0 && wavesLanded !== lastMerchantWaveOffered) {
+      lastMerchantWaveOffered = wavesLanded;
+      midRunMerchantVisits += 1;
+      machine.pushOverlay("MidRunMerchant");
+      return;
+    }
   }
 
   // AF-036: Biome — weather rotation feeds AF-020's own MovementModifier "force"
@@ -4603,7 +4807,7 @@ function updateSandboxCombat(fixedDtMs: number): void {
     weaponRuntime.intervalScale = sandboxBuild.fireIntervalScale * atlasCoreFireIntervalScale(bossArtifactRuntime);
     weaponRuntime.update(fixedDtMs);
     const candidates: TargetCandidate[] = drones
-      .filter((d) => d.alive)
+      .filter((d) => d.alive && !isDroneCloaked(d))
       .map((d) => ({ id: d.id, x: d.x, y: d.y, health: d.hull, maxHealth: d.maxHull, isBoss: false, isElite: d.elite }));
     const bossAlive =
       bossRuntime && bossRuntime.snapshot.state !== "introduction" && bossRuntime.snapshot.state !== "deathSequence" && bossRuntime.snapshot.state !== "rewardCeremony";
@@ -4798,7 +5002,31 @@ function updateSandboxCombat(fixedDtMs: number): void {
         // count, the same "no single shared value" shape as Solar Energy above.
         const droneConstellation = constellationOf(drone);
         if (droneConstellation) appliedDamage *= 1 - droneConstellation.incomingDamageReductionFor(drone.id);
+        // GP-002 adaptiveArmour: resists whichever damage school it was most recently hit by.
+        const hitSchool = playerPacket().school;
+        if (drone.mutationEffects.adaptiveResistFraction > 0 && drone.lastDamageSchoolTaken === hitSchool) {
+          appliedDamage *= 1 - drone.mutationEffects.adaptiveResistFraction;
+        }
+        drone.lastDamageSchoolTaken = hitSchool;
         drone.hull -= appliedDamage;
+        // GP-002 reflectiveArmour: a fraction of the damage just applied comes back to the player.
+        if (drone.mutationEffects.reflectDamageFraction > 0 && playerDefence && !player.invulnerable) {
+          const reflected = appliedDamage * drone.mutationEffects.reflectDamageFraction;
+          const reflectIntake = playerDefence.takeDamage(reflected);
+          bus.emit("PlayerDamaged", { amount: reflected, source: drone.id });
+          if (reflectIntake.defeated) {
+            endRun("defeat");
+            return;
+          }
+        }
+        // GP-002 quantumShift: a chance to teleport away the instant it's hit —
+        // burst damage already landed above; this only denies follow-up shots.
+        if (drone.mutationEffects.quantumShiftChance > 0 && combatRng.next() < drone.mutationEffects.quantumShiftChance) {
+          const jumpAngle = combatRng.float(0, Math.PI * 2);
+          const jumpDistance = combatRng.float(4, 8);
+          drone.x = Math.min(ARENA.maxX - 1, Math.max(ARENA.minX + 1, drone.x + Math.cos(jumpAngle) * jumpDistance));
+          drone.y = Math.min(ARENA.maxY - 1, Math.max(ARENA.minY + 1, drone.y + Math.sin(jumpAngle) * jumpDistance));
+        }
         hitCount += 1;
         if (result.critical) {
           critCount += 1;
@@ -4970,7 +5198,10 @@ function startRun(): void {
   buildPathBiasRng = new Rng(seed).fork("build-path-bias");
   currentBuildPathOffer = [];
   midRunMerchantVisits = 0;
+  lastMerchantWaveOffered = 0;
   extractionDepth = 0;
+  playerStationaryMs = 0;
+  playerWasNearDeath = false;
   bossArtifactRuntime = new BossArtifactRuntime();
   currentBossArtifactOffer = [];
   bossArtifactRng = new Rng(seed).fork("boss-artifact");
@@ -4995,10 +5226,12 @@ function startRun(): void {
   hitCount = 0;
   critCount = 0;
   bossRuntime = null; // AF-035: fresh run, fresh Boss — respawns when MiniBoss phase is reached again.
+  sandboxBoss = SANDBOX_BOSSES[0]!; // GP-002: a fresh run always starts with the ordinary boss, never a leftover World Boss.
   bossDirector = null; // AF-057: the director lives and dies with its encounter.
   outlawSquads = []; // AF-046: squads and mines are run-scoped, like every combat structure here.
   outlawMines = [];
   outlawMineDropClockMs = 0;
+  meteorImpacts = []; // GP-002: Meteor Shower impacts are run-scoped too.
   machineNetworks = []; // AF-047: networks are run-scoped too.
   crystalEcosystems = []; // AF-048: ecosystems and growths are run-scoped too.
   crystalGrowths = [];
@@ -5261,6 +5494,15 @@ function drawSandbox(): void {
     ctx.fill();
   }
 
+  // GP-002 §Events: Meteor Shower impacts — fiery red-orange rings, distinct from the Outlaws' warning-orange mines.
+  for (const impact of meteorImpacts) {
+    ctx.beginPath();
+    ctx.strokeStyle = "#ff4d4d";
+    ctx.lineWidth = 1.5;
+    ctx.arc(toX(impact.zone.x), toY(impact.zone.y), impact.zone.radius * scale, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   // AF-048: Crystal growths — violet filled zones that visibly expand
   // (the faction's visual language), readable area-under-threat per AF-004.
   for (const growth of crystalGrowths) {
@@ -5341,6 +5583,8 @@ function drawSandbox(): void {
     const dy = toY(drone.y);
     const droneSize = (drone.elite ? 0.55 : 0.35) * scale;
     ctx.save();
+    // GP-002 cloaked: renders as a faint outline while untargetable, never fully invisible.
+    ctx.globalAlpha = isDroneCloaked(drone) ? 0.25 : 1;
     ctx.translate(dx, dy);
     ctx.fillStyle = drone.elite ? "#c8323c" : "#ff4054";
     ctx.shadowColor = "#ff4054";
@@ -5919,6 +6163,19 @@ function render(): void {
               director?.setThreatInputs({ missionDifficulty: 1 + extractionDepth * 0.35 });
               extractionRemainingMs = 20000;
               lootNotices.push({ text: `PUSHING DEEPER · DEPTH ${extractionDepth}`, colour: "#ff8c1a", ttlMs: 2600 });
+              // GP-002 §Mission End: "each additional wave increases... boss
+              // chance" — a real roll for a real second encounter (the same
+              // spawnBoss()/grantBossRewards() pipeline, run again against
+              // WORLD_BOSS), never just a bigger number. Only rolls while no
+              // boss fight is currently live (the ordinary boss is always
+              // already defeated by the time Extraction is reachable at all).
+              const bossChance = Math.min(0.6, extractionDepth * 0.15);
+              const bossAvailable = !bossRuntime || bossRuntime.snapshot.state === "rewardCeremony";
+              if (bossAvailable && combatRng && combatRng.next() < bossChance) {
+                sandboxBoss = WORLD_BOSS;
+                spawnBoss();
+                lootNotices.push({ text: "WORLD BOSS DETECTED", colour: "#ffc652", ttlMs: 3200 });
+              }
               machine.popOverlay();
             },
           ],
@@ -7024,6 +7281,7 @@ const loop = new GameLoop({
           return `articles ${CONSTITUTIONAL_ARTICLES.length} · review passed=${constitutionalReviewPassed(new Set(articleNames))} · player promise ${ATLAS_CONSTITUTION_PLAYER_PROMISE.length} items · developer promise ${ATLAS_CONSTITUTION_DEVELOPER_PROMISE.length} items · article overlap[Constitution,Pillars] ${pillarOverlap.shared.length}/${articleNames.length} · article overlap[Constitution,PrimeDirectives] ${primeDirectiveOverlap.shared.length}/${articleNames.length} · oath overlap[Constitution,PrimeDevPromise] ${oathOverlap.shared.length}/${CONSTITUTIONAL_OATH_COMMITMENTS.length}`;
         })(),
         gpCoreLoop: gpCoreLoopDebugLine(),
+        gpEnemyWave: gpEnemyWaveDebugLine(),
       });
     }
   },

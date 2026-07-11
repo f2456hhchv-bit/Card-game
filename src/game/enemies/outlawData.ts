@@ -239,7 +239,7 @@ export const OUTLAW_ENEMIES: readonly EnemyDef[] = [
     id: "outlaw-shield-carrier",
     name: "Outlaw Shield Carrier",
     family: "supportUnit",
-    roles: ["support", "tank"],
+    roles: ["support", "tank", "shieldUnit"], // GP-002: fronting a shield for everything behind it IS the shieldUnit role, already real
     lore: "It doesn't shoot. It doesn't have to — everything behind it does.",
     strengths: ["Shield Coordination — a walking barrier for the squad"],
     weaknesses: ["Nearly harmless alone", "Slow"],
@@ -324,7 +324,7 @@ export const OUTLAW_ENEMIES: readonly EnemyDef[] = [
     id: "outlaw-captain",
     name: "Outlaw Captain",
     family: "heavyAssault",
-    roles: ["controller", "elite"],
+    roles: ["controller", "elite", "commander"], // GP-002: squad-leading officer IS the commander role, already real
     lore: "Every broken fleet has one officer who kept their rank by keeping their crew alive.",
     strengths: ["The squad fights coordinated while the Captain lives"],
     weaknesses: ["Kill the Captain and the formation breaks"],

@@ -126,8 +126,18 @@ export const SANDBOX_BOSSES: readonly BossDef[] = [
     threatRating: 8,
     lore: "It has guarded an empty vault for ten thousand years. It no longer remembers what was inside.",
     family: "ancientGuardian",
-    phaseSystem: "twoPhase",
-    hull: 900,
+    // GP-002: the registered "fourPhase" PHASE_SYSTEM value, completed with
+    // two new real phases below — Learning/Pressure/Chaos/Signature, each a
+    // genuine attack+movement+mechanic change, never a hull-threshold-only
+    // stat bump. phase-2's own hullThreshold moved from 0.5 to 0.7 to make
+    // room for the two new phases below it; its attack/movement content is untouched.
+    phaseSystem: "fourPhase",
+    // GP-002: hull raised from 900 to 3000 alongside the new phases — with
+    // four real phase transitions to cross instead of one, each threshold
+    // gap needs enough absolute hull headroom to survive a transition's own
+    // ~500ms damage-still-applies window without cascading straight through
+    // the next phase (and past Enrage) before ever returning to "engaging".
+    hull: 3000,
     shield: 200,
     armour: 0.15,
     weakPoints: [{ id: "core-eye", name: "Core Eye", hullFraction: 0.2, damageMultiplier: 2.5 }],
@@ -174,7 +184,7 @@ export const SANDBOX_BOSSES: readonly BossDef[] = [
       },
       {
         phaseId: "phase-2-collapse",
-        hullThreshold: 0.5,
+        hullThreshold: 0.75,
         attack: {
           attackType: "nova",
           mechanism: {
@@ -212,6 +222,93 @@ export const SANDBOX_BOSSES: readonly BossDef[] = [
         additionalAbility: null,
         mechanic: "arenaManipulation",
       },
+      // GP-002: Phase 3 — "Chaos". The vault's guardian abandons its own
+      // patrol logic; a spiral barrage plus wall-crawling movement is a
+      // genuinely new pressure shape, not a scaled repeat of phase 1 or 2.
+      {
+        phaseId: "phase-3-chaos",
+        hullThreshold: 0.5,
+        attack: {
+          attackType: "missile",
+          mechanism: {
+            kind: "ranged",
+            weapon: {
+              id: "sentinel-chaos-spiral",
+              name: "Chaos Spiral",
+              category: "missile",
+              manufacturer: "Ancient Guardian Remnant",
+              tier: 4,
+              rarity: "legendary",
+              lore: "It stops choosing where to aim. Everywhere is close enough.",
+              damageSchool: "physical",
+              damageSourceKind: "boss",
+              baseDamage: 7,
+              critChance: 0,
+              critMultiplier: 1,
+              fireIntervalMs: 900,
+              firePattern: "spiral",
+              projectilesPerShot: 6,
+              projectileBehaviour: "straight",
+              range: 13,
+              projectileSpeed: 11,
+              pierceCount: 0,
+              explosionRadius: 1,
+              statusOnHit: null,
+              energyCost: 0,
+              evolution: null,
+            },
+          },
+          telegraphMs: 700,
+        },
+        movementBehaviour: "wallCrawling",
+        moveSpeed: 2.1,
+        additionalAbility: null,
+        mechanic: "areaDenial",
+      },
+      // GP-002: Phase 4 — "Signature". The Hollow Sentinel's one truly
+      // unique attack, saved for the very end — a sustained beam, never used
+      // in any earlier phase, timed to land alongside its own existing
+      // low-health Enrage bonus for one real final-stand moment.
+      {
+        phaseId: "phase-4-signature",
+        hullThreshold: 0.32,
+        attack: {
+          attackType: "beam",
+          mechanism: {
+            kind: "ranged",
+            weapon: {
+              id: "sentinel-vault-beam",
+              name: "Vault Beam",
+              category: "beam",
+              manufacturer: "Ancient Guardian Remnant",
+              tier: 4,
+              rarity: "legendary",
+              lore: "What it was built to protect the vault from, once. It remembers how.",
+              damageSchool: "energy",
+              damageSourceKind: "boss",
+              baseDamage: 22,
+              critChance: 0,
+              critMultiplier: 1,
+              fireIntervalMs: 1800,
+              firePattern: "beam",
+              projectilesPerShot: 1,
+              projectileBehaviour: "straight",
+              range: 18,
+              projectileSpeed: 20,
+              pierceCount: 3,
+              explosionRadius: 0,
+              statusOnHit: { kind: "burn", chance: 0.5, strength: 6, durationMs: 2500 },
+              energyCost: 0,
+              evolution: null,
+            },
+          },
+          telegraphMs: 1300,
+        },
+        movementBehaviour: "teleport",
+        moveSpeed: 1.8,
+        additionalAbility: null,
+        mechanic: "energyBeams",
+      },
     ],
     enrage: {
       trigger: "lowHealth",
@@ -236,3 +333,26 @@ export const SANDBOX_BOSSES: readonly BossDef[] = [
     codexId: "hollow-sentinel",
   },
 ];
+
+/**
+ * GP-002 §Enemy Hierarchy: "World Boss" as a real, distinct category from a
+ * single ordinary Boss — built by scaling an existing BossDef exactly the
+ * way AF-034's EliteGenerator already scales a base EnemyDef (hull/threat
+ * multipliers over the same phases/weak points/enrage/mastery content), not
+ * a second duplicated content block. The composition root triggers this via
+ * a deep-extraction "boss chance" roll (GP-002 §Mission End).
+ */
+export function createWorldBossVariant(base: BossDef, hullMultiplier: number): BossDef {
+  return {
+    ...base,
+    id: `${base.id}-world-boss`,
+    name: `World-Ender ${base.name}`,
+    title: `${base.title} (Awakened)`,
+    threatRating: base.threatRating + 2,
+    hull: base.hull * hullMultiplier,
+    codexId: `${base.codexId}-world-boss`,
+  };
+}
+
+/** The one World Boss content actually authored today — a scaled Hollow Sentinel. */
+export const WORLD_BOSS: BossDef = createWorldBossVariant(SANDBOX_BOSSES[0]!, 1.75);
