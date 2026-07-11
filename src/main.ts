@@ -41,6 +41,8 @@ import { XpPickups } from "./game/progression/XpPickups";
 import { UpgradePool } from "./game/progression/UpgradePool";
 import { DEFAULT_XP_TUNING, type UpgradeDefinition } from "./game/progression/xpTuning";
 import { PASSIVE_CATEGORIES, SANDBOX_PASSIVES } from "./game/passives/passiveData";
+import { SANDBOX_UPGRADES } from "./game/progression/sandboxUpgrades";
+import type { EquipmentBonus, PassiveTrigger } from "./game/equipment/equipmentData";
 import { SANDBOX_ARTIFACTS, ArtifactRuntime } from "./game/artifacts/artifactData";
 import { BUILD_PATHS, BuildPathRuntime, offerBiasedUpgrades, offerBuildPaths, shouldOfferBuildPath, type BuildPathDef } from "./game/progression/buildPaths";
 import {
@@ -630,27 +632,9 @@ const sandboxBuild = {
   passiveXpBonus: 0, // GP-004: standalone Passives, xp category
 };
 
-const SANDBOX_UPGRADES: UpgradeDefinition[] = [
-  { id: "damage", category: "weaponUpgrade", name: "Focused Coils", description: "+15% weapon damage", weight: 10, maxStacks: 5, effect: { kind: "damage", value: 0.15 } },
-  { id: "firerate", category: "weaponUpgrade", name: "Rapid Cycler", description: "+14% fire rate", weight: 10, maxStacks: 5, effect: { kind: "cooldownReduction", value: 0.14 } },
-  { id: "crit", category: "critical", name: "Precision Optics", description: "+5% critical chance", weight: 6, maxStacks: 4, effect: { kind: "criticalChance", value: 0.05 } },
-  { id: "speed", category: "movement", name: "Tuned Thrusters", description: "+8% movement speed", weight: 6, maxStacks: 5, effect: { kind: "movementSpeed", value: 0.08 } },
-  { id: "barrier", category: "shield", name: "Emergency Barrier", description: "+20 barrier now", weight: 5, maxStacks: null, effect: { kind: "shieldCapacity", value: 20 } },
-  { id: "magnet", category: "resource", name: "Collection Field", description: "+1.5 magnet radius", weight: 4, maxStacks: 3, effect: { kind: "pickupRadius", value: 1.5 } },
-  // GP-004 §Content Engine: the standalone Passive registry, offered through
-  // this same real, tested acquisition flow — not a disconnected parallel
-  // system. Each carries `category: "passive"` (already registered in
-  // UPGRADE_CATEGORIES) plus its own taxonomy sub-category for future filtering.
-  ...SANDBOX_PASSIVES.map((passive) => ({
-    id: passive.id,
-    category: "passive" as const,
-    name: passive.name,
-    description: passive.description,
-    weight: 5,
-    maxStacks: 5,
-    effect: passive.bonus,
-  })),
-];
+// GP-005 §Balance: extracted to src/game/progression/sandboxUpgrades.ts so
+// its own numeric balance (e.g. Rapid Cycler vs Focused Coils) is
+// independently testable without importing this entry point.
 
 function playerPacket() {
   const commanderCritDamage = commanderRuntime?.bonuses.criticalDamage ?? 0;
@@ -663,6 +647,15 @@ function playerPacket() {
   } as const;
 }
 
+// GP-005 §Passives: which Passives are held as real, repeatable triggered
+// procs (see applyUpgrade/firePassiveTrigger below) rather than a one-time
+// stat applied at pickup. lowHealthPassiveFired tracks which onLowHealth
+// procs have already fired THIS low-health window, so they fire once per
+// crossing rather than every tick while health stays low, then rearm once
+// health recovers above threshold (see checkLowHealthPassives).
+const heldPassiveIds = new Set<string>();
+const lowHealthPassiveFired = new Set<string>();
+
 /**
  * GP-004 §Content Engine / §Passives: the audit found this switched on
  * literal upgrade-id strings — the same hardcoded-branching anti-pattern
@@ -671,10 +664,36 @@ function playerPacket() {
  * `effect` (AF-028's EquipmentBonus/BonusKind vocabulary): any future
  * upgrade — including the whole standalone Passive roster — plugs in with
  * zero main.ts changes as long as it uses an already-registered BonusKind.
+ *
+ * GP-005 §Passives: the audit found `trigger` was never read anywhere —
+ * every Passive applied as a flat permanent bonus at pickup regardless of
+ * its stated trigger (its own cited example: "restores hull when
+ * critically wounded" that actually just healed once, immediately,
+ * regardless of health). Instant-effect Passives (shieldCapacity/
+ * shieldRegeneration kinds — Hardened Plating, Guardian Ward, Nanite Mesh)
+ * are now held and fired on their own real trigger instead (see
+ * firePassiveTrigger/checkLowHealthPassives), mirroring how Artifacts
+ * already work. Stat-kind Passives (damage/cooldownReduction/
+ * criticalChance/movementSpeed/pickupRadius/resourceGain/experienceGain)
+ * correctly stay pickup-permanent — re-firing them on every trigger would
+ * compound unboundedly — matching AF-028's own pre-existing trigger+bonus
+ * convention (Commander/Equipment passives), which this module does not
+ * redesign.
  */
 function applyUpgrade(id: string): void {
   const effect = SANDBOX_UPGRADES.find((upgrade) => upgrade.id === id)?.effect;
   if (!effect) return;
+  const isInstantEffectPassive =
+    (effect.kind === "shieldCapacity" || effect.kind === "shieldRegeneration") &&
+    SANDBOX_PASSIVES.some((passive) => passive.id === id);
+  if (isInstantEffectPassive) {
+    heldPassiveIds.add(id);
+    return;
+  }
+  applyUpgradeEffect(effect);
+}
+
+function applyUpgradeEffect(effect: EquipmentBonus): void {
   switch (effect.kind) {
     case "damage":
       sandboxBuild.weaponBonus += effect.value;
@@ -711,6 +730,39 @@ function applyUpgrade(id: string): void {
       break;
     default:
       break; // registered-future bonus kinds (droneEffectiveness/orbitalPower/...) — no consumer system yet, by design.
+  }
+}
+
+/** GP-005 §Passives: fires every held instant-effect Passive registered on `trigger`. */
+function firePassiveTrigger(trigger: PassiveTrigger): void {
+  for (const passive of SANDBOX_PASSIVES) {
+    if (passive.trigger !== trigger || !heldPassiveIds.has(passive.id)) continue;
+    if (passive.bonus.kind === "shieldCapacity") playerDefence?.addBarrier(passive.bonus.value);
+    else if (passive.bonus.kind === "shieldRegeneration") playerDefence?.healHull(passive.bonus.value);
+  }
+}
+
+/**
+ * GP-005 §Passives: onLowHealth is a threshold STATE, not a discrete event,
+ * so it can't be a plain bus listener like the others — edge-triggered via
+ * lowHealthPassiveFired so a held passive fires once per crossing below its
+ * own threshold, then rearms once health recovers back above it.
+ */
+function checkLowHealthPassives(): void {
+  if (!playerDefence) return;
+  const snap = playerDefence.snapshot;
+  const fraction = snap.maxHull > 0 ? snap.hull / snap.maxHull : 1;
+  for (const passive of SANDBOX_PASSIVES) {
+    if (passive.trigger !== "onLowHealth" || !heldPassiveIds.has(passive.id)) continue;
+    const threshold = passive.threshold ?? 0.3;
+    if (fraction > threshold) {
+      lowHealthPassiveFired.delete(passive.id);
+      continue;
+    }
+    if (lowHealthPassiveFired.has(passive.id)) continue;
+    lowHealthPassiveFired.add(passive.id);
+    if (passive.bonus.kind === "shieldRegeneration") playerDefence.healHull(passive.bonus.value);
+    else if (passive.bonus.kind === "shieldCapacity") playerDefence.addBarrier(passive.bonus.value);
   }
 }
 
@@ -816,7 +868,8 @@ function gpMetaProgressionDebugLine(): string {
 
 /** GP-004 §DEBUG: one combined summary line for the Content Engine's architecture fixes. */
 function gpContentEngineDebugLine(): string {
-  return `passives ${SANDBOX_PASSIVES.length}/${PASSIVE_CATEGORIES.length} categories · artifacts [${artifactRuntime.heldIds.join(", ") || "none"}]/${SANDBOX_ARTIFACTS.length} · weapon categories ${WEAPON_CATEGORIES.length} (+summon) · framework categories ${WEAPON_FRAMEWORK_CATEGORIES.length}`;
+  const instantEffectPassiveCount = SANDBOX_PASSIVES.filter((p) => p.bonus.kind === "shieldCapacity" || p.bonus.kind === "shieldRegeneration").length;
+  return `passives ${SANDBOX_PASSIVES.length}/${PASSIVE_CATEGORIES.length} categories (${instantEffectPassiveCount} real triggered procs, held [${[...heldPassiveIds].join(", ") || "none"}]) · artifacts [${artifactRuntime.heldIds.join(", ") || "none"}]/${SANDBOX_ARTIFACTS.length} · weapon categories ${WEAPON_CATEGORIES.length} (+summon) · framework categories ${WEAPON_FRAMEWORK_CATEGORIES.length}`;
 }
 
 // ── Sandbox loot (AF-023): elites always drop, drones sometimes; beams on
@@ -1180,6 +1233,16 @@ bus.on("CommanderLevelUp", () => {
       sandboxBuild.critBonus += artifact.effect.value;
     }
   }
+});
+// GP-005 §Passives: the instant-effect Passive registry's generic trigger
+// dispatcher — mirrors the Artifact listeners immediately above exactly.
+// onLowHealth is handled separately (checkLowHealthPassives, called from
+// the fixed-tick loop) since it's a threshold state, not a discrete event.
+bus.on("EnemyKilled", () => firePassiveTrigger("onKill"));
+bus.on("PlayerDamaged", () => firePassiveTrigger("onDamageTaken"));
+bus.on("ShieldBroken", () => firePassiveTrigger("onShieldBreak"));
+bus.on("DamageDealt", ({ critical }) => {
+  if (critical) firePassiveTrigger("onCriticalHit");
 });
 // AF-049: Void Distortion is one of AF-017's existing EnvironmentalEvent
 // outcomes — reacting to the fact the Director already emits, no Director change.
@@ -4366,6 +4429,11 @@ function updateSandboxCombat(fixedDtMs: number): void {
     playerWasNearDeath = false;
   }
 
+  // GP-005 §Passives: onLowHealth Passives (Nanite Mesh) fire a real,
+  // edge-triggered proc here — the same per-tick health read as the Near
+  // Death check just above, reused rather than duplicated.
+  checkLowHealthPassives();
+
   // GP-001 Living Reactor: a slow, steady hull regen pulse — and every pulse
   // detonates, damaging anything standing near the player when it lands.
   if (bossArtifactRuntime.has("livingReactor")) {
@@ -5631,6 +5699,8 @@ function startRun(): void {
   sandboxBuild.speedStacks = 0;
   sandboxBuild.passiveLootBonus = 0; // GP-004: standalone Passives, economy category
   sandboxBuild.passiveXpBonus = 0; // GP-004: standalone Passives, xp category
+  heldPassiveIds.clear(); // GP-005: instant-effect Passives are held per-run too.
+  lowHealthPassiveFired.clear();
   const research = researchEffects();
   sandboxBuild.magnetBonus = research.magnetBonus;
   sandboxBuild.researchWeaponBonus = research.weaponBonus;
