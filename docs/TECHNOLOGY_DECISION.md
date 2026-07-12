@@ -65,3 +65,28 @@ This supersedes AF-002/AF-092's prior 2D-flavoured art-style vocabulary (`nasaRe
 - The **loot-tier hex values** referenced in rule 2 are AF-007's locked rarity ladder (`RARITY_TABLE` in `src/game/loot/lootTuning.ts`) — already-canonical, not new colours to invent.
 
 Scope and sequencing for actually building the rendering pipeline and applying this style remain tracked separately (AF-095+), unchanged by this amendment — this records the *decision*, not an implementation.
+
+## Amendment — 2026-07-12 (Project Owner) — DIRECTIVE: Asset Pipeline & Derivation Rules (BINDING)
+
+Unlike the two amendments above (art direction — how things should look), this one governs the **technical delivery format** every asset arrives in and how the renderer must handle it — implemented as real code, not just recorded as a decision.
+
+**§1 Three pipelines — every art asset belongs to exactly one:**
+- **KEYED** (ships/enemies/boss/commander sprites, pickups, and every icon-shaped asset by extension): pre-keyed RGBA PNGs, trimmed to content, 2px alpha pad, nose/face pointing north. Rendered normally — never re-keyed, never assumes a background colour.
+- **ADDITIVE** (muzzle flashes, impacts, status effects, elite mutation tells, elite tier rings, ultimate VFX, particle bursts, rarity frames, artifact activations): RGB PNGs on pure black, rendered with `globalCompositeOperation: "lighter"`. Black is the transparency — never alpha-keyed.
+- **FULLBLEED** (biome backgrounds, UI screen backgrounds, briefings, star-map region/cluster art): opaque images, rendered as backgrounds with no keying or blending.
+
+Implemented in `src/game/assets/assetPipeline.ts` — `blendModeFor(pipeline)` is the ONE place blend mode is decided; every `AssetRegistryEntry` carries its own `pipeline` field.
+
+**§2 Derived assets — never separate source files, generated in code from a real parent:**
+- Ship roster thumbnails ← downscale the ship's own in-run sprite (`deriveThumbnailTransform`).
+- Enemy move/attack/death states ← the idle sprite plus a code-driven transform: rotation lean for move (`deriveEnemyMoveLean`), recoil/flash overlay for attack (`deriveEnemyAttackOverlay`), fragment-and-fade for death (`deriveEnemyDeathFrame`). A hand-made per-enemy state sprite is the exception, not the rule — the registry renders correctly with idle-only.
+- Boss variants (World-Ender, Vanguard) ← the base Hollow Sentinel model at a different scale (`bossVisualScale`, cube-root of the same hull multiplier `createWorldBossVariant`/`createMiniBossVariant` already use — a literal 1:1 hull-to-linear-size mapping would render the 0.35-hull Mini Boss absurdly tiny).
+- Elite mutations / elite tiers / status effects / rarity treatment ← a real, reusable additive overlay composited onto the base sprite/icon at runtime — never baked into a second, combined source file.
+
+**§3 `docs/ASSET_MANIFEST.md` is now a GENERATED artefact** — `npm run assets:manifest` rebuilds it from `src/game/assets/assetRegistry.ts` (id, name, category, pipeline, sourceOrDerived, derivedFrom, status). Hand-editing it is prohibited going forward; edit the registry and regenerate. Its companion, `docs/asset-prompts.csv` (`npm run assets:prompts`), covers SOURCE entries only — a derived entry has no prompt because there's nothing to generate for it.
+
+**§4 Colour law:** nothing green in any KEYED sprite's palette (the chroma-key extraction step would strip it from the subject, not just the background). Substitutions in source art: regeneration → gold, poison/toxic → amber, biomass → amber-yellow. Green is permitted freely in additive/fullbleed assets. Crystal Dominion sprites are magenta-keyed instead of green-keyed — tracked per-entry via `AssetRegistryEntry.keyColour`.
+
+**§5 Placeholder discipline:** every registry entry starts at status `"missing"`, not `"placeholder"` — nothing has even a temporary asset yet. `main.ts`'s existing 100%-canvas-primitive rendering already satisfies "the game must boot and play with any mix of delivered and placeholder assets — no asset is ever load-bearing" by construction; no code change to `main.ts` was needed or made.
+
+**Result:** the true source-file count, once derivation was actually applied (not just recorded), is **854** — down from **1,049** total registry entries (195 eliminated as pure code-derivations: 10 ship thumbnails + 183 enemy move/attack/death states + 2 boss-variant models). This is a different unit from the pre-directive named-content-entry count (704) — that counted distinct game-content entries, this counts individual image files actually needed — so the two numbers are not directly comparable, but both are real and both are now tracked.

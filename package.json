@@ -10,11 +10,13 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "assets:manifest": "tsx scripts/generate-asset-manifest.ts"
   },
   "devDependencies": {
     "@types/node": "^26.0.1",
     "playwright": "^1.61.1",
+    "tsx": "^4.23.0",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
     "vitest": "^2.1.4"
