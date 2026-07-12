@@ -309,10 +309,14 @@ for (const entry of RUN_ENTRIES) {
     matched = true;
     const profile = profilesById.get(baseId) as any;
     Object.assign(context, {
-      subject: subtype === "ultimate-vfx" ? `ultimate ability "${commander.ultimate.name}"` : subtype === "active-vfx" ? `active ability "${commander.active.name}" (fires often — visibly smaller than an ultimate)` : `${commander.name} "${commander.callsign}"`,
+      subject:
+        subtype === "ultimate-vfx" ? `ultimate ability "${commander.ultimate.name}"`
+          : subtype === "active-vfx" ? `active ability "${commander.active.name}" (fires often — visibly smaller than an ultimate)`
+            : `UI PORTRAIT of ${commander.name} "${commander.callsign}", the ship's commanding officer — a chibi character bust`,
+      formFactor: subtype === "portrait" ? "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene." : undefined,
       archetype: commander.archetype, commanderClass: profile?.class, faction: commander.faction,
       biography: commander.biography, designBrief: profile?.visualDesign,
-      usedIn: subtype === "portrait" ? "recruitment/roster/loadout screens, dialogue framing" : subtype === "sprite" ? "in-run gameplay" : "in-run gameplay",
+      usedIn: subtype === "portrait" ? "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator" : "in-run gameplay",
     });
   }
   const enemyHit = enemiesById.get(baseId);
@@ -337,17 +341,18 @@ for (const entry of RUN_ENTRIES) {
       weakPoint: boss.weakPoints[0]?.id, usedIn: "in-run boss encounters (base model reused at scale for World Boss / Mini Boss variants)",
     });
   }
+  const AUGMENT_FORM_FACTOR = "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.";
   const bossArtifact = bossArtifactsById.get(baseId);
-  if (bossArtifact) { matched = true; Object.assign(context, { subject: bossArtifact.name, description: bossArtifact.description, usedIn: subtype === "icon" ? "BossArtifactChoice overlay, HUD" : "in-run gameplay" }); }
+  if (bossArtifact) { matched = true; Object.assign(context, { subject: `ship augment "${bossArtifact.name}"`, description: bossArtifact.description, formFactor: subtype === "icon" ? AUGMENT_FORM_FACTOR : undefined, usedIn: subtype === "icon" ? "BossArtifactChoice overlay, HUD" : "in-run gameplay" }); }
   const passive = passivesById.get(baseId);
-  if (passive) { matched = true; Object.assign(context, { subject: passive.name, description: passive.description, passiveCategory: passive.category, trigger: passive.trigger, usedIn: "level-up cards, HUD" }); }
+  if (passive) { matched = true; Object.assign(context, { subject: `ship passive-upgrade icon "${passive.name}"`, description: passive.description, formFactor: "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.", passiveCategory: passive.category, trigger: passive.trigger, usedIn: "level-up cards, HUD" }); }
   const artifact = artifactsById.get(baseId);
-  if (artifact) { matched = true; Object.assign(context, { subject: artifact.name, description: artifact.description, usedIn: subtype === "icon" ? "merchant/inventory" : "in-run gameplay" }); }
+  if (artifact) { matched = true; Object.assign(context, { subject: `ship augment "${artifact.name}"`, description: artifact.description, formFactor: subtype === "icon" ? AUGMENT_FORM_FACTOR : undefined, usedIn: subtype === "icon" ? "merchant/inventory" : "in-run gameplay" }); }
   const relic = relicsById.get(baseId);
   if (relic) {
     matched = true;
     const rp = relicProfilesById.get(baseId) as any;
-    Object.assign(context, { subject: relic.name, description: relic.description, relicCategory: (relic as any).category, rarity: (relic as any).rarity, rarityHex: (RARITY_TABLE as any)[(relic as any).rarity]?.colour, profileVisual: rp?.visualIdentity, usedIn: "museum, inventory, drop beams" });
+    Object.assign(context, { subject: `ship relic-augment "${relic.name}"`, description: relic.description, formFactor: AUGMENT_FORM_FACTOR, relicCategory: (relic as any).category, rarity: (relic as any).rarity, rarityHex: (RARITY_TABLE as any)[(relic as any).rarity]?.colour, profileVisual: rp?.visualIdentity, usedIn: "museum, inventory, drop beams" });
   }
   const relicSet = relicSetsById.get(baseId);
   if (relicSet) { matched = true; Object.assign(context, { subject: `relic set "${relicSet.name}" active-bonus aura`, description: (relicSet as any).description, pieces: (relicSet as any).pieceRelicIds ?? undefined, usedIn: "in-run gameplay, worn by the player ship" }); }
@@ -507,6 +512,11 @@ const runFile = {
       "A 'weapon' is a ship armament that bolts to a hull hardpoint (turret / cannon / missile pod / beam emitter / lattice array), not a gun a soldier holds. " +
       "Weapon FAMILY names (railguns, shotguns, missileLaunchers, laserArrays…) describe the FIRING BEHAVIOUR, not an infantry form-factor. " +
       "Commanders are the ONLY human/character assets in the game (chibi pilots) — everything else is hardware, creatures, environments, or UI.",
+    worldConsistency:
+      "NOTHING in this game is a person on foot or a ground scene. Enemies are ships / drones / crystalline organisms / void entities / living structures — never soldiers. " +
+      "Commanders exist SOLELY as a meta skill/ability layer: a UI portrait bust shown in menus and the HUD, providing passives/actives/ultimates — they are never a walking body in the play-field (the game renders no commander body). " +
+      "Passives, artifacts, relics, equipment, and resources are SHIP augments / upgrade modules / cargo — augment icons and hardware, not clothing, hand-tools, or character inventory. " +
+      "Everything the player 'equips' is an attachment for the ship (armament, shield, engine, plating, drone bay). If a subject could be read as a handheld item or a person standing on ground, it is being drawn wrong.",
     artStyle: "Chibi-proportioned stylized 3D rendered with flat toon/cel-shading — Nintendo-inspired, hopeful not grim. The 8 Visual Style Rules below bind every asset.",
     visualStyleRules: VISUAL_STYLE_RULES,
     litmusTest: "Shrink any new visual element to 32px. If you can't tell what it is, redesign it.",
@@ -565,7 +575,7 @@ const CSV_COLUMNS = [
 const CONSUMED_KEYS = new Set(["subject", "lore", "description", "briefing", "faction", "factionVisual", "biome", "biomeVisualIdentityStatus", "manufacturer", "manufacturerVisualIdentity", "rarity", "rarityHex", "usedIn"]);
 const csvRows: string[] = [CSV_COLUMNS.map(csvEscape).join(",")];
 const directiveText =
-  `GAME FRAMING: ${runFile.directive.gameFraming} ` +
+  `GAME FRAMING: ${runFile.directive.gameFraming} WORLD CONSISTENCY: ${runFile.directive.worldConsistency} ` +
   `${runFile.directive.artStyle} RULES: ${VISUAL_STYLE_RULES.map((r, i) => `${i + 1}. ${r}`).join(" ")} LITMUS: ${runFile.directive.litmusTest} ` +
   `DELIVERY — keyed: ${runFile.directive.delivery.keyed} additive: ${runFile.directive.delivery.additive} fullbleed: ${runFile.directive.delivery.fullbleed} ` +
   `COLOUR LAW: ${runFile.directive.colourLaw} DERIVATION: ${runFile.directive.derivationPolicy}`;

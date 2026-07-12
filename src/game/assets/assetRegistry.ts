@@ -122,12 +122,16 @@ for (const weapon of LAUNCH_ARSENAL) {
   add({ id: `${weapon.id}:impact`, name: weapon.name, category: "weapons", pipeline: "additive", sourceOrDerived: "source" });
 }
 
-// ── Commanders — portrait/sprite keyed source; ultimate VFX additive source.
-// Crystal-faction commanders are magenta-keyed like their faction's enemies (§4). ──
+// ── Commanders — PORTRAIT ONLY + an ultimate VFX. World-consistency
+// (Project Owner, 2026-07-12): commanders are a meta SKILL layer, not
+// bodies in the play-field. This is a top-down space game — the player is
+// a ship, and main.ts renders no commander body anywhere. So a commander
+// gets a UI portrait (roster/loadout/dialogue/HUD) and their ultimate's
+// VFX, but NO in-run full-body sprite. Crystal-faction commanders are
+// magenta-keyed like their faction's art (§4). ──
 for (const commander of FULL_ROSTER_WITH_FOUNDER) {
   const keyColour = MAGENTA_KEYED_FACTIONS.has(commander.faction) ? ("magenta" as const) : ("green" as const);
   add({ id: `${commander.id}:portrait`, name: commander.name, category: "commanders", pipeline: "keyed", sourceOrDerived: "source", keyColour });
-  add({ id: `${commander.id}:sprite`, name: commander.name, category: "commanders", pipeline: "keyed", sourceOrDerived: "source", keyColour });
   add({ id: `${commander.id}:ultimate-vfx`, name: commander.name, category: "commanders", pipeline: "additive", sourceOrDerived: "source" });
 }
 

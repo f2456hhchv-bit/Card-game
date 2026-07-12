@@ -8,13 +8,13 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 
 ## Summary
 
-- **Total registry entries: 1265**
-- **True source-file count (excludes derived): 1064**
+- **Total registry entries: 1212**
+- **True source-file count (excludes derived): 1011**
 - Derived (code-generated, no art file needed): 201
 - Code-drawn (precision vector UI implemented in code, not image-generated): 80
-- Generation run (source AND generated): 984 — P1 136 / P2 231 / P3 617
-- By pipeline: keyed 755, additive 453, fullbleed 57
-- By status: missing 1265, placeholder 0, delivered 0
+- Generation run (source AND generated): 931 — P1 136 / P2 178 / P3 617
+- By pipeline: keyed 702, additive 453, fullbleed 57
+- By status: missing 1212, placeholder 0, delivered 0
 
 **Colour law (DIRECTIVE §4):** nothing green in any KEYED sprite's palette (the chroma-key extraction step would strip it). Substitutions: regeneration → gold, poison → amber, toxic → amber, biomass → amber-yellow. Green is permitted freely in additive/fullbleed assets. Crystal Dominion sprites are magenta-keyed instead of green-keyed (see each entry's own `keyColour`).
 
@@ -36,7 +36,7 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 | build-paths | 9 |
 | combat-entities | 22 |
 | commander-actives | 53 |
-| commanders | 159 |
+| commanders | 106 |
 | currencies | 6 |
 | director-events | 7 |
 | elite-mutations | 18 |
@@ -161,163 +161,110 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 | salvage-scattergun:muzzle | Salvage Scattergun | weapons | P1 | additive | generated | source |  | missing |
 | salvage-scattergun:impact | Salvage Scattergun | weapons | P1 | additive | generated | source |  | missing |
 | reyes-longlight:portrait | Ilsa Reyes | commanders | P2 | keyed | generated | source |  | missing |
-| reyes-longlight:sprite | Ilsa Reyes | commanders | P2 | keyed | generated | source |  | missing |
 | reyes-longlight:ultimate-vfx | Ilsa Reyes | commanders | P2 | additive | generated | source |  | missing |
 | vek-ironhull:portrait | Vek Tarn | commanders | P2 | keyed | generated | source |  | missing |
-| vek-ironhull:sprite | Vek Tarn | commanders | P2 | keyed | generated | source |  | missing |
 | vek-ironhull:ultimate-vfx | Vek Tarn | commanders | P2 | additive | generated | source |  | missing |
 | vael-meridian:portrait | Dr. Sen Vael | commanders | P2 | keyed | generated | source |  | missing |
-| vael-meridian:sprite | Dr. Sen Vael | commanders | P2 | keyed | generated | source |  | missing |
 | vael-meridian:ultimate-vfx | Dr. Sen Vael | commanders | P2 | additive | generated | source |  | missing |
 | okoye-torque:portrait | Jelan Okoye | commanders | P2 | keyed | generated | source |  | missing |
-| okoye-torque:sprite | Jelan Okoye | commanders | P2 | keyed | generated | source |  | missing |
 | okoye-torque:ultimate-vfx | Jelan Okoye | commanders | P2 | additive | generated | source |  | missing |
 | naru-whisper:portrait | Ai Naru | commanders | P2 | keyed | generated | source |  | missing |
-| naru-whisper:sprite | Ai Naru | commanders | P2 | keyed | generated | source |  | missing |
 | naru-whisper:ultimate-vfx | Ai Naru | commanders | P2 | additive | generated | source |  | missing |
 | vex-longfang:portrait | Dain Vex | commanders | P2 | keyed | generated | source |  | missing |
-| vex-longfang:sprite | Dain Vex | commanders | P2 | keyed | generated | source |  | missing |
 | vex-longfang:ultimate-vfx | Dain Vex | commanders | P2 | additive | generated | source |  | missing |
 | holt-thunderline:portrait | Petra Holt | commanders | P2 | keyed | generated | source |  | missing |
-| holt-thunderline:sprite | Petra Holt | commanders | P2 | keyed | generated | source |  | missing |
 | holt-thunderline:ultimate-vfx | Petra Holt | commanders | P2 | additive | generated | source |  | missing |
 | anders-cipher:portrait | Rell Anders | commanders | P2 | keyed | generated | source |  | missing |
-| anders-cipher:sprite | Rell Anders | commanders | P2 | keyed | generated | source |  | missing |
 | anders-cipher:ultimate-vfx | Rell Anders | commanders | P2 | additive | generated | source |  | missing |
 | kite-aviary:portrait | Suno Kite | commanders | P2 | keyed | generated | source |  | missing |
-| kite-aviary:sprite | Suno Kite | commanders | P2 | keyed | generated | source |  | missing |
 | kite-aviary:ultimate-vfx | Suno Kite | commanders | P2 | additive | generated | source |  | missing |
 | sel-keystone:portrait | Mara Sel | commanders | P2 | keyed | generated | source |  | missing |
-| sel-keystone:sprite | Mara Sel | commanders | P2 | keyed | generated | source |  | missing |
 | sel-keystone:ultimate-vfx | Mara Sel | commanders | P2 | additive | generated | source |  | missing |
 | vane-chord:portrait | Ilex Vane | commanders | P2 | keyed | generated | source |  | missing |
-| vane-chord:sprite | Ilex Vane | commanders | P2 | keyed | generated | source |  | missing |
 | vane-chord:ultimate-vfx | Ilex Vane | commanders | P2 | additive | generated | source |  | missing |
 | kael-nadir:portrait | Dr. Oshen Kael | commanders | P2 | keyed | generated | source |  | missing |
-| kael-nadir:sprite | Dr. Oshen Kael | commanders | P2 | keyed | generated | source |  | missing |
 | kael-nadir:ultimate-vfx | Dr. Oshen Kael | commanders | P2 | additive | generated | source |  | missing |
 | farr-redline:portrait | Juno Farr | commanders | P2 | keyed | generated | source |  | missing |
-| farr-redline:sprite | Juno Farr | commanders | P2 | keyed | generated | source |  | missing |
 | farr-redline:ultimate-vfx | Juno Farr | commanders | P2 | additive | generated | source |  | missing |
 | iman-relay:portrait | Sera Iman | commanders | P2 | keyed | generated | source |  | missing |
-| iman-relay:sprite | Sera Iman | commanders | P2 | keyed | generated | source |  | missing |
 | iman-relay:ultimate-vfx | Sera Iman | commanders | P2 | additive | generated | source |  | missing |
 | korr-wardbreaker:portrait | Thessaly Korr | commanders | P2 | keyed | generated | source |  | missing |
-| korr-wardbreaker:sprite | Thessaly Korr | commanders | P2 | keyed | generated | source |  | missing |
 | korr-wardbreaker:ultimate-vfx | Thessaly Korr | commanders | P2 | additive | generated | source |  | missing |
 | voss-lanternkeep:portrait | Dr. Imara Voss | commanders | P2 | keyed | generated | source |  | missing |
-| voss-lanternkeep:sprite | Dr. Imara Voss | commanders | P2 | keyed | generated | source |  | missing |
 | voss-lanternkeep:ultimate-vfx | Dr. Imara Voss | commanders | P2 | additive | generated | source |  | missing |
 | devereux-static:portrait | Ash Devereux | commanders | P2 | keyed | generated | source |  | missing |
-| devereux-static:sprite | Ash Devereux | commanders | P2 | keyed | generated | source |  | missing |
 | devereux-static:ultimate-vfx | Ash Devereux | commanders | P2 | additive | generated | source |  | missing |
 | okafor-halcyon:portrait | Rin Okafor | commanders | P2 | keyed | generated | source |  | missing |
-| okafor-halcyon:sprite | Rin Okafor | commanders | P2 | keyed | generated | source |  | missing |
 | okafor-halcyon:ultimate-vfx | Rin Okafor | commanders | P2 | additive | generated | source |  | missing |
 | ur-sella-chorus:portrait | Vantha Ur-Sella | commanders | P2 | keyed | generated | source |  | missing |
-| ur-sella-chorus:sprite | Vantha Ur-Sella | commanders | P2 | keyed | generated | source |  | missing |
 | ur-sella-chorus:ultimate-vfx | Vantha Ur-Sella | commanders | P2 | additive | generated | source |  | missing |
 | kade-fulcrum:portrait | Boren Kade | commanders | P2 | keyed | generated | source |  | missing |
-| kade-fulcrum:sprite | Boren Kade | commanders | P2 | keyed | generated | source |  | missing |
 | kade-fulcrum:ultimate-vfx | Boren Kade | commanders | P2 | additive | generated | source |  | missing |
 | calder-driftline:portrait | Yuen Calder | commanders | P2 | keyed | generated | source |  | missing |
-| calder-driftline:sprite | Yuen Calder | commanders | P2 | keyed | generated | source |  | missing |
 | calder-driftline:ultimate-vfx | Yuen Calder | commanders | P2 | additive | generated | source |  | missing |
 | aldana-aftercare:portrait | Dr. Petrin Aldana | commanders | P2 | keyed | generated | source |  | missing |
-| aldana-aftercare:sprite | Dr. Petrin Aldana | commanders | P2 | keyed | generated | source |  | missing |
 | aldana-aftercare:ultimate-vfx | Dr. Petrin Aldana | commanders | P2 | additive | generated | source |  | missing |
 | voss-pathfinder:portrait | Dr. Lyra Voss | commanders | P2 | keyed | generated | source |  | missing |
-| voss-pathfinder:sprite | Dr. Lyra Voss | commanders | P2 | keyed | generated | source |  | missing |
 | voss-pathfinder:ultimate-vfx | Dr. Lyra Voss | commanders | P2 | additive | generated | source |  | missing |
 | kane-vanguard:portrait | Adrian Kane | commanders | P2 | keyed | generated | source |  | missing |
-| kane-vanguard:sprite | Adrian Kane | commanders | P2 | keyed | generated | source |  | missing |
 | kane-vanguard:ultimate-vfx | Adrian Kane | commanders | P2 | additive | generated | source |  | missing |
 | ryker-engineer:portrait | Elias Ryker | commanders | P2 | keyed | generated | source |  | missing |
-| ryker-engineer:sprite | Elias Ryker | commanders | P2 | keyed | generated | source |  | missing |
 | ryker-engineer:ultimate-vfx | Elias Ryker | commanders | P2 | additive | generated | source |  | missing |
 | cael-weaver:portrait | Seraphina Cael | commanders | P2 | keyed | generated | source |  | missing |
-| cael-weaver:sprite | Seraphina Cael | commanders | P2 | keyed | generated | source |  | missing |
 | cael-weaver:ultimate-vfx | Seraphina Cael | commanders | P2 | additive | generated | source |  | missing |
 | drake-hunter:portrait | Kael Drake | commanders | P2 | keyed | generated | source |  | missing |
-| drake-hunter:sprite | Kael Drake | commanders | P2 | keyed | generated | source |  | missing |
 | drake-hunter:ultimate-vfx | Kael Drake | commanders | P2 | additive | generated | source |  | missing |
 | sol-resonant:portrait | Aria Sol | commanders | P2 | keyed | generated | source |  | missing |
-| sol-resonant:sprite | Aria Sol | commanders | P2 | keyed | generated | source |  | missing |
 | sol-resonant:ultimate-vfx | Aria Sol | commanders | P2 | additive | generated | source |  | missing |
 | vale-voidrunner:portrait | Orion Vale | commanders | P2 | keyed | generated | source |  | missing |
-| vale-voidrunner:sprite | Orion Vale | commanders | P2 | keyed | generated | source |  | missing |
 | vale-voidrunner:ultimate-vfx | Orion Vale | commanders | P2 | additive | generated | source |  | missing |
 | iskander-swarmmaster:portrait | Nova Iskander | commanders | P2 | keyed | generated | source |  | missing |
-| iskander-swarmmaster:sprite | Nova Iskander | commanders | P2 | keyed | generated | source |  | missing |
 | iskander-swarmmaster:ultimate-vfx | Nova Iskander | commanders | P2 | additive | generated | source |  | missing |
 | thorne-starforged:portrait | Cassia Thorne | commanders | P2 | keyed | generated | source |  | missing |
-| thorne-starforged:sprite | Cassia Thorne | commanders | P2 | keyed | generated | source |  | missing |
 | thorne-starforged:ultimate-vfx | Cassia Thorne | commanders | P2 | additive | generated | source |  | missing |
 | vex-chronomancer:portrait | Aurelion Vex | commanders | P2 | keyed | generated | source |  | missing |
-| vex-chronomancer:sprite | Aurelion Vex | commanders | P2 | keyed | generated | source |  | missing |
 | vex-chronomancer:ultimate-vfx | Aurelion Vex | commanders | P2 | additive | generated | source |  | missing |
 | ash-tempest:portrait | Valen Ash | commanders | P2 | keyed | generated | source |  | missing |
-| ash-tempest:sprite | Valen Ash | commanders | P2 | keyed | generated | source |  | missing |
 | ash-tempest:ultimate-vfx | Valen Ash | commanders | P2 | additive | generated | source |  | missing |
 | korven-phantom:portrait | Nyx Korven | commanders | P2 | keyed | generated | source |  | missing |
-| korven-phantom:sprite | Nyx Korven | commanders | P2 | keyed | generated | source |  | missing |
 | korven-phantom:ultimate-vfx | Nyx Korven | commanders | P2 | additive | generated | source |  | missing |
 | syn-bioforge:portrait | Dr. Mira Syn | commanders | P2 | keyed | generated | source |  | missing |
-| syn-bioforge:sprite | Dr. Mira Syn | commanders | P2 | keyed | generated | source |  | missing |
 | syn-bioforge:ultimate-vfx | Dr. Mira Syn | commanders | P2 | additive | generated | source |  | missing |
 | solari-photon:portrait | Rhea Solari | commanders | P2 | keyed | generated | source |  | missing |
-| solari-photon:sprite | Rhea Solari | commanders | P2 | keyed | generated | source |  | missing |
 | solari-photon:ultimate-vfx | Rhea Solari | commanders | P2 | additive | generated | source |  | missing |
 | kain-singularity:portrait | Zephyr Kain | commanders | P2 | keyed | generated | source |  | missing |
-| kain-singularity:sprite | Zephyr Kain | commanders | P2 | keyed | generated | source |  | missing |
 | kain-singularity:ultimate-vfx | Zephyr Kain | commanders | P2 | additive | generated | source |  | missing |
 | reyes-warden:portrait | Astrid Reyes | commanders | P2 | keyed | generated | source |  | missing |
-| reyes-warden:sprite | Astrid Reyes | commanders | P2 | keyed | generated | source |  | missing |
 | reyes-warden:ultimate-vfx | Astrid Reyes | commanders | P2 | additive | generated | source |  | missing |
 | orion-starlancer:portrait | Lucien Orion | commanders | P2 | keyed | generated | source |  | missing |
-| orion-starlancer:sprite | Lucien Orion | commanders | P2 | keyed | generated | source |  | missing |
 | orion-starlancer:ultimate-vfx | Lucien Orion | commanders | P2 | additive | generated | source |  | missing |
 | volkov-titan:portrait | Ivan Volkov | commanders | P2 | keyed | generated | source |  | missing |
-| volkov-titan:sprite | Ivan Volkov | commanders | P2 | keyed | generated | source |  | missing |
 | volkov-titan:ultimate-vfx | Ivan Volkov | commanders | P2 | additive | generated | source |  | missing |
 | myrr-oracle:portrait | Selene Myrr | commanders | P2 | keyed | generated | source |  | missing |
-| myrr-oracle:sprite | Selene Myrr | commanders | P2 | keyed | generated | source |  | missing |
 | myrr-oracle:ultimate-vfx | Selene Myrr | commanders | P2 | additive | generated | source |  | missing |
 | nova-architect:portrait | Caelus Nova | commanders | P2 | keyed | generated | source |  | missing |
-| nova-architect:sprite | Caelus Nova | commanders | P2 | keyed | generated | source |  | missing |
 | nova-architect:ultimate-vfx | Caelus Nova | commanders | P2 | additive | generated | source |  | missing |
 | vega-echo:portrait | Talia Vega | commanders | P2 | keyed | generated | source |  | missing |
-| vega-echo:sprite | Talia Vega | commanders | P2 | keyed | generated | source |  | missing |
 | vega-echo:ultimate-vfx | Talia Vega | commanders | P2 | additive | generated | source |  | missing |
 | rhem-catalyst:portrait | Darius Rhem | commanders | P2 | keyed | generated | source |  | missing |
-| rhem-catalyst:sprite | Darius Rhem | commanders | P2 | keyed | generated | source |  | missing |
 | rhem-catalyst:ultimate-vfx | Darius Rhem | commanders | P2 | additive | generated | source |  | missing |
 | ross-horizon:portrait | Eliana Ross | commanders | P2 | keyed | generated | source |  | missing |
-| ross-horizon:sprite | Eliana Ross | commanders | P2 | keyed | generated | source |  | missing |
 | ross-horizon:ultimate-vfx | Eliana Ross | commanders | P2 | additive | generated | source |  | missing |
 | solace-diplomat:portrait | Kieran Solace | commanders | P2 | keyed | generated | source |  | missing |
-| solace-diplomat:sprite | Kieran Solace | commanders | P2 | keyed | generated | source |  | missing |
 | solace-diplomat:ultimate-vfx | Kieran Solace | commanders | P2 | additive | generated | source |  | missing |
 | oris-nanoforge:portrait | Xanthe Oris | commanders | P2 | keyed | generated | source |  | missing |
-| oris-nanoforge:sprite | Xanthe Oris | commanders | P2 | keyed | generated | source |  | missing |
 | oris-nanoforge:ultimate-vfx | Xanthe Oris | commanders | P2 | additive | generated | source |  | missing |
 | drake-sentinel:portrait | Ronan Drake | commanders | P2 | keyed | generated | source |  | missing |
-| drake-sentinel:sprite | Ronan Drake | commanders | P2 | keyed | generated | source |  | missing |
 | drake-sentinel:ultimate-vfx | Ronan Drake | commanders | P2 | additive | generated | source |  | missing |
 | helix-alchemist:portrait | Sora Helix | commanders | P2 | keyed | generated | source |  | missing |
-| helix-alchemist:sprite | Sora Helix | commanders | P2 | keyed | generated | source |  | missing |
 | helix-alchemist:ultimate-vfx | Sora Helix | commanders | P2 | additive | generated | source |  | missing |
 | fen-beastmaster:portrait | Dorian Fen | commanders | P2 | keyed | generated | source |  | missing |
-| fen-beastmaster:sprite | Dorian Fen | commanders | P2 | keyed | generated | source |  | missing |
 | fen-beastmaster:ultimate-vfx | Dorian Fen | commanders | P2 | additive | generated | source |  | missing |
 | noctis-voidwalker:portrait | Vega Noctis | commanders | P2 | keyed | generated | source |  | missing |
-| noctis-voidwalker:sprite | Vega Noctis | commanders | P2 | keyed | generated | source |  | missing |
 | noctis-voidwalker:ultimate-vfx | Vega Noctis | commanders | P2 | additive | generated | source |  | missing |
 | aether-celestial:portrait | Lysandra Aether | commanders | P2 | keyed | generated | source |  | missing |
-| aether-celestial:sprite | Lysandra Aether | commanders | P2 | keyed | generated | source |  | missing |
 | aether-celestial:ultimate-vfx | Lysandra Aether | commanders | P2 | additive | generated | source |  | missing |
 | prime-founder:portrait | Atlas Prime | commanders | P2 | keyed | generated | source |  | missing |
-| prime-founder:sprite | Atlas Prime | commanders | P2 | keyed | generated | source |  | missing |
 | prime-founder:ultimate-vfx | Atlas Prime | commanders | P2 | additive | generated | source |  | missing |
 | equipment-refit-cannon | refit-cannon | equipment | P3 | keyed | generated | source |  | missing |
 | equipment-barrier-plate | barrier-plate | equipment | P3 | keyed | generated | source |  | missing |

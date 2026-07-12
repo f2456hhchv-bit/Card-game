@@ -89,16 +89,24 @@ describe("DIRECTIVE §4 — colour law", () => {
     }
   });
 
-  it("crystal-faction COMMANDERS are magenta-keyed like their faction's enemies — keying follows the art, not the category", () => {
+  it("crystal-faction COMMANDER portraits are magenta-keyed like their faction's enemies — keying follows the art, not the category", () => {
     for (const id of ["vane-chord", "ur-sella-chorus", "sol-resonant"]) {
-      for (const view of ["portrait", "sprite"]) {
-        const entry = ASSET_REGISTRY.find((e) => e.id === `${id}:${view}`);
-        expect(entry, `${id}:${view} missing`).toBeDefined();
-        expect(entry!.keyColour, `${id}:${view} must be magenta-keyed`).toBe("magenta");
-      }
+      const entry = ASSET_REGISTRY.find((e) => e.id === `${id}:portrait`);
+      expect(entry, `${id}:portrait missing`).toBeDefined();
+      expect(entry!.keyColour, `${id}:portrait must be magenta-keyed`).toBe("magenta");
     }
     // A non-crystal commander stays green-keyed.
-    expect(ASSET_REGISTRY.find((e) => e.id === "reyes-longlight:sprite")!.keyColour).toBe("green");
+    expect(ASSET_REGISTRY.find((e) => e.id === "reyes-longlight:portrait")!.keyColour).toBe("green");
+  });
+
+  it("commanders are a UI skill layer — a portrait and an ultimate VFX, but NO in-run body sprite (top-down space game renders no commander body)", () => {
+    const commanderEntries = ASSET_REGISTRY.filter((e) => e.category === "commanders");
+    expect(commanderEntries.some((e) => e.id.endsWith(":sprite")), "commanders must not have in-run body sprites").toBe(false);
+    // Every commander has exactly a portrait + an ultimate-vfx.
+    const portraits = commanderEntries.filter((e) => e.id.endsWith(":portrait"));
+    const ultimates = commanderEntries.filter((e) => e.id.endsWith(":ultimate-vfx"));
+    expect(portraits.length).toBe(ultimates.length);
+    expect(commanderEntries.length).toBe(portraits.length + ultimates.length);
   });
 
   it("other crystal-motif keyed art (crystal-growth entity, Crystal Dominion emblem) is magenta-keyed too", () => {

@@ -3,6 +3,7 @@
   "generatedBy": "scripts/generate-asset-run.ts (source of truth: src/game/assets/assetRegistry.ts — regenerate via `npm run assets:run`, never hand-edit)",
   "directive": {
     "gameFraming": "Afterlight is a top-down 360° SPACE roguelite. The player is a STARSHIP seen from above, not a person on foot. Ships, weapons, equipment, and ship modules are all SPACE HARDWARE — hull-mounted armaments, pods, cannons, engine/reactor/shield modules — rendered as mechanical kit at a top-down or 3/4 hardware angle, NEVER held, worn, or carried by a character, and never an infantry firearm. A 'weapon' is a ship armament that bolts to a hull hardpoint (turret / cannon / missile pod / beam emitter / lattice array), not a gun a soldier holds. Weapon FAMILY names (railguns, shotguns, missileLaunchers, laserArrays…) describe the FIRING BEHAVIOUR, not an infantry form-factor. Commanders are the ONLY human/character assets in the game (chibi pilots) — everything else is hardware, creatures, environments, or UI.",
+    "worldConsistency": "NOTHING in this game is a person on foot or a ground scene. Enemies are ships / drones / crystalline organisms / void entities / living structures — never soldiers. Commanders exist SOLELY as a meta skill/ability layer: a UI portrait bust shown in menus and the HUD, providing passives/actives/ultimates — they are never a walking body in the play-field (the game renders no commander body). Passives, artifacts, relics, equipment, and resources are SHIP augments / upgrade modules / cargo — augment icons and hardware, not clothing, hand-tools, or character inventory. Everything the player 'equips' is an attachment for the ship (armament, shield, engine, plating, drone bay). If a subject could be read as a handheld item or a person standing on ground, it is being drawn wrong.",
     "artStyle": "Chibi-proportioned stylized 3D rendered with flat toon/cel-shading — Nintendo-inspired, hopeful not grim. The 8 Visual Style Rules below bind every asset.",
     "visualStyleRules": [
       "Shapes are rounded and chunky. No 1px lines, no sharp rectangles. Minimum corner radius on any UI panel or bar. Health bars, buttons, frames all have visible thickness.",
@@ -93,16 +94,16 @@
     "priorityOrder": "Assets are sorted by priority. P1 = playable vertical slice (ships, weapons, enemies, boss, XP gems, fire-pattern/projectile primitives). P2 = commanders, biomes, player VFX, and the in-run readability layer (mutation tells, telegraphs, status effects). P3 = everything else. Generate in this order."
   },
   "counts": {
-    "assets": 984,
+    "assets": 931,
     "derivedExcluded": 201,
     "codeDrawnExcluded": 80,
     "byPriority": {
       "p1": 136,
-      "p2": 231,
+      "p2": 178,
       "p3": 617
     },
     "byPipeline": {
-      "keyed": 512,
+      "keyed": 459,
       "additive": 415,
       "fullbleed": 57
     }
@@ -4079,34 +4080,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Ilsa Reyes \"Longlight\"",
+        "subject": "UI PORTRAIT of Ilsa Reyes \"Longlight\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "assault",
         "commanderClass": "assault",
         "faction": "Human Alliance",
         "biography": "The last gunnery officer of a fleet that no longer exists.",
         "designBrief": "Scorched fleet-grey plate, one gold epaulette from a decommissioned uniform, targeting monocle always lit.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "reyes-longlight:sprite",
-      "name": "Ilsa Reyes",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Ilsa Reyes \"Longlight\"",
-        "archetype": "assault",
-        "commanderClass": "assault",
-        "faction": "Human Alliance",
-        "biography": "The last gunnery officer of a fleet that no longer exists.",
-        "designBrief": "Scorched fleet-grey plate, one gold epaulette from a decommissioned uniform, targeting monocle always lit.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4139,34 +4120,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Vek Tarn \"Ironhull\"",
+        "subject": "UI PORTRAIT of Vek Tarn \"Ironhull\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "guardian",
         "commanderClass": "defender",
         "faction": "Machine Collective",
         "biography": "Rebuilt three times. Remembers all three deaths.",
         "designBrief": "Salvage-plated bulk, three weld-seams across the chest — one per death — running lights set to dim amber.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "vek-ironhull:sprite",
-      "name": "Vek Tarn",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Vek Tarn \"Ironhull\"",
-        "archetype": "guardian",
-        "commanderClass": "defender",
-        "faction": "Machine Collective",
-        "biography": "Rebuilt three times. Remembers all three deaths.",
-        "designBrief": "Salvage-plated bulk, three weld-seams across the chest — one per death — running lights set to dim amber.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4199,34 +4160,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Dr. Sen Vael \"Meridian\"",
+        "subject": "UI PORTRAIT of Dr. Sen Vael \"Meridian\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "crystalSpecialist",
         "commanderClass": "scientist",
         "faction": "Human Alliance",
         "biography": "Wrote the paper proving the Afterlight Network was artificial. Has spent every year since trying to be wrong about the second half.",
         "designBrief": "Field-research whites gone expedition-grey, sample vials in bandolier rows, annotating everything mid-fight.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "vael-meridian:sprite",
-      "name": "Dr. Sen Vael",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Dr. Sen Vael \"Meridian\"",
-        "archetype": "crystalSpecialist",
-        "commanderClass": "scientist",
-        "faction": "Human Alliance",
-        "biography": "Wrote the paper proving the Afterlight Network was artificial. Has spent every year since trying to be wrong about the second half.",
-        "designBrief": "Field-research whites gone expedition-grey, sample vials in bandolier rows, annotating everything mid-fight.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4259,34 +4200,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Jelan Okoye \"Torque\"",
+        "subject": "UI PORTRAIT of Jelan Okoye \"Torque\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "engineer",
         "commanderClass": "engineer",
         "faction": "Human Alliance",
         "biography": "Kept a generation ship running for forty years with spare parts and spite. The restoration is just a bigger engine room.",
         "designBrief": "Grease-marked utility rig, magnetic tool bandolier, one glove always off.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "okoye-torque:sprite",
-      "name": "Jelan Okoye",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Jelan Okoye \"Torque\"",
-        "archetype": "engineer",
-        "commanderClass": "engineer",
-        "faction": "Human Alliance",
-        "biography": "Kept a generation ship running for forty years with spare parts and spite. The restoration is just a bigger engine room.",
-        "designBrief": "Grease-marked utility rig, magnetic tool bandolier, one glove always off.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4319,34 +4240,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Ai Naru \"Whisper\"",
+        "subject": "UI PORTRAIT of Ai Naru \"Whisper\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "recon",
         "commanderClass": "recon",
         "faction": "Stellar Nomads",
         "biography": "Flew pathfinder for three convoys that never lost a ship. The dark isn't empty, she says. It's just quiet.",
         "designBrief": "Matte convoy leathers, route-tattoos on both forearms, engine trail dimmed to a breath.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "naru-whisper:sprite",
-      "name": "Ai Naru",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Ai Naru \"Whisper\"",
-        "archetype": "recon",
-        "commanderClass": "recon",
-        "faction": "Stellar Nomads",
-        "biography": "Flew pathfinder for three convoys that never lost a ship. The dark isn't empty, she says. It's just quiet.",
-        "designBrief": "Matte convoy leathers, route-tattoos on both forearms, engine trail dimmed to a breath.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4379,34 +4280,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Dain Vex \"Longfang\"",
+        "subject": "UI PORTRAIT of Dain Vex \"Longfang\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "recon",
         "commanderClass": "recon",
         "faction": "Outlaw Havens",
         "biography": "Hunted salvage claim-jumpers for the havens until the restoration offered better prey: everything the dark sends.",
         "designBrief": "Trophy-notched hull plating, one optic permanently zeroed, moves like a slow question.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "vex-longfang:sprite",
-      "name": "Dain Vex",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Dain Vex \"Longfang\"",
-        "archetype": "recon",
-        "commanderClass": "recon",
-        "faction": "Outlaw Havens",
-        "biography": "Hunted salvage claim-jumpers for the havens until the restoration offered better prey: everything the dark sends.",
-        "designBrief": "Trophy-notched hull plating, one optic permanently zeroed, moves like a slow question.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4439,34 +4320,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Petra Holt \"Thunderline\"",
+        "subject": "UI PORTRAIT of Petra Holt \"Thunderline\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "orbitalCommander",
         "commanderClass": "assault",
         "faction": "Human Alliance",
         "biography": "Commanded the orbital batteries at the Collapse's last stand. Never stopped believing in preparation as a weapon.",
         "designBrief": "Battery-command greatcoat, ranging monocle, chalk still on her gloves from the plotting table.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "holt-thunderline:sprite",
-      "name": "Petra Holt",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Petra Holt \"Thunderline\"",
-        "archetype": "orbitalCommander",
-        "commanderClass": "assault",
-        "faction": "Human Alliance",
-        "biography": "Commanded the orbital batteries at the Collapse's last stand. Never stopped believing in preparation as a weapon.",
-        "designBrief": "Battery-command greatcoat, ranging monocle, chalk still on her gloves from the plotting table.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4499,34 +4360,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Rell Anders \"Cipher\"",
+        "subject": "UI PORTRAIT of Rell Anders \"Cipher\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "prototypePilot",
         "commanderClass": "experimental",
         "faction": "Independent",
         "biography": "Speaks four machine dialects and one the Machines pretend not to recognise. Systems open for them like doors.",
         "designBrief": "Cable-laced duster, glyph projections orbiting one wrist, never quite looking at you.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "anders-cipher:sprite",
-      "name": "Rell Anders",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Rell Anders \"Cipher\"",
-        "archetype": "prototypePilot",
-        "commanderClass": "experimental",
-        "faction": "Independent",
-        "biography": "Speaks four machine dialects and one the Machines pretend not to recognise. Systems open for them like doors.",
-        "designBrief": "Cable-laced duster, glyph projections orbiting one wrist, never quite looking at you.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4559,34 +4400,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Suno Kite \"Aviary\"",
+        "subject": "UI PORTRAIT of Suno Kite \"Aviary\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "droneCommander",
         "commanderClass": "hybrid",
         "faction": "Stellar Nomads",
         "biography": "Raised a flock of salvage drones from junked parts. They follow without being told. Nobody knows how, including Suno.",
         "designBrief": "Perch-scarred shoulder plating, a drone always idling at each shoulder like patient birds.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "kite-aviary:sprite",
-      "name": "Suno Kite",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Suno Kite \"Aviary\"",
-        "archetype": "droneCommander",
-        "commanderClass": "hybrid",
-        "faction": "Stellar Nomads",
-        "biography": "Raised a flock of salvage drones from junked parts. They follow without being told. Nobody knows how, including Suno.",
-        "designBrief": "Perch-scarred shoulder plating, a drone always idling at each shoulder like patient birds.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4619,34 +4440,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Mara Sel \"Keystone\"",
+        "subject": "UI PORTRAIT of Mara Sel \"Keystone\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "voidSpecialist",
         "commanderClass": "experimental",
         "faction": "Independent",
         "biography": "Survived a gravity-well collapse that should have folded her ship into a point. Came back understanding weight.",
         "designBrief": "Counterweighted rig that hangs wrong in every gravity, hair drifting a half-second late.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "sel-keystone:sprite",
-      "name": "Mara Sel",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Mara Sel \"Keystone\"",
-        "archetype": "voidSpecialist",
-        "commanderClass": "experimental",
-        "faction": "Independent",
-        "biography": "Survived a gravity-well collapse that should have folded her ship into a point. Came back understanding weight.",
-        "designBrief": "Counterweighted rig that hangs wrong in every gravity, hair drifting a half-second late.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4679,34 +4480,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Ilex Vane \"Chord\"",
+        "subject": "UI PORTRAIT of Ilex Vane \"Chord\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "crystalSpecialist",
         "commanderClass": "scientist",
         "faction": "Crystal Dominion",
         "biography": "The only human the Dominion's ecosystems sing back to. The Ascendancy finds this hilarious, or possibly holy.",
         "designBrief": "Lattice-grown plating that chimes when struck, tuning forks where medals would go.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "vane-chord:sprite",
-      "name": "Ilex Vane",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "magenta",
-      "paletteConstraint": "no magenta anywhere in this sprite's palette (magenta-keyed)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Ilex Vane \"Chord\"",
-        "archetype": "crystalSpecialist",
-        "commanderClass": "scientist",
-        "faction": "Crystal Dominion",
-        "biography": "The only human the Dominion's ecosystems sing back to. The Ascendancy finds this hilarious, or possibly holy.",
-        "designBrief": "Lattice-grown plating that chimes when struck, tuning forks where medals would go.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4739,34 +4520,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Dr. Oshen Kael \"Nadir\"",
+        "subject": "UI PORTRAIT of Dr. Oshen Kael \"Nadir\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "voidSpecialist",
         "commanderClass": "scientist",
         "faction": "Independent",
         "biography": "Studies the Void the way you study a predator: from inside the enclosure, taking excellent notes.",
         "designBrief": "Containment-grade fieldsuit annotated in grease pencil, sample vials that occasionally move.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "kael-nadir:sprite",
-      "name": "Dr. Oshen Kael",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Dr. Oshen Kael \"Nadir\"",
-        "archetype": "voidSpecialist",
-        "commanderClass": "scientist",
-        "faction": "Independent",
-        "biography": "Studies the Void the way you study a predator: from inside the enclosure, taking excellent notes.",
-        "designBrief": "Containment-grade fieldsuit annotated in grease pencil, sample vials that occasionally move.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4799,34 +4560,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Juno Farr \"Redline\"",
+        "subject": "UI PORTRAIT of Juno Farr \"Redline\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "prototypePilot",
         "commanderClass": "experimental",
         "faction": "Independent",
         "biography": "Test-flew eleven prototypes the Protocol abandoned. Crashed nine. Bonded with the tenth. Nobody discusses the eleventh.",
         "designBrief": "Mismatched prototype plating with eleven tally marks, one fresh weld always cooling.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "farr-redline:sprite",
-      "name": "Juno Farr",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Juno Farr \"Redline\"",
-        "archetype": "prototypePilot",
-        "commanderClass": "experimental",
-        "faction": "Independent",
-        "biography": "Test-flew eleven prototypes the Protocol abandoned. Crashed nine. Bonded with the tenth. Nobody discusses the eleventh.",
-        "designBrief": "Mismatched prototype plating with eleven tally marks, one fresh weld always cooling.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4859,34 +4600,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Sera Iman \"Relay\"",
+        "subject": "UI PORTRAIT of Sera Iman \"Relay\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "support",
         "commanderClass": "support",
         "faction": "Human Alliance",
         "biography": "Carries an Afterlight key that predates her family's records. The Network's doors open before she knocks.",
         "designBrief": "Courier greys with a single precursor-white gauntlet, the key worn openly — a statement.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "iman-relay:sprite",
-      "name": "Sera Iman",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Sera Iman \"Relay\"",
-        "archetype": "support",
-        "commanderClass": "support",
-        "faction": "Human Alliance",
-        "biography": "Carries an Afterlight key that predates her family's records. The Network's doors open before she knocks.",
-        "designBrief": "Courier greys with a single precursor-white gauntlet, the key worn openly — a statement.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4919,34 +4640,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Thessaly Korr \"Wardbreaker\"",
+        "subject": "UI PORTRAIT of Thessaly Korr \"Wardbreaker\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "guardian",
         "commanderClass": "defender",
         "faction": "Mercenary Guild",
         "biography": "Broke a Guild contract to pull civilians out of a burning evacuation instead of finishing the job she was paid for. The Guild fined her everything she owned. The restoration paid the fine.",
         "designBrief": "Guild-issue plate re-forged into personal armour, contract seals filed off, one pauldron left blank on purpose.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "korr-wardbreaker:sprite",
-      "name": "Thessaly Korr",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Thessaly Korr \"Wardbreaker\"",
-        "archetype": "guardian",
-        "commanderClass": "defender",
-        "faction": "Mercenary Guild",
-        "biography": "Broke a Guild contract to pull civilians out of a burning evacuation instead of finishing the job she was paid for. The Guild fined her everything she owned. The restoration paid the fine.",
-        "designBrief": "Guild-issue plate re-forged into personal armour, contract seals filed off, one pauldron left blank on purpose.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -4979,34 +4680,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Dr. Imara Voss \"Lanternkeep\"",
+        "subject": "UI PORTRAIT of Dr. Imara Voss \"Lanternkeep\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "recon",
         "commanderClass": "scientist",
         "faction": "Ancient Custodians",
         "biography": "Spent eleven years cataloguing First Light's collapsed archive by hand before the Custodians decided she'd earned the right to read what she'd catalogued. She still asks permission.",
         "designBrief": "Archive-whites layered under a Custodian courtesy sash, a hand-lantern clipped at the hip out of habit, never electronic.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "voss-lanternkeep:sprite",
-      "name": "Dr. Imara Voss",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Dr. Imara Voss \"Lanternkeep\"",
-        "archetype": "recon",
-        "commanderClass": "scientist",
-        "faction": "Ancient Custodians",
-        "biography": "Spent eleven years cataloguing First Light's collapsed archive by hand before the Custodians decided she'd earned the right to read what she'd catalogued. She still asks permission.",
-        "designBrief": "Archive-whites layered under a Custodian courtesy sash, a hand-lantern clipped at the hip out of habit, never electronic.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5039,34 +4720,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Ash Devereux \"Static\"",
+        "subject": "UI PORTRAIT of Ash Devereux \"Static\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "prototypePilot",
         "commanderClass": "experimental",
         "faction": "Independent",
         "biography": "Flew reconnaissance for the Paragon Protocol until the Protocol reconnoitred a colony that hadn't done anything but exist. Defected mid-flight. Never fully trusts a clean scan again.",
         "designBrief": "Stripped Protocol flight suit with every insignia burned off, a single unpatched scorch mark left where the Paragon crest used to sit.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "devereux-static:sprite",
-      "name": "Ash Devereux",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Ash Devereux \"Static\"",
-        "archetype": "prototypePilot",
-        "commanderClass": "experimental",
-        "faction": "Independent",
-        "biography": "Flew reconnaissance for the Paragon Protocol until the Protocol reconnoitred a colony that hadn't done anything but exist. Defected mid-flight. Never fully trusts a clean scan again.",
-        "designBrief": "Stripped Protocol flight suit with every insignia burned off, a single unpatched scorch mark left where the Paragon crest used to sit.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5099,34 +4760,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Rin Okafor \"Halcyon\"",
+        "subject": "UI PORTRAIT of Rin Okafor \"Halcyon\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "support",
         "commanderClass": "support",
         "faction": "Human Alliance",
         "biography": "Combat medic who has personally stabilised more restoration personnel than any single ship has lost. Keeps a ledger of names, not casualties. The ledger is longer than the losses.",
         "designBrief": "Field-medic whites gone road-worn, a hand-stitched ledger strapped where a sidearm would usually sit.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "okafor-halcyon:sprite",
-      "name": "Rin Okafor",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Rin Okafor \"Halcyon\"",
-        "archetype": "support",
-        "commanderClass": "support",
-        "faction": "Human Alliance",
-        "biography": "Combat medic who has personally stabilised more restoration personnel than any single ship has lost. Keeps a ledger of names, not casualties. The ledger is longer than the losses.",
-        "designBrief": "Field-medic whites gone road-worn, a hand-stitched ledger strapped where a sidearm would usually sit.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5159,34 +4800,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Vantha Ur-Sella \"Chorus\"",
+        "subject": "UI PORTRAIT of Vantha Ur-Sella \"Chorus\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "crystalSpecialist",
         "commanderClass": "scientist",
         "faction": "Crystal Dominion",
         "biography": "Diplomat-scientist who negotiates with the Dominion's resonant ecosystems as readily as with its Ascendancy. Says the crystals were the easier audience.",
         "designBrief": "Diplomatic Dominion vestments grown, not sewn, from lattice-silk that shifts colour with her mood.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "ur-sella-chorus:sprite",
-      "name": "Vantha Ur-Sella",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "magenta",
-      "paletteConstraint": "no magenta anywhere in this sprite's palette (magenta-keyed)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Vantha Ur-Sella \"Chorus\"",
-        "archetype": "crystalSpecialist",
-        "commanderClass": "scientist",
-        "faction": "Crystal Dominion",
-        "biography": "Diplomat-scientist who negotiates with the Dominion's resonant ecosystems as readily as with its Ascendancy. Says the crystals were the easier audience.",
-        "designBrief": "Diplomatic Dominion vestments grown, not sewn, from lattice-silk that shifts colour with her mood.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5219,34 +4840,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Boren Kade \"Fulcrum\"",
+        "subject": "UI PORTRAIT of Boren Kade \"Fulcrum\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "engineer",
         "commanderClass": "engineer",
         "faction": "Machine Collective",
         "biography": "The first human the Collective certified as a full integration engineer. Argues the certification runs both ways — the Collective learned something too.",
         "designBrief": "Integration-certified exoframe half-machined, half-grown, a visible lattice seam running from wrist to shoulder where the Collective's work meets his own.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "kade-fulcrum:sprite",
-      "name": "Boren Kade",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Boren Kade \"Fulcrum\"",
-        "archetype": "engineer",
-        "commanderClass": "engineer",
-        "faction": "Machine Collective",
-        "biography": "The first human the Collective certified as a full integration engineer. Argues the certification runs both ways — the Collective learned something too.",
-        "designBrief": "Integration-certified exoframe half-machined, half-grown, a visible lattice seam running from wrist to shoulder where the Collective's work meets his own.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5279,34 +4880,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Yuen Calder \"Driftline\"",
+        "subject": "UI PORTRAIT of Yuen Calder \"Driftline\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "droneCommander",
         "commanderClass": "hybrid",
         "faction": "Stellar Nomads",
         "biography": "Grew up navigating by convoy driftlines instead of star charts. Flies scout drones the way older pilots read weather — a sense, not a system.",
         "designBrief": "Convoy-drift leathers patched from three different fleets, a scout-drone perch worn smooth at the shoulder from constant use.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "calder-driftline:sprite",
-      "name": "Yuen Calder",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Yuen Calder \"Driftline\"",
-        "archetype": "droneCommander",
-        "commanderClass": "hybrid",
-        "faction": "Stellar Nomads",
-        "biography": "Grew up navigating by convoy driftlines instead of star charts. Flies scout drones the way older pilots read weather — a sense, not a system.",
-        "designBrief": "Convoy-drift leathers patched from three different fleets, a scout-drone perch worn smooth at the shoulder from constant use.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5339,34 +4920,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Dr. Petrin Aldana \"Aftercare\"",
+        "subject": "UI PORTRAIT of Dr. Petrin Aldana \"Aftercare\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "voidSpecialist",
         "commanderClass": "scientist",
         "faction": "Independent",
         "biography": "Studies what the Void leaves behind in the people who come back from it. Survived contact with an Eclipsed vanguard herself; treats her own case notes with the same clinical honesty as everyone else's.",
         "designBrief": "Clinical field-whites worn under a void-rated overcoat, case files bound in the same static-resistant cloth she wears.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "aldana-aftercare:sprite",
-      "name": "Dr. Petrin Aldana",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Dr. Petrin Aldana \"Aftercare\"",
-        "archetype": "voidSpecialist",
-        "commanderClass": "scientist",
-        "faction": "Independent",
-        "biography": "Studies what the Void leaves behind in the people who come back from it. Survived contact with an Eclipsed vanguard herself; treats her own case notes with the same clinical honesty as everyone else's.",
-        "designBrief": "Clinical field-whites worn under a void-rated overcoat, case files bound in the same static-resistant cloth she wears.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5399,34 +4960,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Dr. Lyra Voss \"Pathfinder\"",
+        "subject": "UI PORTRAIT of Dr. Lyra Voss \"Pathfinder\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "recon",
         "commanderClass": "scientist",
         "faction": "Afterlight Initiative",
         "biography": "An astrophysicist and expedition commander who chose curiosity over conquest — the first to rediscover functioning Afterlight technology after decades of failed expeditions, and the reason humanity started believing the galaxy could be understood again, not just survived.",
         "designBrief": "Slim white-and-navy exploration exosuit with gold scientific markings, a long expedition coat, a compact scanning drone perched at the shoulder, an integrated holographic wrist computer, an explorer's backpack, and a blue visor — NASA-inspired equipment throughout.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "voss-pathfinder:sprite",
-      "name": "Dr. Lyra Voss",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Dr. Lyra Voss \"Pathfinder\"",
-        "archetype": "recon",
-        "commanderClass": "scientist",
-        "faction": "Afterlight Initiative",
-        "biography": "An astrophysicist and expedition commander who chose curiosity over conquest — the first to rediscover functioning Afterlight technology after decades of failed expeditions, and the reason humanity started believing the galaxy could be understood again, not just survived.",
-        "designBrief": "Slim white-and-navy exploration exosuit with gold scientific markings, a long expedition coat, a compact scanning drone perched at the shoulder, an integrated holographic wrist computer, an explorer's backpack, and a blue visor — NASA-inspired equipment throughout.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5459,34 +5000,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Adrian Kane \"Vanguard\"",
+        "subject": "UI PORTRAIT of Adrian Kane \"Vanguard\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "guardian",
         "commanderClass": "defender",
         "faction": "United Human Frontier",
         "biography": "A fleet commander and veteran officer who held humanity's final defensive lines through the darkest years after the Collapse — refuses, on principle, to abandon a civilian population, no matter the cost to the mission.",
         "designBrief": "Heavy dark-graphite command armour with white military markings and blue command lights, a long reinforced officer's coat, a mechanical left arm, a command visor, decorated service medals, and a battle-worn finish that has clearly seen every one of them.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "kane-vanguard:sprite",
-      "name": "Adrian Kane",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Adrian Kane \"Vanguard\"",
-        "archetype": "guardian",
-        "commanderClass": "defender",
-        "faction": "United Human Frontier",
-        "biography": "A fleet commander and veteran officer who held humanity's final defensive lines through the darkest years after the Collapse — refuses, on principle, to abandon a civilian population, no matter the cost to the mission.",
-        "designBrief": "Heavy dark-graphite command armour with white military markings and blue command lights, a long reinforced officer's coat, a mechanical left arm, a command visor, decorated service medals, and a battle-worn finish that has clearly seen every one of them.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5519,34 +5040,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Elias Ryker \"Engineer\"",
+        "subject": "UI PORTRAIT of Elias Ryker \"Engineer\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "engineer",
         "commanderClass": "engineer",
         "faction": "Afterlight Initiative",
         "biography": "A systems engineer, prototype designer, and chief recovery technician who helped rebuild dozens of frontier colonies after the Collapse — trained at Atlas Dynamics, and still argues their hardpoint lattice was the last honest piece of engineering they shipped.",
         "designBrief": "Heavy industrial exosuit in dark steel with orange utility lights, a mechanical backpack with integrated fabrication arms, deployable tool drones at the hip, a protective visor, numerous repair tools, and a compact fabrication printer he's clearly used mid-fight before.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "ryker-engineer:sprite",
-      "name": "Elias Ryker",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Elias Ryker \"Engineer\"",
-        "archetype": "engineer",
-        "commanderClass": "engineer",
-        "faction": "Afterlight Initiative",
-        "biography": "A systems engineer, prototype designer, and chief recovery technician who helped rebuild dozens of frontier colonies after the Collapse — trained at Atlas Dynamics, and still argues their hardpoint lattice was the last honest piece of engineering they shipped.",
-        "designBrief": "Heavy industrial exosuit in dark steel with orange utility lights, a mechanical backpack with integrated fabrication arms, deployable tool drones at the hip, a protective visor, numerous repair tools, and a compact fabrication printer he's clearly used mid-fight before.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5579,34 +5080,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Seraphina Cael \"Weaver\"",
+        "subject": "UI PORTRAIT of Seraphina Cael \"Weaver\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "voidSpecialist",
         "commanderClass": "experimental",
         "faction": "Afterlight Initiative",
         "biography": "A quantum physicist, reality research specialist, and experimental systems director who became the first scientist to stabilise an artificial quantum singularity after the Collapse — trained at the Helios Quantum Institute, with ties to Quantum Horizon that she describes, cheerfully, as 'mutual professional obsession.'",
         "designBrief": "A white adaptive quantum suit with gold energy channels, floating holographic rings, and gravity stabilisers; white hair tied back, blue quantum eyes, a fractal energy cloak, and quantum particles that orbit her continuously — an elegant, unmistakably scientific silhouette.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "cael-weaver:sprite",
-      "name": "Seraphina Cael",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Seraphina Cael \"Weaver\"",
-        "archetype": "voidSpecialist",
-        "commanderClass": "experimental",
-        "faction": "Afterlight Initiative",
-        "biography": "A quantum physicist, reality research specialist, and experimental systems director who became the first scientist to stabilise an artificial quantum singularity after the Collapse — trained at the Helios Quantum Institute, with ties to Quantum Horizon that she describes, cheerfully, as 'mutual professional obsession.'",
-        "designBrief": "A white adaptive quantum suit with gold energy channels, floating holographic rings, and gravity stabilisers; white hair tied back, blue quantum eyes, a fractal energy cloak, and quantum particles that orbit her continuously — an elegant, unmistakably scientific silhouette.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5639,34 +5120,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Kael Drake \"Hunter\"",
+        "subject": "UI PORTRAIT of Kael Drake \"Hunter\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "recon",
         "commanderClass": "recon",
         "faction": "Independent Frontier Rangers",
         "biography": "A frontier tracker, elite recon specialist, and xeno hunter who spent decades protecting isolated colonies by studying threats long before they reached anyone — allied with the Afterlight Initiative, though he still answers to the Rangers first.",
         "designBrief": "Light reconnaissance armour in dark forest green and graphite, an adaptive camouflage cloak, a compact tactical backpack, a retractable targeting visor, a biometric gauntlet, a magnetic utility belt, and a long-range sensor drone — every piece of it battle-scarred.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "drake-hunter:sprite",
-      "name": "Kael Drake",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Kael Drake \"Hunter\"",
-        "archetype": "recon",
-        "commanderClass": "recon",
-        "faction": "Independent Frontier Rangers",
-        "biography": "A frontier tracker, elite recon specialist, and xeno hunter who spent decades protecting isolated colonies by studying threats long before they reached anyone — allied with the Afterlight Initiative, though he still answers to the Rangers first.",
-        "designBrief": "Light reconnaissance armour in dark forest green and graphite, an adaptive camouflage cloak, a compact tactical backpack, a retractable targeting visor, a biometric gauntlet, a magnetic utility belt, and a long-range sensor drone — every piece of it battle-scarred.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5699,34 +5160,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Aria Sol \"Resonant\"",
+        "subject": "UI PORTRAIT of Aria Sol \"Resonant\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "crystalSpecialist",
         "commanderClass": "support",
         "faction": "Crystal Ascendancy",
         "biography": "A resonance physicist, crystal harmonics specialist, and energy systems architect who led the rediscovery of resonance engineering after recovering surviving Crystal Ascendancy archives — allied with the Afterlight Initiative, and still describes her own work as 'conducting an orchestra that was already playing.'",
         "designBrief": "An elegant crystal-lined combat suit in pearlescent white with cyan resonance veins, a floating crystalline halo, holographic waveform ribbons, a lightweight scientific cloak, crystal gauntlets, a luminescent visor, and soft energy trails that follow every movement.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "sol-resonant:sprite",
-      "name": "Aria Sol",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "magenta",
-      "paletteConstraint": "no magenta anywhere in this sprite's palette (magenta-keyed)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Aria Sol \"Resonant\"",
-        "archetype": "crystalSpecialist",
-        "commanderClass": "support",
-        "faction": "Crystal Ascendancy",
-        "biography": "A resonance physicist, crystal harmonics specialist, and energy systems architect who led the rediscovery of resonance engineering after recovering surviving Crystal Ascendancy archives — allied with the Afterlight Initiative, and still describes her own work as 'conducting an orchestra that was already playing.'",
-        "designBrief": "An elegant crystal-lined combat suit in pearlescent white with cyan resonance veins, a floating crystalline halo, holographic waveform ribbons, a lightweight scientific cloak, crystal gauntlets, a luminescent visor, and soft energy trails that follow every movement.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5759,34 +5200,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Orion Vale \"Voidrunner\"",
+        "subject": "UI PORTRAIT of Orion Vale \"Voidrunner\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "voidSpecialist",
         "commanderClass": "experimental",
         "faction": "Afterlight Initiative",
         "biography": "A void expedition specialist, dimensional navigator, and reality recovery operative who volunteered for humanity's first successful expeditions into permanent Void anomalies after witnessing countless failed rescue attempts — believes someone must willingly walk into darkness so others never have to.",
         "designBrief": "Black adaptive void armour with deep violet energy veins, a floating fractured cloak, a distorted helmet visor, micro-singularity stabilisers, dark energy gauntlets, subtle gravitational lensing, and reality fractures that appear around his every movement.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "vale-voidrunner:sprite",
-      "name": "Orion Vale",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Orion Vale \"Voidrunner\"",
-        "archetype": "voidSpecialist",
-        "commanderClass": "experimental",
-        "faction": "Afterlight Initiative",
-        "biography": "A void expedition specialist, dimensional navigator, and reality recovery operative who volunteered for humanity's first successful expeditions into permanent Void anomalies after witnessing countless failed rescue attempts — believes someone must willingly walk into darkness so others never have to.",
-        "designBrief": "Black adaptive void armour with deep violet energy veins, a floating fractured cloak, a distorted helmet visor, micro-singularity stabilisers, dark energy gauntlets, subtle gravitational lensing, and reality fractures that appear around his every movement.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5819,34 +5240,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Nova Iskander \"Swarmmaster\"",
+        "subject": "UI PORTRAIT of Nova Iskander \"Swarmmaster\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "droneCommander",
         "commanderClass": "hybrid",
         "faction": "Afterlight Initiative",
         "biography": "A drone fleet commander, autonomous systems engineer, and swarm intelligence architect who pioneered humanity's first ethical autonomous combat framework after the Collapse — believes automation should preserve life, never replace it.",
         "designBrief": "A white tactical command suit over a graphite exoskeleton with blue command lights, a floating holographic drone interface, mechanical shoulder drones, a compact command visor, adaptive control gauntlets, and orbiting utility drones — a minimalist engineering aesthetic throughout.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "iskander-swarmmaster:sprite",
-      "name": "Nova Iskander",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Nova Iskander \"Swarmmaster\"",
-        "archetype": "droneCommander",
-        "commanderClass": "hybrid",
-        "faction": "Afterlight Initiative",
-        "biography": "A drone fleet commander, autonomous systems engineer, and swarm intelligence architect who pioneered humanity's first ethical autonomous combat framework after the Collapse — believes automation should preserve life, never replace it.",
-        "designBrief": "A white tactical command suit over a graphite exoskeleton with blue command lights, a floating holographic drone interface, mechanical shoulder drones, a compact command visor, adaptive control gauntlets, and orbiting utility drones — a minimalist engineering aesthetic throughout.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5879,34 +5280,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Cassia Thorne \"Starforged\"",
+        "subject": "UI PORTRAIT of Cassia Thorne \"Starforged\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "engineer",
         "commanderClass": "engineer",
         "faction": "Atlas Dynamics",
         "biography": "Atlas Dynamics' Chief Weapons Architect, an experimental metallurgist and industrial commander who rebuilt humanity's first orbital forge complex after the Collapse — she believes true strength is earned through relentless refinement, never granted.",
         "designBrief": "Heavy industrial combat armour in dark titanium plating with molten orange energy vents, forging gauntlets, a thermal reactor backpack, heat exhaust vents, a magnetic tool harness, and a glowing forge hammer emblem — an unmistakably industrial silhouette.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "thorne-starforged:sprite",
-      "name": "Cassia Thorne",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Cassia Thorne \"Starforged\"",
-        "archetype": "engineer",
-        "commanderClass": "engineer",
-        "faction": "Atlas Dynamics",
-        "biography": "Atlas Dynamics' Chief Weapons Architect, an experimental metallurgist and industrial commander who rebuilt humanity's first orbital forge complex after the Collapse — she believes true strength is earned through relentless refinement, never granted.",
-        "designBrief": "Heavy industrial combat armour in dark titanium plating with molten orange energy vents, forging gauntlets, a thermal reactor backpack, heat exhaust vents, a magnetic tool harness, and a glowing forge hammer emblem — an unmistakably industrial silhouette.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5939,34 +5320,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Aurelion Vex \"Chronomancer\"",
+        "subject": "UI PORTRAIT of Aurelion Vex \"Chronomancer\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "recon",
         "commanderClass": "support",
         "faction": "Afterlight Initiative",
         "biography": "A temporal physicist, chrono expedition specialist, and Timeline Recovery Director who led humanity's first successful expedition through a naturally occurring temporal fracture — he understands that changing history always carries a cost, and refuses to rewrite lives for personal gain.",
         "designBrief": "White and silver temporal armour with floating clockwork rings, blue temporal energy, a golden chronometer core, a transparent flowing cloak, fractal clock fragments, and an elegant scientific silhouette — time distortion surrounds his every movement.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "vex-chronomancer:sprite",
-      "name": "Aurelion Vex",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Aurelion Vex \"Chronomancer\"",
-        "archetype": "recon",
-        "commanderClass": "support",
-        "faction": "Afterlight Initiative",
-        "biography": "A temporal physicist, chrono expedition specialist, and Timeline Recovery Director who led humanity's first successful expedition through a naturally occurring temporal fracture — he understands that changing history always carries a cost, and refuses to rewrite lives for personal gain.",
-        "designBrief": "White and silver temporal armour with floating clockwork rings, blue temporal energy, a golden chronometer core, a transparent flowing cloak, fractal clock fragments, and an elegant scientific silhouette — time distortion surrounds his every movement.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -5999,34 +5360,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Valen Ash \"Tempest\"",
+        "subject": "UI PORTRAIT of Valen Ash \"Tempest\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "orbitalCommander",
         "commanderClass": "assault",
         "faction": "Afterlight Initiative",
         "biography": "An atmospheric physicist, weather systems commander, and disaster response specialist who became the first commander to safely stabilise an artificial planetary weather network after the Collapse — he believes nature is never the enemy, only a failure to understand it.",
         "designBrief": "White storm armour with electric blue energy veins, a flowing weather cloak, a lightning reactor backpack, floating atmospheric sensors, crackling gauntlets, and a blue-white visor — static electricity constantly dances across the armour.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "ash-tempest:sprite",
-      "name": "Valen Ash",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Valen Ash \"Tempest\"",
-        "archetype": "orbitalCommander",
-        "commanderClass": "assault",
-        "faction": "Afterlight Initiative",
-        "biography": "An atmospheric physicist, weather systems commander, and disaster response specialist who became the first commander to safely stabilise an artificial planetary weather network after the Collapse — he believes nature is never the enemy, only a failure to understand it.",
-        "designBrief": "White storm armour with electric blue energy veins, a flowing weather cloak, a lightning reactor backpack, floating atmospheric sensors, crackling gauntlets, and a blue-white visor — static electricity constantly dances across the armour.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6059,34 +5400,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Nyx Korven \"Phantom\"",
+        "subject": "UI PORTRAIT of Nyx Korven \"Phantom\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "recon",
         "commanderClass": "recon",
         "faction": "Afterlight Initiative",
         "biography": "An infiltration specialist, recon commander, and counter-intelligence operative who rebuilt humanity's fractured intelligence network after the Collapse — she avoids unnecessary conflict, believing her greatest victories are the battles that never happen.",
         "designBrief": "Adaptive black stealth armour with dark violet energy lines, an active camouflage cloak, a retractable optical visor, a low-profile tactical harness, and a silenced propulsion pack — minimal lighting throughout, with glitch-like distortion trailing every movement.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "korven-phantom:sprite",
-      "name": "Nyx Korven",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Nyx Korven \"Phantom\"",
-        "archetype": "recon",
-        "commanderClass": "recon",
-        "faction": "Afterlight Initiative",
-        "biography": "An infiltration specialist, recon commander, and counter-intelligence operative who rebuilt humanity's fractured intelligence network after the Collapse — she avoids unnecessary conflict, believing her greatest victories are the battles that never happen.",
-        "designBrief": "Adaptive black stealth armour with dark violet energy lines, an active camouflage cloak, a retractable optical visor, a low-profile tactical harness, and a silenced propulsion pack — minimal lighting throughout, with glitch-like distortion trailing every movement.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6119,34 +5440,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Dr. Mira Syn \"Bioforge\"",
+        "subject": "UI PORTRAIT of Dr. Mira Syn \"Bioforge\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "support",
         "commanderClass": "scientist",
         "faction": "Afterlight Initiative",
         "biography": "A bioengineer, genetic systems director, and xenobiology specialist who rebuilt humanity's lost xenobiology programme after recovering intact genetic archives from forgotten colonies — she believes every living organism deserves understanding before judgement.",
         "designBrief": "A white biological research suit with emerald energy veins, living bio-organic shoulder armour, floating DNA holograms, adaptive vine-like gauntlets, a portable laboratory backpack, and a luminescent green visor — subtle organic growths integrated throughout her equipment.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "syn-bioforge:sprite",
-      "name": "Dr. Mira Syn",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Dr. Mira Syn \"Bioforge\"",
-        "archetype": "support",
-        "commanderClass": "scientist",
-        "faction": "Afterlight Initiative",
-        "biography": "A bioengineer, genetic systems director, and xenobiology specialist who rebuilt humanity's lost xenobiology programme after recovering intact genetic archives from forgotten colonies — she believes every living organism deserves understanding before judgement.",
-        "designBrief": "A white biological research suit with emerald energy veins, living bio-organic shoulder armour, floating DNA holograms, adaptive vine-like gauntlets, a portable laboratory backpack, and a luminescent green visor — subtle organic growths integrated throughout her equipment.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6179,34 +5480,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Rhea Solari \"Photon\"",
+        "subject": "UI PORTRAIT of Rhea Solari \"Photon\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "assault",
         "commanderClass": "scientist",
         "faction": "Afterlight Initiative",
         "biography": "A photon systems scientist, energy weapons specialist, and stellar array commander who restored humanity's first functioning stellar energy array after the Collapse — she believes every sunrise proves humanity deserves another chance.",
         "designBrief": "A brilliant white combat suit with gold solar plating, radiant energy wings, floating solar mirrors, a golden visor, photon gauntlets, and a solar reactor backpack — constant shimmering light follows every movement.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "solari-photon:sprite",
-      "name": "Rhea Solari",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Rhea Solari \"Photon\"",
-        "archetype": "assault",
-        "commanderClass": "scientist",
-        "faction": "Afterlight Initiative",
-        "biography": "A photon systems scientist, energy weapons specialist, and stellar array commander who restored humanity's first functioning stellar energy array after the Collapse — she believes every sunrise proves humanity deserves another chance.",
-        "designBrief": "A brilliant white combat suit with gold solar plating, radiant energy wings, floating solar mirrors, a golden visor, photon gauntlets, and a solar reactor backpack — constant shimmering light follows every movement.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6239,34 +5520,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Zephyr Kain \"Singularity\"",
+        "subject": "UI PORTRAIT of Zephyr Kain \"Singularity\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "prototypePilot",
         "commanderClass": "scientist",
         "faction": "Afterlight Initiative",
         "biography": "A gravitational physicist, singularity engineer, and black hole navigation specialist who led the first successful expedition into the event horizon of a stable artificial singularity — he believes gravity is the universe's oldest language.",
         "designBrief": "Midnight-black research armour with gold gravitational rings orbiting his torso, a deep violet singularity core, a distorted cloak, a gravity lens visor, and micro-black-hole stabilisers — floating debris slowly orbits him at all times.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "kain-singularity:sprite",
-      "name": "Zephyr Kain",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Zephyr Kain \"Singularity\"",
-        "archetype": "prototypePilot",
-        "commanderClass": "scientist",
-        "faction": "Afterlight Initiative",
-        "biography": "A gravitational physicist, singularity engineer, and black hole navigation specialist who led the first successful expedition into the event horizon of a stable artificial singularity — he believes gravity is the universe's oldest language.",
-        "designBrief": "Midnight-black research armour with gold gravitational rings orbiting his torso, a deep violet singularity core, a distorted cloak, a gravity lens visor, and micro-black-hole stabilisers — floating debris slowly orbits him at all times.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6299,34 +5560,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Astrid Reyes \"Warden\"",
+        "subject": "UI PORTRAIT of Astrid Reyes \"Warden\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "support",
         "commanderClass": "hybrid",
         "faction": "Afterlight Initiative",
         "biography": "A civil defence commander, emergency response director, and planetary guardian who became the face of humanity's Civil Defence Corps after the Collapse — she believes the greatest victory is bringing everyone home alive.",
         "designBrief": "A heavy rescue exosuit in white ceramic armour with gold emergency markings, blue shield emitters, expandable rescue drones, a medical backpack, an integrated command visor, a protective energy mantle, and the Civil Defence insignia worn plainly.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "reyes-warden:sprite",
-      "name": "Astrid Reyes",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Astrid Reyes \"Warden\"",
-        "archetype": "support",
-        "commanderClass": "hybrid",
-        "faction": "Afterlight Initiative",
-        "biography": "A civil defence commander, emergency response director, and planetary guardian who became the face of humanity's Civil Defence Corps after the Collapse — she believes the greatest victory is bringing everyone home alive.",
-        "designBrief": "A heavy rescue exosuit in white ceramic armour with gold emergency markings, blue shield emitters, expandable rescue drones, a medical backpack, an integrated command visor, a protective energy mantle, and the Civil Defence insignia worn plainly.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6359,34 +5600,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Lucien Orion \"Starlancer\"",
+        "subject": "UI PORTRAIT of Lucien Orion \"Starlancer\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "assault",
         "commanderClass": "assault",
         "faction": "Afterlight Initiative",
         "biography": "A strike commander, experimental flight specialist, and deep space interceptor pilot who became the first pilot to successfully survive repeated flights through unstable prototype jump corridors — he believes hesitation is the only true enemy.",
         "designBrief": "Aerodynamic white combat armour with blue plasma fins, retractable thruster wings, magnetic flight stabilisers, a streamlined visor, a star-blue reactor core, glowing propulsion vents, and a long asymmetric flight coat.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "orion-starlancer:sprite",
-      "name": "Lucien Orion",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Lucien Orion \"Starlancer\"",
-        "archetype": "assault",
-        "commanderClass": "assault",
-        "faction": "Afterlight Initiative",
-        "biography": "A strike commander, experimental flight specialist, and deep space interceptor pilot who became the first pilot to successfully survive repeated flights through unstable prototype jump corridors — he believes hesitation is the only true enemy.",
-        "designBrief": "Aerodynamic white combat armour with blue plasma fins, retractable thruster wings, magnetic flight stabilisers, a streamlined visor, a star-blue reactor core, glowing propulsion vents, and a long asymmetric flight coat.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6419,34 +5640,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Ivan Volkov \"Titan\"",
+        "subject": "UI PORTRAIT of Ivan Volkov \"Titan\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "engineer",
         "commanderClass": "assault",
         "faction": "Afterlight Initiative",
         "biography": "A heavy assault commander, siege operations director, and planetary defence specialist who commanded humanity's largest planetary defence operations during the reconstruction era — he believes true strength exists only to protect those who cannot defend themselves.",
         "designBrief": "A massive reinforced exosuit in titanium-grey armour with gold reinforced plating, gigantic shoulder reactors, heavy magnetic boots, integrated shield emitters, industrial hazard markings, and a blue reactor core — a towering silhouette wherever he stands.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "volkov-titan:sprite",
-      "name": "Ivan Volkov",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Ivan Volkov \"Titan\"",
-        "archetype": "engineer",
-        "commanderClass": "assault",
-        "faction": "Afterlight Initiative",
-        "biography": "A heavy assault commander, siege operations director, and planetary defence specialist who commanded humanity's largest planetary defence operations during the reconstruction era — he believes true strength exists only to protect those who cannot defend themselves.",
-        "designBrief": "A massive reinforced exosuit in titanium-grey armour with gold reinforced plating, gigantic shoulder reactors, heavy magnetic boots, integrated shield emitters, industrial hazard markings, and a blue reactor core — a towering silhouette wherever he stands.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6479,34 +5680,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Selene Myrr \"Oracle\"",
+        "subject": "UI PORTRAIT of Selene Myrr \"Oracle\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "support",
         "commanderClass": "support",
         "faction": "Afterlight Initiative",
         "biography": "A strategic forecast scientist, battlefield simulation director, and predictive systems architect who rebuilt humanity's predictive analytics systems using recovered Afterlight computational arrays — she believes perfect preparation saves more lives than perfect weapons.",
         "designBrief": "An elegant white command suit with silver neural circuitry, floating holographic prediction rings, a transparent tactical cloak, a blue quantum visor, orbiting tactical drones, and predictive holo-displays — a minimalist scientific aesthetic throughout.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "myrr-oracle:sprite",
-      "name": "Selene Myrr",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Selene Myrr \"Oracle\"",
-        "archetype": "support",
-        "commanderClass": "support",
-        "faction": "Afterlight Initiative",
-        "biography": "A strategic forecast scientist, battlefield simulation director, and predictive systems architect who rebuilt humanity's predictive analytics systems using recovered Afterlight computational arrays — she believes perfect preparation saves more lives than perfect weapons.",
-        "designBrief": "An elegant white command suit with silver neural circuitry, floating holographic prediction rings, a transparent tactical cloak, a blue quantum visor, orbiting tactical drones, and predictive holo-displays — a minimalist scientific aesthetic throughout.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6539,34 +5720,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Caelus Nova \"Architect\"",
+        "subject": "UI PORTRAIT of Caelus Nova \"Architect\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "orbitalCommander",
         "commanderClass": "support",
         "faction": "Atlas Dynamics",
         "biography": "A megastructure engineer, orbital construction director, and stellar infrastructure commander who became the chief architect behind humanity's post-Collapse reconstruction programme — he believes civilisation is humanity's greatest invention, and every rebuilt structure is proof that hope survives.",
         "designBrief": "A white industrial exosuit with graphite structural plating, gold engineering markings, floating holographic blueprint arrays, mechanical construction arms, adaptive fabrication gauntlets, a blueprint projector backpack, and an architectural visor — orbiting construction drones accompany him everywhere.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "nova-architect:sprite",
-      "name": "Caelus Nova",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Caelus Nova \"Architect\"",
-        "archetype": "orbitalCommander",
-        "commanderClass": "support",
-        "faction": "Atlas Dynamics",
-        "biography": "A megastructure engineer, orbital construction director, and stellar infrastructure commander who became the chief architect behind humanity's post-Collapse reconstruction programme — he believes civilisation is humanity's greatest invention, and every rebuilt structure is proof that hope survives.",
-        "designBrief": "A white industrial exosuit with graphite structural plating, gold engineering markings, floating holographic blueprint arrays, mechanical construction arms, adaptive fabrication gauntlets, a blueprint projector backpack, and an architectural visor — orbiting construction drones accompany him everywhere.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6599,34 +5760,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Talia Vega \"Echo\"",
+        "subject": "UI PORTRAIT of Talia Vega \"Echo\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "crystalSpecialist",
         "commanderClass": "scientist",
         "faction": "Afterlight Initiative",
         "biography": "A signal intelligence specialist, acoustic physicist, and deep space communications commander who restored the fragmented interstellar communications infrastructure that had remained silent since the Collapse — she believes silence contains more information than noise.",
         "designBrief": "Slim white reconnaissance armour with turquoise resonance circuitry, circular shoulder emitters, a waveform visor, floating signal receivers, an adaptive communication pack, and concentric energy rings — an elegant scientific silhouette throughout.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "vega-echo:sprite",
-      "name": "Talia Vega",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Talia Vega \"Echo\"",
-        "archetype": "crystalSpecialist",
-        "commanderClass": "scientist",
-        "faction": "Afterlight Initiative",
-        "biography": "A signal intelligence specialist, acoustic physicist, and deep space communications commander who restored the fragmented interstellar communications infrastructure that had remained silent since the Collapse — she believes silence contains more information than noise.",
-        "designBrief": "Slim white reconnaissance armour with turquoise resonance circuitry, circular shoulder emitters, a waveform visor, floating signal receivers, an adaptive communication pack, and concentric energy rings — an elegant scientific silhouette throughout.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6659,34 +5800,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Darius Rhem \"Catalyst\"",
+        "subject": "UI PORTRAIT of Darius Rhem \"Catalyst\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "prototypePilot",
         "commanderClass": "experimental",
         "faction": "Afterlight Initiative",
         "biography": "A reaction systems scientist, chain-reaction specialist, and energy cascade researcher who pioneered safe chain-reaction engineering after preventing one of the largest post-Collapse reactor failures in recorded history — he believes the smallest action can reshape an entire civilisation.",
         "designBrief": "A white experimental combat suit with amber energy conduits, reactive plasma coils, floating catalyst spheres, scientific gauntlets, an adaptive reaction backpack, and a bright orange reactor core — particle emitters orbit him constantly.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "rhem-catalyst:sprite",
-      "name": "Darius Rhem",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Darius Rhem \"Catalyst\"",
-        "archetype": "prototypePilot",
-        "commanderClass": "experimental",
-        "faction": "Afterlight Initiative",
-        "biography": "A reaction systems scientist, chain-reaction specialist, and energy cascade researcher who pioneered safe chain-reaction engineering after preventing one of the largest post-Collapse reactor failures in recorded history — he believes the smallest action can reshape an entire civilisation.",
-        "designBrief": "A white experimental combat suit with amber energy conduits, reactive plasma coils, floating catalyst spheres, scientific gauntlets, an adaptive reaction backpack, and a bright orange reactor core — particle emitters orbit him constantly.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6719,34 +5840,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Eliana Ross \"Horizon\"",
+        "subject": "UI PORTRAIT of Eliana Ross \"Horizon\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "droneCommander",
         "commanderClass": "support",
         "faction": "Afterlight Initiative",
         "biography": "A long-range expedition commander, planetary survey director, and colonisation specialist who commanded the first successful post-Collapse deep-space colonisation programme — she believes humanity's future will always exist just beyond the next horizon.",
         "designBrief": "White expedition armour with sand-gold expedition markings, a long exploration cloak, a terrain analysis visor, portable survey drones, a planetary mapping backpack, adaptive climbing equipment, and blue atmospheric sensors — an unmistakable explorer silhouette.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "ross-horizon:sprite",
-      "name": "Eliana Ross",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Eliana Ross \"Horizon\"",
-        "archetype": "droneCommander",
-        "commanderClass": "support",
-        "faction": "Afterlight Initiative",
-        "biography": "A long-range expedition commander, planetary survey director, and colonisation specialist who commanded the first successful post-Collapse deep-space colonisation programme — she believes humanity's future will always exist just beyond the next horizon.",
-        "designBrief": "White expedition armour with sand-gold expedition markings, a long exploration cloak, a terrain analysis visor, portable survey drones, a planetary mapping backpack, adaptive climbing equipment, and blue atmospheric sensors — an unmistakable explorer silhouette.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6779,34 +5880,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Kieran Solace \"Diplomat\"",
+        "subject": "UI PORTRAIT of Kieran Solace \"Diplomat\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "crystalSpecialist",
         "commanderClass": "defender",
         "faction": "Afterlight Initiative",
         "biography": "A chief diplomatic envoy, conflict resolution director, and first contact specialist who negotiated the first lasting interstellar alliance following the Collapse — he believes lasting peace requires courage equal to warfare.",
         "designBrief": "An elegant white diplomatic uniform with gold ceremonial armour, a blue illuminated insignia, a holographic translation device, a compact negotiation interface, a light ceremonial cape, and minimal defensive plating — orbiting diplomatic drones accompany him at all times.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "solace-diplomat:sprite",
-      "name": "Kieran Solace",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Kieran Solace \"Diplomat\"",
-        "archetype": "crystalSpecialist",
-        "commanderClass": "defender",
-        "faction": "Afterlight Initiative",
-        "biography": "A chief diplomatic envoy, conflict resolution director, and first contact specialist who negotiated the first lasting interstellar alliance following the Collapse — he believes lasting peace requires courage equal to warfare.",
-        "designBrief": "An elegant white diplomatic uniform with gold ceremonial armour, a blue illuminated insignia, a holographic translation device, a compact negotiation interface, a light ceremonial cape, and minimal defensive plating — orbiting diplomatic drones accompany him at all times.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6839,34 +5920,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Xanthe Oris \"Nanoforge\"",
+        "subject": "UI PORTRAIT of Xanthe Oris \"Nanoforge\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "guardian",
         "commanderClass": "experimental",
         "faction": "Afterlight Initiative",
         "biography": "A nanotechnology engineer, adaptive materials scientist, and matter reconstruction specialist who perfected safe programmable matter after decades of failed experiments — she believes perfection is not a destination, it is continuous adaptation.",
         "designBrief": "Pearlescent adaptive armour with silver nanite swarms flowing beneath transparent plating, floating construction particles, morphing gauntlets, a programmable cloak, a blue-white nanite reactor, a dynamic helmet visor, and constant microscopic surface movement.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "oris-nanoforge:sprite",
-      "name": "Xanthe Oris",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Xanthe Oris \"Nanoforge\"",
-        "archetype": "guardian",
-        "commanderClass": "experimental",
-        "faction": "Afterlight Initiative",
-        "biography": "A nanotechnology engineer, adaptive materials scientist, and matter reconstruction specialist who perfected safe programmable matter after decades of failed experiments — she believes perfection is not a destination, it is continuous adaptation.",
-        "designBrief": "Pearlescent adaptive armour with silver nanite swarms flowing beneath transparent plating, floating construction particles, morphing gauntlets, a programmable cloak, a blue-white nanite reactor, a dynamic helmet visor, and constant microscopic surface movement.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6899,34 +5960,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Ronan Drake \"Sentinel\"",
+        "subject": "UI PORTRAIT of Ronan Drake \"Sentinel\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "orbitalCommander",
         "commanderClass": "recon",
         "faction": "Afterlight Initiative",
         "biography": "A perimeter defence commander, orbital security director, and threat assessment specialist who protected humanity's first restored core systems after the Collapse — he believes the best defence is one nobody notices because it never fails.",
         "designBrief": "White tactical defence armour with dark graphite reinforcement, blue defensive energy nodes, an orbital targeting visor, deployable defence pylons, a compact radar backpack, integrated shield emitters, and floating interceptor drones.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "drake-sentinel:sprite",
-      "name": "Ronan Drake",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Ronan Drake \"Sentinel\"",
-        "archetype": "orbitalCommander",
-        "commanderClass": "recon",
-        "faction": "Afterlight Initiative",
-        "biography": "A perimeter defence commander, orbital security director, and threat assessment specialist who protected humanity's first restored core systems after the Collapse — he believes the best defence is one nobody notices because it never fails.",
-        "designBrief": "White tactical defence armour with dark graphite reinforcement, blue defensive energy nodes, an orbital targeting visor, deployable defence pylons, a compact radar backpack, integrated shield emitters, and floating interceptor drones.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -6959,34 +6000,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Sora Helix \"Alchemist\"",
+        "subject": "UI PORTRAIT of Sora Helix \"Alchemist\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "engineer",
         "commanderClass": "scientist",
         "faction": "Afterlight Initiative",
         "biography": "An experimental chemist, elemental reaction scientist, and hazard systems specialist who revolutionised applied chemistry after the Collapse — she treats every battlefield as a scientific laboratory.",
         "designBrief": "An adaptive white research coat with amber chemical reservoirs, transparent reagent canisters, a multi-spectrum visor, mechanical synthesis gauntlets, portable analysis drones, a colour-changing reactor core, and a scientific expedition harness.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "helix-alchemist:sprite",
-      "name": "Sora Helix",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Sora Helix \"Alchemist\"",
-        "archetype": "engineer",
-        "commanderClass": "scientist",
-        "faction": "Afterlight Initiative",
-        "biography": "An experimental chemist, elemental reaction scientist, and hazard systems specialist who revolutionised applied chemistry after the Collapse — she treats every battlefield as a scientific laboratory.",
-        "designBrief": "An adaptive white research coat with amber chemical reservoirs, transparent reagent canisters, a multi-spectrum visor, mechanical synthesis gauntlets, portable analysis drones, a colour-changing reactor core, and a scientific expedition harness.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -7019,34 +6040,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Dorian Fen \"Beastmaster\"",
+        "subject": "UI PORTRAIT of Dorian Fen \"Beastmaster\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "droneCommander",
         "commanderClass": "hybrid",
         "faction": "Afterlight Initiative",
         "biography": "A xenobiologist, wildlife handler, and ecological restoration commander who rebuilt humanity's relationship with alien ecosystems by proving that native species could become trusted expedition partners rather than obstacles — he believes every species deserves coexistence before conflict.",
         "designBrief": "White frontier ranger armour with an emerald expedition cloak, a living bio-scanner, a creature command gauntlet, a portable habitat pack, adaptive survival equipment, a wildlife tracking visor, and a small companion that constantly accompanies him.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "fen-beastmaster:sprite",
-      "name": "Dorian Fen",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Dorian Fen \"Beastmaster\"",
-        "archetype": "droneCommander",
-        "commanderClass": "hybrid",
-        "faction": "Afterlight Initiative",
-        "biography": "A xenobiologist, wildlife handler, and ecological restoration commander who rebuilt humanity's relationship with alien ecosystems by proving that native species could become trusted expedition partners rather than obstacles — he believes every species deserves coexistence before conflict.",
-        "designBrief": "White frontier ranger armour with an emerald expedition cloak, a living bio-scanner, a creature command gauntlet, a portable habitat pack, adaptive survival equipment, a wildlife tracking visor, and a small companion that constantly accompanies him.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -7079,34 +6080,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Vega Noctis \"Voidwalker\"",
+        "subject": "UI PORTRAIT of Vega Noctis \"Voidwalker\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "voidSpecialist",
         "commanderClass": "experimental",
         "faction": "Afterlight Initiative",
         "biography": "An anomaly navigator, deep void explorer, and reality boundary specialist who became the first explorer to successfully navigate and return from the expanding dimensional fractures that appeared after the Collapse — she has stared into the emptiness long enough to understand that hope shines brightest where light cannot reach.",
         "designBrief": "Midnight-black adaptive armour with deep violet energy veins, a shifting starfield cloak, floating void crystals, a fractured visor, gravitational distortion surrounding her movement, small galaxies visible within her armour plating, and a dark silhouette with brilliant cosmic highlights.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "noctis-voidwalker:sprite",
-      "name": "Vega Noctis",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Vega Noctis \"Voidwalker\"",
-        "archetype": "voidSpecialist",
-        "commanderClass": "experimental",
-        "faction": "Afterlight Initiative",
-        "biography": "An anomaly navigator, deep void explorer, and reality boundary specialist who became the first explorer to successfully navigate and return from the expanding dimensional fractures that appeared after the Collapse — she has stared into the emptiness long enough to understand that hope shines brightest where light cannot reach.",
-        "designBrief": "Midnight-black adaptive armour with deep violet energy veins, a shifting starfield cloak, floating void crystals, a fractured visor, gravitational distortion surrounding her movement, small galaxies visible within her armour plating, and a dark silhouette with brilliant cosmic highlights.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -7139,34 +6120,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Lysandra Aether \"Celestial\"",
+        "subject": "UI PORTRAIT of Lysandra Aether \"Celestial\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "orbitalCommander",
         "commanderClass": "hybrid",
         "faction": "Afterlight Initiative",
         "biography": "An astrophysicist, celestial navigation director, and cosmic energy research commander who restored the forgotten network of ancient observatories that once united humanity's earliest interstellar explorers — she believes humanity was never meant to conquer the stars, only to become worthy of them.",
         "designBrief": "Flowing white ceremonial armour with gold celestial trim, an animated constellation cloak, orbiting miniature stars, a living galaxy halo, a solar crown, cosmic energy wings, and a deep blue crystal visor — every movement leaves constellations behind.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "aether-celestial:sprite",
-      "name": "Lysandra Aether",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Lysandra Aether \"Celestial\"",
-        "archetype": "orbitalCommander",
-        "commanderClass": "hybrid",
-        "faction": "Afterlight Initiative",
-        "biography": "An astrophysicist, celestial navigation director, and cosmic energy research commander who restored the forgotten network of ancient observatories that once united humanity's earliest interstellar explorers — she believes humanity was never meant to conquer the stars, only to become worthy of them.",
-        "designBrief": "Flowing white ceremonial armour with gold celestial trim, an animated constellation cloak, orbiting miniature stars, a living galaxy halo, a solar crown, cosmic energy wings, and a deep blue crystal visor — every movement leaves constellations behind.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -7199,34 +6160,14 @@
       "view": "head-and-shoulders",
       "suggestedSize": "512x512",
       "requirements": {
-        "subject": "Atlas Prime \"Founder\"",
+        "subject": "UI PORTRAIT of Atlas Prime \"Founder\", the ship's commanding officer — a chibi character bust",
+        "formFactor": "Head-and-shoulders UI portrait bust ONLY. Commanders are the game's one human/character asset, shown in menus and the HUD as a skill/ability provider — they NEVER appear as a body in the top-down play-field. No full-body pose, no ground scene.",
         "archetype": "guardian",
         "commanderClass": "hybrid",
         "faction": "The First Expedition",
         "biography": "The first expedition commander, architect of humanity's survival, and founder of the Afterlight Network, revived after more than four centuries in cryostasis — he never sought greatness; he simply refused to let humanity disappear.",
         "designBrief": "Ancient white expedition armour with worn gold trim, the original Atlas insignia, visible repairs accumulated over centuries, a simple command cloak, and a prototype reactor — no unnecessary ornamentation; his appearance reflects history rather than power.",
-        "usedIn": "recruitment/roster/loadout screens, dialogue framing"
-      }
-    },
-    {
-      "id": "prime-founder:sprite",
-      "name": "Atlas Prime",
-      "category": "commanders",
-      "priority": 2,
-      "pipeline": "keyed",
-      "keyColour": "green",
-      "paletteConstraint": "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)",
-      "assetType": "in-run sprite",
-      "view": "full body, facing north",
-      "suggestedSize": "256x256, trimmed",
-      "requirements": {
-        "subject": "Atlas Prime \"Founder\"",
-        "archetype": "guardian",
-        "commanderClass": "hybrid",
-        "faction": "The First Expedition",
-        "biography": "The first expedition commander, architect of humanity's survival, and founder of the Afterlight Network, revived after more than four centuries in cryostasis — he never sought greatness; he simply refused to let humanity disappear.",
-        "designBrief": "Ancient white expedition armour with worn gold trim, the original Atlas insignia, visible repairs accumulated over centuries, a simple command cloak, and a prototype reactor — no unnecessary ornamentation; his appearance reflects history rather than power.",
-        "usedIn": "in-run gameplay"
+        "usedIn": "recruitment/roster/loadout screens, dialogue framing, HUD commander indicator"
       }
     },
     {
@@ -8678,8 +7619,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Living Reactor",
+        "subject": "ship augment \"Living Reactor\"",
         "description": "A slow, steady hull regeneration — and every pulse detonates, scorching everything nearby.",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "usedIn": "BossArtifactChoice overlay, HUD"
       }
     },
@@ -8692,7 +7634,7 @@
       "assetType": "VFX (single frame or short frame sheet)",
       "suggestedSize": "256x256 per frame",
       "requirements": {
-        "subject": "Living Reactor",
+        "subject": "ship augment \"Living Reactor\"",
         "description": "A slow, steady hull regeneration — and every pulse detonates, scorching everything nearby.",
         "usedIn": "in-run gameplay"
       }
@@ -8709,8 +7651,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Atlas Core",
+        "subject": "ship augment \"Atlas Core\"",
         "description": "Every weapon you carry fires meaningfully faster, permanently.",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "usedIn": "BossArtifactChoice overlay, HUD"
       }
     },
@@ -8723,7 +7666,7 @@
       "assetType": "VFX (single frame or short frame sheet)",
       "suggestedSize": "256x256 per frame",
       "requirements": {
-        "subject": "Atlas Core",
+        "subject": "ship augment \"Atlas Core\"",
         "description": "Every weapon you carry fires meaningfully faster, permanently.",
         "usedIn": "in-run gameplay"
       }
@@ -8740,8 +7683,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Graviton Heart",
+        "subject": "ship augment \"Graviton Heart\"",
         "description": "Every boost tears open a gravity well that drags nearby enemies in and crushes them.",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "usedIn": "BossArtifactChoice overlay, HUD"
       }
     },
@@ -8754,7 +7698,7 @@
       "assetType": "VFX (single frame or short frame sheet)",
       "suggestedSize": "256x256 per frame",
       "requirements": {
-        "subject": "Graviton Heart",
+        "subject": "ship augment \"Graviton Heart\"",
         "description": "Every boost tears open a gravity well that drags nearby enemies in and crushes them.",
         "usedIn": "in-run gameplay"
       }
@@ -8771,8 +7715,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Stellar Compass",
+        "subject": "ship augment \"Stellar Compass\"",
         "description": "Every Elite you kill for the rest of this run drops loot no worse than Epic.",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "usedIn": "BossArtifactChoice overlay, HUD"
       }
     },
@@ -8785,7 +7730,7 @@
       "assetType": "VFX (single frame or short frame sheet)",
       "suggestedSize": "256x256 per frame",
       "requirements": {
-        "subject": "Stellar Compass",
+        "subject": "ship augment \"Stellar Compass\"",
         "description": "Every Elite you kill for the rest of this run drops loot no worse than Epic.",
         "usedIn": "in-run gameplay"
       }
@@ -8802,8 +7747,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Void Engine",
+        "subject": "ship augment \"Void Engine\"",
         "description": "Every boost detonates a damaging shockwave beneath you.",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "usedIn": "BossArtifactChoice overlay, HUD"
       }
     },
@@ -8816,7 +7762,7 @@
       "assetType": "VFX (single frame or short frame sheet)",
       "suggestedSize": "256x256 per frame",
       "requirements": {
-        "subject": "Void Engine",
+        "subject": "ship augment \"Void Engine\"",
         "description": "Every boost detonates a damaging shockwave beneath you.",
         "usedIn": "in-run gameplay"
       }
@@ -8833,8 +7779,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Focus Fire",
+        "subject": "ship passive-upgrade icon \"Focus Fire\"",
         "description": "Permanently boosts weapon damage.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "offensive",
         "trigger": "onKill",
         "usedIn": "level-up cards, HUD"
@@ -8852,8 +7799,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Overcharge Coils",
+        "subject": "ship passive-upgrade icon \"Overcharge Coils\"",
         "description": "Reduces active-module cooldowns.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "cooldown",
         "trigger": "onKill",
         "usedIn": "level-up cards, HUD"
@@ -8871,8 +7819,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Deadeye",
+        "subject": "ship passive-upgrade icon \"Deadeye\"",
         "description": "Raises critical hit chance.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "critical",
         "trigger": "onCriticalHit",
         "usedIn": "level-up cards, HUD"
@@ -8890,8 +7839,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Light Frame",
+        "subject": "ship passive-upgrade icon \"Light Frame\"",
         "description": "Raises movement speed.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "movement",
         "trigger": "onKill",
         "usedIn": "level-up cards, HUD"
@@ -8909,8 +7859,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Hardened Plating",
+        "subject": "ship passive-upgrade icon \"Hardened Plating\"",
         "description": "Raises barrier capacity on shield break.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "shield",
         "trigger": "onShieldBreak",
         "usedIn": "level-up cards, HUD"
@@ -8928,8 +7879,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Wide Net",
+        "subject": "ship passive-upgrade icon \"Wide Net\"",
         "description": "Extends the pickup magnet radius.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "loot",
         "trigger": "onKill",
         "usedIn": "level-up cards, HUD"
@@ -8947,8 +7899,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Nanite Mesh",
+        "subject": "ship passive-upgrade icon \"Nanite Mesh\"",
         "description": "Restores hull when critically wounded.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "healing",
         "trigger": "onLowHealth",
         "usedIn": "level-up cards, HUD"
@@ -8966,8 +7919,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Salvage Protocol",
+        "subject": "ship passive-upgrade icon \"Salvage Protocol\"",
         "description": "Improves loot yield.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "economy",
         "trigger": "onKill",
         "usedIn": "level-up cards, HUD"
@@ -8985,8 +7939,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Fast Learner",
+        "subject": "ship passive-upgrade icon \"Fast Learner\"",
         "description": "Raises experience gained.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "xp",
         "trigger": "onKill",
         "usedIn": "level-up cards, HUD"
@@ -9004,8 +7959,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Escort Link",
+        "subject": "ship passive-upgrade icon \"Escort Link\"",
         "description": "Shortens active-module cooldowns further while wounded, backing up the pilot.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "support",
         "trigger": "onLowHealth",
         "usedIn": "level-up cards, HUD"
@@ -9023,8 +7979,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Guardian Ward",
+        "subject": "ship passive-upgrade icon \"Guardian Ward\"",
         "description": "Raises barrier capacity on taking damage.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "defensive",
         "trigger": "onDamageTaken",
         "usedIn": "level-up cards, HUD"
@@ -9042,8 +7999,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Signal Boost",
+        "subject": "ship passive-upgrade icon \"Signal Boost\"",
         "description": "Extends the pickup magnet radius on a critical hit.",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "utility",
         "trigger": "onCriticalHit",
         "usedIn": "level-up cards, HUD"
@@ -9061,8 +8019,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Drone Primer",
+        "subject": "ship passive-upgrade icon \"Drone Primer\"",
         "description": "Improves future drone effectiveness. (Awaiting a drone system.)",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "summons",
         "trigger": "onKill",
         "usedIn": "level-up cards, HUD"
@@ -9080,8 +8039,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Resonance",
+        "subject": "ship passive-upgrade icon \"Resonance\"",
         "description": "Improves future orbital-weapon power. (Awaiting an orbital system.)",
+        "formFactor": "A symbolic upgrade ICON for a starship trait (targeting, plating, thrusters, etc.) — a clean mechanical/symbolic emblem, not a person or a held item.",
         "passiveCategory": "synergy",
         "trigger": "onKill",
         "usedIn": "level-up cards, HUD"
@@ -9099,8 +8059,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Shrapnel Core",
+        "subject": "ship augment \"Shrapnel Core\"",
         "description": "Every kill sends out a damaging pulse.",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "usedIn": "merchant/inventory"
       }
     },
@@ -9113,7 +8074,7 @@
       "assetType": "VFX (single frame or short frame sheet)",
       "suggestedSize": "256x256 per frame",
       "requirements": {
-        "subject": "Shrapnel Core",
+        "subject": "ship augment \"Shrapnel Core\"",
         "description": "Every kill sends out a damaging pulse.",
         "usedIn": "in-run gameplay"
       }
@@ -9130,8 +8091,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Reactive Plating",
+        "subject": "ship augment \"Reactive Plating\"",
         "description": "Taking damage instantly raises your barrier.",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "usedIn": "merchant/inventory"
       }
     },
@@ -9144,7 +8106,7 @@
       "assetType": "VFX (single frame or short frame sheet)",
       "suggestedSize": "256x256 per frame",
       "requirements": {
-        "subject": "Reactive Plating",
+        "subject": "ship augment \"Reactive Plating\"",
         "description": "Taking damage instantly raises your barrier.",
         "usedIn": "in-run gameplay"
       }
@@ -9161,8 +8123,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Fail-Safe Cell",
+        "subject": "ship augment \"Fail-Safe Cell\"",
         "description": "Losing your shield triggers an emergency hull repair.",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "usedIn": "merchant/inventory"
       }
     },
@@ -9175,7 +8138,7 @@
       "assetType": "VFX (single frame or short frame sheet)",
       "suggestedSize": "256x256 per frame",
       "requirements": {
-        "subject": "Fail-Safe Cell",
+        "subject": "ship augment \"Fail-Safe Cell\"",
         "description": "Losing your shield triggers an emergency hull repair.",
         "usedIn": "in-run gameplay"
       }
@@ -9192,8 +8155,9 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Ascension Matrix",
+        "subject": "ship augment \"Ascension Matrix\"",
         "description": "Every level gained permanently sharpens your aim.",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "usedIn": "merchant/inventory"
       }
     },
@@ -9206,7 +8170,7 @@
       "assetType": "VFX (single frame or short frame sheet)",
       "suggestedSize": "256x256 per frame",
       "requirements": {
-        "subject": "Ascension Matrix",
+        "subject": "ship augment \"Ascension Matrix\"",
         "description": "Every level gained permanently sharpens your aim.",
         "usedIn": "in-run gameplay"
       }
@@ -9223,7 +8187,8 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Ember Core",
+        "subject": "ship relic-augment \"Ember Core\"",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "relicCategory": "elemental",
         "rarity": "rare",
         "rarityHex": "#4d7cff",
@@ -9243,7 +8208,8 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Frost Shard",
+        "subject": "ship relic-augment \"Frost Shard\"",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "relicCategory": "elemental",
         "rarity": "rare",
         "rarityHex": "#4d7cff",
@@ -9263,7 +8229,8 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Cinder Heart",
+        "subject": "ship relic-augment \"Cinder Heart\"",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "relicCategory": "elemental",
         "rarity": "legendary",
         "rarityHex": "#ffc652",
@@ -9283,7 +8250,8 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Gambler's Die",
+        "subject": "ship relic-augment \"Gambler's Die\"",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "relicCategory": "prototype",
         "rarity": "epic",
         "rarityHex": "#9b5cff",
@@ -9303,7 +8271,8 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Static Node",
+        "subject": "ship relic-augment \"Static Node\"",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "relicCategory": "prototype",
         "rarity": "common",
         "rarityHex": "#dce4f2",
@@ -9323,7 +8292,8 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Conduit Loop",
+        "subject": "ship relic-augment \"Conduit Loop\"",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "relicCategory": "prototype",
         "rarity": "common",
         "rarityHex": "#dce4f2",
@@ -9343,7 +8313,8 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Warden's Token",
+        "subject": "ship relic-augment \"Warden's Token\"",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "relicCategory": "defensive",
         "rarity": "epic",
         "rarityHex": "#9b5cff",
@@ -9363,7 +8334,8 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Singularity Keepsake",
+        "subject": "ship relic-augment \"Singularity Keepsake\"",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "relicCategory": "singularity",
         "rarity": "singularity",
         "rarityHex": "#e4d4ff",
@@ -9383,7 +8355,8 @@
       "view": "centered, transparent background",
       "suggestedSize": "128x128",
       "requirements": {
-        "subject": "Veil Fragment",
+        "subject": "ship relic-augment \"Veil Fragment\"",
+        "formFactor": "A ship-augment/upgrade ICON — a mechanical module, core, or mysterious augment object that enhances the player's STARSHIP. Not clothing, not a hand-tool, not a character's personal item.",
         "relicCategory": "void",
         "rarity": "epic",
         "rarityHex": "#9b5cff",
