@@ -8,11 +8,11 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 
 ## Summary
 
-- **Total registry entries: 1049**
-- **True source-file count (excludes derived): 854**
+- **Total registry entries: 1241**
+- **True source-file count (excludes derived): 1046**
 - Derived (code-generated, no art file needed): 195
-- By pipeline: keyed 648, additive 349, fullbleed 52
-- By status: missing 1049, placeholder 0, delivered 0
+- By pipeline: keyed 727, additive 457, fullbleed 57
+- By status: missing 1241, placeholder 0, delivered 0
 
 **Colour law (DIRECTIVE §4):** nothing green in any KEYED sprite's palette (the chroma-key extraction step would strip it). Substitutions: regeneration → gold, poison → amber, toxic → amber, biomass → amber-yellow. Green is permitted freely in additive/fullbleed assets. Crystal Dominion sprites are magenta-keyed instead of green-keyed (see each entry's own `keyColour`).
 
@@ -22,6 +22,7 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 |---|---|
 | achievements | 8 |
 | artifacts | 8 |
+| banners | 1 |
 | biome-events | 10 |
 | biome-hazards | 79 |
 | biome-poi | 80 |
@@ -29,31 +30,46 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 | biomes | 11 |
 | boss | 9 |
 | boss-artifacts | 10 |
+| branding | 7 |
+| combat-entities | 21 |
+| commander-actives | 53 |
 | commanders | 159 |
 | currencies | 6 |
 | elite-mutations | 18 |
+| elite-reward-vfx | 11 |
 | elite-tiers | 7 |
 | enemies | 244 |
+| environment | 2 |
+| environmental-conditions | 10 |
 | equipment | 10 |
+| faction-emblems | 6 |
 | faction-reputation | 8 |
 | fire-patterns | 12 |
 | frames | 4 |
 | galaxy | 28 |
+| hud-chrome | 14 |
+| interactables | 7 |
 | loot-rarity | 9 |
 | manufacturers | 18 |
 | mission-modifiers | 38 |
 | missions | 4 |
 | particles | 5 |
 | passives | 14 |
+| player-vfx | 9 |
 | projectile-behaviours | 12 |
 | relics | 11 |
 | reputation-titles | 8 |
+| research-nodes | 18 |
 | resources | 15 |
+| ship-abilities | 10 |
 | ship-modules | 8 |
 | ships | 30 |
+| starmap-chrome | 4 |
 | status-effects | 10 |
 | titles | 7 |
+| ui-components | 11 |
 | ui-screens | 24 |
+| wave-reward-vfx | 8 |
 | weapons | 48 |
 | xp-tiers | 7 |
 
@@ -1110,4 +1126,196 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 | xp-tier:boss | boss | xp-tiers | keyed | source |  | missing |
 | xp-tier:ancient | ancient | xp-tiers | keyed | source |  | missing |
 | xp-tier:research | research | xp-tiers | keyed | source |  | missing |
+| branding:logo-wordmark | AFTERLIGHT logo/wordmark | branding | keyed | source |  | missing |
+| branding:app-icon-512 | PWA app icon 512px | branding | fullbleed | source |  | missing |
+| branding:app-icon-192 | PWA app icon 192px | branding | fullbleed | source |  | missing |
+| branding:favicon | Browser favicon | branding | fullbleed | source |  | missing |
+| branding:loading-spinner | Loading spinner/animation | branding | additive | source |  | missing |
+| branding:cursor | Custom cursor | branding | keyed | source |  | missing |
+| branding:display-typeface | Chunky rounded display typeface (Visual Style Rule 5) | branding | keyed | source |  | missing |
+| hud:health-bar | health-bar | hud-chrome | keyed | source |  | missing |
+| hud:shield-bar | shield-bar | hud-chrome | keyed | source |  | missing |
+| hud:energy-bar | energy-bar | hud-chrome | keyed | source |  | missing |
+| hud:xp-bar | xp-bar | hud-chrome | keyed | source |  | missing |
+| hud:boss-health-bar | boss-health-bar | hud-chrome | keyed | source |  | missing |
+| hud:ultimate-meter | ultimate-meter | hud-chrome | keyed | source |  | missing |
+| hud:ability-cooldown | ability-cooldown | hud-chrome | keyed | source |  | missing |
+| hud:minimap | minimap | hud-chrome | keyed | source |  | missing |
+| hud:crosshair | crosshair | hud-chrome | keyed | source |  | missing |
+| hud:damage-numbers | damage-numbers | hud-chrome | keyed | source |  | missing |
+| hud:toast-banner | toast-banner | hud-chrome | keyed | source |  | missing |
+| hud:wave-banner | wave-banner | hud-chrome | keyed | source |  | missing |
+| hud:objective-tracker | objective-tracker | hud-chrome | keyed | source |  | missing |
+| hud:extraction-timer | extraction-timer | hud-chrome | keyed | source |  | missing |
+| ui:button-set | button-set | ui-components | keyed | source |  | missing |
+| ui:panel | panel | ui-components | keyed | source |  | missing |
+| ui:card-frame | card-frame | ui-components | keyed | source |  | missing |
+| ui:tooltip | tooltip | ui-components | keyed | source |  | missing |
+| ui:modal-frame | modal-frame | ui-components | keyed | source |  | missing |
+| ui:tab-bar | tab-bar | ui-components | keyed | source |  | missing |
+| ui:toggle | toggle | ui-components | keyed | source |  | missing |
+| ui:slider | slider | ui-components | keyed | source |  | missing |
+| ui:scrollbar | scrollbar | ui-components | keyed | source |  | missing |
+| ui:list-row | list-row | ui-components | keyed | source |  | missing |
+| ui:talent-node-frame | talent-node-frame | ui-components | keyed | source |  | missing |
+| player-vfx:engine-trail | engine-trail | player-vfx | additive | source |  | missing |
+| player-vfx:boost-dash | boost-dash | player-vfx | additive | source |  | missing |
+| player-vfx:invuln-shimmer | invuln-shimmer | player-vfx | additive | source |  | missing |
+| player-vfx:barrier-bubble | barrier-bubble | player-vfx | additive | source |  | missing |
+| player-vfx:shield-impact | shield-impact | player-vfx | additive | source |  | missing |
+| player-vfx:player-death | player-death | player-vfx | additive | source |  | missing |
+| player-vfx:player-spawn | player-spawn | player-vfx | additive | source |  | missing |
+| player-vfx:extraction-warp | extraction-warp | player-vfx | additive | source |  | missing |
+| player-vfx:heal-pulse | heal-pulse | player-vfx | additive | source |  | missing |
+| combat-entity:outlaw-mine | outlaw-mine | combat-entities | keyed | source |  | missing |
+| combat-entity:crystal-growth | crystal-growth | combat-entities | keyed | source |  | missing |
+| combat-entity:xeno-hive | xeno-hive | combat-entities | keyed | source |  | missing |
+| combat-entity:ancient-site | ancient-site | combat-entities | keyed | source |  | missing |
+| combat-entity:loot-cache | loot-cache | combat-entities | keyed | source |  | missing |
+| combat-entity:merchant-vessel | merchant-vessel | combat-entities | keyed | source |  | missing |
+| combat-entity:extraction-beacon | extraction-beacon | combat-entities | keyed | source |  | missing |
+| combat-entity:meteor-telegraph | meteor-telegraph | combat-entities | additive | source |  | missing |
+| combat-entity:meteor-impact | meteor-impact | combat-entities | additive | source |  | missing |
+| combat-entity:acid-pool | acid-pool | combat-entities | additive | source |  | missing |
+| combat-entity:void-zone | void-zone | combat-entities | additive | source |  | missing |
+| combat-entity:gravity-well | gravity-well | combat-entities | additive | source |  | missing |
+| combat-entity:singularity-charge | singularity-charge | combat-entities | additive | source |  | missing |
+| combat-entity:machine-shield-lattice | machine-shield-lattice | combat-entities | additive | source |  | missing |
+| combat-entity:constellation-link | constellation-link | combat-entities | additive | source |  | missing |
+| combat-entity:spawn-warp-in | spawn-warp-in | combat-entities | additive | source |  | missing |
+| combat-entity:telegraph-ring | telegraph-ring | combat-entities | additive | source |  | missing |
+| combat-entity:telegraph-line | telegraph-line | combat-entities | additive | source |  | missing |
+| combat-entity:hazard-telegraph | hazard-telegraph | combat-entities | additive | source |  | missing |
+| combat-entity:loot-beam | loot-beam | combat-entities | additive | source |  | missing |
+| combat-entity:extraction-beacon-pulse | extraction-beacon-pulse | combat-entities | additive | source |  | missing |
+| environment:space-backdrop | Shared deep-space backdrop (starfield base layer) | environment | fullbleed | source |  | missing |
+| environment:arena-boundary | Arena boundary treatment | environment | additive | source |  | missing |
+| interactable:activateAncientDevice | activateAncientDevice | interactables | keyed | source |  | missing |
+| interactable:destroyObstacle | destroyObstacle | interactables | keyed | source |  | missing |
+| interactable:openHiddenArea | openHiddenArea | interactables | keyed | source |  | missing |
+| interactable:triggerEvent | triggerEvent | interactables | keyed | source |  | missing |
+| interactable:harvestResource | harvestResource | interactables | keyed | source |  | missing |
+| interactable:disableHazard | disableHazard | interactables | keyed | source |  | missing |
+| interactable:unlockSecret | unlockSecret | interactables | keyed | source |  | missing |
+| condition:solarRadiation | solarRadiation | environmental-conditions | keyed | source |  | missing |
+| condition:gravityDistortion | gravityDistortion | environmental-conditions | keyed | source |  | missing |
+| condition:crystalGrowth | crystalGrowth | environmental-conditions | keyed | source |  | missing |
+| condition:nebulaFog | nebulaFog | environmental-conditions | keyed | source |  | missing |
+| condition:ionStorms | ionStorms | environmental-conditions | keyed | source |  | missing |
+| condition:empFields | empFields | environmental-conditions | keyed | source |  | missing |
+| condition:asteroidDrift | asteroidDrift | environmental-conditions | keyed | source |  | missing |
+| condition:voidCorruption | voidCorruption | environmental-conditions | keyed | source |  | missing |
+| condition:machineActivity | machineActivity | environmental-conditions | keyed | source |  | missing |
+| condition:ancientEnergy | ancientEnergy | environmental-conditions | keyed | source |  | missing |
+| starmap:route-line | Star-map route/lane line | starmap-chrome | additive | source |  | missing |
+| starmap:position-marker | Current-position marker | starmap-chrome | keyed | source |  | missing |
+| starmap:threat-pips | System threat-level pips | starmap-chrome | keyed | source |  | missing |
+| starmap:locked-marker | Locked-system marker | starmap-chrome | keyed | source |  | missing |
+| banner:boss-intro | Boss introduction banner/title card | banners | fullbleed | source |  | missing |
+| wayfarer-hull-mk2:ability-vfx | Wayfarer Mk. II — Emergency Thrusters | ship-abilities | additive | source |  | missing |
+| bastion-hull-mk1:ability-vfx | Bastion Mk. I — Shield Overload | ship-abilities | additive | source |  | missing |
+| aurelia-hull-mk1:ability-vfx | Aurelia Mk. I — Survey Burst | ship-abilities | additive | source |  | missing |
+| sable-dart-mk1:ability-vfx | Sable Dart Mk. I — Afterburn Manifold | ship-abilities | additive | source |  | missing |
+| falchion-mk2:ability-vfx | Falchion Mk. II — Executioner Suite | ship-abilities | additive | source |  | missing |
+| hivemother-mk1:ability-vfx | Hivemother Mk. I — Brood Bay | ship-abilities | additive | source |  | missing |
+| dawnspire:ability-vfx | Dawnspire — Vigil Lance | ship-abilities | additive | source |  | missing |
+| ballista-mk3:ability-vfx | Ballista Mk. III — Hardpoint Lattice | ship-abilities | additive | source |  | missing |
+| caduceus-mk1:ability-vfx | Caduceus Mk. I — Umbrella Field | ship-abilities | additive | source |  | missing |
+| maelstrom-x1:ability-vfx | Maelstrom X-1 — Shear Field | ship-abilities | additive | source |  | missing |
+| reyes-longlight:active-vfx | Ilsa Reyes — Energy Pulse | commander-actives | additive | source |  | missing |
+| vek-ironhull:active-vfx | Vek Tarn — Emergency Barrier | commander-actives | additive | source |  | missing |
+| vael-meridian:active-vfx | Dr. Sen Vael — Resonance Survey | commander-actives | additive | source |  | missing |
+| okoye-torque:active-vfx | Jelan Okoye — Field Refit | commander-actives | additive | source |  | missing |
+| naru-whisper:active-vfx | Ai Naru — Ghost Vector | commander-actives | additive | source |  | missing |
+| vex-longfang:active-vfx | Dain Vex — Marked Quarry | commander-actives | additive | source |  | missing |
+| holt-thunderline:active-vfx | Petra Holt — Ranging Shot | commander-actives | additive | source |  | missing |
+| anders-cipher:active-vfx | Rell Anders — Intrusion Suite | commander-actives | additive | source |  | missing |
+| kite-aviary:active-vfx | Suno Kite — Release the Flock | commander-actives | additive | source |  | missing |
+| sel-keystone:active-vfx | Mara Sel — Well Anchor | commander-actives | additive | source |  | missing |
+| vane-chord:active-vfx | Ilex Vane — Resonant Note | commander-actives | additive | source |  | missing |
+| kael-nadir:active-vfx | Dr. Oshen Kael — Containment Sample | commander-actives | additive | source |  | missing |
+| farr-redline:active-vfx | Juno Farr — Test Envelope | commander-actives | additive | source |  | missing |
+| iman-relay:active-vfx | Sera Iman — Network Ping | commander-actives | additive | source |  | missing |
+| korr-wardbreaker:active-vfx | Thessaly Korr — Writ of Cover | commander-actives | additive | source |  | missing |
+| voss-lanternkeep:active-vfx | Dr. Imara Voss — Archive Lantern | commander-actives | additive | source |  | missing |
+| devereux-static:active-vfx | Ash Devereux — Burn the Orders | commander-actives | additive | source |  | missing |
+| okafor-halcyon:active-vfx | Rin Okafor — Field Triage | commander-actives | additive | source |  | missing |
+| ur-sella-chorus:active-vfx | Vantha Ur-Sella — Harmonic Accord | commander-actives | additive | source |  | missing |
+| kade-fulcrum:active-vfx | Boren Kade — Lattice Splice | commander-actives | additive | source |  | missing |
+| calder-driftline:active-vfx | Yuen Calder — Driftline Scan | commander-actives | additive | source |  | missing |
+| aldana-aftercare:active-vfx | Dr. Petrin Aldana — Aftercare Protocol | commander-actives | additive | source |  | missing |
+| voss-pathfinder:active-vfx | Dr. Lyra Voss — Survey Drone | commander-actives | additive | source |  | missing |
+| kane-vanguard:active-vfx | Adrian Kane — Guardian Barrier | commander-actives | additive | source |  | missing |
+| ryker-engineer:active-vfx | Elias Ryker — Auto Turret | commander-actives | additive | source |  | missing |
+| cael-weaver:active-vfx | Seraphina Cael — Quantum Anchor | commander-actives | additive | source |  | missing |
+| drake-hunter:active-vfx | Kael Drake — Hunter Drone | commander-actives | additive | source |  | missing |
+| sol-resonant:active-vfx | Aria Sol — Crystal Pulse | commander-actives | additive | source |  | missing |
+| vale-voidrunner:active-vfx | Orion Vale — Phase Step | commander-actives | additive | source |  | missing |
+| iskander-swarmmaster:active-vfx | Nova Iskander — Drone Deployment Matrix | commander-actives | additive | source |  | missing |
+| thorne-starforged:active-vfx | Cassia Thorne — Thermal Overdrive | commander-actives | additive | source |  | missing |
+| vex-chronomancer:active-vfx | Aurelion Vex — Time Fracture | commander-actives | additive | source |  | missing |
+| ash-tempest:active-vfx | Valen Ash — Lightning Spear | commander-actives | additive | source |  | missing |
+| korven-phantom:active-vfx | Nyx Korven — Optical Cloak | commander-actives | additive | source |  | missing |
+| syn-bioforge:active-vfx | Dr. Mira Syn — Living Bloom | commander-actives | additive | source |  | missing |
+| solari-photon:active-vfx | Rhea Solari — Photon Lance | commander-actives | additive | source |  | missing |
+| kain-singularity:active-vfx | Zephyr Kain — Gravity Well | commander-actives | additive | source |  | missing |
+| reyes-warden:active-vfx | Astrid Reyes — Guardian Dome | commander-actives | additive | source |  | missing |
+| orion-starlancer:active-vfx | Lucien Orion — Star Dash | commander-actives | additive | source |  | missing |
+| volkov-titan:active-vfx | Ivan Volkov — Titan Charge | commander-actives | additive | source |  | missing |
+| myrr-oracle:active-vfx | Selene Myrr — Tactical Projection | commander-actives | additive | source |  | missing |
+| nova-architect:active-vfx | Caelus Nova — Rapid Fabrication | commander-actives | additive | source |  | missing |
+| vega-echo:active-vfx | Talia Vega — Resonance Pulse | commander-actives | additive | source |  | missing |
+| rhem-catalyst:active-vfx | Darius Rhem — Catalytic Charge | commander-actives | additive | source |  | missing |
+| ross-horizon:active-vfx | Eliana Ross — Survey Beacon | commander-actives | additive | source |  | missing |
+| solace-diplomat:active-vfx | Kieran Solace — Peace Accord | commander-actives | additive | source |  | missing |
+| oris-nanoforge:active-vfx | Xanthe Oris — Nanite Swarm | commander-actives | additive | source |  | missing |
+| drake-sentinel:active-vfx | Ronan Drake — Interceptor Grid | commander-actives | additive | source |  | missing |
+| helix-alchemist:active-vfx | Sora Helix — Elemental Injector | commander-actives | additive | source |  | missing |
+| fen-beastmaster:active-vfx | Dorian Fen — Call Companion | commander-actives | additive | source |  | missing |
+| noctis-voidwalker:active-vfx | Vega Noctis — Phase Step | commander-actives | additive | source |  | missing |
+| aether-celestial:active-vfx | Lysandra Aether — Starfall | commander-actives | additive | source |  | missing |
+| prime-founder:active-vfx | Atlas Prime — Command Protocol | commander-actives | additive | source |  | missing |
+| elite-reward-xp-crystal:vfx | Large XP Crystal | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-xp-magnet:vfx | XP Magnet | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-screen-clear:vfx | Screen Clear | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-screen-stun:vfx | Screen Stun | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-rare-cache:vfx | Rare Cache | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-epic-upgrade:vfx | Epic Upgrade | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-legendary-chance:vfx | Legendary Chance | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-temporary-ally:vfx | Temporary Ally | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-repair-drone:vfx | Repair Drone | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-atlas-fragment:vfx | Atlas Fragment | elite-reward-vfx | additive | source |  | missing |
+| elite-reward-ultra-rare-event:vfx | Ultra Rare Event Trigger | elite-reward-vfx | additive | source |  | missing |
+| wave-reward-patch-kit:vfx | Patch Kit | wave-reward-vfx | additive | source |  | missing |
+| wave-reward-salvage-haul:vfx | Salvage Haul | wave-reward-vfx | additive | source |  | missing |
+| wave-reward-wide-scanner:vfx | Wide Scanner | wave-reward-vfx | additive | source |  | missing |
+| wave-reward-coil-tune:vfx | Coil Tune | wave-reward-vfx | additive | source |  | missing |
+| wave-reward-field-primer:vfx | Field Primer | wave-reward-vfx | additive | source |  | missing |
+| wave-reward-second-look:vfx | Second Look | wave-reward-vfx | additive | source |  | missing |
+| wave-reward-atlas-cache:vfx | Atlas Cache | wave-reward-vfx | additive | source |  | missing |
+| wave-reward-overdrive:vfx | Overdrive | wave-reward-vfx | additive | source |  | missing |
+| faction-emblem:crystalDominion | Crystal Dominion | faction-emblems | keyed | source |  | missing |
+| faction-emblem:machineCollective | Machine Collective | faction-emblems | keyed | source |  | missing |
+| faction-emblem:humanAlliance | Human Alliance | faction-emblems | keyed | source |  | missing |
+| faction-emblem:mercenaryGuild | Mercenary Guild | faction-emblems | keyed | source |  | missing |
+| faction-emblem:ancientCustodians | Ancient Custodians | faction-emblems | keyed | source |  | missing |
+| faction-emblem:nomadFleet | Stellar Nomads | faction-emblems | keyed | source |  | missing |
+| research-node:focused-lattice | Focused Lattice | research-nodes | keyed | source |  | missing |
+| research-node:coherent-beams | Coherent Beams | research-nodes | keyed | source |  | missing |
+| research-node:harmonic-overload | Harmonic Overload | research-nodes | keyed | source |  | missing |
+| research-node:field-dynamics | Field Dynamics | research-nodes | keyed | source |  | missing |
+| research-node:resonant-collectors | Resonant Collectors | research-nodes | keyed | source |  | missing |
+| research-node:survey-protocols | Survey Protocols | research-nodes | keyed | source |  | missing |
+| research-node:deep-scanning | Deep Scanning | research-nodes | keyed | source |  | missing |
+| research-node:unified-theory | Unified Theory | research-nodes | keyed | source |  | missing |
+| research-node:rapid-refit | Rapid Refit | research-nodes | keyed | source |  | missing |
+| research-node:expanded-archives | Expanded Archives | research-nodes | keyed | source |  | missing |
+| research-node:barrier-theory | Barrier Theory | research-nodes | keyed | source |  | missing |
+| research-node:ancient-conduit | Ancient Conduit | research-nodes | keyed | source |  | missing |
+| research-node:warp-charting | Warp Charting | research-nodes | keyed | source |  | missing |
+| research-node:lattice-attunement | Lattice Attunement | research-nodes | keyed | source |  | missing |
+| research-node:drone-doctrine | Drone Doctrine | research-nodes | keyed | source |  | missing |
+| research-node:gene-tempering | Gene Tempering | research-nodes | keyed | source |  | missing |
+| research-node:void-containment | Void Containment | research-nodes | keyed | source |  | missing |
+| research-node:afterlight-network | The Afterlight Network | research-nodes | keyed | source |  | missing |
 

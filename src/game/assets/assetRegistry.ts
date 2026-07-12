@@ -55,7 +55,11 @@ import { PARTICLE_BURSTS } from "../../engine/vfx/particleTuning";
 import { RARITY_TABLE } from "../loot/lootTuning";
 import { RESOURCE_TYPES } from "../crafting/craftingData";
 import { CURRENCY_IDS } from "../economy/economyData";
-import { REPUTATION_LEVELS } from "../factions/factionData";
+import { REPUTATION_LEVELS, SANDBOX_FACTION_ROSTER } from "../factions/factionData";
+import { INTERACTION_KINDS, ENVIRONMENTAL_CONDITIONS } from "../biomes/biomeData";
+import { ELITE_REWARD_POOL } from "../loot/eliteRewardPool";
+import { SANDBOX_WAVE_REWARDS } from "../progression/waveRewards";
+import { ROSTER_RESEARCH_TREE } from "../research/researchRosterData";
 import type { AssetPipelineKind, AssetRegistryEntry } from "./assetPipeline";
 
 const entries: AssetRegistryEntry[] = [];
@@ -207,6 +211,83 @@ for (const m of SHIP_MANUFACTURERS as readonly { id: string; name: string }[]) {
 for (const p of [...GEOMETRIC_FIRE_PATTERNS, ...IDENTITY_FIRE_PATTERNS] as readonly string[]) add({ id: `fire-pattern:${p}`, name: p, category: "fire-patterns", pipeline: "additive", sourceOrDerived: "source" });
 for (const b of PROJECTILE_BEHAVIOURS as readonly string[]) add({ id: `projectile-behaviour:${b}`, name: b, category: "projectile-behaviours", pipeline: "additive", sourceOrDerived: "source" });
 for (const tier of ["small", "medium", "large", "elite", "boss", "ancient", "research"]) add({ id: `xp-tier:${tier}`, name: tier, category: "xp-tiers", pipeline: "keyed", sourceOrDerived: "source" });
+
+// ── Full-sweep additions (2026-07-12, second registry pass): everything
+// rendered as a primitive today that the roster-driven walk above missed —
+// branding, HUD chrome, the generic UI kit, player-ship VFX, the run-time
+// combat/environment entities main.ts already simulates (mines, acid
+// pools, gravity wells, telegraphs, loot beams…), interactables, faction
+// emblems, research-node icons, and per-ability VFX. All source entries.
+
+// Branding / app identity.
+const BRANDING = [
+  ["logo-wordmark", "AFTERLIGHT logo/wordmark", "keyed"],
+  ["app-icon-512", "PWA app icon 512px", "fullbleed"],
+  ["app-icon-192", "PWA app icon 192px", "fullbleed"],
+  ["favicon", "Browser favicon", "fullbleed"],
+  ["loading-spinner", "Loading spinner/animation", "additive"],
+  ["cursor", "Custom cursor", "keyed"],
+  ["display-typeface", "Chunky rounded display typeface (Visual Style Rule 5)", "keyed"],
+] as const;
+for (const [id, name, pipeline] of BRANDING) add({ id: `branding:${id}`, name, category: "branding", pipeline: pipeline as AssetPipelineKind, sourceOrDerived: "source" });
+
+// HUD chrome — every readout the run screen draws as text/rects today.
+const HUD_CHROME = ["health-bar", "shield-bar", "energy-bar", "xp-bar", "boss-health-bar", "ultimate-meter", "ability-cooldown", "minimap", "crosshair", "damage-numbers", "toast-banner", "wave-banner", "objective-tracker", "extraction-timer"];
+for (const id of HUD_CHROME) add({ id: `hud:${id}`, name: id, category: "hud-chrome", pipeline: "keyed", sourceOrDerived: "source" });
+
+// Generic UI component kit — shared by every screen in GAME_STATE_IDS.
+const UI_COMPONENTS = ["button-set", "panel", "card-frame", "tooltip", "modal-frame", "tab-bar", "toggle", "slider", "scrollbar", "list-row", "talent-node-frame"];
+for (const id of UI_COMPONENTS) add({ id: `ui:${id}`, name: id, category: "ui-components", pipeline: "keyed", sourceOrDerived: "source" });
+
+// Player-ship VFX — movement/defence states PlayerMovement + DefenceState already simulate.
+const PLAYER_VFX = ["engine-trail", "boost-dash", "invuln-shimmer", "barrier-bubble", "shield-impact", "player-death", "player-spawn", "extraction-warp", "heal-pulse"];
+for (const id of PLAYER_VFX) add({ id: `player-vfx:${id}`, name: id, category: "player-vfx", pipeline: "additive", sourceOrDerived: "source" });
+
+// Run-time combat/environment entities — real state arrays in main.ts,
+// all rendered as primitives today (outlawMines, acidPools, voidZones,
+// gravityWells, singularityCharges, meteorImpacts, crystalGrowths,
+// machineNetworks' lattice, celestialConstellations' links, xenoHives,
+// ancientSites), plus the shared telegraph/spawn/loot/extraction/merchant
+// visuals every run uses.
+const COMBAT_ENTITIES_KEYED = ["outlaw-mine", "crystal-growth", "xeno-hive", "ancient-site", "loot-cache", "merchant-vessel", "extraction-beacon"];
+for (const id of COMBAT_ENTITIES_KEYED) add({ id: `combat-entity:${id}`, name: id, category: "combat-entities", pipeline: "keyed", sourceOrDerived: "source" });
+const COMBAT_ENTITIES_ADDITIVE = ["meteor-telegraph", "meteor-impact", "acid-pool", "void-zone", "gravity-well", "singularity-charge", "machine-shield-lattice", "constellation-link", "spawn-warp-in", "telegraph-ring", "telegraph-line", "hazard-telegraph", "loot-beam", "extraction-beacon-pulse"];
+for (const id of COMBAT_ENTITIES_ADDITIVE) add({ id: `combat-entity:${id}`, name: id, category: "combat-entities", pipeline: "additive", sourceOrDerived: "source" });
+
+// Shared environment layers — the play-field itself.
+add({ id: "environment:space-backdrop", name: "Shared deep-space backdrop (starfield base layer)", category: "environment", pipeline: "fullbleed", sourceOrDerived: "source" });
+add({ id: "environment:arena-boundary", name: "Arena boundary treatment", category: "environment", pipeline: "additive", sourceOrDerived: "source" });
+
+// Interactables (AF-036 INTERACTION_KINDS) — physical objects the player activates in-run.
+for (const kind of INTERACTION_KINDS as readonly string[]) add({ id: `interactable:${kind}`, name: kind, category: "interactables", pipeline: "keyed", sourceOrDerived: "source" });
+
+// Environmental-condition indicators (AF-036) — the biome-condition tags surfaced to the player.
+for (const kind of ENVIRONMENTAL_CONDITIONS as readonly string[]) add({ id: `condition:${kind}`, name: kind, category: "environmental-conditions", pipeline: "keyed", sourceOrDerived: "source" });
+
+// Star-map chrome — the GalaxyCommand map's own furniture beyond region/system art.
+add({ id: "starmap:route-line", name: "Star-map route/lane line", category: "starmap-chrome", pipeline: "additive", sourceOrDerived: "source" });
+add({ id: "starmap:position-marker", name: "Current-position marker", category: "starmap-chrome", pipeline: "keyed", sourceOrDerived: "source" });
+add({ id: "starmap:threat-pips", name: "System threat-level pips", category: "starmap-chrome", pipeline: "keyed", sourceOrDerived: "source" });
+add({ id: "starmap:locked-marker", name: "Locked-system marker", category: "starmap-chrome", pipeline: "keyed", sourceOrDerived: "source" });
+
+// Boss introduction banner — the AF-035 introduction state's own title card.
+add({ id: "banner:boss-intro", name: "Boss introduction banner/title card", category: "banners", pipeline: "fullbleed", sourceOrDerived: "source" });
+
+// Ship active abilities (AF-031, KeyR) — one VFX per hull's named ability.
+for (const ship of LAUNCH_FLEET) add({ id: `${ship.id}:ability-vfx`, name: `${ship.name} — ${ship.ability.name}`, category: "ship-abilities", pipeline: "additive", sourceOrDerived: "source" });
+
+// Commander active abilities (AF-030, cooldown-gated) — one VFX per commander's named active.
+for (const commander of FULL_ROSTER_WITH_FOUNDER) add({ id: `${commander.id}:active-vfx`, name: `${commander.name} — ${commander.active.name}`, category: "commander-actives", pipeline: "additive", sourceOrDerived: "source" });
+
+// Elite/Wave reward grant VFX (GP-FINAL) — the moment each reward kind fires.
+for (const reward of ELITE_REWARD_POOL) add({ id: `${reward.id}:vfx`, name: reward.name, category: "elite-reward-vfx", pipeline: "additive", sourceOrDerived: "source" });
+for (const reward of SANDBOX_WAVE_REWARDS) add({ id: `${reward.id}:vfx`, name: reward.name, category: "wave-reward-vfx", pipeline: "additive", sourceOrDerived: "source" });
+
+// Faction emblems (AF-039/085) — reputation UI, mission givers, codex.
+for (const faction of SANDBOX_FACTION_ROSTER.factions) add({ id: `faction-emblem:${faction.id}`, name: faction.name, category: "faction-emblems", pipeline: "keyed", sourceOrDerived: "source" });
+
+// Research-node icons (AF-024) — the research tree renders one node per def.
+for (const node of ROSTER_RESEARCH_TREE) add({ id: `research-node:${node.id}`, name: node.name, category: "research-nodes", pipeline: "keyed", sourceOrDerived: "source" });
 
 export const ASSET_REGISTRY: readonly AssetRegistryEntry[] = entries;
 

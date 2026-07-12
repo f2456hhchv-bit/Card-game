@@ -47,6 +47,11 @@ import { biomeVisualIdentityFor } from "../src/game/visual/visualDirectionData";
 import { GALAXY_CLUSTERS } from "../src/game/galaxy/galaxyClusterData";
 import { SANDBOX_GALAXY } from "../src/game/galaxy/galaxyData";
 import { FRAMEWORK_MISSIONS } from "../src/game/missions/missionFrameworkData";
+import { SANDBOX_FACTION_ROSTER } from "../src/game/factions/factionData";
+import { ELITE_REWARD_POOL } from "../src/game/loot/eliteRewardPool";
+import { SANDBOX_WAVE_REWARDS } from "../src/game/progression/waveRewards";
+import { ROSTER_RESEARCH_TREE } from "../src/game/research/researchRosterData";
+import { FACTION_COLOUR_SIGNATURES } from "../src/game/visual/visualDirectionData";
 
 const STYLE_LOCK =
   "House style: chibi-proportioned stylized 3D, flat toon/cel-shading (max two-tone gradient, no PBR falloff), " +
@@ -186,6 +191,10 @@ for (const entry of sourceEntries()) {
     if (subtype === "portrait") prompt = `Character portrait, head-and-shoulders, plain backdrop. ${base}`;
     if (subtype === "sprite") prompt = `Full-body in-run sprite, standing pose, nose/face pointing north. ${base}`;
     if (subtype === "ultimate-vfx") prompt = `Ultimate-ability VFX for "${commander.ultimate.name}". ${base}`;
+    if (subtype === "active-vfx") prompt = `Active-ability VFX for "${commander.active.name}" (cooldown-gated, fires often — brief and modest, clearly smaller than an ultimate). ${base}`;
+  }
+  if (ship && subtype === "ability-vfx") {
+    prompt = `Ship-ability VFX for "${ship.ability.name}", fired from the ${ship.name} (${ship.shipClass}-class). ${ship.lore}`;
   }
 
   if (entry.category === "equipment") prompt = `Equipment icon on transparent background, centered. ${entry.name}.`;
@@ -287,6 +296,135 @@ for (const entry of sourceEntries()) {
   if (entry.category === "projectile-behaviours") prompt = `Projectile visual/trail primitive (additive) for behaviour "${entry.name}".`;
   if (entry.category === "xp-tiers") prompt = `XP pickup gem/orb sprite (keyed) for tier "${entry.name}".`;
 
+  // ── Full-sweep additions (branding/HUD/UI/player/combat-entity/etc.). ──
+  const BRANDING_PROMPTS: Record<string, string> = {
+    "branding:logo-wordmark": `Game logo/wordmark for "AFTERLIGHT" — a dying galaxy re-lit one expedition at a time; hopeful, not grim. Chunky rounded letterforms with visible thickness.`,
+    "branding:app-icon-512": `PWA app icon, 512x512, full-bleed — a single instantly-readable emblem of the game (the carried light against the dark).`,
+    "branding:app-icon-192": `PWA app icon, 192x192, full-bleed — same emblem as the 512px icon, simplified for the smaller size.`,
+    "branding:favicon": `Browser favicon — the game emblem reduced to its simplest readable form.`,
+    "branding:loading-spinner": `Loading spinner/animation — a chunky rotating ring or orbit motif, additive glow.`,
+    "branding:cursor": `Custom cursor sprite — small, chunky, unmissable at a glance, never obscuring what it points at.`,
+    "branding:display-typeface": `Display typeface specimen: rounded, heavy-weight, friendly letterforms for damage numbers and headers (Visual Style Rule 5 — no thin or condensed faces anywhere in gameplay). Full A-Z, 0-9, and the damage/HUD punctuation set.`,
+  };
+  if (entry.category === "branding") prompt = BRANDING_PROMPTS[entry.id] ?? `Branding asset "${entry.name}".`;
+
+  const HUD_PROMPTS: Record<string, string> = {
+    "health-bar": "Player hull/health bar — rounded, chunky, visible thickness, reads at a glance",
+    "shield-bar": "Player shield/barrier bar — distinct from the health bar at a glance",
+    "energy-bar": "Ship energy bar (weapon/ability energy pool)",
+    "xp-bar": "XP progress bar with level indicator",
+    "boss-health-bar": "Boss health bar with phase-threshold ticks and a weak-point indicator slot",
+    "ultimate-meter": "Commander ultimate charge meter — reads clearly when READY",
+    "ability-cooldown": "Ability cooldown indicator (radial or pip-based)",
+    "minimap": "Minimap frame + player/enemy/objective blips",
+    "crosshair": "Aim crosshair/reticle",
+    "damage-numbers": "Floating damage-number treatment — chunky rounded digits, distinct crit variant",
+    "toast-banner": "Loot/reward toast notification banner",
+    "wave-banner": "Wave announcement banner (WAVE 5, MINI BOSS, etc.)",
+    "objective-tracker": "Mission objective tracker panel (primary + optional objectives)",
+    "extraction-timer": "Extraction countdown timer readout",
+  };
+  if (entry.category === "hud-chrome") prompt = `HUD element: ${HUD_PROMPTS[entry.name] ?? entry.name}.`;
+
+  const UI_PROMPTS: Record<string, string> = {
+    "button-set": "Button component set — normal, hover, pressed, disabled states",
+    "panel": "Screen panel background — rounded corners, visible border thickness",
+    "card-frame": "Choice-card frame (level-up offers, build paths, boss artifacts)",
+    "tooltip": "Tooltip bubble",
+    "modal-frame": "Modal/dialog frame",
+    "tab-bar": "Tab bar with active/inactive tab states",
+    "toggle": "Settings toggle — on/off states",
+    "slider": "Settings slider — track, fill, and handle",
+    "scrollbar": "Scrollbar — track and thumb",
+    "list-row": "List row / roster entry background — normal and selected states",
+    "talent-node-frame": "Talent-tree node frame — locked, available, and unlocked states",
+  };
+  if (entry.category === "ui-components") prompt = `UI component: ${UI_PROMPTS[entry.name] ?? entry.name}.`;
+
+  const PLAYER_VFX_PROMPTS: Record<string, string> = {
+    "engine-trail": "Player ship engine/thruster trail — constant, subtle, never obscuring the ship",
+    "boost-dash": "Boost dash burst — brief chunky speed-line/ring burst along the dash direction",
+    "invuln-shimmer": "Invulnerability-frame shimmer during boost — a clean outline glow",
+    "barrier-bubble": "Active barrier/shield bubble around the player ship",
+    "shield-impact": "Shield impact flash + knockback ring when the player is hit",
+    "player-death": "Player ship destruction — fragment-and-flash, bold and brief",
+    "player-spawn": "Player spawn-in / mission-start materialisation",
+    "extraction-warp": "Extraction warp-out — the ship leaves in a bold vertical light column",
+    "heal-pulse": "Hull-repair pulse (repair drone ticks, heal passives, patch kits)",
+  };
+  if (entry.category === "player-vfx") prompt = `Player-ship VFX: ${PLAYER_VFX_PROMPTS[entry.name] ?? entry.name}.`;
+
+  const COMBAT_ENTITY_PROMPTS: Record<string, string> = {
+    "outlaw-mine": "Proximity mine seeded by the Outlaw Mine Layer — small, readable, clearly dangerous",
+    "crystal-growth": "Living crystal growth spreading across the arena floor (Crystal Dominion terrain expansion)",
+    "xeno-hive": "Xenomorph hive structure — organic, bone-plated, bioluminescent (amber-yellow veins, not green — colour law, DIRECTIVE §4)",
+    "ancient-site": "Ancient Custodian security site structure — white stone alloy, gold conduit",
+    "loot-cache": "Dropped loot cache/canister awaiting pickup",
+    "merchant-vessel": "The Travelling Merchant's vessel — mismatched trader hull, inviting not hostile",
+    "extraction-beacon": "Extraction beacon structure the player defends/reaches",
+    "meteor-telegraph": "Meteor impact warning telegraph — a chunky target ring on the ground before the strike",
+    "meteor-impact": "Meteor strike impact burst",
+    "acid-pool": "Acid pool ground hazard (amber, not green — colour law, DIRECTIVE §4) with a lazy bubble loop",
+    "void-zone": "Void corruption zone — reality-torn dark patch with a violet edge",
+    "gravity-well": "Gravity well — visible distortion ring pulling inward",
+    "singularity-charge": "Paragon singularity charge — an unstable contained point of light",
+    "machine-shield-lattice": "Machine Collective shared-shield lattice — hexagonal energy links between networked units",
+    "constellation-link": "Celestial constellation link-line between networked enemies",
+    "spawn-warp-in": "Enemy spawn warp-in flash — brief, readable, fair (AF-017 spawn-fairness telegraph)",
+    "telegraph-ring": "Generic attack telegraph ring (radial attacks) — reads instantly as 'don't stand here'",
+    "telegraph-line": "Generic attack telegraph line/cone (sniper and beam attacks)",
+    "hazard-telegraph": "Hazard-zone arming telegraph before a zone starts dealing damage",
+    "loot-beam": "Loot drop beam — a vertical light column marking a drop, tinted by rarity frame",
+    "extraction-beacon-pulse": "Extraction beacon active pulse while the countdown runs",
+  };
+  if (entry.category === "combat-entities") prompt = `In-run entity: ${COMBAT_ENTITY_PROMPTS[entry.name] ?? entry.name}.`;
+
+  if (entry.id === "environment:space-backdrop") prompt = `Shared deep-space backdrop — the base starfield layer behind every biome. Sparse chunky stars, flat nebula shapes, no fine noise; must never compete with foreground silhouettes.`;
+  if (entry.id === "environment:arena-boundary") prompt = `Arena boundary treatment — the play-field edge, a clean glowing border that reads as 'the world ends here' without visual clutter.`;
+
+  const INTERACTABLE_PROMPTS: Record<string, string> = {
+    activateAncientDevice: "an ancient device the player activates — dormant vs active states",
+    destroyObstacle: "a destructible obstacle",
+    openHiddenArea: "a sealed hidden-area entrance",
+    triggerEvent: "an event trigger console/beacon",
+    harvestResource: "a harvestable resource node",
+    disableHazard: "a hazard control the player disables",
+    unlockSecret: "a secret lock/vault marker",
+  };
+  if (entry.category === "interactables") prompt = `Interactable object sprite: ${INTERACTABLE_PROMPTS[entry.name] ?? entry.name} — must read as 'interact with me' at a glance.`;
+
+  if (entry.category === "environmental-conditions") prompt = `Environmental-condition indicator icon for "${entry.name}" — shown when the biome condition is active.`;
+
+  const STARMAP_PROMPTS: Record<string, string> = {
+    "route-line": "Star-map route/lane line between systems — travelled vs untravelled states",
+    "position-marker": "Current-position marker on the star map",
+    "threat-pips": "System threat-level pips (threat 1-7)",
+    "locked-marker": "Locked/undiscovered system marker",
+  };
+  if (entry.category === "starmap-chrome") prompt = `Star-map element: ${STARMAP_PROMPTS[entry.name] ?? entry.name}.`;
+
+  if (entry.id === "banner:boss-intro") prompt = `Boss introduction banner/title card — dramatic full-width treatment for the boss name + title reveal (e.g. "THE HOLLOW SENTINEL — Last Watcher of the Drift").`;
+
+  if (entry.category === "elite-reward-vfx") {
+    const reward = ELITE_REWARD_POOL.find((r) => `${r.id}:vfx` === entry.id);
+    prompt = `Elite-reward grant VFX for "${reward?.name ?? entry.name}" — ${reward?.description ?? ""} Bold, brief, celebratory.`;
+  }
+  if (entry.category === "wave-reward-vfx") {
+    const reward = SANDBOX_WAVE_REWARDS.find((r) => `${r.id}:vfx` === entry.id);
+    prompt = `Wave-reward grant VFX for "${reward?.name ?? entry.name}" — ${reward?.description ?? ""} Small and ambient (fires every wave — must never interrupt play).`;
+  }
+
+  if (entry.category === "faction-emblems") {
+    const faction = SANDBOX_FACTION_ROSTER.factions.find((f) => `faction-emblem:${f.id}` === entry.id);
+    const sig = faction ? (FACTION_COLOUR_SIGNATURES as Record<string, { primary: string; secondary: string; energy: string; visualSignature: string } | undefined>)[faction.id] : undefined;
+    prompt = `Faction emblem/sigil for "${entry.name}"${sig ? ` — palette ${sig.primary}/${sig.secondary}/${sig.energy}, ${sig.visualSignature}` : ""}. Used in reputation UI, mission briefings, and the codex.`;
+  }
+
+  if (entry.category === "research-nodes") {
+    const node = ROSTER_RESEARCH_TREE.find((n) => `research-node:${n.id}` === entry.id);
+    prompt = `Research-tree node icon for "${entry.name}" (${node?.category ?? "research"}, tier ${node?.tier ?? "?"}).`;
+  }
+
   if (!prompt) {
     console.error("NO PROMPT TEMPLATE MATCHED:", entry.id, entry.category);
     continue;
@@ -299,7 +437,56 @@ function csvEscape(field: string): string {
 }
 const header = ["asset_id", "category", "pipeline", "name", "prompt"].map(csvEscape).join(",");
 const lines = rows.map((r) => [r.id, r.category, r.pipeline, r.name, r.prompt].map(csvEscape).join(","));
-const outPath = path.resolve(import.meta.dirname, "../docs/asset-prompts.csv");
-fs.writeFileSync(outPath, [header, ...lines].join("\n") + "\n");
-console.log(`Wrote ${outPath}`);
+const csvPath = path.resolve(import.meta.dirname, "../docs/asset-prompts.csv");
+fs.writeFileSync(csvPath, [header, ...lines].join("\n") + "\n");
+
+// ── The asset run file: one importable JSON with the full art directive at
+// the top, then every prompt. Prompt generators that support a global
+// prefix/system field can use `directive`; generators that only read the
+// per-row prompt still get the style lock inline in every prompt string.
+const VISUAL_STYLE_RULES = [
+  "Shapes are rounded and chunky. No 1px lines, no sharp rectangles. Minimum corner radius on any UI panel or bar. Health bars, buttons, frames all have visible thickness.",
+  "Colour is saturated and flat. No gradients longer than a subtle two-stop. No desaturated greys except the defined rarity/faction colours. Use the loot-tier hex values as the canonical accent palette.",
+  "VFX are bold and brief. Particles are large, few, and rounded — fat circles, chunky stars, thick rings. Never fine dust, never realistic smoke, never lens flares. Additive glow is allowed but clipped tight to the source.",
+  "Outlines over realism. Where an entity needs separation from the background, prefer a soft dark outline or drop-glow, never a realistic shadow.",
+  "Text is chunky and friendly. Rounded, heavy-weight type for damage numbers and headers. No thin or condensed faces anywhere in gameplay.",
+  "Status effects tint, they don't texture. Burn = warm orange tint + fat ember particles; freeze = pale blue tint + chunky frost ring. A tint plus one particle loop, never a material change.",
+  "Nothing gritty. No scratches, film grain, chromatic aberration, vignettes, or screen dirt. The camera is clean.",
+  "Readability beats fidelity. Any effect that obscures the player ship or enemy silhouettes for more than ~200ms gets scaled down. The silhouette is sacred.",
+];
+const runFile = {
+  title: "AFTERLIGHT — Asset Run",
+  generatedBy: "scripts/generate-asset-prompts.ts (source of truth: src/game/assets/assetRegistry.ts — regenerate via `npm run assets:prompts`, never hand-edit)",
+  directive: {
+    artStyle:
+      "Chibi-proportioned stylized 3D rendered with flat toon/cel-shading — Nintendo-inspired, hopeful not grim. " +
+      "The 8 Visual Style Rules below are binding for every asset (docs/TECHNOLOGY_DECISION.md, 2026-07-12 amendments).",
+    visualStyleRules: VISUAL_STYLE_RULES,
+    litmusTest: "Shrink any new visual element to 32px. If you can't tell what it is, redesign it.",
+    delivery: {
+      keyed: "Pre-keyed RGBA PNG, trimmed to content, 2px alpha pad, nose/face pointing up (north). Never assume a background colour.",
+      additive: "RGB PNG on pure black — black IS the transparency, rendered additively. Never rely on an alpha channel.",
+      fullbleed: "Opaque image, rendered as a background. No keying, no blending tricks.",
+    },
+    colourLaw:
+      "Nothing green in any KEYED sprite's palette (green-keyed pipeline). Lore-green subjects substitute: regeneration → gold, " +
+      "poison/toxic → amber, biomass → amber-yellow. Green is permitted freely in ADDITIVE and FULL-BLEED assets. " +
+      "Crystal Dominion sprites are magenta-keyed — magenta is forbidden in THEIR palettes instead.",
+    rarityPalette: "damaged #7a8296 · common #dce4f2 · improved #4de868 · rare #4d7cff · epic #9b5cff · legendary #ffc652 · ancient #c8323c · mythic #fff3d6 · singularity #e4d4ff",
+  },
+  counts: {
+    total: rows.length,
+    byPipeline: {
+      keyed: rows.filter((r) => r.pipeline === "keyed").length,
+      additive: rows.filter((r) => r.pipeline === "additive").length,
+      fullbleed: rows.filter((r) => r.pipeline === "fullbleed").length,
+    },
+  },
+  assets: rows.map((r) => ({ id: r.id, name: r.name, category: r.category, pipeline: r.pipeline, prompt: r.prompt })),
+};
+const runPath = path.resolve(import.meta.dirname, "../docs/asset-run.json");
+fs.writeFileSync(runPath, JSON.stringify(runFile, null, 2) + "\n");
+
+console.log(`Wrote ${csvPath}`);
+console.log(`Wrote ${runPath}`);
 console.log(`TOTAL PROMPT ROWS (source-only): ${rows.length} / ${sourceEntries().length} source entries`);
