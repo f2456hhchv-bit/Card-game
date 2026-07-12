@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "assets:manifest": "tsx scripts/generate-asset-manifest.ts"
+    "assets:manifest": "tsx scripts/generate-asset-manifest.ts",
+    "assets:run": "tsx scripts/generate-asset-run.ts"
   },
   "devDependencies": {
     "@types/node": "^26.0.1",
