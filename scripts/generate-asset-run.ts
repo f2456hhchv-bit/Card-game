@@ -55,6 +55,7 @@ import { SANDBOX_FACTION_ROSTER } from "../src/game/factions/factionData";
 import { ELITE_REWARD_POOL } from "../src/game/loot/eliteRewardPool";
 import { SANDBOX_WAVE_REWARDS } from "../src/game/progression/waveRewards";
 import { ROSTER_RESEARCH_TREE } from "../src/game/research/researchRosterData";
+import { BUILD_PATHS } from "../src/game/progression/buildPaths";
 
 // ── Lookup maps ────────────────────────────────────────────────────────────
 const shipsById = new Map(LAUNCH_FLEET.map((s) => [s.id, s]));
@@ -152,6 +153,7 @@ const COMBAT_ENTITY_ORIGIN: Record<string, { description: string; factionKey?: s
   "hazard-telegraph": { description: "Hazard-zone arming telegraph before a zone deals damage", usedIn: "all hazard zones" },
   "loot-beam": { description: "Vertical light column marking a drop; tinted by rarity", usedIn: "in-run loot drops" },
   "extraction-beacon-pulse": { description: "Active pulse while the extraction countdown runs", usedIn: "in-run extraction phase" },
+  "hostile-projectile-tint": { description: "Shared hostile-shot treatment — enemy projectiles reuse the player projectile primitives but must read as hostile at a glance (readability law)", usedIn: "every enemy/boss ranged attack" },
 };
 
 const HUD_DESCRIPTIONS: Record<string, string> = {
@@ -428,6 +430,14 @@ for (const entry of sourceEntries()) {
   if (entry.category === "elite-tiers") { matched = true; Object.assign(context, { subject: `elite tier ring "${entry.name}"`, tierOrder: "veteran→champion→ancient→prime→legendary→apex→mythic; intensity escalates", rule: "additive ring composited under the enemy — stackable with mutation tells", usedIn: "elite enemies, in-run" }); }
   if (entry.category === "equipment") { matched = true; Object.assign(context, { subject: `equipment item "${entry.name}"`, usedIn: "inventory/loadout" }); }
   if (entry.category === "ship-modules") { matched = true; Object.assign(context, { subject: `ship module "${entry.name}"`, usedIn: "Upgrade Ship / outfitting UI" }); }
+  if (entry.category === "build-paths") {
+    matched = true;
+    const buildPath = BUILD_PATHS.find((p) => entry.id === `build-path:${p.id}`);
+    Object.assign(context, { subject: `Build-Defining Path card "${entry.name}"`, description: buildPath?.description, usedIn: "BuildPathChoice overlay (offered every 5 waves)" });
+  }
+  if (entry.category === "loot-items") { matched = true; Object.assign(context, { subject: `loot base item "${entry.name}"`, rule: "rarity frame is composited around this at runtime — keep the icon rarity-neutral", usedIn: "loot drops, inventory, merchant stock" }); }
+  if (entry.category === "director-events") { matched = true; Object.assign(context, { subject: `environmental event onset "${entry.name}"`, kind: "event announcement/onset VFX — the moment the Director fires this event", usedIn: "in-run environmental events, all biomes" }); }
+  if (entry.category === "input-glyphs") { matched = true; Object.assign(context, { subject: `input prompt glyph "${entry.name}"`, rule: "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime", usedIn: "control prompts, settings, tutorials" }); }
 
   if (!matched) {
     unmatched += 1;
@@ -501,5 +511,42 @@ const runFile = {
 
 const runPath = path.resolve(import.meta.dirname, "../docs/asset-run.json");
 fs.writeFileSync(runPath, JSON.stringify(runFile, null, 2) + "\n");
+
+// ── Flat CSV twin — same data as a table, for builders that ingest rows
+// rather than nested JSON. Common context fields get their own columns;
+// everything else lands in additional_context as compact JSON. Row 1
+// (after the header) is a _directive pseudo-row carrying the full art
+// directive — drop it on import if the consuming tool dislikes it.
+function csvEscape(field: unknown): string {
+  if (field === undefined || field === null) return '""';
+  return `"${String(field).replace(/"/g, '""')}"`;
+}
+const CSV_COLUMNS = [
+  "asset_id", "name", "category", "pipeline", "key_colour", "palette_constraint", "asset_type", "view", "suggested_size", "nine_slice",
+  "subject", "description_or_lore", "faction", "faction_palette", "faction_visual_signature", "biome", "biome_visual_identity_status",
+  "manufacturer", "manufacturer_visual_identity", "rarity", "rarity_hex", "used_in", "additional_context",
+];
+const CONSUMED_KEYS = new Set(["subject", "lore", "description", "briefing", "faction", "factionVisual", "biome", "biomeVisualIdentityStatus", "manufacturer", "manufacturerVisualIdentity", "rarity", "rarityHex", "usedIn"]);
+const csvRows: string[] = [CSV_COLUMNS.map(csvEscape).join(",")];
+const directiveText =
+  `${runFile.directive.artStyle} RULES: ${VISUAL_STYLE_RULES.map((r, i) => `${i + 1}. ${r}`).join(" ")} LITMUS: ${runFile.directive.litmusTest} ` +
+  `DELIVERY — keyed: ${runFile.directive.delivery.keyed} additive: ${runFile.directive.delivery.additive} fullbleed: ${runFile.directive.delivery.fullbleed} ` +
+  `COLOUR LAW: ${runFile.directive.colourLaw} DERIVATION: ${runFile.directive.derivationPolicy}`;
+csvRows.push([ "_directive", "ART DIRECTIVE (applies to every row below)", "directive", "", "", "", "", "", "", "", directiveText, "", "", "", "", "", "", "", "", "", "", "", JSON.stringify({ rarityPalette: runFile.directive.rarityPalette }) ].map(csvEscape).join(","));
+for (const a of assets as any[]) {
+  const req = a.requirements as Record<string, unknown>;
+  const fv = req.factionVisual as { palette?: string; visualSignature?: string; language?: string } | undefined;
+  const remainder = Object.fromEntries(Object.entries(req).filter(([k]) => !CONSUMED_KEYS.has(k)));
+  csvRows.push([
+    a.id, a.name, a.category, a.pipeline, a.keyColour ?? "", a.paletteConstraint ?? "", a.assetType, a.view ?? "", a.suggestedSize, a.nineSlice ? "yes" : "",
+    req.subject ?? "", req.lore ?? req.description ?? req.briefing ?? "", req.faction ?? "", fv?.palette ?? fv?.language ?? "", fv?.visualSignature ?? "",
+    req.biome ?? "", req.biomeVisualIdentityStatus ?? "", req.manufacturer ?? "", req.manufacturerVisualIdentity ?? "", req.rarity ?? "", req.rarityHex ?? "",
+    req.usedIn ?? "", Object.keys(remainder).length > 0 ? JSON.stringify(remainder) : "",
+  ].map(csvEscape).join(","));
+}
+const csvPath = path.resolve(import.meta.dirname, "../docs/asset-run.csv");
+fs.writeFileSync(csvPath, csvRows.join("\n") + "\n");
+
 console.log(`Wrote ${runPath}`);
+console.log(`Wrote ${csvPath}`);
 console.log(`ASSETS: ${assets.length} (source) · derived excluded: ${derivedEntries().length}`);

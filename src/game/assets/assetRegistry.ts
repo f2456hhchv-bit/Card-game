@@ -60,6 +60,8 @@ import { INTERACTION_KINDS, ENVIRONMENTAL_CONDITIONS } from "../biomes/biomeData
 import { ELITE_REWARD_POOL } from "../loot/eliteRewardPool";
 import { SANDBOX_WAVE_REWARDS } from "../progression/waveRewards";
 import { ROSTER_RESEARCH_TREE } from "../research/researchRosterData";
+import { BUILD_PATHS } from "../progression/buildPaths";
+import { ENVIRONMENTAL_EVENTS } from "../director/directorTuning";
 import type { AssetPipelineKind, AssetRegistryEntry } from "./assetPipeline";
 
 const entries: AssetRegistryEntry[] = [];
@@ -288,6 +290,26 @@ for (const faction of SANDBOX_FACTION_ROSTER.factions) add({ id: `faction-emblem
 
 // Research-node icons (AF-024) — the research tree renders one node per def.
 for (const node of ROSTER_RESEARCH_TREE) add({ id: `research-node:${node.id}`, name: node.name, category: "research-nodes", pipeline: "keyed", sourceOrDerived: "source" });
+
+// ── Proof-pass additions (2026-07-12, third registry pass) ──────────────
+
+// Build-Defining Path choice cards (GP-001, every 5 waves) — nine paths, each a real card the player picks.
+for (const path of BUILD_PATHS) add({ id: `build-path:${path.id}`, name: path.name, category: "build-paths", pipeline: "keyed", sourceOrDerived: "source" });
+
+// Loot base items (SANDBOX_DROP_TABLE, main.ts — inline data, mirrored here) — every drop names one of these.
+const LOOT_BASE_ITEMS = ["PROTO_CANNON", "HULL_PLATING", "STRANGE_RELIC", "SALVAGED_ALLOY", "RESEARCH_CORE"];
+for (const id of LOOT_BASE_ITEMS) add({ id: `loot-item:${id}`, name: id.replaceAll("_", " ").toLowerCase(), category: "loot-items", pipeline: "keyed", sourceOrDerived: "source" });
+
+// Director environmental events (AF-017/GP-002) — distinct from the biome-event kinds; each needs an onset VFX/announcement.
+for (const event of ENVIRONMENTAL_EVENTS as readonly string[]) add({ id: `director-event:${event}`, name: event, category: "director-events", pipeline: "additive", sourceOrDerived: "source" });
+
+// Input prompt glyphs (AF-019 DEFAULT_BINDINGS — keyboard, gamepad, mouse, touch all bindable today).
+const INPUT_GLYPHS = ["pad-north", "pad-south", "pad-east", "pad-west", "pad-dpad-up", "pad-dpad-down", "pad-dpad-left", "pad-dpad-right", "pad-start", "pad-back", "keyboard-keycap-frame", "mouse-left", "mouse-right", "touch-button-frame"];
+for (const id of INPUT_GLYPHS) add({ id: `input-glyph:${id}`, name: id, category: "input-glyphs", pipeline: "keyed", sourceOrDerived: "source" });
+
+// Hostile-projectile tint — enemy shots reuse the player projectile primitives but MUST read
+// as hostile at a glance (AF-004 readability law); one shared additive treatment.
+add({ id: "combat-entity:hostile-projectile-tint", name: "hostile-projectile-tint", category: "combat-entities", pipeline: "additive", sourceOrDerived: "source" });
 
 export const ASSET_REGISTRY: readonly AssetRegistryEntry[] = entries;
 

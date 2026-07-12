@@ -90,11 +90,11 @@
     "derivationPolicy": "Derived assets are NOT in this file and must not be generated: ship roster thumbnails, enemy move/attack/death states, and the World-Ender/Vanguard boss variants are produced in code from their parent asset (Asset Pipeline Directive §2)."
   },
   "counts": {
-    "assets": 1046,
+    "assets": 1082,
     "derivedExcluded": 195,
     "byPipeline": {
-      "keyed": 532,
-      "additive": 457,
+      "keyed": 560,
+      "additive": 465,
       "fullbleed": 57
     }
   },
@@ -18165,6 +18165,501 @@
         "tier": 3,
         "nodeType": "ancientDiscovery",
         "usedIn": "research tree (GalaxyCommand)"
+      }
+    },
+    {
+      "id": "build-path:commander",
+      "name": "Commander",
+      "category": "build-paths",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "Build-Defining Path card \"Commander\"",
+        "description": "Ability-focused command — your active skills and ultimate carry the run.",
+        "usedIn": "BuildPathChoice overlay (offered every 5 waves)"
+      }
+    },
+    {
+      "id": "build-path:engineer",
+      "name": "Engineer",
+      "category": "build-paths",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "Build-Defining Path card \"Engineer\"",
+        "description": "Systems and resilience — shields and resource generation define you.",
+        "usedIn": "BuildPathChoice overlay (offered every 5 waves)"
+      }
+    },
+    {
+      "id": "build-path:void",
+      "name": "Void Walker",
+      "category": "build-paths",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "Build-Defining Path card \"Void Walker\"",
+        "description": "Corruption and control — status effects chain into critical openings.",
+        "usedIn": "BuildPathChoice overlay (offered every 5 waves)"
+      }
+    },
+    {
+      "id": "build-path:guardian",
+      "name": "Guardian",
+      "category": "build-paths",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "Build-Defining Path card \"Guardian\"",
+        "description": "Unbreakable — shields and passives stack into a wall nothing gets through.",
+        "usedIn": "BuildPathChoice overlay (offered every 5 waves)"
+      }
+    },
+    {
+      "id": "build-path:hunter",
+      "name": "Hunter",
+      "category": "build-paths",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "Build-Defining Path card \"Hunter\"",
+        "description": "Precision damage — weapon upgrades and critical strikes above all else.",
+        "usedIn": "BuildPathChoice overlay (offered every 5 waves)"
+      }
+    },
+    {
+      "id": "build-path:droneCommander",
+      "name": "Drone Commander",
+      "category": "build-paths",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "Build-Defining Path card \"Drone Commander\"",
+        "description": "A swarm of allied drones fights the run beside you.",
+        "usedIn": "BuildPathChoice overlay (offered every 5 waves)"
+      }
+    },
+    {
+      "id": "build-path:heavyWeapons",
+      "name": "Heavy Weapons",
+      "category": "build-paths",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "Build-Defining Path card \"Heavy Weapons\"",
+        "description": "Escalating firepower — every weapon evolves further and hits harder.",
+        "usedIn": "BuildPathChoice overlay (offered every 5 waves)"
+      }
+    },
+    {
+      "id": "build-path:orbitalSpecialist",
+      "name": "Orbital Specialist",
+      "category": "build-paths",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "Build-Defining Path card \"Orbital Specialist\"",
+        "description": "Orbiting satellites do the fighting for you.",
+        "usedIn": "BuildPathChoice overlay (offered every 5 waves)"
+      }
+    },
+    {
+      "id": "build-path:bioEngineer",
+      "name": "Bio-Engineer",
+      "category": "build-paths",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "Build-Defining Path card \"Bio-Engineer\"",
+        "description": "Sustain and utility — passives and resources compound over the run.",
+        "usedIn": "BuildPathChoice overlay (offered every 5 waves)"
+      }
+    },
+    {
+      "id": "loot-item:PROTO_CANNON",
+      "name": "proto cannon",
+      "category": "loot-items",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "loot base item \"proto cannon\"",
+        "rule": "rarity frame is composited around this at runtime — keep the icon rarity-neutral",
+        "usedIn": "loot drops, inventory, merchant stock"
+      }
+    },
+    {
+      "id": "loot-item:HULL_PLATING",
+      "name": "hull plating",
+      "category": "loot-items",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "loot base item \"hull plating\"",
+        "rule": "rarity frame is composited around this at runtime — keep the icon rarity-neutral",
+        "usedIn": "loot drops, inventory, merchant stock"
+      }
+    },
+    {
+      "id": "loot-item:STRANGE_RELIC",
+      "name": "strange relic",
+      "category": "loot-items",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "loot base item \"strange relic\"",
+        "rule": "rarity frame is composited around this at runtime — keep the icon rarity-neutral",
+        "usedIn": "loot drops, inventory, merchant stock"
+      }
+    },
+    {
+      "id": "loot-item:SALVAGED_ALLOY",
+      "name": "salvaged alloy",
+      "category": "loot-items",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "loot base item \"salvaged alloy\"",
+        "rule": "rarity frame is composited around this at runtime — keep the icon rarity-neutral",
+        "usedIn": "loot drops, inventory, merchant stock"
+      }
+    },
+    {
+      "id": "loot-item:RESEARCH_CORE",
+      "name": "research core",
+      "category": "loot-items",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "loot base item \"research core\"",
+        "rule": "rarity frame is composited around this at runtime — keep the icon rarity-neutral",
+        "usedIn": "loot drops, inventory, merchant stock"
+      }
+    },
+    {
+      "id": "director-event:MeteorShower",
+      "name": "MeteorShower",
+      "category": "director-events",
+      "pipeline": "additive",
+      "assetType": "VFX (single frame or short frame sheet)",
+      "suggestedSize": "256x256 per frame",
+      "requirements": {
+        "subject": "environmental event onset \"MeteorShower\"",
+        "kind": "event announcement/onset VFX — the moment the Director fires this event",
+        "usedIn": "in-run environmental events, all biomes"
+      }
+    },
+    {
+      "id": "director-event:SolarFlare",
+      "name": "SolarFlare",
+      "category": "director-events",
+      "pipeline": "additive",
+      "assetType": "VFX (single frame or short frame sheet)",
+      "suggestedSize": "256x256 per frame",
+      "requirements": {
+        "subject": "environmental event onset \"SolarFlare\"",
+        "kind": "event announcement/onset VFX — the moment the Director fires this event",
+        "usedIn": "in-run environmental events, all biomes"
+      }
+    },
+    {
+      "id": "director-event:CrystalGrowth",
+      "name": "CrystalGrowth",
+      "category": "director-events",
+      "pipeline": "additive",
+      "assetType": "VFX (single frame or short frame sheet)",
+      "suggestedSize": "256x256 per frame",
+      "requirements": {
+        "subject": "environmental event onset \"CrystalGrowth\"",
+        "kind": "event announcement/onset VFX — the moment the Director fires this event",
+        "usedIn": "in-run environmental events, all biomes"
+      }
+    },
+    {
+      "id": "director-event:GravityFlux",
+      "name": "GravityFlux",
+      "category": "director-events",
+      "pipeline": "additive",
+      "assetType": "VFX (single frame or short frame sheet)",
+      "suggestedSize": "256x256 per frame",
+      "requirements": {
+        "subject": "environmental event onset \"GravityFlux\"",
+        "kind": "event announcement/onset VFX — the moment the Director fires this event",
+        "usedIn": "in-run environmental events, all biomes"
+      }
+    },
+    {
+      "id": "director-event:VoidDistortion",
+      "name": "VoidDistortion",
+      "category": "director-events",
+      "pipeline": "additive",
+      "assetType": "VFX (single frame or short frame sheet)",
+      "suggestedSize": "256x256 per frame",
+      "requirements": {
+        "subject": "environmental event onset \"VoidDistortion\"",
+        "kind": "event announcement/onset VFX — the moment the Director fires this event",
+        "usedIn": "in-run environmental events, all biomes"
+      }
+    },
+    {
+      "id": "director-event:MachineReinforcements",
+      "name": "MachineReinforcements",
+      "category": "director-events",
+      "pipeline": "additive",
+      "assetType": "VFX (single frame or short frame sheet)",
+      "suggestedSize": "256x256 per frame",
+      "requirements": {
+        "subject": "environmental event onset \"MachineReinforcements\"",
+        "kind": "event announcement/onset VFX — the moment the Director fires this event",
+        "usedIn": "in-run environmental events, all biomes"
+      }
+    },
+    {
+      "id": "director-event:AncientSignal",
+      "name": "AncientSignal",
+      "category": "director-events",
+      "pipeline": "additive",
+      "assetType": "VFX (single frame or short frame sheet)",
+      "suggestedSize": "256x256 per frame",
+      "requirements": {
+        "subject": "environmental event onset \"AncientSignal\"",
+        "kind": "event announcement/onset VFX — the moment the Director fires this event",
+        "usedIn": "in-run environmental events, all biomes"
+      }
+    },
+    {
+      "id": "input-glyph:pad-north",
+      "name": "pad-north",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-north\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:pad-south",
+      "name": "pad-south",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-south\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:pad-east",
+      "name": "pad-east",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-east\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:pad-west",
+      "name": "pad-west",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-west\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:pad-dpad-up",
+      "name": "pad-dpad-up",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-dpad-up\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:pad-dpad-down",
+      "name": "pad-dpad-down",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-dpad-down\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:pad-dpad-left",
+      "name": "pad-dpad-left",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-dpad-left\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:pad-dpad-right",
+      "name": "pad-dpad-right",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-dpad-right\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:pad-start",
+      "name": "pad-start",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-start\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:pad-back",
+      "name": "pad-back",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"pad-back\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:keyboard-keycap-frame",
+      "name": "keyboard-keycap-frame",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"keyboard-keycap-frame\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:mouse-left",
+      "name": "mouse-left",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"mouse-left\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:mouse-right",
+      "name": "mouse-right",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"mouse-right\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "input-glyph:touch-button-frame",
+      "name": "touch-button-frame",
+      "category": "input-glyphs",
+      "pipeline": "keyed",
+      "assetType": "icon",
+      "view": "centered, transparent background",
+      "suggestedSize": "128x128",
+      "requirements": {
+        "subject": "input prompt glyph \"touch-button-frame\"",
+        "rule": "must read at HUD scale next to text; keycap/touch frames take a text label composited at runtime",
+        "usedIn": "control prompts, settings, tutorials"
+      }
+    },
+    {
+      "id": "combat-entity:hostile-projectile-tint",
+      "name": "hostile-projectile-tint",
+      "category": "combat-entities",
+      "pipeline": "additive",
+      "assetType": "VFX (single frame or short frame sheet)",
+      "suggestedSize": "256x256 per frame",
+      "requirements": {
+        "subject": "Shared hostile-shot treatment — enemy projectiles reuse the player projectile primitives but must read as hostile at a glance (readability law)",
+        "usedIn": "every enemy/boss ranged attack"
       }
     }
   ]

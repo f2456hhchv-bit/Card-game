@@ -8,11 +8,11 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 
 ## Summary
 
-- **Total registry entries: 1241**
-- **True source-file count (excludes derived): 1046**
+- **Total registry entries: 1277**
+- **True source-file count (excludes derived): 1082**
 - Derived (code-generated, no art file needed): 195
-- By pipeline: keyed 727, additive 457, fullbleed 57
-- By status: missing 1241, placeholder 0, delivered 0
+- By pipeline: keyed 755, additive 465, fullbleed 57
+- By status: missing 1277, placeholder 0, delivered 0
 
 **Colour law (DIRECTIVE §4):** nothing green in any KEYED sprite's palette (the chroma-key extraction step would strip it). Substitutions: regeneration → gold, poison → amber, toxic → amber, biomass → amber-yellow. Green is permitted freely in additive/fullbleed assets. Crystal Dominion sprites are magenta-keyed instead of green-keyed (see each entry's own `keyColour`).
 
@@ -31,10 +31,12 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 | boss | 9 |
 | boss-artifacts | 10 |
 | branding | 7 |
-| combat-entities | 21 |
+| build-paths | 9 |
+| combat-entities | 22 |
 | commander-actives | 53 |
 | commanders | 159 |
 | currencies | 6 |
+| director-events | 7 |
 | elite-mutations | 18 |
 | elite-reward-vfx | 11 |
 | elite-tiers | 7 |
@@ -48,7 +50,9 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 | frames | 4 |
 | galaxy | 28 |
 | hud-chrome | 14 |
+| input-glyphs | 14 |
 | interactables | 7 |
+| loot-items | 5 |
 | loot-rarity | 9 |
 | manufacturers | 18 |
 | mission-modifiers | 38 |
@@ -1318,4 +1322,40 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 | research-node:gene-tempering | Gene Tempering | research-nodes | keyed | source |  | missing |
 | research-node:void-containment | Void Containment | research-nodes | keyed | source |  | missing |
 | research-node:afterlight-network | The Afterlight Network | research-nodes | keyed | source |  | missing |
+| build-path:commander | Commander | build-paths | keyed | source |  | missing |
+| build-path:engineer | Engineer | build-paths | keyed | source |  | missing |
+| build-path:void | Void Walker | build-paths | keyed | source |  | missing |
+| build-path:guardian | Guardian | build-paths | keyed | source |  | missing |
+| build-path:hunter | Hunter | build-paths | keyed | source |  | missing |
+| build-path:droneCommander | Drone Commander | build-paths | keyed | source |  | missing |
+| build-path:heavyWeapons | Heavy Weapons | build-paths | keyed | source |  | missing |
+| build-path:orbitalSpecialist | Orbital Specialist | build-paths | keyed | source |  | missing |
+| build-path:bioEngineer | Bio-Engineer | build-paths | keyed | source |  | missing |
+| loot-item:PROTO_CANNON | proto cannon | loot-items | keyed | source |  | missing |
+| loot-item:HULL_PLATING | hull plating | loot-items | keyed | source |  | missing |
+| loot-item:STRANGE_RELIC | strange relic | loot-items | keyed | source |  | missing |
+| loot-item:SALVAGED_ALLOY | salvaged alloy | loot-items | keyed | source |  | missing |
+| loot-item:RESEARCH_CORE | research core | loot-items | keyed | source |  | missing |
+| director-event:MeteorShower | MeteorShower | director-events | additive | source |  | missing |
+| director-event:SolarFlare | SolarFlare | director-events | additive | source |  | missing |
+| director-event:CrystalGrowth | CrystalGrowth | director-events | additive | source |  | missing |
+| director-event:GravityFlux | GravityFlux | director-events | additive | source |  | missing |
+| director-event:VoidDistortion | VoidDistortion | director-events | additive | source |  | missing |
+| director-event:MachineReinforcements | MachineReinforcements | director-events | additive | source |  | missing |
+| director-event:AncientSignal | AncientSignal | director-events | additive | source |  | missing |
+| input-glyph:pad-north | pad-north | input-glyphs | keyed | source |  | missing |
+| input-glyph:pad-south | pad-south | input-glyphs | keyed | source |  | missing |
+| input-glyph:pad-east | pad-east | input-glyphs | keyed | source |  | missing |
+| input-glyph:pad-west | pad-west | input-glyphs | keyed | source |  | missing |
+| input-glyph:pad-dpad-up | pad-dpad-up | input-glyphs | keyed | source |  | missing |
+| input-glyph:pad-dpad-down | pad-dpad-down | input-glyphs | keyed | source |  | missing |
+| input-glyph:pad-dpad-left | pad-dpad-left | input-glyphs | keyed | source |  | missing |
+| input-glyph:pad-dpad-right | pad-dpad-right | input-glyphs | keyed | source |  | missing |
+| input-glyph:pad-start | pad-start | input-glyphs | keyed | source |  | missing |
+| input-glyph:pad-back | pad-back | input-glyphs | keyed | source |  | missing |
+| input-glyph:keyboard-keycap-frame | keyboard-keycap-frame | input-glyphs | keyed | source |  | missing |
+| input-glyph:mouse-left | mouse-left | input-glyphs | keyed | source |  | missing |
+| input-glyph:mouse-right | mouse-right | input-glyphs | keyed | source |  | missing |
+| input-glyph:touch-button-frame | touch-button-frame | input-glyphs | keyed | source |  | missing |
+| combat-entity:hostile-projectile-tint | hostile-projectile-tint | combat-entities | additive | source |  | missing |
 
