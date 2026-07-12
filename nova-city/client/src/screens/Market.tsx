@@ -61,7 +61,7 @@ export function Market() {
               const blackMarketLocked = item.type === 'contraband' && contrabandLocked;
               const locked = statLocked || blackMarketLocked;
               return (
-                <Card key={item.id} title={<ItemTitle type={item.type} name={item.name} />}>
+                <Card key={item.id} title={<ItemTitle type={item.type} name={item.name} tier={item.tier} />}>
                   <p className="muted">{item.flavor}</p>
                   {item.statBonus && (
                     <p className="small">

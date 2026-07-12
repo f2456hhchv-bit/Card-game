@@ -99,6 +99,13 @@ or on a LAN.
 - **Client** (`client/`): Vite + React + TypeScript SPA, React Router for
   navigation. A ~15-screen, form- and state-heavy menu app — a deliberate
   departure from AFTERLIGHT's no-framework canvas approach.
+- **Art**: zero external image files. Every icon, crest, planet/sector glyph,
+  ship silhouette, station glyph, hostile portrait, and the auth-screen
+  starfield is a deterministic inline SVG derived from the entity's id
+  (`client/src/icons/hash.ts` + `client/src/components/*Glyph.tsx`,
+  `ShipSilhouette.tsx`, `NpcPortrait.tsx`, `StationGlyph.tsx`,
+  `Starfield.tsx`) — same seed always renders the same art, so a fleet
+  roster or hostiles list reads consistently without an asset pipeline.
 
 ## Running it
 

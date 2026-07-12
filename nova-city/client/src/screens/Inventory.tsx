@@ -48,7 +48,7 @@ export function Inventory() {
           if (!meta) return null;
           const key = `${stack.itemId}-${stack.acquiredAt}`;
           return (
-            <Card key={key} title={<ItemTitle type={meta.type} name={`${meta.name} ×${stack.qty}`} />}>
+            <Card key={key} title={<ItemTitle type={meta.type} name={`${meta.name} ×${stack.qty}`} tier={meta.tier} />}>
               <p className="muted">{meta.flavor}</p>
               {meta.decays && <p className="small warn">Contraband — value decays over time.</p>}
               <div className="button-row">

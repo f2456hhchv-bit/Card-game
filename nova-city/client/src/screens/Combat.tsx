@@ -4,6 +4,7 @@ import { useToast } from '../state/ToastContext';
 import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
 import { Timer } from '../components/Timer';
+import { NpcPortrait } from '../components/NpcPortrait';
 import { Icon } from '../icons/Icon';
 import type { Bounty, Character, CombatTarget, NpcTarget, PlayerTarget } from '../types';
 
@@ -100,7 +101,7 @@ export function Combat() {
             key={target.id}
             title={
               <span className="card-title-with-icon">
-                <Icon name="enemy" size={16} />
+                <NpcPortrait seed={target.id} tier={target.tier} size={26} />
                 {target.name}
               </span>
             }

@@ -56,14 +56,26 @@ a {
 
 /* Auth screens */
 .auth-screen {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  overflow: hidden;
+}
+
+.starfield {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
 
 .auth-card {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 380px;
   background: var(--bg-panel);
@@ -79,6 +91,38 @@ a {
   color: var(--accent-strong);
   filter: drop-shadow(0 0 14px rgba(79, 217, 255, 0.55));
   margin-bottom: 0.5rem;
+}
+
+.brand-emblem-orbit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.brand-orbit-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--accent-strong);
+  animation: brand-orbit-spin 18s linear infinite;
+}
+
+@keyframes brand-orbit-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-orbit-ring {
+    animation: none;
+  }
 }
 
 .brand-title {
@@ -391,6 +435,14 @@ a {
   vertical-align: -3px;
 }
 
+.item-rarity-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 3px;
+}
+
 .location-header,
 .faction-header {
   display: flex;
@@ -418,7 +470,11 @@ a {
 }
 
 .faction-crest,
-.location-glyph {
+.location-glyph,
+.sector-glyph,
+.ship-silhouette,
+.npc-portrait,
+.station-glyph {
   flex-shrink: 0;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
 }

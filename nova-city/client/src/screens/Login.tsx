@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../state/AuthContext';
 import { ApiError } from '../api/client';
-import { Icon } from '../icons/Icon';
+import { Starfield } from '../components/Starfield';
+import { BrandEmblem } from '../components/BrandEmblem';
 
 export function Login() {
   const { login } = useAuth();
@@ -28,9 +29,10 @@ export function Login() {
 
   return (
     <div className="auth-screen">
+      <Starfield seed="login-starfield" />
       <div className="auth-card">
         <div className="brand-emblem">
-          <Icon name="logo" size={40} />
+          <BrandEmblem size={64} />
         </div>
         <h1 className="brand-title">NOVA CITY</h1>
         <p className="brand-tagline">The orbital sprawl never sleeps.</p>

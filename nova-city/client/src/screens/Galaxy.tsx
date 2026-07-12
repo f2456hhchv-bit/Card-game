@@ -5,6 +5,8 @@ import { api, ApiError } from '../api/client';
 import { Card } from '../components/Card';
 import { Icon } from '../icons/Icon';
 import { SectorGlyph } from '../components/SectorGlyph';
+import { ShipSilhouette } from '../components/ShipSilhouette';
+import { StationGlyph } from '../components/StationGlyph';
 import type { Character, FleetSummary, OwnedStation, SectorAttackOutcome, SectorView, Ship, ShipClass } from '../types';
 
 export function Galaxy() {
@@ -137,7 +139,10 @@ export function Galaxy() {
           <div className="ship-roster">
             {ships.map((s) => (
               <div key={s.id} className="ship-row">
-                <strong>{s.name}</strong>
+                <span className="card-title-with-icon">
+                  {s.shipClass && <ShipSilhouette seed={s.id} hullClass={s.shipClass.hullClass} size={26} />}
+                  <strong>{s.name}</strong>
+                </span>
                 <span className="muted small">
                   {s.shipClass?.name} · {s.shipClass?.firepower} fp
                 </span>
@@ -180,7 +185,15 @@ export function Galaxy() {
         {catalog.map((cls) => {
           const locked = trainedStats < cls.requiredTotalStats;
           return (
-            <Card key={cls.id} title={cls.name}>
+            <Card
+              key={cls.id}
+              title={
+                <span className="card-title-with-icon">
+                  <ShipSilhouette seed={cls.id} hullClass={cls.hullClass} size={26} />
+                  {cls.name}
+                </span>
+              }
+            >
               <p className="muted small">{cls.flavor}</p>
               <p className="small">
                 {cls.firepower} firepower · {cls.shieldHP} shields · {cls.crewCapacity} crew
@@ -211,7 +224,15 @@ export function Galaxy() {
           </h2>
           <div className="grid three-col">
             {stations.map((st) => (
-              <Card key={st.id} title={st.sector?.name ?? 'Station'}>
+              <Card
+                key={st.id}
+                title={
+                  <span className="card-title-with-icon">
+                    <StationGlyph seed={st.id} tier={st.tier} size={26} />
+                    {st.sector?.name ?? 'Station'}
+                  </span>
+                }
+              >
                 <p className="small">Tier {st.tier}</p>
                 <p>{Math.round(st.credits).toLocaleString()} cr accrued</p>
                 <button className="btn-primary" disabled={busy !== null} onClick={() => collectStation(st)}>
