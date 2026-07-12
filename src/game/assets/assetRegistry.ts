@@ -66,8 +66,22 @@ import type { AssetPipelineKind, AssetRegistryEntry } from "./assetPipeline";
 
 const entries: AssetRegistryEntry[] = [];
 function add(entry: Omit<AssetRegistryEntry, "status"> & Partial<Pick<AssetRegistryEntry, "status">>): void {
-  entries.push({ status: "missing", ...entry });
+  // §4 colour law: keyColour is EXPLICIT on every keyed entry — a
+  // machine-readable registry must not carry an implicit "blank means
+  // green" default that every consumer has to know about. Green unless the
+  // entry says otherwise (Crystal Dominion/Ascendancy art is magenta-keyed).
+  const keyColour = entry.pipeline === "keyed" ? (entry.keyColour ?? "green") : undefined;
+  entries.push({ status: "missing", ...entry, ...(keyColour ? { keyColour } : {}) });
 }
+
+/**
+ * §4: "Crystal Dominion sprites are magenta-keyed." Faction-tagged keyed
+ * art inherits this — commanders included, and the Crystal Ascendancy
+ * faction string too (its one commander's authored design brief is
+ * crystal-lined suit/halo/gauntlets — the exact crystal-motif art class
+ * the magenta key exists for).
+ */
+const MAGENTA_KEYED_FACTIONS = new Set(["Crystal Dominion", "Crystal Ascendancy"]);
 
 // ── Ships — sprite is source; roster thumbnail is DERIVED (downscale). ──
 for (const ship of LAUNCH_FLEET) {
@@ -84,10 +98,12 @@ for (const weapon of LAUNCH_ARSENAL) {
   add({ id: `${weapon.id}:impact`, name: weapon.name, category: "weapons", pipeline: "additive", sourceOrDerived: "source" });
 }
 
-// ── Commanders — portrait/sprite keyed source; ultimate VFX additive source. ──
+// ── Commanders — portrait/sprite keyed source; ultimate VFX additive source.
+// Crystal-faction commanders are magenta-keyed like their faction's enemies (§4). ──
 for (const commander of FULL_ROSTER_WITH_FOUNDER) {
-  add({ id: `${commander.id}:portrait`, name: commander.name, category: "commanders", pipeline: "keyed", sourceOrDerived: "source" });
-  add({ id: `${commander.id}:sprite`, name: commander.name, category: "commanders", pipeline: "keyed", sourceOrDerived: "source" });
+  const keyColour = MAGENTA_KEYED_FACTIONS.has(commander.faction) ? ("magenta" as const) : ("green" as const);
+  add({ id: `${commander.id}:portrait`, name: commander.name, category: "commanders", pipeline: "keyed", sourceOrDerived: "source", keyColour });
+  add({ id: `${commander.id}:sprite`, name: commander.name, category: "commanders", pipeline: "keyed", sourceOrDerived: "source", keyColour });
   add({ id: `${commander.id}:ultimate-vfx`, name: commander.name, category: "commanders", pipeline: "additive", sourceOrDerived: "source" });
 }
 
@@ -252,7 +268,7 @@ for (const id of PLAYER_VFX) add({ id: `player-vfx:${id}`, name: id, category: "
 // ancientSites), plus the shared telegraph/spawn/loot/extraction/merchant
 // visuals every run uses.
 const COMBAT_ENTITIES_KEYED = ["outlaw-mine", "crystal-growth", "xeno-hive", "ancient-site", "loot-cache", "merchant-vessel", "extraction-beacon"];
-for (const id of COMBAT_ENTITIES_KEYED) add({ id: `combat-entity:${id}`, name: id, category: "combat-entities", pipeline: "keyed", sourceOrDerived: "source" });
+for (const id of COMBAT_ENTITIES_KEYED) add({ id: `combat-entity:${id}`, name: id, category: "combat-entities", pipeline: "keyed", sourceOrDerived: "source", keyColour: id === "crystal-growth" ? "magenta" : "green" });
 const COMBAT_ENTITIES_ADDITIVE = ["meteor-telegraph", "meteor-impact", "acid-pool", "void-zone", "gravity-well", "singularity-charge", "machine-shield-lattice", "constellation-link", "spawn-warp-in", "telegraph-ring", "telegraph-line", "hazard-telegraph", "loot-beam", "extraction-beacon-pulse"];
 for (const id of COMBAT_ENTITIES_ADDITIVE) add({ id: `combat-entity:${id}`, name: id, category: "combat-entities", pipeline: "additive", sourceOrDerived: "source" });
 
@@ -286,7 +302,7 @@ for (const reward of ELITE_REWARD_POOL) add({ id: `${reward.id}:vfx`, name: rewa
 for (const reward of SANDBOX_WAVE_REWARDS) add({ id: `${reward.id}:vfx`, name: reward.name, category: "wave-reward-vfx", pipeline: "additive", sourceOrDerived: "source" });
 
 // Faction emblems (AF-039/085) — reputation UI, mission givers, codex.
-for (const faction of SANDBOX_FACTION_ROSTER.factions) add({ id: `faction-emblem:${faction.id}`, name: faction.name, category: "faction-emblems", pipeline: "keyed", sourceOrDerived: "source" });
+for (const faction of SANDBOX_FACTION_ROSTER.factions) add({ id: `faction-emblem:${faction.id}`, name: faction.name, category: "faction-emblems", pipeline: "keyed", sourceOrDerived: "source", keyColour: MAGENTA_KEYED_FACTIONS.has(faction.name) ? "magenta" : "green" });
 
 // Research-node icons (AF-024) — the research tree renders one node per def.
 for (const node of ROSTER_RESEARCH_TREE) add({ id: `research-node:${node.id}`, name: node.name, category: "research-nodes", pipeline: "keyed", sourceOrDerived: "source" });

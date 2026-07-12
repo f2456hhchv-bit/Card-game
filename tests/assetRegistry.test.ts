@@ -82,6 +82,30 @@ describe("DIRECTIVE §4 — colour law", () => {
     for (const e of otherEnemyIdle) expect(e.keyColour).toBe("green");
   });
 
+  it("EVERY keyed entry carries an explicit keyColour — no implicit 'blank means green' default", () => {
+    for (const e of ASSET_REGISTRY) {
+      if (e.pipeline === "keyed") expect(e.keyColour, `${e.id} has no explicit keyColour`).toBeDefined();
+      else expect(e.keyColour, `${e.id} is ${e.pipeline} but carries a keyColour`).toBeUndefined();
+    }
+  });
+
+  it("crystal-faction COMMANDERS are magenta-keyed like their faction's enemies — keying follows the art, not the category", () => {
+    for (const id of ["vane-chord", "ur-sella-chorus", "sol-resonant"]) {
+      for (const view of ["portrait", "sprite"]) {
+        const entry = ASSET_REGISTRY.find((e) => e.id === `${id}:${view}`);
+        expect(entry, `${id}:${view} missing`).toBeDefined();
+        expect(entry!.keyColour, `${id}:${view} must be magenta-keyed`).toBe("magenta");
+      }
+    }
+    // A non-crystal commander stays green-keyed.
+    expect(ASSET_REGISTRY.find((e) => e.id === "reyes-longlight:sprite")!.keyColour).toBe("green");
+  });
+
+  it("other crystal-motif keyed art (crystal-growth entity, Crystal Dominion emblem) is magenta-keyed too", () => {
+    expect(ASSET_REGISTRY.find((e) => e.id === "combat-entity:crystal-growth")!.keyColour).toBe("magenta");
+    expect(ASSET_REGISTRY.find((e) => e.id === "faction-emblem:crystalDominion")!.keyColour).toBe("magenta");
+  });
+
   it("registers the required green-to-substitution mapping for every named lore-green asset", () => {
     for (const key of ["regeneration", "poison", "toxic", "biomass"]) {
       expect(COLOUR_LAW_SUBSTITUTIONS[key]).toBeTruthy();
