@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ASSET_REGISTRY, derivedEntries, entriesByPipeline, sourceEntries } from "../src/game/assets/assetRegistry";
+import { ASSET_REGISTRY, codeDrawnEntries, derivedEntries, entriesByPipeline, generatedSourceEntries, sourceEntries } from "../src/game/assets/assetRegistry";
 import { ASSET_PIPELINE_KINDS, ASSET_STATUSES, COLOUR_LAW_SUBSTITUTIONS } from "../src/game/assets/assetPipeline";
 
 /**
@@ -110,6 +110,44 @@ describe("DIRECTIVE §4 — colour law", () => {
     for (const key of ["regeneration", "poison", "toxic", "biomass"]) {
       expect(COLOUR_LAW_SUBSTITUTIONS[key]).toBeTruthy();
     }
+  });
+});
+
+describe("Production split + priority (Project Owner review, 2026-07-12)", () => {
+  it("every entry carries an explicit production and priority — no implicit defaults for consumers to know", () => {
+    for (const e of ASSET_REGISTRY) {
+      expect(["generated", "codeDrawn"]).toContain(e.production);
+      expect([1, 2, 3]).toContain(e.priority);
+    }
+  });
+
+  it("precision vector UI is code-drawn, never image-generated", () => {
+    const codeDrawnCategories = new Set(["input-glyphs", "hud-chrome", "ui-components", "starmap-chrome", "frames", "loot-rarity", "elite-tiers", "particles"]);
+    for (const e of ASSET_REGISTRY) {
+      expect(e.production, `${e.id} production mismatch`).toBe(codeDrawnCategories.has(e.category) ? "codeDrawn" : "generated");
+    }
+    expect(codeDrawnEntries().length).toBeGreaterThan(50); // the "~60 rows off the pile"
+  });
+
+  it("generatedSourceEntries excludes both derived and code-drawn entries, and the split is exhaustive", () => {
+    for (const e of generatedSourceEntries()) {
+      expect(e.sourceOrDerived).toBe("source");
+      expect(e.production).toBe("generated");
+    }
+    const generatedSource = generatedSourceEntries().length;
+    const codeDrawnSource = sourceEntries().filter((e) => e.production === "codeDrawn").length;
+    expect(generatedSource + codeDrawnSource).toBe(sourceEntries().length);
+  });
+
+  it("the playable vertical slice is P1: ships, weapons, enemies, boss, HUD, XP gems, weapon primitives", () => {
+    for (const category of ["ships", "weapons", "enemies", "boss", "hud-chrome", "xp-tiers", "fire-patterns", "projectile-behaviours"]) {
+      const inCategory = ASSET_REGISTRY.filter((e) => e.category === category);
+      expect(inCategory.length).toBeGreaterThan(0);
+      for (const e of inCategory) expect(e.priority, `${e.id} should be P1`).toBe(1);
+    }
+    // Commanders and biomes are P2; the meta long tail is P3.
+    for (const e of ASSET_REGISTRY.filter((e) => e.category === "commanders" || e.category === "biomes")) expect(e.priority).toBe(2);
+    for (const e of ASSET_REGISTRY.filter((e) => e.category === "achievements" || e.category === "titles")) expect(e.priority).toBe(3);
   });
 });
 

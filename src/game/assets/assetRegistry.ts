@@ -64,14 +64,38 @@ import { BUILD_PATHS } from "../progression/buildPaths";
 import { ENVIRONMENTAL_EVENTS } from "../director/directorTuning";
 import type { AssetPipelineKind, AssetRegistryEntry } from "./assetPipeline";
 
+/**
+ * Production split (Project Owner review, 2026-07-12): precision vector UI
+ * is CODE-DRAWN, never image-generated — the Visual Style Rules' rounded
+ * chunky geometry (rings, bars, borders, glyphs, frames) is exactly what
+ * canvas primitives do best, and generation is the worst tool for it.
+ * Particle bursts are in this set because Particles.ts already draws them
+ * in code today. These entries stay in the registry (they're real work
+ * with real status tracking) but are excluded from the asset run.
+ */
+const CODE_DRAWN_CATEGORIES = new Set(["input-glyphs", "hud-chrome", "ui-components", "starmap-chrome", "frames", "loot-rarity", "elite-tiers", "particles"]);
+
+/**
+ * Generation order (Project Owner review, 2026-07-12): P1 is the playable
+ * vertical slice — ships, weapons, enemies, HUD — plus what a slice
+ * literally hits in its first minutes (the boss at wave 5, XP gems from
+ * the first kill, and the fire-pattern/projectile primitives every weapon
+ * composes from). P2: commanders, biomes, and the in-run readability layer.
+ * P3: everything else. Generate in that order.
+ */
+const PRIORITY_1_CATEGORIES = new Set(["ships", "weapons", "enemies", "boss", "hud-chrome", "xp-tiers", "fire-patterns", "projectile-behaviours"]);
+const PRIORITY_2_CATEGORIES = new Set(["commanders", "biomes", "environment", "player-vfx", "elite-mutations", "elite-tiers", "combat-entities", "status-effects", "particles", "ui-components", "input-glyphs"]);
+
 const entries: AssetRegistryEntry[] = [];
-function add(entry: Omit<AssetRegistryEntry, "status"> & Partial<Pick<AssetRegistryEntry, "status">>): void {
+function add(entry: Omit<AssetRegistryEntry, "status" | "production" | "priority"> & Partial<Pick<AssetRegistryEntry, "status" | "production" | "priority">>): void {
   // §4 colour law: keyColour is EXPLICIT on every keyed entry — a
   // machine-readable registry must not carry an implicit "blank means
   // green" default that every consumer has to know about. Green unless the
   // entry says otherwise (Crystal Dominion/Ascendancy art is magenta-keyed).
   const keyColour = entry.pipeline === "keyed" ? (entry.keyColour ?? "green") : undefined;
-  entries.push({ status: "missing", ...entry, ...(keyColour ? { keyColour } : {}) });
+  const production = entry.production ?? (CODE_DRAWN_CATEGORIES.has(entry.category) ? "codeDrawn" : "generated");
+  const priority = entry.priority ?? (PRIORITY_1_CATEGORIES.has(entry.category) ? 1 : PRIORITY_2_CATEGORIES.has(entry.category) ? 2 : 3);
+  entries.push({ status: "missing", ...entry, production, priority, ...(keyColour ? { keyColour } : {}) });
 }
 
 /**
@@ -337,4 +361,11 @@ export function derivedEntries(): readonly AssetRegistryEntry[] {
 }
 export function entriesByPipeline(pipeline: AssetPipelineKind): readonly AssetRegistryEntry[] {
   return ASSET_REGISTRY.filter((e) => e.pipeline === pipeline);
+}
+/** Source entries that actually enter the generation run — code-drawn entries are engineering work, not art generation. */
+export function generatedSourceEntries(): readonly AssetRegistryEntry[] {
+  return ASSET_REGISTRY.filter((e) => e.sourceOrDerived === "source" && e.production === "generated");
+}
+export function codeDrawnEntries(): readonly AssetRegistryEntry[] {
+  return ASSET_REGISTRY.filter((e) => e.production === "codeDrawn");
 }

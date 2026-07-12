@@ -28,6 +28,19 @@ export type AssetStatus = (typeof ASSET_STATUSES)[number];
 export const ASSET_SOURCE_KINDS = ["source", "derived"] as const;
 export type AssetSourceKind = (typeof ASSET_SOURCE_KINDS)[number];
 
+/**
+ * How a source asset gets made. Precision vector UI — input glyphs, HUD
+ * bars, UI kit, rarity frames, tier rings, star-map chrome, particle
+ * primitives — is CODE-DRAWN per the Visual Style Rules (rounded chunky
+ * geometry is exactly what canvas primitives do best); image generation is
+ * the wrong tool for it and those entries are excluded from the asset run.
+ */
+export const ASSET_PRODUCTION_KINDS = ["generated", "codeDrawn"] as const;
+export type AssetProductionKind = (typeof ASSET_PRODUCTION_KINDS)[number];
+
+/** Generation order: P1 = playable vertical slice, P2 = commanders/biomes, P3 = the long tail. */
+export type AssetPriority = 1 | 2 | 3;
+
 /** Canvas composite operation each pipeline renders with — the ONLY place blend mode is decided. */
 export function blendModeFor(pipeline: AssetPipelineKind): GlobalCompositeOperation {
   return pipeline === "additive" ? "lighter" : "source-over";
@@ -42,6 +55,10 @@ export interface AssetRegistryEntry {
   /** Set only when sourceOrDerived === "derived" — the parent asset id it's generated from. */
   derivedFrom?: string;
   status: AssetStatus;
+  /** How the asset gets made — codeDrawn entries never enter the generation run. */
+  production: AssetProductionKind;
+  /** Generation order — P1 first (playable vertical slice), then P2, then P3. */
+  priority: AssetPriority;
   /**
    * §4 colour law: KEYED sprites are pre-processed via chroma-key
    * extraction — green for everything except Crystal Dominion, which is

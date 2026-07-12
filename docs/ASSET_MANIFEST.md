@@ -11,6 +11,8 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 - **Total registry entries: 1277**
 - **True source-file count (excludes derived): 1082**
 - Derived (code-generated, no art file needed): 195
+- Code-drawn (precision vector UI implemented in code, not image-generated): 68
+- Generation run (source AND generated): 1014 — P1 167 / P2 231 / P3 616
 - By pipeline: keyed 755, additive 465, fullbleed 57
 - By status: missing 1277, placeholder 0, delivered 0
 
@@ -79,1283 +81,1283 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 
 ## Full registry
 
-| id | name | category | pipeline | sourceOrDerived | derivedFrom | status |
-|---|---|---|---|---|---|---|
-| wayfarer-hull-mk2:portrait | Wayfarer Mk. II | ships | keyed | source |  | missing |
-| wayfarer-hull-mk2:sprite | Wayfarer Mk. II | ships | keyed | source |  | missing |
-| wayfarer-hull-mk2:thumbnail | Wayfarer Mk. II | ships | keyed | derived | wayfarer-hull-mk2:sprite | missing |
-| bastion-hull-mk1:portrait | Bastion Mk. I | ships | keyed | source |  | missing |
-| bastion-hull-mk1:sprite | Bastion Mk. I | ships | keyed | source |  | missing |
-| bastion-hull-mk1:thumbnail | Bastion Mk. I | ships | keyed | derived | bastion-hull-mk1:sprite | missing |
-| aurelia-hull-mk1:portrait | Aurelia Mk. I | ships | keyed | source |  | missing |
-| aurelia-hull-mk1:sprite | Aurelia Mk. I | ships | keyed | source |  | missing |
-| aurelia-hull-mk1:thumbnail | Aurelia Mk. I | ships | keyed | derived | aurelia-hull-mk1:sprite | missing |
-| sable-dart-mk1:portrait | Sable Dart Mk. I | ships | keyed | source |  | missing |
-| sable-dart-mk1:sprite | Sable Dart Mk. I | ships | keyed | source |  | missing |
-| sable-dart-mk1:thumbnail | Sable Dart Mk. I | ships | keyed | derived | sable-dart-mk1:sprite | missing |
-| falchion-mk2:portrait | Falchion Mk. II | ships | keyed | source |  | missing |
-| falchion-mk2:sprite | Falchion Mk. II | ships | keyed | source |  | missing |
-| falchion-mk2:thumbnail | Falchion Mk. II | ships | keyed | derived | falchion-mk2:sprite | missing |
-| hivemother-mk1:portrait | Hivemother Mk. I | ships | keyed | source |  | missing |
-| hivemother-mk1:sprite | Hivemother Mk. I | ships | keyed | source |  | missing |
-| hivemother-mk1:thumbnail | Hivemother Mk. I | ships | keyed | derived | hivemother-mk1:sprite | missing |
-| dawnspire:portrait | Dawnspire | ships | keyed | source |  | missing |
-| dawnspire:sprite | Dawnspire | ships | keyed | source |  | missing |
-| dawnspire:thumbnail | Dawnspire | ships | keyed | derived | dawnspire:sprite | missing |
-| ballista-mk3:portrait | Ballista Mk. III | ships | keyed | source |  | missing |
-| ballista-mk3:sprite | Ballista Mk. III | ships | keyed | source |  | missing |
-| ballista-mk3:thumbnail | Ballista Mk. III | ships | keyed | derived | ballista-mk3:sprite | missing |
-| caduceus-mk1:portrait | Caduceus Mk. I | ships | keyed | source |  | missing |
-| caduceus-mk1:sprite | Caduceus Mk. I | ships | keyed | source |  | missing |
-| caduceus-mk1:thumbnail | Caduceus Mk. I | ships | keyed | derived | caduceus-mk1:sprite | missing |
-| maelstrom-x1:portrait | Maelstrom X-1 | ships | keyed | source |  | missing |
-| maelstrom-x1:sprite | Maelstrom X-1 | ships | keyed | source |  | missing |
-| maelstrom-x1:thumbnail | Maelstrom X-1 | ships | keyed | derived | maelstrom-x1:sprite | missing |
-| coil-ripper:icon | Coil Ripper | weapons | keyed | source |  | missing |
-| coil-ripper:projectile | Coil Ripper | weapons | keyed | source |  | missing |
-| coil-ripper:muzzle | Coil Ripper | weapons | additive | source |  | missing |
-| coil-ripper:impact | Coil Ripper | weapons | additive | source |  | missing |
-| coil-ripper-mk2:icon | Coil Ripper Mk. II | weapons | keyed | source |  | missing |
-| coil-ripper-mk2:projectile | Coil Ripper Mk. II | weapons | keyed | source |  | missing |
-| coil-ripper-mk2:muzzle | Coil Ripper Mk. II | weapons | additive | source |  | missing |
-| coil-ripper-mk2:impact | Coil Ripper Mk. II | weapons | additive | source |  | missing |
-| novasplitter:icon | Novasplitter | weapons | keyed | source |  | missing |
-| novasplitter:projectile | Novasplitter | weapons | keyed | source |  | missing |
-| novasplitter:muzzle | Novasplitter | weapons | additive | source |  | missing |
-| novasplitter:impact | Novasplitter | weapons | additive | source |  | missing |
-| voidlance:icon | Voidlance | weapons | keyed | source |  | missing |
-| voidlance:projectile | Voidlance | weapons | keyed | source |  | missing |
-| voidlance:muzzle | Voidlance | weapons | additive | source |  | missing |
-| voidlance:impact | Voidlance | weapons | additive | source |  | missing |
-| hailborn-array:icon | Hailborn Array | weapons | keyed | source |  | missing |
-| hailborn-array:projectile | Hailborn Array | weapons | keyed | source |  | missing |
-| hailborn-array:muzzle | Hailborn Array | weapons | additive | source |  | missing |
-| hailborn-array:impact | Hailborn Array | weapons | additive | source |  | missing |
-| swarm-tender:icon | Swarm Tender | weapons | keyed | source |  | missing |
-| swarm-tender:projectile | Swarm Tender | weapons | keyed | source |  | missing |
-| swarm-tender:muzzle | Swarm Tender | weapons | additive | source |  | missing |
-| swarm-tender:impact | Swarm Tender | weapons | additive | source |  | missing |
-| spore-lance:icon | Spore Lance | weapons | keyed | source |  | missing |
-| spore-lance:projectile | Spore Lance | weapons | keyed | source |  | missing |
-| spore-lance:muzzle | Spore Lance | weapons | additive | source |  | missing |
-| spore-lance:impact | Spore Lance | weapons | additive | source |  | missing |
-| atlas-cluster-battery:icon | Atlas Cluster Battery | weapons | keyed | source |  | missing |
-| atlas-cluster-battery:projectile | Atlas Cluster Battery | weapons | keyed | source |  | missing |
-| atlas-cluster-battery:muzzle | Atlas Cluster Battery | weapons | additive | source |  | missing |
-| atlas-cluster-battery:impact | Atlas Cluster Battery | weapons | additive | source |  | missing |
-| helios-prism-array:icon | Helios Prism Array | weapons | keyed | source |  | missing |
-| helios-prism-array:projectile | Helios Prism Array | weapons | keyed | source |  | missing |
-| helios-prism-array:muzzle | Helios Prism Array | weapons | additive | source |  | missing |
-| helios-prism-array:impact | Helios Prism Array | weapons | additive | source |  | missing |
-| paragon-flux-driver:icon | Paragon Flux Driver | weapons | keyed | source |  | missing |
-| paragon-flux-driver:projectile | Paragon Flux Driver | weapons | keyed | source |  | missing |
-| paragon-flux-driver:muzzle | Paragon Flux Driver | weapons | additive | source |  | missing |
-| paragon-flux-driver:impact | Paragon Flux Driver | weapons | additive | source |  | missing |
-| foundry-sunlance:icon | Foundry Sunlance | weapons | keyed | source |  | missing |
-| foundry-sunlance:projectile | Foundry Sunlance | weapons | keyed | source |  | missing |
-| foundry-sunlance:muzzle | Foundry Sunlance | weapons | additive | source |  | missing |
-| foundry-sunlance:impact | Foundry Sunlance | weapons | additive | source |  | missing |
-| salvage-scattergun:icon | Salvage Scattergun | weapons | keyed | source |  | missing |
-| salvage-scattergun:projectile | Salvage Scattergun | weapons | keyed | source |  | missing |
-| salvage-scattergun:muzzle | Salvage Scattergun | weapons | additive | source |  | missing |
-| salvage-scattergun:impact | Salvage Scattergun | weapons | additive | source |  | missing |
-| reyes-longlight:portrait | Ilsa Reyes | commanders | keyed | source |  | missing |
-| reyes-longlight:sprite | Ilsa Reyes | commanders | keyed | source |  | missing |
-| reyes-longlight:ultimate-vfx | Ilsa Reyes | commanders | additive | source |  | missing |
-| vek-ironhull:portrait | Vek Tarn | commanders | keyed | source |  | missing |
-| vek-ironhull:sprite | Vek Tarn | commanders | keyed | source |  | missing |
-| vek-ironhull:ultimate-vfx | Vek Tarn | commanders | additive | source |  | missing |
-| vael-meridian:portrait | Dr. Sen Vael | commanders | keyed | source |  | missing |
-| vael-meridian:sprite | Dr. Sen Vael | commanders | keyed | source |  | missing |
-| vael-meridian:ultimate-vfx | Dr. Sen Vael | commanders | additive | source |  | missing |
-| okoye-torque:portrait | Jelan Okoye | commanders | keyed | source |  | missing |
-| okoye-torque:sprite | Jelan Okoye | commanders | keyed | source |  | missing |
-| okoye-torque:ultimate-vfx | Jelan Okoye | commanders | additive | source |  | missing |
-| naru-whisper:portrait | Ai Naru | commanders | keyed | source |  | missing |
-| naru-whisper:sprite | Ai Naru | commanders | keyed | source |  | missing |
-| naru-whisper:ultimate-vfx | Ai Naru | commanders | additive | source |  | missing |
-| vex-longfang:portrait | Dain Vex | commanders | keyed | source |  | missing |
-| vex-longfang:sprite | Dain Vex | commanders | keyed | source |  | missing |
-| vex-longfang:ultimate-vfx | Dain Vex | commanders | additive | source |  | missing |
-| holt-thunderline:portrait | Petra Holt | commanders | keyed | source |  | missing |
-| holt-thunderline:sprite | Petra Holt | commanders | keyed | source |  | missing |
-| holt-thunderline:ultimate-vfx | Petra Holt | commanders | additive | source |  | missing |
-| anders-cipher:portrait | Rell Anders | commanders | keyed | source |  | missing |
-| anders-cipher:sprite | Rell Anders | commanders | keyed | source |  | missing |
-| anders-cipher:ultimate-vfx | Rell Anders | commanders | additive | source |  | missing |
-| kite-aviary:portrait | Suno Kite | commanders | keyed | source |  | missing |
-| kite-aviary:sprite | Suno Kite | commanders | keyed | source |  | missing |
-| kite-aviary:ultimate-vfx | Suno Kite | commanders | additive | source |  | missing |
-| sel-keystone:portrait | Mara Sel | commanders | keyed | source |  | missing |
-| sel-keystone:sprite | Mara Sel | commanders | keyed | source |  | missing |
-| sel-keystone:ultimate-vfx | Mara Sel | commanders | additive | source |  | missing |
-| vane-chord:portrait | Ilex Vane | commanders | keyed | source |  | missing |
-| vane-chord:sprite | Ilex Vane | commanders | keyed | source |  | missing |
-| vane-chord:ultimate-vfx | Ilex Vane | commanders | additive | source |  | missing |
-| kael-nadir:portrait | Dr. Oshen Kael | commanders | keyed | source |  | missing |
-| kael-nadir:sprite | Dr. Oshen Kael | commanders | keyed | source |  | missing |
-| kael-nadir:ultimate-vfx | Dr. Oshen Kael | commanders | additive | source |  | missing |
-| farr-redline:portrait | Juno Farr | commanders | keyed | source |  | missing |
-| farr-redline:sprite | Juno Farr | commanders | keyed | source |  | missing |
-| farr-redline:ultimate-vfx | Juno Farr | commanders | additive | source |  | missing |
-| iman-relay:portrait | Sera Iman | commanders | keyed | source |  | missing |
-| iman-relay:sprite | Sera Iman | commanders | keyed | source |  | missing |
-| iman-relay:ultimate-vfx | Sera Iman | commanders | additive | source |  | missing |
-| korr-wardbreaker:portrait | Thessaly Korr | commanders | keyed | source |  | missing |
-| korr-wardbreaker:sprite | Thessaly Korr | commanders | keyed | source |  | missing |
-| korr-wardbreaker:ultimate-vfx | Thessaly Korr | commanders | additive | source |  | missing |
-| voss-lanternkeep:portrait | Dr. Imara Voss | commanders | keyed | source |  | missing |
-| voss-lanternkeep:sprite | Dr. Imara Voss | commanders | keyed | source |  | missing |
-| voss-lanternkeep:ultimate-vfx | Dr. Imara Voss | commanders | additive | source |  | missing |
-| devereux-static:portrait | Ash Devereux | commanders | keyed | source |  | missing |
-| devereux-static:sprite | Ash Devereux | commanders | keyed | source |  | missing |
-| devereux-static:ultimate-vfx | Ash Devereux | commanders | additive | source |  | missing |
-| okafor-halcyon:portrait | Rin Okafor | commanders | keyed | source |  | missing |
-| okafor-halcyon:sprite | Rin Okafor | commanders | keyed | source |  | missing |
-| okafor-halcyon:ultimate-vfx | Rin Okafor | commanders | additive | source |  | missing |
-| ur-sella-chorus:portrait | Vantha Ur-Sella | commanders | keyed | source |  | missing |
-| ur-sella-chorus:sprite | Vantha Ur-Sella | commanders | keyed | source |  | missing |
-| ur-sella-chorus:ultimate-vfx | Vantha Ur-Sella | commanders | additive | source |  | missing |
-| kade-fulcrum:portrait | Boren Kade | commanders | keyed | source |  | missing |
-| kade-fulcrum:sprite | Boren Kade | commanders | keyed | source |  | missing |
-| kade-fulcrum:ultimate-vfx | Boren Kade | commanders | additive | source |  | missing |
-| calder-driftline:portrait | Yuen Calder | commanders | keyed | source |  | missing |
-| calder-driftline:sprite | Yuen Calder | commanders | keyed | source |  | missing |
-| calder-driftline:ultimate-vfx | Yuen Calder | commanders | additive | source |  | missing |
-| aldana-aftercare:portrait | Dr. Petrin Aldana | commanders | keyed | source |  | missing |
-| aldana-aftercare:sprite | Dr. Petrin Aldana | commanders | keyed | source |  | missing |
-| aldana-aftercare:ultimate-vfx | Dr. Petrin Aldana | commanders | additive | source |  | missing |
-| voss-pathfinder:portrait | Dr. Lyra Voss | commanders | keyed | source |  | missing |
-| voss-pathfinder:sprite | Dr. Lyra Voss | commanders | keyed | source |  | missing |
-| voss-pathfinder:ultimate-vfx | Dr. Lyra Voss | commanders | additive | source |  | missing |
-| kane-vanguard:portrait | Adrian Kane | commanders | keyed | source |  | missing |
-| kane-vanguard:sprite | Adrian Kane | commanders | keyed | source |  | missing |
-| kane-vanguard:ultimate-vfx | Adrian Kane | commanders | additive | source |  | missing |
-| ryker-engineer:portrait | Elias Ryker | commanders | keyed | source |  | missing |
-| ryker-engineer:sprite | Elias Ryker | commanders | keyed | source |  | missing |
-| ryker-engineer:ultimate-vfx | Elias Ryker | commanders | additive | source |  | missing |
-| cael-weaver:portrait | Seraphina Cael | commanders | keyed | source |  | missing |
-| cael-weaver:sprite | Seraphina Cael | commanders | keyed | source |  | missing |
-| cael-weaver:ultimate-vfx | Seraphina Cael | commanders | additive | source |  | missing |
-| drake-hunter:portrait | Kael Drake | commanders | keyed | source |  | missing |
-| drake-hunter:sprite | Kael Drake | commanders | keyed | source |  | missing |
-| drake-hunter:ultimate-vfx | Kael Drake | commanders | additive | source |  | missing |
-| sol-resonant:portrait | Aria Sol | commanders | keyed | source |  | missing |
-| sol-resonant:sprite | Aria Sol | commanders | keyed | source |  | missing |
-| sol-resonant:ultimate-vfx | Aria Sol | commanders | additive | source |  | missing |
-| vale-voidrunner:portrait | Orion Vale | commanders | keyed | source |  | missing |
-| vale-voidrunner:sprite | Orion Vale | commanders | keyed | source |  | missing |
-| vale-voidrunner:ultimate-vfx | Orion Vale | commanders | additive | source |  | missing |
-| iskander-swarmmaster:portrait | Nova Iskander | commanders | keyed | source |  | missing |
-| iskander-swarmmaster:sprite | Nova Iskander | commanders | keyed | source |  | missing |
-| iskander-swarmmaster:ultimate-vfx | Nova Iskander | commanders | additive | source |  | missing |
-| thorne-starforged:portrait | Cassia Thorne | commanders | keyed | source |  | missing |
-| thorne-starforged:sprite | Cassia Thorne | commanders | keyed | source |  | missing |
-| thorne-starforged:ultimate-vfx | Cassia Thorne | commanders | additive | source |  | missing |
-| vex-chronomancer:portrait | Aurelion Vex | commanders | keyed | source |  | missing |
-| vex-chronomancer:sprite | Aurelion Vex | commanders | keyed | source |  | missing |
-| vex-chronomancer:ultimate-vfx | Aurelion Vex | commanders | additive | source |  | missing |
-| ash-tempest:portrait | Valen Ash | commanders | keyed | source |  | missing |
-| ash-tempest:sprite | Valen Ash | commanders | keyed | source |  | missing |
-| ash-tempest:ultimate-vfx | Valen Ash | commanders | additive | source |  | missing |
-| korven-phantom:portrait | Nyx Korven | commanders | keyed | source |  | missing |
-| korven-phantom:sprite | Nyx Korven | commanders | keyed | source |  | missing |
-| korven-phantom:ultimate-vfx | Nyx Korven | commanders | additive | source |  | missing |
-| syn-bioforge:portrait | Dr. Mira Syn | commanders | keyed | source |  | missing |
-| syn-bioforge:sprite | Dr. Mira Syn | commanders | keyed | source |  | missing |
-| syn-bioforge:ultimate-vfx | Dr. Mira Syn | commanders | additive | source |  | missing |
-| solari-photon:portrait | Rhea Solari | commanders | keyed | source |  | missing |
-| solari-photon:sprite | Rhea Solari | commanders | keyed | source |  | missing |
-| solari-photon:ultimate-vfx | Rhea Solari | commanders | additive | source |  | missing |
-| kain-singularity:portrait | Zephyr Kain | commanders | keyed | source |  | missing |
-| kain-singularity:sprite | Zephyr Kain | commanders | keyed | source |  | missing |
-| kain-singularity:ultimate-vfx | Zephyr Kain | commanders | additive | source |  | missing |
-| reyes-warden:portrait | Astrid Reyes | commanders | keyed | source |  | missing |
-| reyes-warden:sprite | Astrid Reyes | commanders | keyed | source |  | missing |
-| reyes-warden:ultimate-vfx | Astrid Reyes | commanders | additive | source |  | missing |
-| orion-starlancer:portrait | Lucien Orion | commanders | keyed | source |  | missing |
-| orion-starlancer:sprite | Lucien Orion | commanders | keyed | source |  | missing |
-| orion-starlancer:ultimate-vfx | Lucien Orion | commanders | additive | source |  | missing |
-| volkov-titan:portrait | Ivan Volkov | commanders | keyed | source |  | missing |
-| volkov-titan:sprite | Ivan Volkov | commanders | keyed | source |  | missing |
-| volkov-titan:ultimate-vfx | Ivan Volkov | commanders | additive | source |  | missing |
-| myrr-oracle:portrait | Selene Myrr | commanders | keyed | source |  | missing |
-| myrr-oracle:sprite | Selene Myrr | commanders | keyed | source |  | missing |
-| myrr-oracle:ultimate-vfx | Selene Myrr | commanders | additive | source |  | missing |
-| nova-architect:portrait | Caelus Nova | commanders | keyed | source |  | missing |
-| nova-architect:sprite | Caelus Nova | commanders | keyed | source |  | missing |
-| nova-architect:ultimate-vfx | Caelus Nova | commanders | additive | source |  | missing |
-| vega-echo:portrait | Talia Vega | commanders | keyed | source |  | missing |
-| vega-echo:sprite | Talia Vega | commanders | keyed | source |  | missing |
-| vega-echo:ultimate-vfx | Talia Vega | commanders | additive | source |  | missing |
-| rhem-catalyst:portrait | Darius Rhem | commanders | keyed | source |  | missing |
-| rhem-catalyst:sprite | Darius Rhem | commanders | keyed | source |  | missing |
-| rhem-catalyst:ultimate-vfx | Darius Rhem | commanders | additive | source |  | missing |
-| ross-horizon:portrait | Eliana Ross | commanders | keyed | source |  | missing |
-| ross-horizon:sprite | Eliana Ross | commanders | keyed | source |  | missing |
-| ross-horizon:ultimate-vfx | Eliana Ross | commanders | additive | source |  | missing |
-| solace-diplomat:portrait | Kieran Solace | commanders | keyed | source |  | missing |
-| solace-diplomat:sprite | Kieran Solace | commanders | keyed | source |  | missing |
-| solace-diplomat:ultimate-vfx | Kieran Solace | commanders | additive | source |  | missing |
-| oris-nanoforge:portrait | Xanthe Oris | commanders | keyed | source |  | missing |
-| oris-nanoforge:sprite | Xanthe Oris | commanders | keyed | source |  | missing |
-| oris-nanoforge:ultimate-vfx | Xanthe Oris | commanders | additive | source |  | missing |
-| drake-sentinel:portrait | Ronan Drake | commanders | keyed | source |  | missing |
-| drake-sentinel:sprite | Ronan Drake | commanders | keyed | source |  | missing |
-| drake-sentinel:ultimate-vfx | Ronan Drake | commanders | additive | source |  | missing |
-| helix-alchemist:portrait | Sora Helix | commanders | keyed | source |  | missing |
-| helix-alchemist:sprite | Sora Helix | commanders | keyed | source |  | missing |
-| helix-alchemist:ultimate-vfx | Sora Helix | commanders | additive | source |  | missing |
-| fen-beastmaster:portrait | Dorian Fen | commanders | keyed | source |  | missing |
-| fen-beastmaster:sprite | Dorian Fen | commanders | keyed | source |  | missing |
-| fen-beastmaster:ultimate-vfx | Dorian Fen | commanders | additive | source |  | missing |
-| noctis-voidwalker:portrait | Vega Noctis | commanders | keyed | source |  | missing |
-| noctis-voidwalker:sprite | Vega Noctis | commanders | keyed | source |  | missing |
-| noctis-voidwalker:ultimate-vfx | Vega Noctis | commanders | additive | source |  | missing |
-| aether-celestial:portrait | Lysandra Aether | commanders | keyed | source |  | missing |
-| aether-celestial:sprite | Lysandra Aether | commanders | keyed | source |  | missing |
-| aether-celestial:ultimate-vfx | Lysandra Aether | commanders | additive | source |  | missing |
-| prime-founder:portrait | Atlas Prime | commanders | keyed | source |  | missing |
-| prime-founder:sprite | Atlas Prime | commanders | keyed | source |  | missing |
-| prime-founder:ultimate-vfx | Atlas Prime | commanders | additive | source |  | missing |
-| equipment-refit-cannon | refit-cannon | equipment | keyed | source |  | missing |
-| equipment-barrier-plate | barrier-plate | equipment | keyed | source |  | missing |
-| equipment-vanguard-thrusters | vanguard-thrusters | equipment | keyed | source |  | missing |
-| equipment-vanguard-core | vanguard-core | equipment | keyed | source |  | missing |
-| equipment-ancient-relay | ancient-relay | equipment | keyed | source |  | missing |
-| equipment-cryo-manifold | cryo-manifold | equipment | keyed | source |  | missing |
-| equipment-aegis-bastion-array | aegis-bastion-array | equipment | keyed | source |  | missing |
-| equipment-aegis-ward-projector | aegis-ward-projector | equipment | keyed | source |  | missing |
-| equipment-horizon-flux-capacitor | horizon-flux-capacitor | equipment | keyed | source |  | missing |
-| equipment-nova-warden-hive | nova-warden-hive | equipment | keyed | source |  | missing |
-| shipmodule-module-fusion-reactor | module-fusion-reactor | ship-modules | keyed | source |  | missing |
-| shipmodule-module-vector-engine | module-vector-engine | ship-modules | keyed | source |  | missing |
-| shipmodule-module-lattice-shield | module-lattice-shield | ship-modules | keyed | source |  | missing |
-| shipmodule-module-predictive-targeter | module-predictive-targeter | ship-modules | keyed | source |  | missing |
-| shipmodule-module-drone-bay | module-drone-bay | ship-modules | keyed | source |  | missing |
-| shipmodule-module-deep-sensor | module-deep-sensor | ship-modules | keyed | source |  | missing |
-| shipmodule-module-cryo-loop | module-cryo-loop | ship-modules | keyed | source |  | missing |
-| shipmodule-module-axiom-core | module-axiom-core | ship-modules | keyed | source |  | missing |
-| wisp-chaser:idle | Wisp Chaser | enemies | keyed | source |  | missing |
-| wisp-chaser:move | Wisp Chaser | enemies | keyed | derived | wisp-chaser:idle | missing |
-| wisp-chaser:attack | Wisp Chaser | enemies | keyed | derived | wisp-chaser:idle | missing |
-| wisp-chaser:death | Wisp Chaser | enemies | keyed | derived | wisp-chaser:idle | missing |
-| flak-orbiter:idle | Flak Orbiter | enemies | keyed | source |  | missing |
-| flak-orbiter:move | Flak Orbiter | enemies | keyed | derived | flak-orbiter:idle | missing |
-| flak-orbiter:attack | Flak Orbiter | enemies | keyed | derived | flak-orbiter:idle | missing |
-| flak-orbiter:death | Flak Orbiter | enemies | keyed | derived | flak-orbiter:idle | missing |
-| outlaw-raider:idle | Outlaw Raider | enemies | keyed | source |  | missing |
-| outlaw-raider:move | Outlaw Raider | enemies | keyed | derived | outlaw-raider:idle | missing |
-| outlaw-raider:attack | Outlaw Raider | enemies | keyed | derived | outlaw-raider:idle | missing |
-| outlaw-raider:death | Outlaw Raider | enemies | keyed | derived | outlaw-raider:idle | missing |
-| outlaw-sniper:idle | Outlaw Sniper | enemies | keyed | source |  | missing |
-| outlaw-sniper:move | Outlaw Sniper | enemies | keyed | derived | outlaw-sniper:idle | missing |
-| outlaw-sniper:attack | Outlaw Sniper | enemies | keyed | derived | outlaw-sniper:idle | missing |
-| outlaw-sniper:death | Outlaw Sniper | enemies | keyed | derived | outlaw-sniper:idle | missing |
-| outlaw-shield-carrier:idle | Outlaw Shield Carrier | enemies | keyed | source |  | missing |
-| outlaw-shield-carrier:move | Outlaw Shield Carrier | enemies | keyed | derived | outlaw-shield-carrier:idle | missing |
-| outlaw-shield-carrier:attack | Outlaw Shield Carrier | enemies | keyed | derived | outlaw-shield-carrier:idle | missing |
-| outlaw-shield-carrier:death | Outlaw Shield Carrier | enemies | keyed | derived | outlaw-shield-carrier:idle | missing |
-| outlaw-mine-layer:idle | Outlaw Mine Layer | enemies | keyed | source |  | missing |
-| outlaw-mine-layer:move | Outlaw Mine Layer | enemies | keyed | derived | outlaw-mine-layer:idle | missing |
-| outlaw-mine-layer:attack | Outlaw Mine Layer | enemies | keyed | derived | outlaw-mine-layer:idle | missing |
-| outlaw-mine-layer:death | Outlaw Mine Layer | enemies | keyed | derived | outlaw-mine-layer:idle | missing |
-| outlaw-captain:idle | Outlaw Captain | enemies | keyed | source |  | missing |
-| outlaw-captain:move | Outlaw Captain | enemies | keyed | derived | outlaw-captain:idle | missing |
-| outlaw-captain:attack | Outlaw Captain | enemies | keyed | derived | outlaw-captain:idle | missing |
-| outlaw-captain:death | Outlaw Captain | enemies | keyed | derived | outlaw-captain:idle | missing |
-| machine-combat-drone:idle | Machine Combat Drone | enemies | keyed | source |  | missing |
-| machine-combat-drone:move | Machine Combat Drone | enemies | keyed | derived | machine-combat-drone:idle | missing |
-| machine-combat-drone:attack | Machine Combat Drone | enemies | keyed | derived | machine-combat-drone:idle | missing |
-| machine-combat-drone:death | Machine Combat Drone | enemies | keyed | derived | machine-combat-drone:idle | missing |
-| machine-sniper-unit:idle | Machine Sniper Unit | enemies | keyed | source |  | missing |
-| machine-sniper-unit:move | Machine Sniper Unit | enemies | keyed | derived | machine-sniper-unit:idle | missing |
-| machine-sniper-unit:attack | Machine Sniper Unit | enemies | keyed | derived | machine-sniper-unit:idle | missing |
-| machine-sniper-unit:death | Machine Sniper Unit | enemies | keyed | derived | machine-sniper-unit:idle | missing |
-| machine-shield-generator:idle | Machine Shield Generator | enemies | keyed | source |  | missing |
-| machine-shield-generator:move | Machine Shield Generator | enemies | keyed | derived | machine-shield-generator:idle | missing |
-| machine-shield-generator:attack | Machine Shield Generator | enemies | keyed | derived | machine-shield-generator:idle | missing |
-| machine-shield-generator:death | Machine Shield Generator | enemies | keyed | derived | machine-shield-generator:idle | missing |
-| machine-repair-drone:idle | Machine Repair Drone | enemies | keyed | source |  | missing |
-| machine-repair-drone:move | Machine Repair Drone | enemies | keyed | derived | machine-repair-drone:idle | missing |
-| machine-repair-drone:attack | Machine Repair Drone | enemies | keyed | derived | machine-repair-drone:idle | missing |
-| machine-repair-drone:death | Machine Repair Drone | enemies | keyed | derived | machine-repair-drone:idle | missing |
-| machine-swarm-constructor:idle | Machine Swarm Constructor | enemies | keyed | source |  | missing |
-| machine-swarm-constructor:move | Machine Swarm Constructor | enemies | keyed | derived | machine-swarm-constructor:idle | missing |
-| machine-swarm-constructor:attack | Machine Swarm Constructor | enemies | keyed | derived | machine-swarm-constructor:idle | missing |
-| machine-swarm-constructor:death | Machine Swarm Constructor | enemies | keyed | derived | machine-swarm-constructor:idle | missing |
-| machine-command-core:idle | Machine Command Core | enemies | keyed | source |  | missing |
-| machine-command-core:move | Machine Command Core | enemies | keyed | derived | machine-command-core:idle | missing |
-| machine-command-core:attack | Machine Command Core | enemies | keyed | derived | machine-command-core:idle | missing |
-| machine-command-core:death | Machine Command Core | enemies | keyed | derived | machine-command-core:idle | missing |
-| crystal-drone:idle | Crystal Drone | enemies | keyed | source |  | missing |
-| crystal-drone:move | Crystal Drone | enemies | keyed | derived | crystal-drone:idle | missing |
-| crystal-drone:attack | Crystal Drone | enemies | keyed | derived | crystal-drone:idle | missing |
-| crystal-drone:death | Crystal Drone | enemies | keyed | derived | crystal-drone:idle | missing |
-| crystal-shard-hunter:idle | Shard Hunter | enemies | keyed | source |  | missing |
-| crystal-shard-hunter:move | Shard Hunter | enemies | keyed | derived | crystal-shard-hunter:idle | missing |
-| crystal-shard-hunter:attack | Shard Hunter | enemies | keyed | derived | crystal-shard-hunter:idle | missing |
-| crystal-shard-hunter:death | Shard Hunter | enemies | keyed | derived | crystal-shard-hunter:idle | missing |
-| crystal-resonance-node:idle | Resonance Node | enemies | keyed | source |  | missing |
-| crystal-resonance-node:move | Resonance Node | enemies | keyed | derived | crystal-resonance-node:idle | missing |
-| crystal-resonance-node:attack | Resonance Node | enemies | keyed | derived | crystal-resonance-node:idle | missing |
-| crystal-resonance-node:death | Resonance Node | enemies | keyed | derived | crystal-resonance-node:idle | missing |
-| crystal-growth-seeder:idle | Growth Seeder | enemies | keyed | source |  | missing |
-| crystal-growth-seeder:move | Growth Seeder | enemies | keyed | derived | crystal-growth-seeder:idle | missing |
-| crystal-growth-seeder:attack | Growth Seeder | enemies | keyed | derived | crystal-growth-seeder:idle | missing |
-| crystal-growth-seeder:death | Growth Seeder | enemies | keyed | derived | crystal-growth-seeder:idle | missing |
-| crystal-guardian:idle | Crystal Guardian | enemies | keyed | source |  | missing |
-| crystal-guardian:move | Crystal Guardian | enemies | keyed | derived | crystal-guardian:idle | missing |
-| crystal-guardian:attack | Crystal Guardian | enemies | keyed | derived | crystal-guardian:idle | missing |
-| crystal-guardian:death | Crystal Guardian | enemies | keyed | derived | crystal-guardian:idle | missing |
-| crystal-titan:idle | Crystal Titan | enemies | keyed | source |  | missing |
-| crystal-titan:move | Crystal Titan | enemies | keyed | derived | crystal-titan:idle | missing |
-| crystal-titan:attack | Crystal Titan | enemies | keyed | derived | crystal-titan:idle | missing |
-| crystal-titan:death | Crystal Titan | enemies | keyed | derived | crystal-titan:idle | missing |
-| void-wisp:idle | Void Wisp | enemies | keyed | source |  | missing |
-| void-wisp:move | Void Wisp | enemies | keyed | derived | void-wisp:idle | missing |
-| void-wisp:attack | Void Wisp | enemies | keyed | derived | void-wisp:idle | missing |
-| void-wisp:death | Void Wisp | enemies | keyed | derived | void-wisp:idle | missing |
-| corruption-parasite:idle | Corruption Parasite | enemies | keyed | source |  | missing |
-| corruption-parasite:move | Corruption Parasite | enemies | keyed | derived | corruption-parasite:idle | missing |
-| corruption-parasite:attack | Corruption Parasite | enemies | keyed | derived | corruption-parasite:idle | missing |
-| corruption-parasite:death | Corruption Parasite | enemies | keyed | derived | corruption-parasite:idle | missing |
-| shadow-hunter:idle | Shadow Hunter | enemies | keyed | source |  | missing |
-| shadow-hunter:move | Shadow Hunter | enemies | keyed | derived | shadow-hunter:idle | missing |
-| shadow-hunter:attack | Shadow Hunter | enemies | keyed | derived | shadow-hunter:idle | missing |
-| shadow-hunter:death | Shadow Hunter | enemies | keyed | derived | shadow-hunter:idle | missing |
-| void-beacon:idle | Void Beacon | enemies | keyed | source |  | missing |
-| void-beacon:move | Void Beacon | enemies | keyed | derived | void-beacon:idle | missing |
-| void-beacon:attack | Void Beacon | enemies | keyed | derived | void-beacon:idle | missing |
-| void-beacon:death | Void Beacon | enemies | keyed | derived | void-beacon:idle | missing |
-| rift-guardian:idle | Rift Guardian | enemies | keyed | source |  | missing |
-| rift-guardian:move | Rift Guardian | enemies | keyed | derived | rift-guardian:idle | missing |
-| rift-guardian:attack | Rift Guardian | enemies | keyed | derived | rift-guardian:idle | missing |
-| rift-guardian:death | Rift Guardian | enemies | keyed | derived | rift-guardian:idle | missing |
-| ancient-void-avatar:idle | Ancient Void Avatar | enemies | keyed | source |  | missing |
-| ancient-void-avatar:move | Ancient Void Avatar | enemies | keyed | derived | ancient-void-avatar:idle | missing |
-| ancient-void-avatar:attack | Ancient Void Avatar | enemies | keyed | derived | ancient-void-avatar:idle | missing |
-| ancient-void-avatar:death | Ancient Void Avatar | enemies | keyed | derived | ancient-void-avatar:idle | missing |
-| sentinel:idle | Sentinel | enemies | keyed | source |  | missing |
-| sentinel:move | Sentinel | enemies | keyed | derived | sentinel:idle | missing |
-| sentinel:attack | Sentinel | enemies | keyed | derived | sentinel:idle | missing |
-| sentinel:death | Sentinel | enemies | keyed | derived | sentinel:idle | missing |
-| defence-drone:idle | Defence Drone | enemies | keyed | source |  | missing |
-| defence-drone:move | Defence Drone | enemies | keyed | derived | defence-drone:idle | missing |
-| defence-drone:attack | Defence Drone | enemies | keyed | derived | defence-drone:idle | missing |
-| defence-drone:death | Defence Drone | enemies | keyed | derived | defence-drone:idle | missing |
-| guardian-sphere:idle | Guardian Sphere | enemies | keyed | source |  | missing |
-| guardian-sphere:move | Guardian Sphere | enemies | keyed | derived | guardian-sphere:idle | missing |
-| guardian-sphere:attack | Guardian Sphere | enemies | keyed | derived | guardian-sphere:idle | missing |
-| guardian-sphere:death | Guardian Sphere | enemies | keyed | derived | guardian-sphere:idle | missing |
-| shield-architect:idle | Shield Architect | enemies | keyed | source |  | missing |
-| shield-architect:move | Shield Architect | enemies | keyed | derived | shield-architect:idle | missing |
-| shield-architect:attack | Shield Architect | enemies | keyed | derived | shield-architect:idle | missing |
-| shield-architect:death | Shield Architect | enemies | keyed | derived | shield-architect:idle | missing |
-| custodian-walker:idle | Custodian Walker | enemies | keyed | source |  | missing |
-| custodian-walker:move | Custodian Walker | enemies | keyed | derived | custodian-walker:idle | missing |
-| custodian-walker:attack | Custodian Walker | enemies | keyed | derived | custodian-walker:idle | missing |
-| custodian-walker:death | Custodian Walker | enemies | keyed | derived | custodian-walker:idle | missing |
-| ancient-executor:idle | Ancient Executor | enemies | keyed | source |  | missing |
-| ancient-executor:move | Ancient Executor | enemies | keyed | derived | ancient-executor:idle | missing |
-| ancient-executor:attack | Ancient Executor | enemies | keyed | derived | ancient-executor:idle | missing |
-| ancient-executor:death | Ancient Executor | enemies | keyed | derived | ancient-executor:idle | missing |
-| hive-drone:idle | Hive Drone | enemies | keyed | source |  | missing |
-| hive-drone:move | Hive Drone | enemies | keyed | derived | hive-drone:idle | missing |
-| hive-drone:attack | Hive Drone | enemies | keyed | derived | hive-drone:idle | missing |
-| hive-drone:death | Hive Drone | enemies | keyed | derived | hive-drone:idle | missing |
-| spitter:idle | Spitter | enemies | keyed | source |  | missing |
-| spitter:move | Spitter | enemies | keyed | derived | spitter:idle | missing |
-| spitter:attack | Spitter | enemies | keyed | derived | spitter:idle | missing |
-| spitter:death | Spitter | enemies | keyed | derived | spitter:idle | missing |
-| stalker:idle | Stalker | enemies | keyed | source |  | missing |
-| stalker:move | Stalker | enemies | keyed | derived | stalker:idle | missing |
-| stalker:attack | Stalker | enemies | keyed | derived | stalker:idle | missing |
-| stalker:death | Stalker | enemies | keyed | derived | stalker:idle | missing |
-| evolution-node:idle | Evolution Node | enemies | keyed | source |  | missing |
-| evolution-node:move | Evolution Node | enemies | keyed | derived | evolution-node:idle | missing |
-| evolution-node:attack | Evolution Node | enemies | keyed | derived | evolution-node:idle | missing |
-| evolution-node:death | Evolution Node | enemies | keyed | derived | evolution-node:idle | missing |
-| crusher:idle | Crusher | enemies | keyed | source |  | missing |
-| crusher:move | Crusher | enemies | keyed | derived | crusher:idle | missing |
-| crusher:attack | Crusher | enemies | keyed | derived | crusher:idle | missing |
-| crusher:death | Crusher | enemies | keyed | derived | crusher:idle | missing |
-| living-titan:idle | Living Titan | enemies | keyed | source |  | missing |
-| living-titan:move | Living Titan | enemies | keyed | derived | living-titan:idle | missing |
-| living-titan:attack | Living Titan | enemies | keyed | derived | living-titan:idle | missing |
-| living-titan:death | Living Titan | enemies | keyed | derived | living-titan:idle | missing |
-| scout-skiff:idle | Scout Skiff | enemies | keyed | source |  | missing |
-| scout-skiff:move | Scout Skiff | enemies | keyed | derived | scout-skiff:idle | missing |
-| scout-skiff:attack | Scout Skiff | enemies | keyed | derived | scout-skiff:idle | missing |
-| scout-skiff:death | Scout Skiff | enemies | keyed | derived | scout-skiff:idle | missing |
-| hunter:idle | Hunter | enemies | keyed | source |  | missing |
-| hunter:move | Hunter | enemies | keyed | derived | hunter:idle | missing |
-| hunter:attack | Hunter | enemies | keyed | derived | hunter:idle | missing |
-| hunter:death | Hunter | enemies | keyed | derived | hunter:idle | missing |
-| escort-fighter:idle | Escort Fighter | enemies | keyed | source |  | missing |
-| escort-fighter:move | Escort Fighter | enemies | keyed | derived | escort-fighter:idle | missing |
-| escort-fighter:attack | Escort Fighter | enemies | keyed | derived | escort-fighter:idle | missing |
-| escort-fighter:death | Escort Fighter | enemies | keyed | derived | escort-fighter:idle | missing |
-| junker-gunship:idle | Junker Gunship | enemies | keyed | source |  | missing |
-| junker-gunship:move | Junker Gunship | enemies | keyed | derived | junker-gunship:idle | missing |
-| junker-gunship:attack | Junker Gunship | enemies | keyed | derived | junker-gunship:idle | missing |
-| junker-gunship:death | Junker Gunship | enemies | keyed | derived | junker-gunship:idle | missing |
-| repair-frigate:idle | Repair Frigate | enemies | keyed | source |  | missing |
-| repair-frigate:move | Repair Frigate | enemies | keyed | derived | repair-frigate:idle | missing |
-| repair-frigate:attack | Repair Frigate | enemies | keyed | derived | repair-frigate:idle | missing |
-| repair-frigate:death | Repair Frigate | enemies | keyed | derived | repair-frigate:idle | missing |
-| nomad-flagship:idle | Nomad Flagship | enemies | keyed | source |  | missing |
-| nomad-flagship:move | Nomad Flagship | enemies | keyed | derived | nomad-flagship:idle | missing |
-| nomad-flagship:attack | Nomad Flagship | enemies | keyed | derived | nomad-flagship:idle | missing |
-| nomad-flagship:death | Nomad Flagship | enemies | keyed | derived | nomad-flagship:idle | missing |
-| prototype-drone:idle | Prototype Drone | enemies | keyed | source |  | missing |
-| prototype-drone:move | Prototype Drone | enemies | keyed | derived | prototype-drone:idle | missing |
-| prototype-drone:attack | Prototype Drone | enemies | keyed | derived | prototype-drone:idle | missing |
-| prototype-drone:death | Prototype Drone | enemies | keyed | derived | prototype-drone:idle | missing |
-| pulse-cannon:idle | Pulse Cannon | enemies | keyed | source |  | missing |
-| pulse-cannon:move | Pulse Cannon | enemies | keyed | derived | pulse-cannon:idle | missing |
-| pulse-cannon:attack | Pulse Cannon | enemies | keyed | derived | pulse-cannon:idle | missing |
-| pulse-cannon:death | Pulse Cannon | enemies | keyed | derived | pulse-cannon:idle | missing |
-| adaptive-hunter:idle | Adaptive Hunter | enemies | keyed | source |  | missing |
-| adaptive-hunter:move | Adaptive Hunter | enemies | keyed | derived | adaptive-hunter:idle | missing |
-| adaptive-hunter:attack | Adaptive Hunter | enemies | keyed | derived | adaptive-hunter:idle | missing |
-| adaptive-hunter:death | Adaptive Hunter | enemies | keyed | derived | adaptive-hunter:idle | missing |
-| containment-sentinel:idle | Containment Sentinel | enemies | keyed | source |  | missing |
-| containment-sentinel:move | Containment Sentinel | enemies | keyed | derived | containment-sentinel:idle | missing |
-| containment-sentinel:attack | Containment Sentinel | enemies | keyed | derived | containment-sentinel:idle | missing |
-| containment-sentinel:death | Containment Sentinel | enemies | keyed | derived | containment-sentinel:idle | missing |
-| energy-construct:idle | Energy Construct | enemies | keyed | source |  | missing |
-| energy-construct:move | Energy Construct | enemies | keyed | derived | energy-construct:idle | missing |
-| energy-construct:attack | Energy Construct | enemies | keyed | derived | energy-construct:idle | missing |
-| energy-construct:death | Energy Construct | enemies | keyed | derived | energy-construct:idle | missing |
-| omega-prototype:idle | Omega Prototype | enemies | keyed | source |  | missing |
-| omega-prototype:move | Omega Prototype | enemies | keyed | derived | omega-prototype:idle | missing |
-| omega-prototype:attack | Omega Prototype | enemies | keyed | derived | omega-prototype:idle | missing |
-| omega-prototype:death | Omega Prototype | enemies | keyed | derived | omega-prototype:idle | missing |
-| solar-spark:idle | Solar Spark | enemies | keyed | source |  | missing |
-| solar-spark:move | Solar Spark | enemies | keyed | derived | solar-spark:idle | missing |
-| solar-spark:attack | Solar Spark | enemies | keyed | derived | solar-spark:idle | missing |
-| solar-spark:death | Solar Spark | enemies | keyed | derived | solar-spark:idle | missing |
-| pulsar-hunter:idle | Pulsar Hunter | enemies | keyed | source |  | missing |
-| pulsar-hunter:move | Pulsar Hunter | enemies | keyed | derived | pulsar-hunter:idle | missing |
-| pulsar-hunter:attack | Pulsar Hunter | enemies | keyed | derived | pulsar-hunter:idle | missing |
-| pulsar-hunter:death | Pulsar Hunter | enemies | keyed | derived | pulsar-hunter:idle | missing |
-| gravity-oracle:idle | Gravity Oracle | enemies | keyed | source |  | missing |
-| gravity-oracle:move | Gravity Oracle | enemies | keyed | derived | gravity-oracle:idle | missing |
-| gravity-oracle:attack | Gravity Oracle | enemies | keyed | derived | gravity-oracle:idle | missing |
-| gravity-oracle:death | Gravity Oracle | enemies | keyed | derived | gravity-oracle:idle | missing |
-| constellation-avatar:idle | Constellation Avatar | enemies | keyed | source |  | missing |
-| constellation-avatar:move | Constellation Avatar | enemies | keyed | derived | constellation-avatar:idle | missing |
-| constellation-avatar:attack | Constellation Avatar | enemies | keyed | derived | constellation-avatar:idle | missing |
-| constellation-avatar:death | Constellation Avatar | enemies | keyed | derived | constellation-avatar:idle | missing |
-| corona-guardian:idle | Corona Guardian | enemies | keyed | source |  | missing |
-| corona-guardian:move | Corona Guardian | enemies | keyed | derived | corona-guardian:idle | missing |
-| corona-guardian:attack | Corona Guardian | enemies | keyed | derived | corona-guardian:idle | missing |
-| corona-guardian:death | Corona Guardian | enemies | keyed | derived | corona-guardian:idle | missing |
-| living-supernova:idle | Living Supernova | enemies | keyed | source |  | missing |
-| living-supernova:move | Living Supernova | enemies | keyed | derived | living-supernova:idle | missing |
-| living-supernova:attack | Living Supernova | enemies | keyed | derived | living-supernova:idle | missing |
-| living-supernova:death | Living Supernova | enemies | keyed | derived | living-supernova:idle | missing |
-| lost-scout:idle | Lost Scout | enemies | keyed | source |  | missing |
-| lost-scout:move | Lost Scout | enemies | keyed | derived | lost-scout:idle | missing |
-| lost-scout:attack | Lost Scout | enemies | keyed | derived | lost-scout:idle | missing |
-| lost-scout:death | Lost Scout | enemies | keyed | derived | lost-scout:idle | missing |
-| broken-pilot:idle | Broken Pilot | enemies | keyed | source |  | missing |
-| broken-pilot:move | Broken Pilot | enemies | keyed | derived | broken-pilot:idle | missing |
-| broken-pilot:attack | Broken Pilot | enemies | keyed | derived | broken-pilot:idle | missing |
-| broken-pilot:death | Broken Pilot | enemies | keyed | derived | broken-pilot:idle | missing |
-| echo-drone:idle | Echo Drone | enemies | keyed | source |  | missing |
-| echo-drone:move | Echo Drone | enemies | keyed | derived | echo-drone:idle | missing |
-| echo-drone:attack | Echo Drone | enemies | keyed | derived | echo-drone:idle | missing |
-| echo-drone:death | Echo Drone | enemies | keyed | derived | echo-drone:idle | missing |
-| memory-warden:idle | Memory Warden | enemies | keyed | source |  | missing |
-| memory-warden:move | Memory Warden | enemies | keyed | derived | memory-warden:idle | missing |
-| memory-warden:attack | Memory Warden | enemies | keyed | derived | memory-warden:idle | missing |
-| memory-warden:death | Memory Warden | enemies | keyed | derived | memory-warden:idle | missing |
-| fallen-guardian:idle | Fallen Guardian | enemies | keyed | source |  | missing |
-| fallen-guardian:move | Fallen Guardian | enemies | keyed | derived | fallen-guardian:idle | missing |
-| fallen-guardian:attack | Fallen Guardian | enemies | keyed | derived | fallen-guardian:idle | missing |
-| fallen-guardian:death | Fallen Guardian | enemies | keyed | derived | fallen-guardian:idle | missing |
-| eclipsed-champion:idle | Eclipsed Champion | enemies | keyed | source |  | missing |
-| eclipsed-champion:move | Eclipsed Champion | enemies | keyed | derived | eclipsed-champion:idle | missing |
-| eclipsed-champion:attack | Eclipsed Champion | enemies | keyed | derived | eclipsed-champion:idle | missing |
-| eclipsed-champion:death | Eclipsed Champion | enemies | keyed | derived | eclipsed-champion:idle | missing |
-| elite-mutation:regeneration | regeneration | elite-mutations | additive | source |  | missing |
-| elite-mutation:shielded | shielded | elite-mutations | additive | source |  | missing |
-| elite-mutation:explosive | explosive | elite-mutations | additive | source |  | missing |
-| elite-mutation:teleport | teleport | elite-mutations | additive | source |  | missing |
-| elite-mutation:reflectiveArmour | reflectiveArmour | elite-mutations | additive | source |  | missing |
-| elite-mutation:rapidAssault | rapidAssault | elite-mutations | additive | source |  | missing |
-| elite-mutation:gravityField | gravityField | elite-mutations | additive | source |  | missing |
-| elite-mutation:summoner | summoner | elite-mutations | additive | source |  | missing |
-| elite-mutation:berserker | berserker | elite-mutations | additive | source |  | missing |
-| elite-mutation:cryogenic | cryogenic | elite-mutations | additive | source |  | missing |
-| elite-mutation:incendiary | incendiary | elite-mutations | additive | source |  | missing |
-| elite-mutation:corrupted | corrupted | elite-mutations | additive | source |  | missing |
-| elite-mutation:quantumShift | quantumShift | elite-mutations | additive | source |  | missing |
-| elite-mutation:temporalEcho | temporalEcho | elite-mutations | additive | source |  | missing |
-| elite-mutation:adaptiveArmour | adaptiveArmour | elite-mutations | additive | source |  | missing |
-| elite-mutation:electric | electric | elite-mutations | additive | source |  | missing |
-| elite-mutation:cloaked | cloaked | elite-mutations | additive | source |  | missing |
-| elite-mutation:vampiric | vampiric | elite-mutations | additive | source |  | missing |
-| elite-tier:veteran | veteran | elite-tiers | additive | source |  | missing |
-| elite-tier:champion | champion | elite-tiers | additive | source |  | missing |
-| elite-tier:ancient | ancient | elite-tiers | additive | source |  | missing |
-| elite-tier:prime | prime | elite-tiers | additive | source |  | missing |
-| elite-tier:legendary | legendary | elite-tiers | additive | source |  | missing |
-| elite-tier:apex | apex | elite-tiers | additive | source |  | missing |
-| elite-tier:mythic | mythic | elite-tiers | additive | source |  | missing |
-| hollow-sentinel:model | The Hollow Sentinel | boss | keyed | source |  | missing |
-| hollow-sentinel-world-boss:model | World-Ender The Hollow Sentinel | boss | keyed | derived | hollow-sentinel:model | missing |
-| hollow-sentinel-mini-boss:model | The Hollow Sentinel Vanguard | boss | keyed | derived | hollow-sentinel:model | missing |
-| hollow-sentinel:phase-1-siege | phase-1-siege | boss | additive | source |  | missing |
-| hollow-sentinel:phase-2-collapse | phase-2-collapse | boss | additive | source |  | missing |
-| hollow-sentinel:phase-3-chaos | phase-3-chaos | boss | additive | source |  | missing |
-| hollow-sentinel:phase-4-signature | phase-4-signature | boss | additive | source |  | missing |
-| hollow-sentinel:weakpoint:core-eye | core-eye | boss | additive | source |  | missing |
-| hollow-sentinel:enrage | enrage | boss | additive | source |  | missing |
-| livingReactor:icon | Living Reactor | boss-artifacts | keyed | source |  | missing |
-| livingReactor:vfx | Living Reactor | boss-artifacts | additive | source |  | missing |
-| atlasCore:icon | Atlas Core | boss-artifacts | keyed | source |  | missing |
-| atlasCore:vfx | Atlas Core | boss-artifacts | additive | source |  | missing |
-| gravitonHeart:icon | Graviton Heart | boss-artifacts | keyed | source |  | missing |
-| gravitonHeart:vfx | Graviton Heart | boss-artifacts | additive | source |  | missing |
-| stellarCompass:icon | Stellar Compass | boss-artifacts | keyed | source |  | missing |
-| stellarCompass:vfx | Stellar Compass | boss-artifacts | additive | source |  | missing |
-| voidEngine:icon | Void Engine | boss-artifacts | keyed | source |  | missing |
-| voidEngine:vfx | Void Engine | boss-artifacts | additive | source |  | missing |
-| passive-focus-fire:icon | Focus Fire | passives | keyed | source |  | missing |
-| passive-overcharge-coils:icon | Overcharge Coils | passives | keyed | source |  | missing |
-| passive-deadeye:icon | Deadeye | passives | keyed | source |  | missing |
-| passive-light-frame:icon | Light Frame | passives | keyed | source |  | missing |
-| passive-hardened-plating:icon | Hardened Plating | passives | keyed | source |  | missing |
-| passive-wide-net:icon | Wide Net | passives | keyed | source |  | missing |
-| passive-nanite-mesh:icon | Nanite Mesh | passives | keyed | source |  | missing |
-| passive-salvage-protocol:icon | Salvage Protocol | passives | keyed | source |  | missing |
-| passive-fast-learner:icon | Fast Learner | passives | keyed | source |  | missing |
-| passive-escort-link:icon | Escort Link | passives | keyed | source |  | missing |
-| passive-guardian-ward:icon | Guardian Ward | passives | keyed | source |  | missing |
-| passive-signal-boost:icon | Signal Boost | passives | keyed | source |  | missing |
-| passive-drone-primer:icon | Drone Primer | passives | keyed | source |  | missing |
-| passive-resonance:icon | Resonance | passives | keyed | source |  | missing |
-| artifact-shrapnel-core:icon | Shrapnel Core | artifacts | keyed | source |  | missing |
-| artifact-shrapnel-core:vfx | Shrapnel Core | artifacts | additive | source |  | missing |
-| artifact-reactive-plating:icon | Reactive Plating | artifacts | keyed | source |  | missing |
-| artifact-reactive-plating:vfx | Reactive Plating | artifacts | additive | source |  | missing |
-| artifact-fail-safe-cell:icon | Fail-Safe Cell | artifacts | keyed | source |  | missing |
-| artifact-fail-safe-cell:vfx | Fail-Safe Cell | artifacts | additive | source |  | missing |
-| artifact-ascension-matrix:icon | Ascension Matrix | artifacts | keyed | source |  | missing |
-| artifact-ascension-matrix:vfx | Ascension Matrix | artifacts | additive | source |  | missing |
-| ember-core:icon | Ember Core | relics | keyed | source |  | missing |
-| frost-shard:icon | Frost Shard | relics | keyed | source |  | missing |
-| cinder-heart:icon | Cinder Heart | relics | keyed | source |  | missing |
-| gambler-die:icon | Gambler's Die | relics | keyed | source |  | missing |
-| static-node:icon | Static Node | relics | keyed | source |  | missing |
-| conduit-loop:icon | Conduit Loop | relics | keyed | source |  | missing |
-| warden-token:icon | Warden's Token | relics | keyed | source |  | missing |
-| singularity-keepsake:icon | Singularity Keepsake | relics | keyed | source |  | missing |
-| veil-fragment:icon | Veil Fragment | relics | keyed | source |  | missing |
-| set-thermal-cycle:set-tell | Thermal Cycle | relics | additive | source |  | missing |
-| set-expedition-ledger:set-tell | Expedition Ledger | relics | additive | source |  | missing |
-| crystal-fields-alpha:background | Crystal Fields | biomes | fullbleed | source |  | missing |
-| ancient-core:background | First Light | biomes | fullbleed | source |  | missing |
-| crystal-expanse:background | Prismheart | biomes | fullbleed | source |  | missing |
-| derelict-expanse:background | Gravewake | biomes | fullbleed | source |  | missing |
-| meridian-rest-frontier:background | Meridian Rest | biomes | fullbleed | source |  | missing |
-| frozen-reach:background | Winterline | biomes | fullbleed | source |  | missing |
-| living-ecospheres:background | Verdance | biomes | fullbleed | source |  | missing |
-| machine-expanse:background | Forge Primus | biomes | fullbleed | source |  | missing |
-| singularity-zone:background | Axiom | biomes | fullbleed | source |  | missing |
-| solar-wastes:background | Cinderfall | biomes | fullbleed | source |  | missing |
-| void-expanse:background | Hollow Crown | biomes | fullbleed | source |  | missing |
-| biome-weather:Ancient Core:solarStreams | solarStreams | biome-weather | additive | source |  | missing |
-| biome-weather:Ancient Core:energyRain | energyRain | biome-weather | additive | source |  | missing |
-| biome-weather:Ancient Core:quantumResonance | quantumResonance | biome-weather | additive | source |  | missing |
-| biome-weather:Ancient Core:gravityHarmony | gravityHarmony | biome-weather | additive | source |  | missing |
-| biome-weather:Ancient Core:lightBloom | lightBloom | biome-weather | additive | source |  | missing |
-| biome-weather:Ancient Core:stellarWinds | stellarWinds | biome-weather | additive | source |  | missing |
-| biome-weather:Ancient Core:ancientEnergyPulses | ancientEnergyPulses | biome-weather | additive | source |  | missing |
-| biome-hazard:Ancient Core:securityFields | securityFields | biome-hazards | additive | source |  | missing |
-| biome-hazard:Ancient Core:energyBridges | energyBridges | biome-hazards | additive | source |  | missing |
-| biome-hazard:Ancient Core:quantumGates | quantumGates | biome-hazards | additive | source |  | missing |
-| biome-hazard:Ancient Core:gravityWells | gravityWells | biome-hazards | additive | source |  | missing |
-| biome-hazard:Ancient Core:guardianArrays | guardianArrays | biome-hazards | additive | source |  | missing |
-| biome-hazard:Ancient Core:defenceLasers | defenceLasers | biome-hazards | additive | source |  | missing |
-| biome-hazard:Ancient Core:collapsingPlatforms | collapsingPlatforms | biome-hazards | additive | source |  | missing |
-| biome-hazard:Ancient Core:temporalLocks | temporalLocks | biome-hazards | additive | source |  | missing |
-| biome-poi:Ancient Core:planetaryLibraries | planetaryLibraries | biome-poi | keyed | source |  | missing |
-| biome-poi:Ancient Core:stellarObservatories | stellarObservatories | biome-poi | keyed | source |  | missing |
-| biome-poi:Ancient Core:ancientCouncils | ancientCouncils | biome-poi | keyed | source |  | missing |
-| biome-poi:Ancient Core:knowledgeWells | knowledgeWells | biome-poi | keyed | source |  | missing |
-| biome-poi:Ancient Core:guardianTemples | guardianTemples | biome-poi | keyed | source |  | missing |
-| biome-poi:Ancient Core:quantumBridges | quantumBridges | biome-poi | keyed | source |  | missing |
-| biome-poi:Ancient Core:memoryArchives | memoryArchives | biome-poi | keyed | source |  | missing |
-| biome-poi:Ancient Core:civilisationMonuments | civilisationMonuments | biome-poi | keyed | source |  | missing |
-| biome-weather:Crystal Expanse:crystalRain | crystalRain | biome-weather | additive | source |  | missing |
-| biome-weather:Crystal Expanse:prismaticStorms | prismaticStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Crystal Expanse:energyWinds | energyWinds | biome-weather | additive | source |  | missing |
-| biome-weather:Crystal Expanse:resonancePulses | resonancePulses | biome-weather | additive | source |  | missing |
-| biome-weather:Crystal Expanse:lightBloom | lightBloom | biome-weather | additive | source |  | missing |
-| biome-weather:Crystal Expanse:crystalMist | crystalMist | biome-weather | additive | source |  | missing |
-| biome-weather:Crystal Expanse:solarRefraction | solarRefraction | biome-weather | additive | source |  | missing |
-| biome-hazard:Crystal Expanse:growingCrystalWalls | growingCrystalWalls | biome-hazards | additive | source |  | missing |
-| biome-hazard:Crystal Expanse:reflectiveShards | reflectiveShards | biome-hazards | additive | source |  | missing |
-| biome-hazard:Crystal Expanse:energyEruptions | energyEruptions | biome-hazards | additive | source |  | missing |
-| biome-hazard:Crystal Expanse:resonanceFields | resonanceFields | biome-hazards | additive | source |  | missing |
-| biome-hazard:Crystal Expanse:crystalExplosions | crystalExplosions | biome-hazards | additive | source |  | missing |
-| biome-hazard:Crystal Expanse:collapsingFormations | collapsingFormations | biome-hazards | additive | source |  | missing |
-| biome-hazard:Crystal Expanse:prismaticLasers | prismaticLasers | biome-hazards | additive | source |  | missing |
-| biome-hazard:Crystal Expanse:livingTerrain | livingTerrain | biome-hazards | additive | source |  | missing |
-| biome-poi:Crystal Expanse:resonanceWells | resonanceWells | biome-poi | keyed | source |  | missing |
-| biome-poi:Crystal Expanse:livingMonoliths | livingMonoliths | biome-poi | keyed | source |  | missing |
-| biome-poi:Crystal Expanse:ancientCrystalArchives | ancientCrystalArchives | biome-poi | keyed | source |  | missing |
-| biome-poi:Crystal Expanse:energyBridges | energyBridges | biome-poi | keyed | source |  | missing |
-| biome-poi:Crystal Expanse:crystalBloomSites | crystalBloomSites | biome-poi | keyed | source |  | missing |
-| biome-poi:Crystal Expanse:hiddenCaverns | hiddenCaverns | biome-poi | keyed | source |  | missing |
-| biome-poi:Crystal Expanse:planetaryHeartChambers | planetaryHeartChambers | biome-poi | keyed | source |  | missing |
-| biome-poi:Crystal Expanse:prismaticSanctuaries | prismaticSanctuaries | biome-poi | keyed | source |  | missing |
-| biome-weather:Derelict Expanse:debrisStorms | debrisStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Derelict Expanse:electromagneticClouds | electromagneticClouds | biome-weather | additive | source |  | missing |
-| biome-weather:Derelict Expanse:microMeteorFields | microMeteorFields | biome-weather | additive | source |  | missing |
-| biome-weather:Derelict Expanse:staticDisturbance | staticDisturbance | biome-weather | additive | source |  | missing |
-| biome-weather:Derelict Expanse:sensorInterference | sensorInterference | biome-weather | additive | source |  | missing |
-| biome-weather:Derelict Expanse:powerFluctuations | powerFluctuations | biome-weather | additive | source |  | missing |
-| biome-weather:Derelict Expanse:ionDust | ionDust | biome-weather | additive | source |  | missing |
-| biome-hazard:Derelict Expanse:hullExplosions | hullExplosions | biome-hazards | additive | source |  | missing |
-| biome-hazard:Derelict Expanse:reactorLeaks | reactorLeaks | biome-hazards | additive | source |  | missing |
-| biome-hazard:Derelict Expanse:electricalDischarge | electricalDischarge | biome-hazards | additive | source |  | missing |
-| biome-hazard:Derelict Expanse:floatingDebris | floatingDebris | biome-hazards | additive | source |  | missing |
-| biome-hazard:Derelict Expanse:brokenGravityFields | brokenGravityFields | biome-hazards | additive | source |  | missing |
-| biome-hazard:Derelict Expanse:radiationPockets | radiationPockets | biome-hazards | additive | source |  | missing |
-| biome-hazard:Derelict Expanse:fuelFires | fuelFires | biome-hazards | additive | source |  | missing |
-| biome-hazard:Derelict Expanse:unstableWreckage | unstableWreckage | biome-hazards | additive | source |  | missing |
-| biome-poi:Derelict Expanse:ghostCarriers | ghostCarriers | biome-poi | keyed | source |  | missing |
-| biome-poi:Derelict Expanse:abandonedBridges | abandonedBridges | biome-poi | keyed | source |  | missing |
-| biome-poi:Derelict Expanse:cryoEscapePods | cryoEscapePods | biome-poi | keyed | source |  | missing |
-| biome-poi:Derelict Expanse:fleetCommandShips | fleetCommandShips | biome-poi | keyed | source |  | missing |
-| biome-poi:Derelict Expanse:prototypeHangars | prototypeHangars | biome-poi | keyed | source |  | missing |
-| biome-poi:Derelict Expanse:researchVessels | researchVessels | biome-poi | keyed | source |  | missing |
-| biome-poi:Derelict Expanse:cargoVaults | cargoVaults | biome-poi | keyed | source |  | missing |
-| biome-poi:Derelict Expanse:emergencyBeacons | emergencyBeacons | biome-poi | keyed | source |  | missing |
-| biome-weather:Human Frontier:solarWinds | solarWinds | biome-weather | additive | source |  | missing |
-| biome-weather:Human Frontier:debrisFields | debrisFields | biome-weather | additive | source |  | missing |
-| biome-weather:Human Frontier:ionStorms | ionStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Human Frontier:microMeteorShowers | microMeteorShowers | biome-weather | additive | source |  | missing |
-| biome-weather:Human Frontier:radiationClouds | radiationClouds | biome-weather | additive | source |  | missing |
-| biome-weather:Human Frontier:engineExhaustFields | engineExhaustFields | biome-weather | additive | source |  | missing |
-| biome-weather:Human Frontier:electricalStorms | electricalStorms | biome-weather | additive | source |  | missing |
-| biome-hazard:Human Frontier:damagedStations | damagedStations | biome-hazards | additive | source |  | missing |
-| biome-hazard:Human Frontier:explosiveFuelTanks | explosiveFuelTanks | biome-hazards | additive | source |  | missing |
-| biome-hazard:Human Frontier:minefields | minefields | biome-hazards | additive | source |  | missing |
-| biome-hazard:Human Frontier:debrisBelts | debrisBelts | biome-hazards | additive | source |  | missing |
-| biome-hazard:Human Frontier:electricalArcs | electricalArcs | biome-hazards | additive | source |  | missing |
-| biome-hazard:Human Frontier:reactorLeaks | reactorLeaks | biome-hazards | additive | source |  | missing |
-| biome-hazard:Human Frontier:navigationHazards | navigationHazards | biome-hazards | additive | source |  | missing |
-| biome-poi:Human Frontier:distressSignals | distressSignals | biome-poi | keyed | source |  | missing |
-| biome-poi:Human Frontier:abandonedStations | abandonedStations | biome-poi | keyed | source |  | missing |
-| biome-poi:Human Frontier:miningOperations | miningOperations | biome-poi | keyed | source |  | missing |
-| biome-poi:Human Frontier:civilianSettlements | civilianSettlements | biome-poi | keyed | source |  | missing |
-| biome-poi:Human Frontier:prototypeWorkshops | prototypeWorkshops | biome-poi | keyed | source |  | missing |
-| biome-poi:Human Frontier:blackMarketOutposts | blackMarketOutposts | biome-poi | keyed | source |  | missing |
-| biome-poi:Human Frontier:navigationBeacons | navigationBeacons | biome-poi | keyed | source |  | missing |
-| biome-poi:Human Frontier:historicWrecks | historicWrecks | biome-poi | keyed | source |  | missing |
-| biome-weather:Frozen Reach:cryoStorms | cryoStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Frozen Reach:auroraActivity | auroraActivity | biome-weather | additive | source |  | missing |
-| biome-weather:Frozen Reach:iceFog | iceFog | biome-weather | additive | source |  | missing |
-| biome-weather:Frozen Reach:frozenDust | frozenDust | biome-weather | additive | source |  | missing |
-| biome-weather:Frozen Reach:electrostaticSnow | electrostaticSnow | biome-weather | additive | source |  | missing |
-| biome-weather:Frozen Reach:crystalHail | crystalHail | biome-weather | additive | source |  | missing |
-| biome-weather:Frozen Reach:thermalCollapse | thermalCollapse | biome-weather | additive | source |  | missing |
-| biome-hazard:Frozen Reach:iceCracks | iceCracks | biome-hazards | additive | source |  | missing |
-| biome-hazard:Frozen Reach:cryogenicFields | cryogenicFields | biome-hazards | additive | source |  | missing |
-| biome-hazard:Frozen Reach:frozenGasClouds | frozenGasClouds | biome-hazards | additive | source |  | missing |
-| biome-hazard:Frozen Reach:slipperySurfaces | slipperySurfaces | biome-hazards | additive | source |  | missing |
-| biome-hazard:Frozen Reach:thermalShock | thermalShock | biome-hazards | additive | source |  | missing |
-| biome-hazard:Frozen Reach:cryoExplosions | cryoExplosions | biome-hazards | additive | source |  | missing |
-| biome-hazard:Frozen Reach:fallingIce | fallingIce | biome-hazards | additive | source |  | missing |
-| biome-hazard:Frozen Reach:frozenDebris | frozenDebris | biome-hazards | additive | source |  | missing |
-| biome-poi:Frozen Reach:cryoVaults | cryoVaults | biome-poi | keyed | source |  | missing |
-| biome-poi:Frozen Reach:frozenFleets | frozenFleets | biome-poi | keyed | source |  | missing |
-| biome-poi:Frozen Reach:ancientLaboratories | ancientLaboratories | biome-poi | keyed | source |  | missing |
-| biome-poi:Frozen Reach:iceTemples | iceTemples | biome-poi | keyed | source |  | missing |
-| biome-poi:Frozen Reach:subsurfaceCities | subsurfaceCities | biome-poi | keyed | source |  | missing |
-| biome-poi:Frozen Reach:auroraObservatories | auroraObservatories | biome-poi | keyed | source |  | missing |
-| biome-poi:Frozen Reach:preservationChambers | preservationChambers | biome-poi | keyed | source |  | missing |
-| biome-poi:Frozen Reach:deepIceArchives | deepIceArchives | biome-poi | keyed | source |  | missing |
-| biome-weather:Living Ecospheres:sporeStorms | sporeStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Living Ecospheres:pollenClouds | pollenClouds | biome-weather | additive | source |  | missing |
-| biome-weather:Living Ecospheres:bioluminescentRain | bioluminescentRain | biome-weather | additive | source |  | missing |
-| biome-weather:Living Ecospheres:livingFog | livingFog | biome-weather | additive | source |  | missing |
-| biome-weather:Living Ecospheres:photosyntheticBloom | photosyntheticBloom | biome-weather | additive | source |  | missing |
-| biome-weather:Living Ecospheres:seedWinds | seedWinds | biome-weather | additive | source |  | missing |
-| biome-weather:Living Ecospheres:organicLightning | organicLightning | biome-weather | additive | source |  | missing |
-| biome-hazard:Living Ecospheres:carnivorousFlora | carnivorousFlora | biome-hazards | additive | source |  | missing |
-| biome-hazard:Living Ecospheres:toxicSpores | toxicSpores | biome-hazards | additive | source |  | missing |
-| biome-hazard:Living Ecospheres:livingVines | livingVines | biome-hazards | additive | source |  | missing |
-| biome-hazard:Living Ecospheres:rootTraps | rootTraps | biome-hazards | additive | source |  | missing |
-| biome-hazard:Living Ecospheres:acidSap | acidSap | biome-hazards | additive | source |  | missing |
-| biome-hazard:Living Ecospheres:sporeBursts | sporeBursts | biome-hazards | additive | source |  | missing |
-| biome-hazard:Living Ecospheres:collapsingGrowth | collapsingGrowth | biome-hazards | additive | source |  | missing |
-| biome-hazard:Living Ecospheres:organicAmbushes | organicAmbushes | biome-hazards | additive | source |  | missing |
-| biome-poi:Living Ecospheres:planetaryHeart | planetaryHeart | biome-poi | keyed | source |  | missing |
-| biome-poi:Living Ecospheres:evolutionPools | evolutionPools | biome-poi | keyed | source |  | missing |
-| biome-poi:Living Ecospheres:ancientBioLabs | ancientBioLabs | biome-poi | keyed | source |  | missing |
-| biome-poi:Living Ecospheres:livingTemples | livingTemples | biome-poi | keyed | source |  | missing |
-| biome-poi:Living Ecospheres:seedVaults | seedVaults | biome-poi | keyed | source |  | missing |
-| biome-poi:Living Ecospheres:symbiosisChambers | symbiosisChambers | biome-poi | keyed | source |  | missing |
-| biome-poi:Living Ecospheres:organicArchives | organicArchives | biome-poi | keyed | source |  | missing |
-| biome-poi:Living Ecospheres:giganticRootSystems | giganticRootSystems | biome-poi | keyed | source |  | missing |
-| biome-weather:Machine Expanse:electricalStorms | electricalStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Machine Expanse:plasmaRain | plasmaRain | biome-weather | additive | source |  | missing |
-| biome-weather:Machine Expanse:steamClouds | steamClouds | biome-weather | additive | source |  | missing |
-| biome-weather:Machine Expanse:empWaves | empWaves | biome-weather | additive | source |  | missing |
-| biome-weather:Machine Expanse:magneticWinds | magneticWinds | biome-weather | additive | source |  | missing |
-| biome-weather:Machine Expanse:coolingVents | coolingVents | biome-weather | additive | source |  | missing |
-| biome-weather:Machine Expanse:ionDischarge | ionDischarge | biome-weather | additive | source |  | missing |
-| biome-hazard:Machine Expanse:movingMachinery | movingMachinery | biome-hazards | additive | source |  | missing |
-| biome-hazard:Machine Expanse:laserGrids | laserGrids | biome-hazards | additive | source |  | missing |
-| biome-hazard:Machine Expanse:crushingPresses | crushingPresses | biome-hazards | additive | source |  | missing |
-| biome-hazard:Machine Expanse:moltenMetal | moltenMetal | biome-hazards | additive | source |  | missing |
-| biome-hazard:Machine Expanse:electrifiedFloors | electrifiedFloors | biome-hazards | additive | source |  | missing |
-| biome-hazard:Machine Expanse:assemblyArms | assemblyArms | biome-hazards | additive | source |  | missing |
-| biome-hazard:Machine Expanse:powerSurges | powerSurges | biome-hazards | additive | source |  | missing |
-| biome-hazard:Machine Expanse:securityTurrets | securityTurrets | biome-hazards | additive | source |  | missing |
-| biome-poi:Machine Expanse:prototypeLaboratories | prototypeLaboratories | biome-poi | keyed | source |  | missing |
-| biome-poi:Machine Expanse:aiArchives | aiArchives | biome-poi | keyed | source |  | missing |
-| biome-poi:Machine Expanse:machineTemples | machineTemples | biome-poi | keyed | source |  | missing |
-| biome-poi:Machine Expanse:manufacturingVaults | manufacturingVaults | biome-poi | keyed | source |  | missing |
-| biome-poi:Machine Expanse:orbitalShipyards | orbitalShipyards | biome-poi | keyed | source |  | missing |
-| biome-poi:Machine Expanse:controlSpires | controlSpires | biome-poi | keyed | source |  | missing |
-| biome-poi:Machine Expanse:energyWells | energyWells | biome-poi | keyed | source |  | missing |
-| biome-poi:Machine Expanse:lostResearchFacilities | lostResearchFacilities | biome-poi | keyed | source |  | missing |
-| biome-weather:Singularity Zone:gravityStorms | gravityStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Singularity Zone:quantumRain | quantumRain | biome-weather | additive | source |  | missing |
-| biome-weather:Singularity Zone:realityCascades | realityCascades | biome-weather | additive | source |  | missing |
-| biome-weather:Singularity Zone:timeEchoes | timeEchoes | biome-weather | additive | source |  | missing |
-| biome-weather:Singularity Zone:lightInversions | lightInversions | biome-weather | additive | source |  | missing |
-| biome-weather:Singularity Zone:particleCollapse | particleCollapse | biome-weather | additive | source |  | missing |
-| biome-weather:Singularity Zone:probabilityWaves | probabilityWaves | biome-weather | additive | source |  | missing |
-| biome-hazard:Singularity Zone:microSingularities | microSingularities | biome-hazards | additive | source |  | missing |
-| biome-hazard:Singularity Zone:gravityCollapse | gravityCollapse | biome-hazards | additive | source |  | missing |
-| biome-hazard:Singularity Zone:timeDilationFields | timeDilationFields | biome-hazards | additive | source |  | missing |
-| biome-hazard:Singularity Zone:probabilityZones | probabilityZones | biome-hazards | additive | source |  | missing |
-| biome-hazard:Singularity Zone:realityFractures | realityFractures | biome-hazards | additive | source |  | missing |
-| biome-hazard:Singularity Zone:quantumLightning | quantumLightning | biome-hazards | additive | source |  | missing |
-| biome-hazard:Singularity Zone:phaseInstability | phaseInstability | biome-hazards | additive | source |  | missing |
-| biome-hazard:Singularity Zone:eventHorizonSurges | eventHorizonSurges | biome-hazards | additive | source |  | missing |
-| biome-poi:Singularity Zone:realityWells | realityWells | biome-poi | keyed | source |  | missing |
-| biome-poi:Singularity Zone:infiniteLibraries | infiniteLibraries | biome-poi | keyed | source |  | missing |
-| biome-poi:Singularity Zone:collapsedObservatories | collapsedObservatories | biome-poi | keyed | source |  | missing |
-| biome-poi:Singularity Zone:quantumArchives | quantumArchives | biome-poi | keyed | source |  | missing |
-| biome-poi:Singularity Zone:singularityTemples | singularityTemples | biome-poi | keyed | source |  | missing |
-| biome-poi:Singularity Zone:mathematicalEngines | mathematicalEngines | biome-poi | keyed | source |  | missing |
-| biome-poi:Singularity Zone:timeVaults | timeVaults | biome-poi | keyed | source |  | missing |
-| biome-poi:Singularity Zone:impossibleMonuments | impossibleMonuments | biome-poi | keyed | source |  | missing |
-| biome-weather:Solar Wastes:solarFlares | solarFlares | biome-weather | additive | source |  | missing |
-| biome-weather:Solar Wastes:coronalMassEjections | coronalMassEjections | biome-weather | additive | source |  | missing |
-| biome-weather:Solar Wastes:plasmaRain | plasmaRain | biome-weather | additive | source |  | missing |
-| biome-weather:Solar Wastes:radiationStorms | radiationStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Solar Wastes:heatWaves | heatWaves | biome-weather | additive | source |  | missing |
-| biome-weather:Solar Wastes:magneticStorms | magneticStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Solar Wastes:fireTornadoes | fireTornadoes | biome-weather | additive | source |  | missing |
-| biome-hazard:Solar Wastes:radiationFields | radiationFields | biome-hazards | additive | source |  | missing |
-| biome-hazard:Solar Wastes:solarBeams | solarBeams | biome-hazards | additive | source |  | missing |
-| biome-hazard:Solar Wastes:plasmaGeysers | plasmaGeysers | biome-hazards | additive | source |  | missing |
-| biome-hazard:Solar Wastes:moltenDebris | moltenDebris | biome-hazards | additive | source |  | missing |
-| biome-hazard:Solar Wastes:heatZones | heatZones | biome-hazards | additive | source |  | missing |
-| biome-hazard:Solar Wastes:magneticCollapse | magneticCollapse | biome-hazards | additive | source |  | missing |
-| biome-hazard:Solar Wastes:explosiveGasClouds | explosiveGasClouds | biome-hazards | additive | source |  | missing |
-| biome-hazard:Solar Wastes:solarShockwaves | solarShockwaves | biome-hazards | additive | source |  | missing |
-| biome-poi:Solar Wastes:solarHarvesters | solarHarvesters | biome-poi | keyed | source |  | missing |
-| biome-poi:Solar Wastes:ancientForges | ancientForges | biome-poi | keyed | source |  | missing |
-| biome-poi:Solar Wastes:heatVaults | heatVaults | biome-poi | keyed | source |  | missing |
-| biome-poi:Solar Wastes:plasmaWells | plasmaWells | biome-poi | keyed | source |  | missing |
-| biome-poi:Solar Wastes:fusionReactors | fusionReactors | biome-poi | keyed | source |  | missing |
-| biome-poi:Solar Wastes:orbitalMirrors | orbitalMirrors | biome-poi | keyed | source |  | missing |
-| biome-poi:Solar Wastes:researchPlatforms | researchPlatforms | biome-poi | keyed | source |  | missing |
-| biome-poi:Solar Wastes:collapsedMiningColonies | collapsedMiningColonies | biome-poi | keyed | source |  | missing |
-| biome-weather:Void Expanse:voidStorms | voidStorms | biome-weather | additive | source |  | missing |
-| biome-weather:Void Expanse:realityPulses | realityPulses | biome-weather | additive | source |  | missing |
-| biome-weather:Void Expanse:gravitationalWaves | gravitationalWaves | biome-weather | additive | source |  | missing |
-| biome-weather:Void Expanse:darkMatterClouds | darkMatterClouds | biome-weather | additive | source |  | missing |
-| biome-weather:Void Expanse:temporalEchoes | temporalEchoes | biome-weather | additive | source |  | missing |
-| biome-weather:Void Expanse:spatialDistortion | spatialDistortion | biome-weather | additive | source |  | missing |
-| biome-weather:Void Expanse:quantumRain | quantumRain | biome-weather | additive | source |  | missing |
-| biome-hazard:Void Expanse:gravityWells | gravityWells | biome-hazards | additive | source |  | missing |
-| biome-hazard:Void Expanse:realityTears | realityTears | biome-hazards | additive | source |  | missing |
-| biome-hazard:Void Expanse:temporalFields | temporalFields | biome-hazards | additive | source |  | missing |
-| biome-hazard:Void Expanse:voidZones | voidZones | biome-hazards | additive | source |  | missing |
-| biome-hazard:Void Expanse:darkEnergyBursts | darkEnergyBursts | biome-hazards | additive | source |  | missing |
-| biome-hazard:Void Expanse:movingSingularities | movingSingularities | biome-hazards | additive | source |  | missing |
-| biome-hazard:Void Expanse:collapsingSpace | collapsingSpace | biome-hazards | additive | source |  | missing |
-| biome-hazard:Void Expanse:phaseHazards | phaseHazards | biome-hazards | additive | source |  | missing |
-| biome-poi:Void Expanse:realityAnchors | realityAnchors | biome-poi | keyed | source |  | missing |
-| biome-poi:Void Expanse:collapsedGateways | collapsedGateways | biome-poi | keyed | source |  | missing |
-| biome-poi:Void Expanse:voidArchives | voidArchives | biome-poi | keyed | source |  | missing |
-| biome-poi:Void Expanse:ancientMonoliths | ancientMonoliths | biome-poi | keyed | source |  | missing |
-| biome-poi:Void Expanse:singularityChambers | singularityChambers | biome-poi | keyed | source |  | missing |
-| biome-poi:Void Expanse:dimensionalBridges | dimensionalBridges | biome-poi | keyed | source |  | missing |
-| biome-poi:Void Expanse:lostFleets | lostFleets | biome-poi | keyed | source |  | missing |
-| biome-poi:Void Expanse:quantumBeacons | quantumBeacons | biome-poi | keyed | source |  | missing |
-| biome-event:distressSignal | distressSignal | biome-events | additive | source |  | missing |
-| biome-event:ancientVault | ancientVault | biome-events | additive | source |  | missing |
-| biome-event:lostExpedition | lostExpedition | biome-events | additive | source |  | missing |
-| biome-event:machineActivation | machineActivation | biome-events | additive | source |  | missing |
-| biome-event:crystalBloom | crystalBloom | biome-events | additive | source |  | missing |
-| biome-event:solarFlare | solarFlare | biome-events | additive | source |  | missing |
-| biome-event:voidBreach | voidBreach | biome-events | additive | source |  | missing |
-| biome-event:wanderingMerchant | wanderingMerchant | biome-events | additive | source |  | missing |
-| biome-event:prototypeWreckage | prototypeWreckage | biome-events | additive | source |  | missing |
-| biome-event:factionConflict | factionConflict | biome-events | additive | source |  | missing |
-| galaxy-cluster:lucent-cluster | The Lucent Cluster | galaxy | fullbleed | source |  | missing |
-| galaxy-cluster:shattered-expanse-cluster | The Shattered Expanse | galaxy | fullbleed | source |  | missing |
-| galaxy-region:crystalDominion | Crystal Dominion | galaxy | fullbleed | source |  | missing |
-| galaxy-region:humanFrontier | Human Frontier | galaxy | fullbleed | source |  | missing |
-| galaxy-region:machineExpanse | Machine Expanse | galaxy | fullbleed | source |  | missing |
-| galaxy-region:voidExpanse | Void Expanse | galaxy | fullbleed | source |  | missing |
-| galaxy-region:ancientCore | Ancient Core | galaxy | fullbleed | source |  | missing |
-| galaxy-region:solarWastes | Solar Wastes | galaxy | fullbleed | source |  | missing |
-| galaxy-region:frozenReach | Frozen Reach | galaxy | fullbleed | source |  | missing |
-| galaxy-region:brokenSystems | Broken Systems | galaxy | fullbleed | source |  | missing |
-| galaxy-region:darkNebula | Dark Nebula | galaxy | fullbleed | source |  | missing |
-| galaxy-region:singularityZone | Singularity Zone | galaxy | fullbleed | source |  | missing |
-| galaxy-region:shatteredExpanse | Shattered Expanse | galaxy | fullbleed | source |  | missing |
-| galaxy-system:sys-lucent-gate | Lucent Gate | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-hollow-drift | Hollow Drift | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-ember-reach | Ember Reach | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-meridian-rest | Meridian Rest | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-prismheart | Prismheart | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-forge-primus | Forge Primus | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-hollow-crown | Hollow Crown | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-first-light | First Light | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-cinderfall | Cinderfall | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-winterline | Winterline | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-gravewake | Gravewake | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-verdance | Verdance | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-axiom | Axiom | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-shatter-approach | Shatter Approach | galaxy | keyed | source |  | missing |
-| galaxy-system:sys-shatter-core | Shatter Core | galaxy | keyed | source |  | missing |
-| mission:crystal-fields-incursion | Crystal Fields Incursion | missions | fullbleed | source |  | missing |
-| mission:winterline-rescue | Winterline Rescue | missions | fullbleed | source |  | missing |
-| mission:first-light-excavation | First Light Excavation | missions | fullbleed | source |  | missing |
-| mission:forge-primus-uprising | Forge Primus Uprising | missions | fullbleed | source |  | missing |
-| modifier-icon:lowGravity | lowGravity | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:lowGravity | lowGravity | mission-modifiers | additive | source |  | missing |
-| modifier-icon:radiation | radiation | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:radiation | radiation | mission-modifiers | additive | source |  | missing |
-| modifier-icon:eliteActivity | eliteActivity | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:eliteActivity | eliteActivity | mission-modifiers | additive | source |  | missing |
-| modifier-icon:doubleRewards | doubleRewards | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:doubleRewards | doubleRewards | mission-modifiers | additive | source |  | missing |
-| modifier-icon:shieldInstability | shieldInstability | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:shieldInstability | shieldInstability | mission-modifiers | additive | source |  | missing |
-| modifier-icon:weaponOvercharge | weaponOvercharge | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:weaponOvercharge | weaponOvercharge | mission-modifiers | additive | source |  | missing |
-| modifier-icon:crystalBloom | crystalBloom | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:crystalBloom | crystalBloom | mission-modifiers | additive | source |  | missing |
-| modifier-icon:darkSector | darkSector | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:darkSector | darkSector | mission-modifiers | additive | source |  | missing |
-| modifier-icon:voidCorruption | voidCorruption | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:voidCorruption | voidCorruption | mission-modifiers | additive | source |  | missing |
-| modifier-icon:experimentalConditions | experimentalConditions | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:experimentalConditions | experimentalConditions | mission-modifiers | additive | source |  | missing |
-| modifier-icon:meteorStorm | meteorStorm | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:meteorStorm | meteorStorm | mission-modifiers | additive | source |  | missing |
-| modifier-icon:solarRadiation | solarRadiation | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:solarRadiation | solarRadiation | mission-modifiers | additive | source |  | missing |
-| modifier-icon:blackHoleDistortion | blackHoleDistortion | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:blackHoleDistortion | blackHoleDistortion | mission-modifiers | additive | source |  | missing |
-| modifier-icon:electricalNebula | electricalNebula | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:electricalNebula | electricalNebula | mission-modifiers | additive | source |  | missing |
-| modifier-icon:frozenSector | frozenSector | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:frozenSector | frozenSector | mission-modifiers | additive | source |  | missing |
-| modifier-icon:toxicClouds | toxicClouds | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:toxicClouds | toxicClouds | mission-modifiers | additive | source |  | missing |
-| modifier-icon:darkMatter | darkMatter | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:darkMatter | darkMatter | mission-modifiers | additive | source |  | missing |
-| modifier-icon:ancientBattlefield | ancientBattlefield | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:ancientBattlefield | ancientBattlefield | mission-modifiers | additive | source |  | missing |
-| modifier-icon:civilianEvacuation | civilianEvacuation | mission-modifiers | keyed | source |  | missing |
-| modifier-vfx:civilianEvacuation | civilianEvacuation | mission-modifiers | additive | source |  | missing |
-| screen:Boot | Boot | ui-screens | fullbleed | source |  | missing |
-| screen:Splash | Splash | ui-screens | fullbleed | source |  | missing |
-| screen:MainMenu | MainMenu | ui-screens | fullbleed | source |  | missing |
-| screen:GalaxyCommand | GalaxyCommand | ui-screens | fullbleed | source |  | missing |
-| screen:MissionSelect | MissionSelect | ui-screens | fullbleed | source |  | missing |
-| screen:Loading | Loading | ui-screens | fullbleed | source |  | missing |
-| screen:Gameplay | Gameplay | ui-screens | fullbleed | source |  | missing |
-| screen:Pause | Pause | ui-screens | fullbleed | source |  | missing |
-| screen:LevelUp | LevelUp | ui-screens | fullbleed | source |  | missing |
-| screen:InventoryOverlay | InventoryOverlay | ui-screens | fullbleed | source |  | missing |
-| screen:MissionComplete | MissionComplete | ui-screens | fullbleed | source |  | missing |
-| screen:Defeat | Defeat | ui-screens | fullbleed | source |  | missing |
-| screen:Statistics | Statistics | ui-screens | fullbleed | source |  | missing |
-| screen:Multiplayer | Multiplayer | ui-screens | fullbleed | source |  | missing |
-| screen:CommunityHub | CommunityHub | ui-screens | fullbleed | source |  | missing |
-| screen:BuildPathChoice | BuildPathChoice | ui-screens | fullbleed | source |  | missing |
-| screen:MidRunMerchant | MidRunMerchant | ui-screens | fullbleed | source |  | missing |
-| screen:ExtractionDecision | ExtractionDecision | ui-screens | fullbleed | source |  | missing |
-| screen:BossArtifactChoice | BossArtifactChoice | ui-screens | fullbleed | source |  | missing |
-| screen:RecruitCommanders | RecruitCommanders | ui-screens | fullbleed | source |  | missing |
-| screen:ViewMuseum | ViewMuseum | ui-screens | fullbleed | source |  | missing |
-| screen:ReadCodex | ReadCodex | ui-screens | fullbleed | source |  | missing |
-| screen:ManageAtlas | ManageAtlas | ui-screens | fullbleed | source |  | missing |
-| screen:LoadoutChoice | LoadoutChoice | ui-screens | fullbleed | source |  | missing |
-| particle:hitImpact | hitImpact | particles | additive | source |  | missing |
-| particle:eliteDeath | eliteDeath | particles | additive | source |  | missing |
-| particle:bossPhaseChange | bossPhaseChange | particles | additive | source |  | missing |
-| particle:explosion | explosion | particles | additive | source |  | missing |
-| particle:levelUp | levelUp | particles | additive | source |  | missing |
-| status:burn | burn | status-effects | additive | source |  | missing |
-| status:shock | shock | status-effects | additive | source |  | missing |
-| status:freeze | freeze | status-effects | additive | source |  | missing |
-| status:corruption | corruption | status-effects | additive | source |  | missing |
-| status:poison | poison | status-effects | additive | source |  | missing |
-| status:slow | slow | status-effects | additive | source |  | missing |
-| status:stasis | stasis | status-effects | additive | source |  | missing |
-| status:shieldBreak | shieldBreak | status-effects | additive | source |  | missing |
-| status:armourBreak | armourBreak | status-effects | additive | source |  | missing |
-| status:overload | overload | status-effects | additive | source |  | missing |
-| rarity-frame:damaged | damaged | loot-rarity | additive | source |  | missing |
-| rarity-frame:common | common | loot-rarity | additive | source |  | missing |
-| rarity-frame:improved | improved | loot-rarity | additive | source |  | missing |
-| rarity-frame:rare | rare | loot-rarity | additive | source |  | missing |
-| rarity-frame:epic | epic | loot-rarity | additive | source |  | missing |
-| rarity-frame:legendary | legendary | loot-rarity | additive | source |  | missing |
-| rarity-frame:ancient | ancient | loot-rarity | additive | source |  | missing |
-| rarity-frame:mythic | mythic | loot-rarity | additive | source |  | missing |
-| rarity-frame:singularity | singularity | loot-rarity | additive | source |  | missing |
-| resource:commonMaterials | commonMaterials | resources | keyed | source |  | missing |
-| resource:rareAlloys | rareAlloys | resources | keyed | source |  | missing |
-| resource:crystalFragments | crystalFragments | resources | keyed | source |  | missing |
-| resource:voidEssence | voidEssence | resources | keyed | source |  | missing |
-| resource:ancientComponents | ancientComponents | resources | keyed | source |  | missing |
-| resource:quantumCores | quantumCores | resources | keyed | source |  | missing |
-| resource:energyCells | energyCells | resources | keyed | source |  | missing |
-| resource:researchSamples | researchSamples | resources | keyed | source |  | missing |
-| resource:mythicMaterials | mythicMaterials | resources | keyed | source |  | missing |
-| resource:singularityMatter | singularityMatter | resources | keyed | source |  | missing |
-| resource:darkMatter | darkMatter | resources | keyed | source |  | missing |
-| resource:quantumCrystals | quantumCrystals | resources | keyed | source |  | missing |
-| resource:biomass | biomass | resources | keyed | source |  | missing |
-| resource:livingMetal | livingMetal | resources | keyed | source |  | missing |
-| resource:atlasFragments | atlasFragments | resources | keyed | source |  | missing |
-| currency:credits | credits | currencies | keyed | source |  | missing |
-| currency:researchData | researchData | currencies | keyed | source |  | missing |
-| currency:ancientFragments | ancientFragments | currencies | keyed | source |  | missing |
-| currency:crystalEssence | crystalEssence | currencies | keyed | source |  | missing |
-| currency:voidMatter | voidMatter | currencies | keyed | source |  | missing |
-| currency:singularityCores | singularityCores | currencies | keyed | source |  | missing |
-| title:TITLE_UNSCARRED | TITLE_UNSCARRED | titles | keyed | source |  | missing |
-| title:TITLE_VETERAN | TITLE_VETERAN | titles | keyed | source |  | missing |
-| title:TITLE_ARCHIVIST_OF_BOSSES | TITLE_ARCHIVIST_OF_BOSSES | titles | keyed | source |  | missing |
-| title:TITLE_WINTERLINE_WARDEN | TITLE_WINTERLINE_WARDEN | titles | keyed | source |  | missing |
-| title:TITLE_FOUNDRY_BREAKER | TITLE_FOUNDRY_BREAKER | titles | keyed | source |  | missing |
-| title:TITLE_UNTOUCHED | TITLE_UNTOUCHED | titles | keyed | source |  | missing |
-| title:TITLE_DRONE_REAPER | TITLE_DRONE_REAPER | titles | keyed | source |  | missing |
-| frame:FRAME_BOSS_HUNTER | FRAME_BOSS_HUNTER | frames | additive | source |  | missing |
-| frame:FRAME_FIRST_LIGHT | FRAME_FIRST_LIGHT | frames | additive | source |  | missing |
-| frame:FRAME_ELITE_HUNTER | FRAME_ELITE_HUNTER | frames | additive | source |  | missing |
-| frame:FRAME_HARVESTER | FRAME_HARVESTER | frames | additive | source |  | missing |
-| reputation-title:The Explorer | The Explorer | reputation-titles | keyed | source |  | missing |
-| reputation-title:The Builder | The Builder | reputation-titles | keyed | source |  | missing |
-| reputation-title:The Scientist | The Scientist | reputation-titles | keyed | source |  | missing |
-| reputation-title:The Guardian | The Guardian | reputation-titles | keyed | source |  | missing |
-| reputation-title:The Diplomat | The Diplomat | reputation-titles | keyed | source |  | missing |
-| reputation-title:The Founder | The Founder | reputation-titles | keyed | source |  | missing |
-| reputation-title:The Pathfinder | The Pathfinder | reputation-titles | keyed | source |  | missing |
-| reputation-title:The Restorer | The Restorer | reputation-titles | keyed | source |  | missing |
-| achievement:ach-veteran | ach-veteran | achievements | keyed | source |  | missing |
-| achievement:ach-boss-hunter | ach-boss-hunter | achievements | keyed | source |  | missing |
-| achievement:ach-curator | ach-curator | achievements | keyed | source |  | missing |
-| achievement:ach-trusted-ally | ach-trusted-ally | achievements | keyed | source |  | missing |
-| achievement:ach-researcher | ach-researcher | achievements | keyed | source |  | missing |
-| achievement:ach-restorer | ach-restorer | achievements | keyed | source |  | missing |
-| achievement:ach-ghost-vault | ach-ghost-vault | achievements | keyed | source |  | missing |
-| achievement:ach-first-contact | ach-first-contact | achievements | keyed | source |  | missing |
-| faction-reputation:hostile | hostile | faction-reputation | keyed | source |  | missing |
-| faction-reputation:distrusted | distrusted | faction-reputation | keyed | source |  | missing |
-| faction-reputation:neutral | neutral | faction-reputation | keyed | source |  | missing |
-| faction-reputation:known | known | faction-reputation | keyed | source |  | missing |
-| faction-reputation:trusted | trusted | faction-reputation | keyed | source |  | missing |
-| faction-reputation:respected | respected | faction-reputation | keyed | source |  | missing |
-| faction-reputation:honoured | honoured | faction-reputation | keyed | source |  | missing |
-| faction-reputation:legendaryAlly | legendaryAlly | faction-reputation | keyed | source |  | missing |
-| manufacturer:atlas-dynamics | Atlas Dynamics | manufacturers | keyed | source |  | missing |
-| manufacturer:helios-industries | Helios Industries | manufacturers | keyed | source |  | missing |
-| manufacturer:nova-forge | Nova Forge | manufacturers | keyed | source |  | missing |
-| manufacturer:vanguard-systems | Vanguard Systems | manufacturers | keyed | source |  | missing |
-| manufacturer:aegis-armaments | Aegis Armaments | manufacturers | keyed | source |  | missing |
-| manufacturer:quantum-horizon | Quantum Horizon | manufacturers | keyed | source |  | missing |
-| manufacturer:black-horizon | Black Horizon | manufacturers | keyed | source |  | missing |
-| manufacturer:frontier-salvage | Frontier Salvage | manufacturers | keyed | source |  | missing |
-| manufacturer:ancient-foundry | Ancient Foundry | manufacturers | keyed | source |  | missing |
-| manufacturer:paragon-laboratories | Paragon Laboratories | manufacturers | keyed | source |  | missing |
-| manufacturer:halcyon-driveworks | Halcyon Driveworks | manufacturers | keyed | source |  | missing |
-| manufacturer:ironmoor-foundry | Ironmoor Foundry | manufacturers | keyed | source |  | missing |
-| manufacturer:void-legion-remnant | Void Legion Remnant | manufacturers | keyed | source |  | missing |
-| manufacturer:meridian-yards | Meridian Yards | manufacturers | keyed | source |  | missing |
-| manufacturer:aegis-systems | Aegis Systems | manufacturers | keyed | source |  | missing |
-| manufacturer:vanguard-fleetworks | Vanguard Fleetworks | manufacturers | keyed | source |  | missing |
-| manufacturer:eclipse-engineering | Eclipse Engineering | manufacturers | keyed | source |  | missing |
-| manufacturer:prototype-division | Prototype Division | manufacturers | keyed | source |  | missing |
-| fire-pattern:singleShot | singleShot | fire-patterns | additive | source |  | missing |
-| fire-pattern:burst | burst | fire-patterns | additive | source |  | missing |
-| fire-pattern:spread | spread | fire-patterns | additive | source |  | missing |
-| fire-pattern:arc | arc | fire-patterns | additive | source |  | missing |
-| fire-pattern:nova | nova | fire-patterns | additive | source |  | missing |
-| fire-pattern:spiral | spiral | fire-patterns | additive | source |  | missing |
-| fire-pattern:beam | beam | fire-patterns | additive | source |  | missing |
-| fire-pattern:orbit | orbit | fire-patterns | additive | source |  | missing |
-| fire-pattern:homing | homing | fire-patterns | additive | source |  | missing |
-| fire-pattern:chain | chain | fire-patterns | additive | source |  | missing |
-| fire-pattern:wave | wave | fire-patterns | additive | source |  | missing |
-| fire-pattern:chargedShot | chargedShot | fire-patterns | additive | source |  | missing |
-| projectile-behaviour:straight | straight | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:seeking | seeking | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:bouncing | bouncing | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:piercing | piercing | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:explosive | explosive | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:returning | returning | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:accelerating | accelerating | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:splitting | splitting | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:orbiting | orbiting | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:chainLightning | chainLightning | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:persistentBeam | persistentBeam | projectile-behaviours | additive | source |  | missing |
-| projectile-behaviour:gravityAffected | gravityAffected | projectile-behaviours | additive | source |  | missing |
-| xp-tier:small | small | xp-tiers | keyed | source |  | missing |
-| xp-tier:medium | medium | xp-tiers | keyed | source |  | missing |
-| xp-tier:large | large | xp-tiers | keyed | source |  | missing |
-| xp-tier:elite | elite | xp-tiers | keyed | source |  | missing |
-| xp-tier:boss | boss | xp-tiers | keyed | source |  | missing |
-| xp-tier:ancient | ancient | xp-tiers | keyed | source |  | missing |
-| xp-tier:research | research | xp-tiers | keyed | source |  | missing |
-| branding:logo-wordmark | AFTERLIGHT logo/wordmark | branding | keyed | source |  | missing |
-| branding:app-icon-512 | PWA app icon 512px | branding | fullbleed | source |  | missing |
-| branding:app-icon-192 | PWA app icon 192px | branding | fullbleed | source |  | missing |
-| branding:favicon | Browser favicon | branding | fullbleed | source |  | missing |
-| branding:loading-spinner | Loading spinner/animation | branding | additive | source |  | missing |
-| branding:cursor | Custom cursor | branding | keyed | source |  | missing |
-| branding:display-typeface | Chunky rounded display typeface (Visual Style Rule 5) | branding | keyed | source |  | missing |
-| hud:health-bar | health-bar | hud-chrome | keyed | source |  | missing |
-| hud:shield-bar | shield-bar | hud-chrome | keyed | source |  | missing |
-| hud:energy-bar | energy-bar | hud-chrome | keyed | source |  | missing |
-| hud:xp-bar | xp-bar | hud-chrome | keyed | source |  | missing |
-| hud:boss-health-bar | boss-health-bar | hud-chrome | keyed | source |  | missing |
-| hud:ultimate-meter | ultimate-meter | hud-chrome | keyed | source |  | missing |
-| hud:ability-cooldown | ability-cooldown | hud-chrome | keyed | source |  | missing |
-| hud:minimap | minimap | hud-chrome | keyed | source |  | missing |
-| hud:crosshair | crosshair | hud-chrome | keyed | source |  | missing |
-| hud:damage-numbers | damage-numbers | hud-chrome | keyed | source |  | missing |
-| hud:toast-banner | toast-banner | hud-chrome | keyed | source |  | missing |
-| hud:wave-banner | wave-banner | hud-chrome | keyed | source |  | missing |
-| hud:objective-tracker | objective-tracker | hud-chrome | keyed | source |  | missing |
-| hud:extraction-timer | extraction-timer | hud-chrome | keyed | source |  | missing |
-| ui:button-set | button-set | ui-components | keyed | source |  | missing |
-| ui:panel | panel | ui-components | keyed | source |  | missing |
-| ui:card-frame | card-frame | ui-components | keyed | source |  | missing |
-| ui:tooltip | tooltip | ui-components | keyed | source |  | missing |
-| ui:modal-frame | modal-frame | ui-components | keyed | source |  | missing |
-| ui:tab-bar | tab-bar | ui-components | keyed | source |  | missing |
-| ui:toggle | toggle | ui-components | keyed | source |  | missing |
-| ui:slider | slider | ui-components | keyed | source |  | missing |
-| ui:scrollbar | scrollbar | ui-components | keyed | source |  | missing |
-| ui:list-row | list-row | ui-components | keyed | source |  | missing |
-| ui:talent-node-frame | talent-node-frame | ui-components | keyed | source |  | missing |
-| player-vfx:engine-trail | engine-trail | player-vfx | additive | source |  | missing |
-| player-vfx:boost-dash | boost-dash | player-vfx | additive | source |  | missing |
-| player-vfx:invuln-shimmer | invuln-shimmer | player-vfx | additive | source |  | missing |
-| player-vfx:barrier-bubble | barrier-bubble | player-vfx | additive | source |  | missing |
-| player-vfx:shield-impact | shield-impact | player-vfx | additive | source |  | missing |
-| player-vfx:player-death | player-death | player-vfx | additive | source |  | missing |
-| player-vfx:player-spawn | player-spawn | player-vfx | additive | source |  | missing |
-| player-vfx:extraction-warp | extraction-warp | player-vfx | additive | source |  | missing |
-| player-vfx:heal-pulse | heal-pulse | player-vfx | additive | source |  | missing |
-| combat-entity:outlaw-mine | outlaw-mine | combat-entities | keyed | source |  | missing |
-| combat-entity:crystal-growth | crystal-growth | combat-entities | keyed | source |  | missing |
-| combat-entity:xeno-hive | xeno-hive | combat-entities | keyed | source |  | missing |
-| combat-entity:ancient-site | ancient-site | combat-entities | keyed | source |  | missing |
-| combat-entity:loot-cache | loot-cache | combat-entities | keyed | source |  | missing |
-| combat-entity:merchant-vessel | merchant-vessel | combat-entities | keyed | source |  | missing |
-| combat-entity:extraction-beacon | extraction-beacon | combat-entities | keyed | source |  | missing |
-| combat-entity:meteor-telegraph | meteor-telegraph | combat-entities | additive | source |  | missing |
-| combat-entity:meteor-impact | meteor-impact | combat-entities | additive | source |  | missing |
-| combat-entity:acid-pool | acid-pool | combat-entities | additive | source |  | missing |
-| combat-entity:void-zone | void-zone | combat-entities | additive | source |  | missing |
-| combat-entity:gravity-well | gravity-well | combat-entities | additive | source |  | missing |
-| combat-entity:singularity-charge | singularity-charge | combat-entities | additive | source |  | missing |
-| combat-entity:machine-shield-lattice | machine-shield-lattice | combat-entities | additive | source |  | missing |
-| combat-entity:constellation-link | constellation-link | combat-entities | additive | source |  | missing |
-| combat-entity:spawn-warp-in | spawn-warp-in | combat-entities | additive | source |  | missing |
-| combat-entity:telegraph-ring | telegraph-ring | combat-entities | additive | source |  | missing |
-| combat-entity:telegraph-line | telegraph-line | combat-entities | additive | source |  | missing |
-| combat-entity:hazard-telegraph | hazard-telegraph | combat-entities | additive | source |  | missing |
-| combat-entity:loot-beam | loot-beam | combat-entities | additive | source |  | missing |
-| combat-entity:extraction-beacon-pulse | extraction-beacon-pulse | combat-entities | additive | source |  | missing |
-| environment:space-backdrop | Shared deep-space backdrop (starfield base layer) | environment | fullbleed | source |  | missing |
-| environment:arena-boundary | Arena boundary treatment | environment | additive | source |  | missing |
-| interactable:activateAncientDevice | activateAncientDevice | interactables | keyed | source |  | missing |
-| interactable:destroyObstacle | destroyObstacle | interactables | keyed | source |  | missing |
-| interactable:openHiddenArea | openHiddenArea | interactables | keyed | source |  | missing |
-| interactable:triggerEvent | triggerEvent | interactables | keyed | source |  | missing |
-| interactable:harvestResource | harvestResource | interactables | keyed | source |  | missing |
-| interactable:disableHazard | disableHazard | interactables | keyed | source |  | missing |
-| interactable:unlockSecret | unlockSecret | interactables | keyed | source |  | missing |
-| condition:solarRadiation | solarRadiation | environmental-conditions | keyed | source |  | missing |
-| condition:gravityDistortion | gravityDistortion | environmental-conditions | keyed | source |  | missing |
-| condition:crystalGrowth | crystalGrowth | environmental-conditions | keyed | source |  | missing |
-| condition:nebulaFog | nebulaFog | environmental-conditions | keyed | source |  | missing |
-| condition:ionStorms | ionStorms | environmental-conditions | keyed | source |  | missing |
-| condition:empFields | empFields | environmental-conditions | keyed | source |  | missing |
-| condition:asteroidDrift | asteroidDrift | environmental-conditions | keyed | source |  | missing |
-| condition:voidCorruption | voidCorruption | environmental-conditions | keyed | source |  | missing |
-| condition:machineActivity | machineActivity | environmental-conditions | keyed | source |  | missing |
-| condition:ancientEnergy | ancientEnergy | environmental-conditions | keyed | source |  | missing |
-| starmap:route-line | Star-map route/lane line | starmap-chrome | additive | source |  | missing |
-| starmap:position-marker | Current-position marker | starmap-chrome | keyed | source |  | missing |
-| starmap:threat-pips | System threat-level pips | starmap-chrome | keyed | source |  | missing |
-| starmap:locked-marker | Locked-system marker | starmap-chrome | keyed | source |  | missing |
-| banner:boss-intro | Boss introduction banner/title card | banners | fullbleed | source |  | missing |
-| wayfarer-hull-mk2:ability-vfx | Wayfarer Mk. II — Emergency Thrusters | ship-abilities | additive | source |  | missing |
-| bastion-hull-mk1:ability-vfx | Bastion Mk. I — Shield Overload | ship-abilities | additive | source |  | missing |
-| aurelia-hull-mk1:ability-vfx | Aurelia Mk. I — Survey Burst | ship-abilities | additive | source |  | missing |
-| sable-dart-mk1:ability-vfx | Sable Dart Mk. I — Afterburn Manifold | ship-abilities | additive | source |  | missing |
-| falchion-mk2:ability-vfx | Falchion Mk. II — Executioner Suite | ship-abilities | additive | source |  | missing |
-| hivemother-mk1:ability-vfx | Hivemother Mk. I — Brood Bay | ship-abilities | additive | source |  | missing |
-| dawnspire:ability-vfx | Dawnspire — Vigil Lance | ship-abilities | additive | source |  | missing |
-| ballista-mk3:ability-vfx | Ballista Mk. III — Hardpoint Lattice | ship-abilities | additive | source |  | missing |
-| caduceus-mk1:ability-vfx | Caduceus Mk. I — Umbrella Field | ship-abilities | additive | source |  | missing |
-| maelstrom-x1:ability-vfx | Maelstrom X-1 — Shear Field | ship-abilities | additive | source |  | missing |
-| reyes-longlight:active-vfx | Ilsa Reyes — Energy Pulse | commander-actives | additive | source |  | missing |
-| vek-ironhull:active-vfx | Vek Tarn — Emergency Barrier | commander-actives | additive | source |  | missing |
-| vael-meridian:active-vfx | Dr. Sen Vael — Resonance Survey | commander-actives | additive | source |  | missing |
-| okoye-torque:active-vfx | Jelan Okoye — Field Refit | commander-actives | additive | source |  | missing |
-| naru-whisper:active-vfx | Ai Naru — Ghost Vector | commander-actives | additive | source |  | missing |
-| vex-longfang:active-vfx | Dain Vex — Marked Quarry | commander-actives | additive | source |  | missing |
-| holt-thunderline:active-vfx | Petra Holt — Ranging Shot | commander-actives | additive | source |  | missing |
-| anders-cipher:active-vfx | Rell Anders — Intrusion Suite | commander-actives | additive | source |  | missing |
-| kite-aviary:active-vfx | Suno Kite — Release the Flock | commander-actives | additive | source |  | missing |
-| sel-keystone:active-vfx | Mara Sel — Well Anchor | commander-actives | additive | source |  | missing |
-| vane-chord:active-vfx | Ilex Vane — Resonant Note | commander-actives | additive | source |  | missing |
-| kael-nadir:active-vfx | Dr. Oshen Kael — Containment Sample | commander-actives | additive | source |  | missing |
-| farr-redline:active-vfx | Juno Farr — Test Envelope | commander-actives | additive | source |  | missing |
-| iman-relay:active-vfx | Sera Iman — Network Ping | commander-actives | additive | source |  | missing |
-| korr-wardbreaker:active-vfx | Thessaly Korr — Writ of Cover | commander-actives | additive | source |  | missing |
-| voss-lanternkeep:active-vfx | Dr. Imara Voss — Archive Lantern | commander-actives | additive | source |  | missing |
-| devereux-static:active-vfx | Ash Devereux — Burn the Orders | commander-actives | additive | source |  | missing |
-| okafor-halcyon:active-vfx | Rin Okafor — Field Triage | commander-actives | additive | source |  | missing |
-| ur-sella-chorus:active-vfx | Vantha Ur-Sella — Harmonic Accord | commander-actives | additive | source |  | missing |
-| kade-fulcrum:active-vfx | Boren Kade — Lattice Splice | commander-actives | additive | source |  | missing |
-| calder-driftline:active-vfx | Yuen Calder — Driftline Scan | commander-actives | additive | source |  | missing |
-| aldana-aftercare:active-vfx | Dr. Petrin Aldana — Aftercare Protocol | commander-actives | additive | source |  | missing |
-| voss-pathfinder:active-vfx | Dr. Lyra Voss — Survey Drone | commander-actives | additive | source |  | missing |
-| kane-vanguard:active-vfx | Adrian Kane — Guardian Barrier | commander-actives | additive | source |  | missing |
-| ryker-engineer:active-vfx | Elias Ryker — Auto Turret | commander-actives | additive | source |  | missing |
-| cael-weaver:active-vfx | Seraphina Cael — Quantum Anchor | commander-actives | additive | source |  | missing |
-| drake-hunter:active-vfx | Kael Drake — Hunter Drone | commander-actives | additive | source |  | missing |
-| sol-resonant:active-vfx | Aria Sol — Crystal Pulse | commander-actives | additive | source |  | missing |
-| vale-voidrunner:active-vfx | Orion Vale — Phase Step | commander-actives | additive | source |  | missing |
-| iskander-swarmmaster:active-vfx | Nova Iskander — Drone Deployment Matrix | commander-actives | additive | source |  | missing |
-| thorne-starforged:active-vfx | Cassia Thorne — Thermal Overdrive | commander-actives | additive | source |  | missing |
-| vex-chronomancer:active-vfx | Aurelion Vex — Time Fracture | commander-actives | additive | source |  | missing |
-| ash-tempest:active-vfx | Valen Ash — Lightning Spear | commander-actives | additive | source |  | missing |
-| korven-phantom:active-vfx | Nyx Korven — Optical Cloak | commander-actives | additive | source |  | missing |
-| syn-bioforge:active-vfx | Dr. Mira Syn — Living Bloom | commander-actives | additive | source |  | missing |
-| solari-photon:active-vfx | Rhea Solari — Photon Lance | commander-actives | additive | source |  | missing |
-| kain-singularity:active-vfx | Zephyr Kain — Gravity Well | commander-actives | additive | source |  | missing |
-| reyes-warden:active-vfx | Astrid Reyes — Guardian Dome | commander-actives | additive | source |  | missing |
-| orion-starlancer:active-vfx | Lucien Orion — Star Dash | commander-actives | additive | source |  | missing |
-| volkov-titan:active-vfx | Ivan Volkov — Titan Charge | commander-actives | additive | source |  | missing |
-| myrr-oracle:active-vfx | Selene Myrr — Tactical Projection | commander-actives | additive | source |  | missing |
-| nova-architect:active-vfx | Caelus Nova — Rapid Fabrication | commander-actives | additive | source |  | missing |
-| vega-echo:active-vfx | Talia Vega — Resonance Pulse | commander-actives | additive | source |  | missing |
-| rhem-catalyst:active-vfx | Darius Rhem — Catalytic Charge | commander-actives | additive | source |  | missing |
-| ross-horizon:active-vfx | Eliana Ross — Survey Beacon | commander-actives | additive | source |  | missing |
-| solace-diplomat:active-vfx | Kieran Solace — Peace Accord | commander-actives | additive | source |  | missing |
-| oris-nanoforge:active-vfx | Xanthe Oris — Nanite Swarm | commander-actives | additive | source |  | missing |
-| drake-sentinel:active-vfx | Ronan Drake — Interceptor Grid | commander-actives | additive | source |  | missing |
-| helix-alchemist:active-vfx | Sora Helix — Elemental Injector | commander-actives | additive | source |  | missing |
-| fen-beastmaster:active-vfx | Dorian Fen — Call Companion | commander-actives | additive | source |  | missing |
-| noctis-voidwalker:active-vfx | Vega Noctis — Phase Step | commander-actives | additive | source |  | missing |
-| aether-celestial:active-vfx | Lysandra Aether — Starfall | commander-actives | additive | source |  | missing |
-| prime-founder:active-vfx | Atlas Prime — Command Protocol | commander-actives | additive | source |  | missing |
-| elite-reward-xp-crystal:vfx | Large XP Crystal | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-xp-magnet:vfx | XP Magnet | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-screen-clear:vfx | Screen Clear | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-screen-stun:vfx | Screen Stun | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-rare-cache:vfx | Rare Cache | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-epic-upgrade:vfx | Epic Upgrade | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-legendary-chance:vfx | Legendary Chance | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-temporary-ally:vfx | Temporary Ally | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-repair-drone:vfx | Repair Drone | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-atlas-fragment:vfx | Atlas Fragment | elite-reward-vfx | additive | source |  | missing |
-| elite-reward-ultra-rare-event:vfx | Ultra Rare Event Trigger | elite-reward-vfx | additive | source |  | missing |
-| wave-reward-patch-kit:vfx | Patch Kit | wave-reward-vfx | additive | source |  | missing |
-| wave-reward-salvage-haul:vfx | Salvage Haul | wave-reward-vfx | additive | source |  | missing |
-| wave-reward-wide-scanner:vfx | Wide Scanner | wave-reward-vfx | additive | source |  | missing |
-| wave-reward-coil-tune:vfx | Coil Tune | wave-reward-vfx | additive | source |  | missing |
-| wave-reward-field-primer:vfx | Field Primer | wave-reward-vfx | additive | source |  | missing |
-| wave-reward-second-look:vfx | Second Look | wave-reward-vfx | additive | source |  | missing |
-| wave-reward-atlas-cache:vfx | Atlas Cache | wave-reward-vfx | additive | source |  | missing |
-| wave-reward-overdrive:vfx | Overdrive | wave-reward-vfx | additive | source |  | missing |
-| faction-emblem:crystalDominion | Crystal Dominion | faction-emblems | keyed | source |  | missing |
-| faction-emblem:machineCollective | Machine Collective | faction-emblems | keyed | source |  | missing |
-| faction-emblem:humanAlliance | Human Alliance | faction-emblems | keyed | source |  | missing |
-| faction-emblem:mercenaryGuild | Mercenary Guild | faction-emblems | keyed | source |  | missing |
-| faction-emblem:ancientCustodians | Ancient Custodians | faction-emblems | keyed | source |  | missing |
-| faction-emblem:nomadFleet | Stellar Nomads | faction-emblems | keyed | source |  | missing |
-| research-node:focused-lattice | Focused Lattice | research-nodes | keyed | source |  | missing |
-| research-node:coherent-beams | Coherent Beams | research-nodes | keyed | source |  | missing |
-| research-node:harmonic-overload | Harmonic Overload | research-nodes | keyed | source |  | missing |
-| research-node:field-dynamics | Field Dynamics | research-nodes | keyed | source |  | missing |
-| research-node:resonant-collectors | Resonant Collectors | research-nodes | keyed | source |  | missing |
-| research-node:survey-protocols | Survey Protocols | research-nodes | keyed | source |  | missing |
-| research-node:deep-scanning | Deep Scanning | research-nodes | keyed | source |  | missing |
-| research-node:unified-theory | Unified Theory | research-nodes | keyed | source |  | missing |
-| research-node:rapid-refit | Rapid Refit | research-nodes | keyed | source |  | missing |
-| research-node:expanded-archives | Expanded Archives | research-nodes | keyed | source |  | missing |
-| research-node:barrier-theory | Barrier Theory | research-nodes | keyed | source |  | missing |
-| research-node:ancient-conduit | Ancient Conduit | research-nodes | keyed | source |  | missing |
-| research-node:warp-charting | Warp Charting | research-nodes | keyed | source |  | missing |
-| research-node:lattice-attunement | Lattice Attunement | research-nodes | keyed | source |  | missing |
-| research-node:drone-doctrine | Drone Doctrine | research-nodes | keyed | source |  | missing |
-| research-node:gene-tempering | Gene Tempering | research-nodes | keyed | source |  | missing |
-| research-node:void-containment | Void Containment | research-nodes | keyed | source |  | missing |
-| research-node:afterlight-network | The Afterlight Network | research-nodes | keyed | source |  | missing |
-| build-path:commander | Commander | build-paths | keyed | source |  | missing |
-| build-path:engineer | Engineer | build-paths | keyed | source |  | missing |
-| build-path:void | Void Walker | build-paths | keyed | source |  | missing |
-| build-path:guardian | Guardian | build-paths | keyed | source |  | missing |
-| build-path:hunter | Hunter | build-paths | keyed | source |  | missing |
-| build-path:droneCommander | Drone Commander | build-paths | keyed | source |  | missing |
-| build-path:heavyWeapons | Heavy Weapons | build-paths | keyed | source |  | missing |
-| build-path:orbitalSpecialist | Orbital Specialist | build-paths | keyed | source |  | missing |
-| build-path:bioEngineer | Bio-Engineer | build-paths | keyed | source |  | missing |
-| loot-item:PROTO_CANNON | proto cannon | loot-items | keyed | source |  | missing |
-| loot-item:HULL_PLATING | hull plating | loot-items | keyed | source |  | missing |
-| loot-item:STRANGE_RELIC | strange relic | loot-items | keyed | source |  | missing |
-| loot-item:SALVAGED_ALLOY | salvaged alloy | loot-items | keyed | source |  | missing |
-| loot-item:RESEARCH_CORE | research core | loot-items | keyed | source |  | missing |
-| director-event:MeteorShower | MeteorShower | director-events | additive | source |  | missing |
-| director-event:SolarFlare | SolarFlare | director-events | additive | source |  | missing |
-| director-event:CrystalGrowth | CrystalGrowth | director-events | additive | source |  | missing |
-| director-event:GravityFlux | GravityFlux | director-events | additive | source |  | missing |
-| director-event:VoidDistortion | VoidDistortion | director-events | additive | source |  | missing |
-| director-event:MachineReinforcements | MachineReinforcements | director-events | additive | source |  | missing |
-| director-event:AncientSignal | AncientSignal | director-events | additive | source |  | missing |
-| input-glyph:pad-north | pad-north | input-glyphs | keyed | source |  | missing |
-| input-glyph:pad-south | pad-south | input-glyphs | keyed | source |  | missing |
-| input-glyph:pad-east | pad-east | input-glyphs | keyed | source |  | missing |
-| input-glyph:pad-west | pad-west | input-glyphs | keyed | source |  | missing |
-| input-glyph:pad-dpad-up | pad-dpad-up | input-glyphs | keyed | source |  | missing |
-| input-glyph:pad-dpad-down | pad-dpad-down | input-glyphs | keyed | source |  | missing |
-| input-glyph:pad-dpad-left | pad-dpad-left | input-glyphs | keyed | source |  | missing |
-| input-glyph:pad-dpad-right | pad-dpad-right | input-glyphs | keyed | source |  | missing |
-| input-glyph:pad-start | pad-start | input-glyphs | keyed | source |  | missing |
-| input-glyph:pad-back | pad-back | input-glyphs | keyed | source |  | missing |
-| input-glyph:keyboard-keycap-frame | keyboard-keycap-frame | input-glyphs | keyed | source |  | missing |
-| input-glyph:mouse-left | mouse-left | input-glyphs | keyed | source |  | missing |
-| input-glyph:mouse-right | mouse-right | input-glyphs | keyed | source |  | missing |
-| input-glyph:touch-button-frame | touch-button-frame | input-glyphs | keyed | source |  | missing |
-| combat-entity:hostile-projectile-tint | hostile-projectile-tint | combat-entities | additive | source |  | missing |
+| id | name | category | priority | pipeline | production | sourceOrDerived | derivedFrom | status |
+|---|---|---|---|---|---|---|---|---|
+| wayfarer-hull-mk2:portrait | Wayfarer Mk. II | ships | P1 | keyed | generated | source |  | missing |
+| wayfarer-hull-mk2:sprite | Wayfarer Mk. II | ships | P1 | keyed | generated | source |  | missing |
+| wayfarer-hull-mk2:thumbnail | Wayfarer Mk. II | ships | P1 | keyed | generated | derived | wayfarer-hull-mk2:sprite | missing |
+| bastion-hull-mk1:portrait | Bastion Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| bastion-hull-mk1:sprite | Bastion Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| bastion-hull-mk1:thumbnail | Bastion Mk. I | ships | P1 | keyed | generated | derived | bastion-hull-mk1:sprite | missing |
+| aurelia-hull-mk1:portrait | Aurelia Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| aurelia-hull-mk1:sprite | Aurelia Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| aurelia-hull-mk1:thumbnail | Aurelia Mk. I | ships | P1 | keyed | generated | derived | aurelia-hull-mk1:sprite | missing |
+| sable-dart-mk1:portrait | Sable Dart Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| sable-dart-mk1:sprite | Sable Dart Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| sable-dart-mk1:thumbnail | Sable Dart Mk. I | ships | P1 | keyed | generated | derived | sable-dart-mk1:sprite | missing |
+| falchion-mk2:portrait | Falchion Mk. II | ships | P1 | keyed | generated | source |  | missing |
+| falchion-mk2:sprite | Falchion Mk. II | ships | P1 | keyed | generated | source |  | missing |
+| falchion-mk2:thumbnail | Falchion Mk. II | ships | P1 | keyed | generated | derived | falchion-mk2:sprite | missing |
+| hivemother-mk1:portrait | Hivemother Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| hivemother-mk1:sprite | Hivemother Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| hivemother-mk1:thumbnail | Hivemother Mk. I | ships | P1 | keyed | generated | derived | hivemother-mk1:sprite | missing |
+| dawnspire:portrait | Dawnspire | ships | P1 | keyed | generated | source |  | missing |
+| dawnspire:sprite | Dawnspire | ships | P1 | keyed | generated | source |  | missing |
+| dawnspire:thumbnail | Dawnspire | ships | P1 | keyed | generated | derived | dawnspire:sprite | missing |
+| ballista-mk3:portrait | Ballista Mk. III | ships | P1 | keyed | generated | source |  | missing |
+| ballista-mk3:sprite | Ballista Mk. III | ships | P1 | keyed | generated | source |  | missing |
+| ballista-mk3:thumbnail | Ballista Mk. III | ships | P1 | keyed | generated | derived | ballista-mk3:sprite | missing |
+| caduceus-mk1:portrait | Caduceus Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| caduceus-mk1:sprite | Caduceus Mk. I | ships | P1 | keyed | generated | source |  | missing |
+| caduceus-mk1:thumbnail | Caduceus Mk. I | ships | P1 | keyed | generated | derived | caduceus-mk1:sprite | missing |
+| maelstrom-x1:portrait | Maelstrom X-1 | ships | P1 | keyed | generated | source |  | missing |
+| maelstrom-x1:sprite | Maelstrom X-1 | ships | P1 | keyed | generated | source |  | missing |
+| maelstrom-x1:thumbnail | Maelstrom X-1 | ships | P1 | keyed | generated | derived | maelstrom-x1:sprite | missing |
+| coil-ripper:icon | Coil Ripper | weapons | P1 | keyed | generated | source |  | missing |
+| coil-ripper:projectile | Coil Ripper | weapons | P1 | keyed | generated | source |  | missing |
+| coil-ripper:muzzle | Coil Ripper | weapons | P1 | additive | generated | source |  | missing |
+| coil-ripper:impact | Coil Ripper | weapons | P1 | additive | generated | source |  | missing |
+| coil-ripper-mk2:icon | Coil Ripper Mk. II | weapons | P1 | keyed | generated | source |  | missing |
+| coil-ripper-mk2:projectile | Coil Ripper Mk. II | weapons | P1 | keyed | generated | source |  | missing |
+| coil-ripper-mk2:muzzle | Coil Ripper Mk. II | weapons | P1 | additive | generated | source |  | missing |
+| coil-ripper-mk2:impact | Coil Ripper Mk. II | weapons | P1 | additive | generated | source |  | missing |
+| novasplitter:icon | Novasplitter | weapons | P1 | keyed | generated | source |  | missing |
+| novasplitter:projectile | Novasplitter | weapons | P1 | keyed | generated | source |  | missing |
+| novasplitter:muzzle | Novasplitter | weapons | P1 | additive | generated | source |  | missing |
+| novasplitter:impact | Novasplitter | weapons | P1 | additive | generated | source |  | missing |
+| voidlance:icon | Voidlance | weapons | P1 | keyed | generated | source |  | missing |
+| voidlance:projectile | Voidlance | weapons | P1 | keyed | generated | source |  | missing |
+| voidlance:muzzle | Voidlance | weapons | P1 | additive | generated | source |  | missing |
+| voidlance:impact | Voidlance | weapons | P1 | additive | generated | source |  | missing |
+| hailborn-array:icon | Hailborn Array | weapons | P1 | keyed | generated | source |  | missing |
+| hailborn-array:projectile | Hailborn Array | weapons | P1 | keyed | generated | source |  | missing |
+| hailborn-array:muzzle | Hailborn Array | weapons | P1 | additive | generated | source |  | missing |
+| hailborn-array:impact | Hailborn Array | weapons | P1 | additive | generated | source |  | missing |
+| swarm-tender:icon | Swarm Tender | weapons | P1 | keyed | generated | source |  | missing |
+| swarm-tender:projectile | Swarm Tender | weapons | P1 | keyed | generated | source |  | missing |
+| swarm-tender:muzzle | Swarm Tender | weapons | P1 | additive | generated | source |  | missing |
+| swarm-tender:impact | Swarm Tender | weapons | P1 | additive | generated | source |  | missing |
+| spore-lance:icon | Spore Lance | weapons | P1 | keyed | generated | source |  | missing |
+| spore-lance:projectile | Spore Lance | weapons | P1 | keyed | generated | source |  | missing |
+| spore-lance:muzzle | Spore Lance | weapons | P1 | additive | generated | source |  | missing |
+| spore-lance:impact | Spore Lance | weapons | P1 | additive | generated | source |  | missing |
+| atlas-cluster-battery:icon | Atlas Cluster Battery | weapons | P1 | keyed | generated | source |  | missing |
+| atlas-cluster-battery:projectile | Atlas Cluster Battery | weapons | P1 | keyed | generated | source |  | missing |
+| atlas-cluster-battery:muzzle | Atlas Cluster Battery | weapons | P1 | additive | generated | source |  | missing |
+| atlas-cluster-battery:impact | Atlas Cluster Battery | weapons | P1 | additive | generated | source |  | missing |
+| helios-prism-array:icon | Helios Prism Array | weapons | P1 | keyed | generated | source |  | missing |
+| helios-prism-array:projectile | Helios Prism Array | weapons | P1 | keyed | generated | source |  | missing |
+| helios-prism-array:muzzle | Helios Prism Array | weapons | P1 | additive | generated | source |  | missing |
+| helios-prism-array:impact | Helios Prism Array | weapons | P1 | additive | generated | source |  | missing |
+| paragon-flux-driver:icon | Paragon Flux Driver | weapons | P1 | keyed | generated | source |  | missing |
+| paragon-flux-driver:projectile | Paragon Flux Driver | weapons | P1 | keyed | generated | source |  | missing |
+| paragon-flux-driver:muzzle | Paragon Flux Driver | weapons | P1 | additive | generated | source |  | missing |
+| paragon-flux-driver:impact | Paragon Flux Driver | weapons | P1 | additive | generated | source |  | missing |
+| foundry-sunlance:icon | Foundry Sunlance | weapons | P1 | keyed | generated | source |  | missing |
+| foundry-sunlance:projectile | Foundry Sunlance | weapons | P1 | keyed | generated | source |  | missing |
+| foundry-sunlance:muzzle | Foundry Sunlance | weapons | P1 | additive | generated | source |  | missing |
+| foundry-sunlance:impact | Foundry Sunlance | weapons | P1 | additive | generated | source |  | missing |
+| salvage-scattergun:icon | Salvage Scattergun | weapons | P1 | keyed | generated | source |  | missing |
+| salvage-scattergun:projectile | Salvage Scattergun | weapons | P1 | keyed | generated | source |  | missing |
+| salvage-scattergun:muzzle | Salvage Scattergun | weapons | P1 | additive | generated | source |  | missing |
+| salvage-scattergun:impact | Salvage Scattergun | weapons | P1 | additive | generated | source |  | missing |
+| reyes-longlight:portrait | Ilsa Reyes | commanders | P2 | keyed | generated | source |  | missing |
+| reyes-longlight:sprite | Ilsa Reyes | commanders | P2 | keyed | generated | source |  | missing |
+| reyes-longlight:ultimate-vfx | Ilsa Reyes | commanders | P2 | additive | generated | source |  | missing |
+| vek-ironhull:portrait | Vek Tarn | commanders | P2 | keyed | generated | source |  | missing |
+| vek-ironhull:sprite | Vek Tarn | commanders | P2 | keyed | generated | source |  | missing |
+| vek-ironhull:ultimate-vfx | Vek Tarn | commanders | P2 | additive | generated | source |  | missing |
+| vael-meridian:portrait | Dr. Sen Vael | commanders | P2 | keyed | generated | source |  | missing |
+| vael-meridian:sprite | Dr. Sen Vael | commanders | P2 | keyed | generated | source |  | missing |
+| vael-meridian:ultimate-vfx | Dr. Sen Vael | commanders | P2 | additive | generated | source |  | missing |
+| okoye-torque:portrait | Jelan Okoye | commanders | P2 | keyed | generated | source |  | missing |
+| okoye-torque:sprite | Jelan Okoye | commanders | P2 | keyed | generated | source |  | missing |
+| okoye-torque:ultimate-vfx | Jelan Okoye | commanders | P2 | additive | generated | source |  | missing |
+| naru-whisper:portrait | Ai Naru | commanders | P2 | keyed | generated | source |  | missing |
+| naru-whisper:sprite | Ai Naru | commanders | P2 | keyed | generated | source |  | missing |
+| naru-whisper:ultimate-vfx | Ai Naru | commanders | P2 | additive | generated | source |  | missing |
+| vex-longfang:portrait | Dain Vex | commanders | P2 | keyed | generated | source |  | missing |
+| vex-longfang:sprite | Dain Vex | commanders | P2 | keyed | generated | source |  | missing |
+| vex-longfang:ultimate-vfx | Dain Vex | commanders | P2 | additive | generated | source |  | missing |
+| holt-thunderline:portrait | Petra Holt | commanders | P2 | keyed | generated | source |  | missing |
+| holt-thunderline:sprite | Petra Holt | commanders | P2 | keyed | generated | source |  | missing |
+| holt-thunderline:ultimate-vfx | Petra Holt | commanders | P2 | additive | generated | source |  | missing |
+| anders-cipher:portrait | Rell Anders | commanders | P2 | keyed | generated | source |  | missing |
+| anders-cipher:sprite | Rell Anders | commanders | P2 | keyed | generated | source |  | missing |
+| anders-cipher:ultimate-vfx | Rell Anders | commanders | P2 | additive | generated | source |  | missing |
+| kite-aviary:portrait | Suno Kite | commanders | P2 | keyed | generated | source |  | missing |
+| kite-aviary:sprite | Suno Kite | commanders | P2 | keyed | generated | source |  | missing |
+| kite-aviary:ultimate-vfx | Suno Kite | commanders | P2 | additive | generated | source |  | missing |
+| sel-keystone:portrait | Mara Sel | commanders | P2 | keyed | generated | source |  | missing |
+| sel-keystone:sprite | Mara Sel | commanders | P2 | keyed | generated | source |  | missing |
+| sel-keystone:ultimate-vfx | Mara Sel | commanders | P2 | additive | generated | source |  | missing |
+| vane-chord:portrait | Ilex Vane | commanders | P2 | keyed | generated | source |  | missing |
+| vane-chord:sprite | Ilex Vane | commanders | P2 | keyed | generated | source |  | missing |
+| vane-chord:ultimate-vfx | Ilex Vane | commanders | P2 | additive | generated | source |  | missing |
+| kael-nadir:portrait | Dr. Oshen Kael | commanders | P2 | keyed | generated | source |  | missing |
+| kael-nadir:sprite | Dr. Oshen Kael | commanders | P2 | keyed | generated | source |  | missing |
+| kael-nadir:ultimate-vfx | Dr. Oshen Kael | commanders | P2 | additive | generated | source |  | missing |
+| farr-redline:portrait | Juno Farr | commanders | P2 | keyed | generated | source |  | missing |
+| farr-redline:sprite | Juno Farr | commanders | P2 | keyed | generated | source |  | missing |
+| farr-redline:ultimate-vfx | Juno Farr | commanders | P2 | additive | generated | source |  | missing |
+| iman-relay:portrait | Sera Iman | commanders | P2 | keyed | generated | source |  | missing |
+| iman-relay:sprite | Sera Iman | commanders | P2 | keyed | generated | source |  | missing |
+| iman-relay:ultimate-vfx | Sera Iman | commanders | P2 | additive | generated | source |  | missing |
+| korr-wardbreaker:portrait | Thessaly Korr | commanders | P2 | keyed | generated | source |  | missing |
+| korr-wardbreaker:sprite | Thessaly Korr | commanders | P2 | keyed | generated | source |  | missing |
+| korr-wardbreaker:ultimate-vfx | Thessaly Korr | commanders | P2 | additive | generated | source |  | missing |
+| voss-lanternkeep:portrait | Dr. Imara Voss | commanders | P2 | keyed | generated | source |  | missing |
+| voss-lanternkeep:sprite | Dr. Imara Voss | commanders | P2 | keyed | generated | source |  | missing |
+| voss-lanternkeep:ultimate-vfx | Dr. Imara Voss | commanders | P2 | additive | generated | source |  | missing |
+| devereux-static:portrait | Ash Devereux | commanders | P2 | keyed | generated | source |  | missing |
+| devereux-static:sprite | Ash Devereux | commanders | P2 | keyed | generated | source |  | missing |
+| devereux-static:ultimate-vfx | Ash Devereux | commanders | P2 | additive | generated | source |  | missing |
+| okafor-halcyon:portrait | Rin Okafor | commanders | P2 | keyed | generated | source |  | missing |
+| okafor-halcyon:sprite | Rin Okafor | commanders | P2 | keyed | generated | source |  | missing |
+| okafor-halcyon:ultimate-vfx | Rin Okafor | commanders | P2 | additive | generated | source |  | missing |
+| ur-sella-chorus:portrait | Vantha Ur-Sella | commanders | P2 | keyed | generated | source |  | missing |
+| ur-sella-chorus:sprite | Vantha Ur-Sella | commanders | P2 | keyed | generated | source |  | missing |
+| ur-sella-chorus:ultimate-vfx | Vantha Ur-Sella | commanders | P2 | additive | generated | source |  | missing |
+| kade-fulcrum:portrait | Boren Kade | commanders | P2 | keyed | generated | source |  | missing |
+| kade-fulcrum:sprite | Boren Kade | commanders | P2 | keyed | generated | source |  | missing |
+| kade-fulcrum:ultimate-vfx | Boren Kade | commanders | P2 | additive | generated | source |  | missing |
+| calder-driftline:portrait | Yuen Calder | commanders | P2 | keyed | generated | source |  | missing |
+| calder-driftline:sprite | Yuen Calder | commanders | P2 | keyed | generated | source |  | missing |
+| calder-driftline:ultimate-vfx | Yuen Calder | commanders | P2 | additive | generated | source |  | missing |
+| aldana-aftercare:portrait | Dr. Petrin Aldana | commanders | P2 | keyed | generated | source |  | missing |
+| aldana-aftercare:sprite | Dr. Petrin Aldana | commanders | P2 | keyed | generated | source |  | missing |
+| aldana-aftercare:ultimate-vfx | Dr. Petrin Aldana | commanders | P2 | additive | generated | source |  | missing |
+| voss-pathfinder:portrait | Dr. Lyra Voss | commanders | P2 | keyed | generated | source |  | missing |
+| voss-pathfinder:sprite | Dr. Lyra Voss | commanders | P2 | keyed | generated | source |  | missing |
+| voss-pathfinder:ultimate-vfx | Dr. Lyra Voss | commanders | P2 | additive | generated | source |  | missing |
+| kane-vanguard:portrait | Adrian Kane | commanders | P2 | keyed | generated | source |  | missing |
+| kane-vanguard:sprite | Adrian Kane | commanders | P2 | keyed | generated | source |  | missing |
+| kane-vanguard:ultimate-vfx | Adrian Kane | commanders | P2 | additive | generated | source |  | missing |
+| ryker-engineer:portrait | Elias Ryker | commanders | P2 | keyed | generated | source |  | missing |
+| ryker-engineer:sprite | Elias Ryker | commanders | P2 | keyed | generated | source |  | missing |
+| ryker-engineer:ultimate-vfx | Elias Ryker | commanders | P2 | additive | generated | source |  | missing |
+| cael-weaver:portrait | Seraphina Cael | commanders | P2 | keyed | generated | source |  | missing |
+| cael-weaver:sprite | Seraphina Cael | commanders | P2 | keyed | generated | source |  | missing |
+| cael-weaver:ultimate-vfx | Seraphina Cael | commanders | P2 | additive | generated | source |  | missing |
+| drake-hunter:portrait | Kael Drake | commanders | P2 | keyed | generated | source |  | missing |
+| drake-hunter:sprite | Kael Drake | commanders | P2 | keyed | generated | source |  | missing |
+| drake-hunter:ultimate-vfx | Kael Drake | commanders | P2 | additive | generated | source |  | missing |
+| sol-resonant:portrait | Aria Sol | commanders | P2 | keyed | generated | source |  | missing |
+| sol-resonant:sprite | Aria Sol | commanders | P2 | keyed | generated | source |  | missing |
+| sol-resonant:ultimate-vfx | Aria Sol | commanders | P2 | additive | generated | source |  | missing |
+| vale-voidrunner:portrait | Orion Vale | commanders | P2 | keyed | generated | source |  | missing |
+| vale-voidrunner:sprite | Orion Vale | commanders | P2 | keyed | generated | source |  | missing |
+| vale-voidrunner:ultimate-vfx | Orion Vale | commanders | P2 | additive | generated | source |  | missing |
+| iskander-swarmmaster:portrait | Nova Iskander | commanders | P2 | keyed | generated | source |  | missing |
+| iskander-swarmmaster:sprite | Nova Iskander | commanders | P2 | keyed | generated | source |  | missing |
+| iskander-swarmmaster:ultimate-vfx | Nova Iskander | commanders | P2 | additive | generated | source |  | missing |
+| thorne-starforged:portrait | Cassia Thorne | commanders | P2 | keyed | generated | source |  | missing |
+| thorne-starforged:sprite | Cassia Thorne | commanders | P2 | keyed | generated | source |  | missing |
+| thorne-starforged:ultimate-vfx | Cassia Thorne | commanders | P2 | additive | generated | source |  | missing |
+| vex-chronomancer:portrait | Aurelion Vex | commanders | P2 | keyed | generated | source |  | missing |
+| vex-chronomancer:sprite | Aurelion Vex | commanders | P2 | keyed | generated | source |  | missing |
+| vex-chronomancer:ultimate-vfx | Aurelion Vex | commanders | P2 | additive | generated | source |  | missing |
+| ash-tempest:portrait | Valen Ash | commanders | P2 | keyed | generated | source |  | missing |
+| ash-tempest:sprite | Valen Ash | commanders | P2 | keyed | generated | source |  | missing |
+| ash-tempest:ultimate-vfx | Valen Ash | commanders | P2 | additive | generated | source |  | missing |
+| korven-phantom:portrait | Nyx Korven | commanders | P2 | keyed | generated | source |  | missing |
+| korven-phantom:sprite | Nyx Korven | commanders | P2 | keyed | generated | source |  | missing |
+| korven-phantom:ultimate-vfx | Nyx Korven | commanders | P2 | additive | generated | source |  | missing |
+| syn-bioforge:portrait | Dr. Mira Syn | commanders | P2 | keyed | generated | source |  | missing |
+| syn-bioforge:sprite | Dr. Mira Syn | commanders | P2 | keyed | generated | source |  | missing |
+| syn-bioforge:ultimate-vfx | Dr. Mira Syn | commanders | P2 | additive | generated | source |  | missing |
+| solari-photon:portrait | Rhea Solari | commanders | P2 | keyed | generated | source |  | missing |
+| solari-photon:sprite | Rhea Solari | commanders | P2 | keyed | generated | source |  | missing |
+| solari-photon:ultimate-vfx | Rhea Solari | commanders | P2 | additive | generated | source |  | missing |
+| kain-singularity:portrait | Zephyr Kain | commanders | P2 | keyed | generated | source |  | missing |
+| kain-singularity:sprite | Zephyr Kain | commanders | P2 | keyed | generated | source |  | missing |
+| kain-singularity:ultimate-vfx | Zephyr Kain | commanders | P2 | additive | generated | source |  | missing |
+| reyes-warden:portrait | Astrid Reyes | commanders | P2 | keyed | generated | source |  | missing |
+| reyes-warden:sprite | Astrid Reyes | commanders | P2 | keyed | generated | source |  | missing |
+| reyes-warden:ultimate-vfx | Astrid Reyes | commanders | P2 | additive | generated | source |  | missing |
+| orion-starlancer:portrait | Lucien Orion | commanders | P2 | keyed | generated | source |  | missing |
+| orion-starlancer:sprite | Lucien Orion | commanders | P2 | keyed | generated | source |  | missing |
+| orion-starlancer:ultimate-vfx | Lucien Orion | commanders | P2 | additive | generated | source |  | missing |
+| volkov-titan:portrait | Ivan Volkov | commanders | P2 | keyed | generated | source |  | missing |
+| volkov-titan:sprite | Ivan Volkov | commanders | P2 | keyed | generated | source |  | missing |
+| volkov-titan:ultimate-vfx | Ivan Volkov | commanders | P2 | additive | generated | source |  | missing |
+| myrr-oracle:portrait | Selene Myrr | commanders | P2 | keyed | generated | source |  | missing |
+| myrr-oracle:sprite | Selene Myrr | commanders | P2 | keyed | generated | source |  | missing |
+| myrr-oracle:ultimate-vfx | Selene Myrr | commanders | P2 | additive | generated | source |  | missing |
+| nova-architect:portrait | Caelus Nova | commanders | P2 | keyed | generated | source |  | missing |
+| nova-architect:sprite | Caelus Nova | commanders | P2 | keyed | generated | source |  | missing |
+| nova-architect:ultimate-vfx | Caelus Nova | commanders | P2 | additive | generated | source |  | missing |
+| vega-echo:portrait | Talia Vega | commanders | P2 | keyed | generated | source |  | missing |
+| vega-echo:sprite | Talia Vega | commanders | P2 | keyed | generated | source |  | missing |
+| vega-echo:ultimate-vfx | Talia Vega | commanders | P2 | additive | generated | source |  | missing |
+| rhem-catalyst:portrait | Darius Rhem | commanders | P2 | keyed | generated | source |  | missing |
+| rhem-catalyst:sprite | Darius Rhem | commanders | P2 | keyed | generated | source |  | missing |
+| rhem-catalyst:ultimate-vfx | Darius Rhem | commanders | P2 | additive | generated | source |  | missing |
+| ross-horizon:portrait | Eliana Ross | commanders | P2 | keyed | generated | source |  | missing |
+| ross-horizon:sprite | Eliana Ross | commanders | P2 | keyed | generated | source |  | missing |
+| ross-horizon:ultimate-vfx | Eliana Ross | commanders | P2 | additive | generated | source |  | missing |
+| solace-diplomat:portrait | Kieran Solace | commanders | P2 | keyed | generated | source |  | missing |
+| solace-diplomat:sprite | Kieran Solace | commanders | P2 | keyed | generated | source |  | missing |
+| solace-diplomat:ultimate-vfx | Kieran Solace | commanders | P2 | additive | generated | source |  | missing |
+| oris-nanoforge:portrait | Xanthe Oris | commanders | P2 | keyed | generated | source |  | missing |
+| oris-nanoforge:sprite | Xanthe Oris | commanders | P2 | keyed | generated | source |  | missing |
+| oris-nanoforge:ultimate-vfx | Xanthe Oris | commanders | P2 | additive | generated | source |  | missing |
+| drake-sentinel:portrait | Ronan Drake | commanders | P2 | keyed | generated | source |  | missing |
+| drake-sentinel:sprite | Ronan Drake | commanders | P2 | keyed | generated | source |  | missing |
+| drake-sentinel:ultimate-vfx | Ronan Drake | commanders | P2 | additive | generated | source |  | missing |
+| helix-alchemist:portrait | Sora Helix | commanders | P2 | keyed | generated | source |  | missing |
+| helix-alchemist:sprite | Sora Helix | commanders | P2 | keyed | generated | source |  | missing |
+| helix-alchemist:ultimate-vfx | Sora Helix | commanders | P2 | additive | generated | source |  | missing |
+| fen-beastmaster:portrait | Dorian Fen | commanders | P2 | keyed | generated | source |  | missing |
+| fen-beastmaster:sprite | Dorian Fen | commanders | P2 | keyed | generated | source |  | missing |
+| fen-beastmaster:ultimate-vfx | Dorian Fen | commanders | P2 | additive | generated | source |  | missing |
+| noctis-voidwalker:portrait | Vega Noctis | commanders | P2 | keyed | generated | source |  | missing |
+| noctis-voidwalker:sprite | Vega Noctis | commanders | P2 | keyed | generated | source |  | missing |
+| noctis-voidwalker:ultimate-vfx | Vega Noctis | commanders | P2 | additive | generated | source |  | missing |
+| aether-celestial:portrait | Lysandra Aether | commanders | P2 | keyed | generated | source |  | missing |
+| aether-celestial:sprite | Lysandra Aether | commanders | P2 | keyed | generated | source |  | missing |
+| aether-celestial:ultimate-vfx | Lysandra Aether | commanders | P2 | additive | generated | source |  | missing |
+| prime-founder:portrait | Atlas Prime | commanders | P2 | keyed | generated | source |  | missing |
+| prime-founder:sprite | Atlas Prime | commanders | P2 | keyed | generated | source |  | missing |
+| prime-founder:ultimate-vfx | Atlas Prime | commanders | P2 | additive | generated | source |  | missing |
+| equipment-refit-cannon | refit-cannon | equipment | P3 | keyed | generated | source |  | missing |
+| equipment-barrier-plate | barrier-plate | equipment | P3 | keyed | generated | source |  | missing |
+| equipment-vanguard-thrusters | vanguard-thrusters | equipment | P3 | keyed | generated | source |  | missing |
+| equipment-vanguard-core | vanguard-core | equipment | P3 | keyed | generated | source |  | missing |
+| equipment-ancient-relay | ancient-relay | equipment | P3 | keyed | generated | source |  | missing |
+| equipment-cryo-manifold | cryo-manifold | equipment | P3 | keyed | generated | source |  | missing |
+| equipment-aegis-bastion-array | aegis-bastion-array | equipment | P3 | keyed | generated | source |  | missing |
+| equipment-aegis-ward-projector | aegis-ward-projector | equipment | P3 | keyed | generated | source |  | missing |
+| equipment-horizon-flux-capacitor | horizon-flux-capacitor | equipment | P3 | keyed | generated | source |  | missing |
+| equipment-nova-warden-hive | nova-warden-hive | equipment | P3 | keyed | generated | source |  | missing |
+| shipmodule-module-fusion-reactor | module-fusion-reactor | ship-modules | P3 | keyed | generated | source |  | missing |
+| shipmodule-module-vector-engine | module-vector-engine | ship-modules | P3 | keyed | generated | source |  | missing |
+| shipmodule-module-lattice-shield | module-lattice-shield | ship-modules | P3 | keyed | generated | source |  | missing |
+| shipmodule-module-predictive-targeter | module-predictive-targeter | ship-modules | P3 | keyed | generated | source |  | missing |
+| shipmodule-module-drone-bay | module-drone-bay | ship-modules | P3 | keyed | generated | source |  | missing |
+| shipmodule-module-deep-sensor | module-deep-sensor | ship-modules | P3 | keyed | generated | source |  | missing |
+| shipmodule-module-cryo-loop | module-cryo-loop | ship-modules | P3 | keyed | generated | source |  | missing |
+| shipmodule-module-axiom-core | module-axiom-core | ship-modules | P3 | keyed | generated | source |  | missing |
+| wisp-chaser:idle | Wisp Chaser | enemies | P1 | keyed | generated | source |  | missing |
+| wisp-chaser:move | Wisp Chaser | enemies | P1 | keyed | generated | derived | wisp-chaser:idle | missing |
+| wisp-chaser:attack | Wisp Chaser | enemies | P1 | keyed | generated | derived | wisp-chaser:idle | missing |
+| wisp-chaser:death | Wisp Chaser | enemies | P1 | keyed | generated | derived | wisp-chaser:idle | missing |
+| flak-orbiter:idle | Flak Orbiter | enemies | P1 | keyed | generated | source |  | missing |
+| flak-orbiter:move | Flak Orbiter | enemies | P1 | keyed | generated | derived | flak-orbiter:idle | missing |
+| flak-orbiter:attack | Flak Orbiter | enemies | P1 | keyed | generated | derived | flak-orbiter:idle | missing |
+| flak-orbiter:death | Flak Orbiter | enemies | P1 | keyed | generated | derived | flak-orbiter:idle | missing |
+| outlaw-raider:idle | Outlaw Raider | enemies | P1 | keyed | generated | source |  | missing |
+| outlaw-raider:move | Outlaw Raider | enemies | P1 | keyed | generated | derived | outlaw-raider:idle | missing |
+| outlaw-raider:attack | Outlaw Raider | enemies | P1 | keyed | generated | derived | outlaw-raider:idle | missing |
+| outlaw-raider:death | Outlaw Raider | enemies | P1 | keyed | generated | derived | outlaw-raider:idle | missing |
+| outlaw-sniper:idle | Outlaw Sniper | enemies | P1 | keyed | generated | source |  | missing |
+| outlaw-sniper:move | Outlaw Sniper | enemies | P1 | keyed | generated | derived | outlaw-sniper:idle | missing |
+| outlaw-sniper:attack | Outlaw Sniper | enemies | P1 | keyed | generated | derived | outlaw-sniper:idle | missing |
+| outlaw-sniper:death | Outlaw Sniper | enemies | P1 | keyed | generated | derived | outlaw-sniper:idle | missing |
+| outlaw-shield-carrier:idle | Outlaw Shield Carrier | enemies | P1 | keyed | generated | source |  | missing |
+| outlaw-shield-carrier:move | Outlaw Shield Carrier | enemies | P1 | keyed | generated | derived | outlaw-shield-carrier:idle | missing |
+| outlaw-shield-carrier:attack | Outlaw Shield Carrier | enemies | P1 | keyed | generated | derived | outlaw-shield-carrier:idle | missing |
+| outlaw-shield-carrier:death | Outlaw Shield Carrier | enemies | P1 | keyed | generated | derived | outlaw-shield-carrier:idle | missing |
+| outlaw-mine-layer:idle | Outlaw Mine Layer | enemies | P1 | keyed | generated | source |  | missing |
+| outlaw-mine-layer:move | Outlaw Mine Layer | enemies | P1 | keyed | generated | derived | outlaw-mine-layer:idle | missing |
+| outlaw-mine-layer:attack | Outlaw Mine Layer | enemies | P1 | keyed | generated | derived | outlaw-mine-layer:idle | missing |
+| outlaw-mine-layer:death | Outlaw Mine Layer | enemies | P1 | keyed | generated | derived | outlaw-mine-layer:idle | missing |
+| outlaw-captain:idle | Outlaw Captain | enemies | P1 | keyed | generated | source |  | missing |
+| outlaw-captain:move | Outlaw Captain | enemies | P1 | keyed | generated | derived | outlaw-captain:idle | missing |
+| outlaw-captain:attack | Outlaw Captain | enemies | P1 | keyed | generated | derived | outlaw-captain:idle | missing |
+| outlaw-captain:death | Outlaw Captain | enemies | P1 | keyed | generated | derived | outlaw-captain:idle | missing |
+| machine-combat-drone:idle | Machine Combat Drone | enemies | P1 | keyed | generated | source |  | missing |
+| machine-combat-drone:move | Machine Combat Drone | enemies | P1 | keyed | generated | derived | machine-combat-drone:idle | missing |
+| machine-combat-drone:attack | Machine Combat Drone | enemies | P1 | keyed | generated | derived | machine-combat-drone:idle | missing |
+| machine-combat-drone:death | Machine Combat Drone | enemies | P1 | keyed | generated | derived | machine-combat-drone:idle | missing |
+| machine-sniper-unit:idle | Machine Sniper Unit | enemies | P1 | keyed | generated | source |  | missing |
+| machine-sniper-unit:move | Machine Sniper Unit | enemies | P1 | keyed | generated | derived | machine-sniper-unit:idle | missing |
+| machine-sniper-unit:attack | Machine Sniper Unit | enemies | P1 | keyed | generated | derived | machine-sniper-unit:idle | missing |
+| machine-sniper-unit:death | Machine Sniper Unit | enemies | P1 | keyed | generated | derived | machine-sniper-unit:idle | missing |
+| machine-shield-generator:idle | Machine Shield Generator | enemies | P1 | keyed | generated | source |  | missing |
+| machine-shield-generator:move | Machine Shield Generator | enemies | P1 | keyed | generated | derived | machine-shield-generator:idle | missing |
+| machine-shield-generator:attack | Machine Shield Generator | enemies | P1 | keyed | generated | derived | machine-shield-generator:idle | missing |
+| machine-shield-generator:death | Machine Shield Generator | enemies | P1 | keyed | generated | derived | machine-shield-generator:idle | missing |
+| machine-repair-drone:idle | Machine Repair Drone | enemies | P1 | keyed | generated | source |  | missing |
+| machine-repair-drone:move | Machine Repair Drone | enemies | P1 | keyed | generated | derived | machine-repair-drone:idle | missing |
+| machine-repair-drone:attack | Machine Repair Drone | enemies | P1 | keyed | generated | derived | machine-repair-drone:idle | missing |
+| machine-repair-drone:death | Machine Repair Drone | enemies | P1 | keyed | generated | derived | machine-repair-drone:idle | missing |
+| machine-swarm-constructor:idle | Machine Swarm Constructor | enemies | P1 | keyed | generated | source |  | missing |
+| machine-swarm-constructor:move | Machine Swarm Constructor | enemies | P1 | keyed | generated | derived | machine-swarm-constructor:idle | missing |
+| machine-swarm-constructor:attack | Machine Swarm Constructor | enemies | P1 | keyed | generated | derived | machine-swarm-constructor:idle | missing |
+| machine-swarm-constructor:death | Machine Swarm Constructor | enemies | P1 | keyed | generated | derived | machine-swarm-constructor:idle | missing |
+| machine-command-core:idle | Machine Command Core | enemies | P1 | keyed | generated | source |  | missing |
+| machine-command-core:move | Machine Command Core | enemies | P1 | keyed | generated | derived | machine-command-core:idle | missing |
+| machine-command-core:attack | Machine Command Core | enemies | P1 | keyed | generated | derived | machine-command-core:idle | missing |
+| machine-command-core:death | Machine Command Core | enemies | P1 | keyed | generated | derived | machine-command-core:idle | missing |
+| crystal-drone:idle | Crystal Drone | enemies | P1 | keyed | generated | source |  | missing |
+| crystal-drone:move | Crystal Drone | enemies | P1 | keyed | generated | derived | crystal-drone:idle | missing |
+| crystal-drone:attack | Crystal Drone | enemies | P1 | keyed | generated | derived | crystal-drone:idle | missing |
+| crystal-drone:death | Crystal Drone | enemies | P1 | keyed | generated | derived | crystal-drone:idle | missing |
+| crystal-shard-hunter:idle | Shard Hunter | enemies | P1 | keyed | generated | source |  | missing |
+| crystal-shard-hunter:move | Shard Hunter | enemies | P1 | keyed | generated | derived | crystal-shard-hunter:idle | missing |
+| crystal-shard-hunter:attack | Shard Hunter | enemies | P1 | keyed | generated | derived | crystal-shard-hunter:idle | missing |
+| crystal-shard-hunter:death | Shard Hunter | enemies | P1 | keyed | generated | derived | crystal-shard-hunter:idle | missing |
+| crystal-resonance-node:idle | Resonance Node | enemies | P1 | keyed | generated | source |  | missing |
+| crystal-resonance-node:move | Resonance Node | enemies | P1 | keyed | generated | derived | crystal-resonance-node:idle | missing |
+| crystal-resonance-node:attack | Resonance Node | enemies | P1 | keyed | generated | derived | crystal-resonance-node:idle | missing |
+| crystal-resonance-node:death | Resonance Node | enemies | P1 | keyed | generated | derived | crystal-resonance-node:idle | missing |
+| crystal-growth-seeder:idle | Growth Seeder | enemies | P1 | keyed | generated | source |  | missing |
+| crystal-growth-seeder:move | Growth Seeder | enemies | P1 | keyed | generated | derived | crystal-growth-seeder:idle | missing |
+| crystal-growth-seeder:attack | Growth Seeder | enemies | P1 | keyed | generated | derived | crystal-growth-seeder:idle | missing |
+| crystal-growth-seeder:death | Growth Seeder | enemies | P1 | keyed | generated | derived | crystal-growth-seeder:idle | missing |
+| crystal-guardian:idle | Crystal Guardian | enemies | P1 | keyed | generated | source |  | missing |
+| crystal-guardian:move | Crystal Guardian | enemies | P1 | keyed | generated | derived | crystal-guardian:idle | missing |
+| crystal-guardian:attack | Crystal Guardian | enemies | P1 | keyed | generated | derived | crystal-guardian:idle | missing |
+| crystal-guardian:death | Crystal Guardian | enemies | P1 | keyed | generated | derived | crystal-guardian:idle | missing |
+| crystal-titan:idle | Crystal Titan | enemies | P1 | keyed | generated | source |  | missing |
+| crystal-titan:move | Crystal Titan | enemies | P1 | keyed | generated | derived | crystal-titan:idle | missing |
+| crystal-titan:attack | Crystal Titan | enemies | P1 | keyed | generated | derived | crystal-titan:idle | missing |
+| crystal-titan:death | Crystal Titan | enemies | P1 | keyed | generated | derived | crystal-titan:idle | missing |
+| void-wisp:idle | Void Wisp | enemies | P1 | keyed | generated | source |  | missing |
+| void-wisp:move | Void Wisp | enemies | P1 | keyed | generated | derived | void-wisp:idle | missing |
+| void-wisp:attack | Void Wisp | enemies | P1 | keyed | generated | derived | void-wisp:idle | missing |
+| void-wisp:death | Void Wisp | enemies | P1 | keyed | generated | derived | void-wisp:idle | missing |
+| corruption-parasite:idle | Corruption Parasite | enemies | P1 | keyed | generated | source |  | missing |
+| corruption-parasite:move | Corruption Parasite | enemies | P1 | keyed | generated | derived | corruption-parasite:idle | missing |
+| corruption-parasite:attack | Corruption Parasite | enemies | P1 | keyed | generated | derived | corruption-parasite:idle | missing |
+| corruption-parasite:death | Corruption Parasite | enemies | P1 | keyed | generated | derived | corruption-parasite:idle | missing |
+| shadow-hunter:idle | Shadow Hunter | enemies | P1 | keyed | generated | source |  | missing |
+| shadow-hunter:move | Shadow Hunter | enemies | P1 | keyed | generated | derived | shadow-hunter:idle | missing |
+| shadow-hunter:attack | Shadow Hunter | enemies | P1 | keyed | generated | derived | shadow-hunter:idle | missing |
+| shadow-hunter:death | Shadow Hunter | enemies | P1 | keyed | generated | derived | shadow-hunter:idle | missing |
+| void-beacon:idle | Void Beacon | enemies | P1 | keyed | generated | source |  | missing |
+| void-beacon:move | Void Beacon | enemies | P1 | keyed | generated | derived | void-beacon:idle | missing |
+| void-beacon:attack | Void Beacon | enemies | P1 | keyed | generated | derived | void-beacon:idle | missing |
+| void-beacon:death | Void Beacon | enemies | P1 | keyed | generated | derived | void-beacon:idle | missing |
+| rift-guardian:idle | Rift Guardian | enemies | P1 | keyed | generated | source |  | missing |
+| rift-guardian:move | Rift Guardian | enemies | P1 | keyed | generated | derived | rift-guardian:idle | missing |
+| rift-guardian:attack | Rift Guardian | enemies | P1 | keyed | generated | derived | rift-guardian:idle | missing |
+| rift-guardian:death | Rift Guardian | enemies | P1 | keyed | generated | derived | rift-guardian:idle | missing |
+| ancient-void-avatar:idle | Ancient Void Avatar | enemies | P1 | keyed | generated | source |  | missing |
+| ancient-void-avatar:move | Ancient Void Avatar | enemies | P1 | keyed | generated | derived | ancient-void-avatar:idle | missing |
+| ancient-void-avatar:attack | Ancient Void Avatar | enemies | P1 | keyed | generated | derived | ancient-void-avatar:idle | missing |
+| ancient-void-avatar:death | Ancient Void Avatar | enemies | P1 | keyed | generated | derived | ancient-void-avatar:idle | missing |
+| sentinel:idle | Sentinel | enemies | P1 | keyed | generated | source |  | missing |
+| sentinel:move | Sentinel | enemies | P1 | keyed | generated | derived | sentinel:idle | missing |
+| sentinel:attack | Sentinel | enemies | P1 | keyed | generated | derived | sentinel:idle | missing |
+| sentinel:death | Sentinel | enemies | P1 | keyed | generated | derived | sentinel:idle | missing |
+| defence-drone:idle | Defence Drone | enemies | P1 | keyed | generated | source |  | missing |
+| defence-drone:move | Defence Drone | enemies | P1 | keyed | generated | derived | defence-drone:idle | missing |
+| defence-drone:attack | Defence Drone | enemies | P1 | keyed | generated | derived | defence-drone:idle | missing |
+| defence-drone:death | Defence Drone | enemies | P1 | keyed | generated | derived | defence-drone:idle | missing |
+| guardian-sphere:idle | Guardian Sphere | enemies | P1 | keyed | generated | source |  | missing |
+| guardian-sphere:move | Guardian Sphere | enemies | P1 | keyed | generated | derived | guardian-sphere:idle | missing |
+| guardian-sphere:attack | Guardian Sphere | enemies | P1 | keyed | generated | derived | guardian-sphere:idle | missing |
+| guardian-sphere:death | Guardian Sphere | enemies | P1 | keyed | generated | derived | guardian-sphere:idle | missing |
+| shield-architect:idle | Shield Architect | enemies | P1 | keyed | generated | source |  | missing |
+| shield-architect:move | Shield Architect | enemies | P1 | keyed | generated | derived | shield-architect:idle | missing |
+| shield-architect:attack | Shield Architect | enemies | P1 | keyed | generated | derived | shield-architect:idle | missing |
+| shield-architect:death | Shield Architect | enemies | P1 | keyed | generated | derived | shield-architect:idle | missing |
+| custodian-walker:idle | Custodian Walker | enemies | P1 | keyed | generated | source |  | missing |
+| custodian-walker:move | Custodian Walker | enemies | P1 | keyed | generated | derived | custodian-walker:idle | missing |
+| custodian-walker:attack | Custodian Walker | enemies | P1 | keyed | generated | derived | custodian-walker:idle | missing |
+| custodian-walker:death | Custodian Walker | enemies | P1 | keyed | generated | derived | custodian-walker:idle | missing |
+| ancient-executor:idle | Ancient Executor | enemies | P1 | keyed | generated | source |  | missing |
+| ancient-executor:move | Ancient Executor | enemies | P1 | keyed | generated | derived | ancient-executor:idle | missing |
+| ancient-executor:attack | Ancient Executor | enemies | P1 | keyed | generated | derived | ancient-executor:idle | missing |
+| ancient-executor:death | Ancient Executor | enemies | P1 | keyed | generated | derived | ancient-executor:idle | missing |
+| hive-drone:idle | Hive Drone | enemies | P1 | keyed | generated | source |  | missing |
+| hive-drone:move | Hive Drone | enemies | P1 | keyed | generated | derived | hive-drone:idle | missing |
+| hive-drone:attack | Hive Drone | enemies | P1 | keyed | generated | derived | hive-drone:idle | missing |
+| hive-drone:death | Hive Drone | enemies | P1 | keyed | generated | derived | hive-drone:idle | missing |
+| spitter:idle | Spitter | enemies | P1 | keyed | generated | source |  | missing |
+| spitter:move | Spitter | enemies | P1 | keyed | generated | derived | spitter:idle | missing |
+| spitter:attack | Spitter | enemies | P1 | keyed | generated | derived | spitter:idle | missing |
+| spitter:death | Spitter | enemies | P1 | keyed | generated | derived | spitter:idle | missing |
+| stalker:idle | Stalker | enemies | P1 | keyed | generated | source |  | missing |
+| stalker:move | Stalker | enemies | P1 | keyed | generated | derived | stalker:idle | missing |
+| stalker:attack | Stalker | enemies | P1 | keyed | generated | derived | stalker:idle | missing |
+| stalker:death | Stalker | enemies | P1 | keyed | generated | derived | stalker:idle | missing |
+| evolution-node:idle | Evolution Node | enemies | P1 | keyed | generated | source |  | missing |
+| evolution-node:move | Evolution Node | enemies | P1 | keyed | generated | derived | evolution-node:idle | missing |
+| evolution-node:attack | Evolution Node | enemies | P1 | keyed | generated | derived | evolution-node:idle | missing |
+| evolution-node:death | Evolution Node | enemies | P1 | keyed | generated | derived | evolution-node:idle | missing |
+| crusher:idle | Crusher | enemies | P1 | keyed | generated | source |  | missing |
+| crusher:move | Crusher | enemies | P1 | keyed | generated | derived | crusher:idle | missing |
+| crusher:attack | Crusher | enemies | P1 | keyed | generated | derived | crusher:idle | missing |
+| crusher:death | Crusher | enemies | P1 | keyed | generated | derived | crusher:idle | missing |
+| living-titan:idle | Living Titan | enemies | P1 | keyed | generated | source |  | missing |
+| living-titan:move | Living Titan | enemies | P1 | keyed | generated | derived | living-titan:idle | missing |
+| living-titan:attack | Living Titan | enemies | P1 | keyed | generated | derived | living-titan:idle | missing |
+| living-titan:death | Living Titan | enemies | P1 | keyed | generated | derived | living-titan:idle | missing |
+| scout-skiff:idle | Scout Skiff | enemies | P1 | keyed | generated | source |  | missing |
+| scout-skiff:move | Scout Skiff | enemies | P1 | keyed | generated | derived | scout-skiff:idle | missing |
+| scout-skiff:attack | Scout Skiff | enemies | P1 | keyed | generated | derived | scout-skiff:idle | missing |
+| scout-skiff:death | Scout Skiff | enemies | P1 | keyed | generated | derived | scout-skiff:idle | missing |
+| hunter:idle | Hunter | enemies | P1 | keyed | generated | source |  | missing |
+| hunter:move | Hunter | enemies | P1 | keyed | generated | derived | hunter:idle | missing |
+| hunter:attack | Hunter | enemies | P1 | keyed | generated | derived | hunter:idle | missing |
+| hunter:death | Hunter | enemies | P1 | keyed | generated | derived | hunter:idle | missing |
+| escort-fighter:idle | Escort Fighter | enemies | P1 | keyed | generated | source |  | missing |
+| escort-fighter:move | Escort Fighter | enemies | P1 | keyed | generated | derived | escort-fighter:idle | missing |
+| escort-fighter:attack | Escort Fighter | enemies | P1 | keyed | generated | derived | escort-fighter:idle | missing |
+| escort-fighter:death | Escort Fighter | enemies | P1 | keyed | generated | derived | escort-fighter:idle | missing |
+| junker-gunship:idle | Junker Gunship | enemies | P1 | keyed | generated | source |  | missing |
+| junker-gunship:move | Junker Gunship | enemies | P1 | keyed | generated | derived | junker-gunship:idle | missing |
+| junker-gunship:attack | Junker Gunship | enemies | P1 | keyed | generated | derived | junker-gunship:idle | missing |
+| junker-gunship:death | Junker Gunship | enemies | P1 | keyed | generated | derived | junker-gunship:idle | missing |
+| repair-frigate:idle | Repair Frigate | enemies | P1 | keyed | generated | source |  | missing |
+| repair-frigate:move | Repair Frigate | enemies | P1 | keyed | generated | derived | repair-frigate:idle | missing |
+| repair-frigate:attack | Repair Frigate | enemies | P1 | keyed | generated | derived | repair-frigate:idle | missing |
+| repair-frigate:death | Repair Frigate | enemies | P1 | keyed | generated | derived | repair-frigate:idle | missing |
+| nomad-flagship:idle | Nomad Flagship | enemies | P1 | keyed | generated | source |  | missing |
+| nomad-flagship:move | Nomad Flagship | enemies | P1 | keyed | generated | derived | nomad-flagship:idle | missing |
+| nomad-flagship:attack | Nomad Flagship | enemies | P1 | keyed | generated | derived | nomad-flagship:idle | missing |
+| nomad-flagship:death | Nomad Flagship | enemies | P1 | keyed | generated | derived | nomad-flagship:idle | missing |
+| prototype-drone:idle | Prototype Drone | enemies | P1 | keyed | generated | source |  | missing |
+| prototype-drone:move | Prototype Drone | enemies | P1 | keyed | generated | derived | prototype-drone:idle | missing |
+| prototype-drone:attack | Prototype Drone | enemies | P1 | keyed | generated | derived | prototype-drone:idle | missing |
+| prototype-drone:death | Prototype Drone | enemies | P1 | keyed | generated | derived | prototype-drone:idle | missing |
+| pulse-cannon:idle | Pulse Cannon | enemies | P1 | keyed | generated | source |  | missing |
+| pulse-cannon:move | Pulse Cannon | enemies | P1 | keyed | generated | derived | pulse-cannon:idle | missing |
+| pulse-cannon:attack | Pulse Cannon | enemies | P1 | keyed | generated | derived | pulse-cannon:idle | missing |
+| pulse-cannon:death | Pulse Cannon | enemies | P1 | keyed | generated | derived | pulse-cannon:idle | missing |
+| adaptive-hunter:idle | Adaptive Hunter | enemies | P1 | keyed | generated | source |  | missing |
+| adaptive-hunter:move | Adaptive Hunter | enemies | P1 | keyed | generated | derived | adaptive-hunter:idle | missing |
+| adaptive-hunter:attack | Adaptive Hunter | enemies | P1 | keyed | generated | derived | adaptive-hunter:idle | missing |
+| adaptive-hunter:death | Adaptive Hunter | enemies | P1 | keyed | generated | derived | adaptive-hunter:idle | missing |
+| containment-sentinel:idle | Containment Sentinel | enemies | P1 | keyed | generated | source |  | missing |
+| containment-sentinel:move | Containment Sentinel | enemies | P1 | keyed | generated | derived | containment-sentinel:idle | missing |
+| containment-sentinel:attack | Containment Sentinel | enemies | P1 | keyed | generated | derived | containment-sentinel:idle | missing |
+| containment-sentinel:death | Containment Sentinel | enemies | P1 | keyed | generated | derived | containment-sentinel:idle | missing |
+| energy-construct:idle | Energy Construct | enemies | P1 | keyed | generated | source |  | missing |
+| energy-construct:move | Energy Construct | enemies | P1 | keyed | generated | derived | energy-construct:idle | missing |
+| energy-construct:attack | Energy Construct | enemies | P1 | keyed | generated | derived | energy-construct:idle | missing |
+| energy-construct:death | Energy Construct | enemies | P1 | keyed | generated | derived | energy-construct:idle | missing |
+| omega-prototype:idle | Omega Prototype | enemies | P1 | keyed | generated | source |  | missing |
+| omega-prototype:move | Omega Prototype | enemies | P1 | keyed | generated | derived | omega-prototype:idle | missing |
+| omega-prototype:attack | Omega Prototype | enemies | P1 | keyed | generated | derived | omega-prototype:idle | missing |
+| omega-prototype:death | Omega Prototype | enemies | P1 | keyed | generated | derived | omega-prototype:idle | missing |
+| solar-spark:idle | Solar Spark | enemies | P1 | keyed | generated | source |  | missing |
+| solar-spark:move | Solar Spark | enemies | P1 | keyed | generated | derived | solar-spark:idle | missing |
+| solar-spark:attack | Solar Spark | enemies | P1 | keyed | generated | derived | solar-spark:idle | missing |
+| solar-spark:death | Solar Spark | enemies | P1 | keyed | generated | derived | solar-spark:idle | missing |
+| pulsar-hunter:idle | Pulsar Hunter | enemies | P1 | keyed | generated | source |  | missing |
+| pulsar-hunter:move | Pulsar Hunter | enemies | P1 | keyed | generated | derived | pulsar-hunter:idle | missing |
+| pulsar-hunter:attack | Pulsar Hunter | enemies | P1 | keyed | generated | derived | pulsar-hunter:idle | missing |
+| pulsar-hunter:death | Pulsar Hunter | enemies | P1 | keyed | generated | derived | pulsar-hunter:idle | missing |
+| gravity-oracle:idle | Gravity Oracle | enemies | P1 | keyed | generated | source |  | missing |
+| gravity-oracle:move | Gravity Oracle | enemies | P1 | keyed | generated | derived | gravity-oracle:idle | missing |
+| gravity-oracle:attack | Gravity Oracle | enemies | P1 | keyed | generated | derived | gravity-oracle:idle | missing |
+| gravity-oracle:death | Gravity Oracle | enemies | P1 | keyed | generated | derived | gravity-oracle:idle | missing |
+| constellation-avatar:idle | Constellation Avatar | enemies | P1 | keyed | generated | source |  | missing |
+| constellation-avatar:move | Constellation Avatar | enemies | P1 | keyed | generated | derived | constellation-avatar:idle | missing |
+| constellation-avatar:attack | Constellation Avatar | enemies | P1 | keyed | generated | derived | constellation-avatar:idle | missing |
+| constellation-avatar:death | Constellation Avatar | enemies | P1 | keyed | generated | derived | constellation-avatar:idle | missing |
+| corona-guardian:idle | Corona Guardian | enemies | P1 | keyed | generated | source |  | missing |
+| corona-guardian:move | Corona Guardian | enemies | P1 | keyed | generated | derived | corona-guardian:idle | missing |
+| corona-guardian:attack | Corona Guardian | enemies | P1 | keyed | generated | derived | corona-guardian:idle | missing |
+| corona-guardian:death | Corona Guardian | enemies | P1 | keyed | generated | derived | corona-guardian:idle | missing |
+| living-supernova:idle | Living Supernova | enemies | P1 | keyed | generated | source |  | missing |
+| living-supernova:move | Living Supernova | enemies | P1 | keyed | generated | derived | living-supernova:idle | missing |
+| living-supernova:attack | Living Supernova | enemies | P1 | keyed | generated | derived | living-supernova:idle | missing |
+| living-supernova:death | Living Supernova | enemies | P1 | keyed | generated | derived | living-supernova:idle | missing |
+| lost-scout:idle | Lost Scout | enemies | P1 | keyed | generated | source |  | missing |
+| lost-scout:move | Lost Scout | enemies | P1 | keyed | generated | derived | lost-scout:idle | missing |
+| lost-scout:attack | Lost Scout | enemies | P1 | keyed | generated | derived | lost-scout:idle | missing |
+| lost-scout:death | Lost Scout | enemies | P1 | keyed | generated | derived | lost-scout:idle | missing |
+| broken-pilot:idle | Broken Pilot | enemies | P1 | keyed | generated | source |  | missing |
+| broken-pilot:move | Broken Pilot | enemies | P1 | keyed | generated | derived | broken-pilot:idle | missing |
+| broken-pilot:attack | Broken Pilot | enemies | P1 | keyed | generated | derived | broken-pilot:idle | missing |
+| broken-pilot:death | Broken Pilot | enemies | P1 | keyed | generated | derived | broken-pilot:idle | missing |
+| echo-drone:idle | Echo Drone | enemies | P1 | keyed | generated | source |  | missing |
+| echo-drone:move | Echo Drone | enemies | P1 | keyed | generated | derived | echo-drone:idle | missing |
+| echo-drone:attack | Echo Drone | enemies | P1 | keyed | generated | derived | echo-drone:idle | missing |
+| echo-drone:death | Echo Drone | enemies | P1 | keyed | generated | derived | echo-drone:idle | missing |
+| memory-warden:idle | Memory Warden | enemies | P1 | keyed | generated | source |  | missing |
+| memory-warden:move | Memory Warden | enemies | P1 | keyed | generated | derived | memory-warden:idle | missing |
+| memory-warden:attack | Memory Warden | enemies | P1 | keyed | generated | derived | memory-warden:idle | missing |
+| memory-warden:death | Memory Warden | enemies | P1 | keyed | generated | derived | memory-warden:idle | missing |
+| fallen-guardian:idle | Fallen Guardian | enemies | P1 | keyed | generated | source |  | missing |
+| fallen-guardian:move | Fallen Guardian | enemies | P1 | keyed | generated | derived | fallen-guardian:idle | missing |
+| fallen-guardian:attack | Fallen Guardian | enemies | P1 | keyed | generated | derived | fallen-guardian:idle | missing |
+| fallen-guardian:death | Fallen Guardian | enemies | P1 | keyed | generated | derived | fallen-guardian:idle | missing |
+| eclipsed-champion:idle | Eclipsed Champion | enemies | P1 | keyed | generated | source |  | missing |
+| eclipsed-champion:move | Eclipsed Champion | enemies | P1 | keyed | generated | derived | eclipsed-champion:idle | missing |
+| eclipsed-champion:attack | Eclipsed Champion | enemies | P1 | keyed | generated | derived | eclipsed-champion:idle | missing |
+| eclipsed-champion:death | Eclipsed Champion | enemies | P1 | keyed | generated | derived | eclipsed-champion:idle | missing |
+| elite-mutation:regeneration | regeneration | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:shielded | shielded | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:explosive | explosive | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:teleport | teleport | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:reflectiveArmour | reflectiveArmour | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:rapidAssault | rapidAssault | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:gravityField | gravityField | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:summoner | summoner | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:berserker | berserker | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:cryogenic | cryogenic | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:incendiary | incendiary | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:corrupted | corrupted | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:quantumShift | quantumShift | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:temporalEcho | temporalEcho | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:adaptiveArmour | adaptiveArmour | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:electric | electric | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:cloaked | cloaked | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-mutation:vampiric | vampiric | elite-mutations | P2 | additive | generated | source |  | missing |
+| elite-tier:veteran | veteran | elite-tiers | P2 | additive | codeDrawn | source |  | missing |
+| elite-tier:champion | champion | elite-tiers | P2 | additive | codeDrawn | source |  | missing |
+| elite-tier:ancient | ancient | elite-tiers | P2 | additive | codeDrawn | source |  | missing |
+| elite-tier:prime | prime | elite-tiers | P2 | additive | codeDrawn | source |  | missing |
+| elite-tier:legendary | legendary | elite-tiers | P2 | additive | codeDrawn | source |  | missing |
+| elite-tier:apex | apex | elite-tiers | P2 | additive | codeDrawn | source |  | missing |
+| elite-tier:mythic | mythic | elite-tiers | P2 | additive | codeDrawn | source |  | missing |
+| hollow-sentinel:model | The Hollow Sentinel | boss | P1 | keyed | generated | source |  | missing |
+| hollow-sentinel-world-boss:model | World-Ender The Hollow Sentinel | boss | P1 | keyed | generated | derived | hollow-sentinel:model | missing |
+| hollow-sentinel-mini-boss:model | The Hollow Sentinel Vanguard | boss | P1 | keyed | generated | derived | hollow-sentinel:model | missing |
+| hollow-sentinel:phase-1-siege | phase-1-siege | boss | P1 | additive | generated | source |  | missing |
+| hollow-sentinel:phase-2-collapse | phase-2-collapse | boss | P1 | additive | generated | source |  | missing |
+| hollow-sentinel:phase-3-chaos | phase-3-chaos | boss | P1 | additive | generated | source |  | missing |
+| hollow-sentinel:phase-4-signature | phase-4-signature | boss | P1 | additive | generated | source |  | missing |
+| hollow-sentinel:weakpoint:core-eye | core-eye | boss | P1 | additive | generated | source |  | missing |
+| hollow-sentinel:enrage | enrage | boss | P1 | additive | generated | source |  | missing |
+| livingReactor:icon | Living Reactor | boss-artifacts | P3 | keyed | generated | source |  | missing |
+| livingReactor:vfx | Living Reactor | boss-artifacts | P3 | additive | generated | source |  | missing |
+| atlasCore:icon | Atlas Core | boss-artifacts | P3 | keyed | generated | source |  | missing |
+| atlasCore:vfx | Atlas Core | boss-artifacts | P3 | additive | generated | source |  | missing |
+| gravitonHeart:icon | Graviton Heart | boss-artifacts | P3 | keyed | generated | source |  | missing |
+| gravitonHeart:vfx | Graviton Heart | boss-artifacts | P3 | additive | generated | source |  | missing |
+| stellarCompass:icon | Stellar Compass | boss-artifacts | P3 | keyed | generated | source |  | missing |
+| stellarCompass:vfx | Stellar Compass | boss-artifacts | P3 | additive | generated | source |  | missing |
+| voidEngine:icon | Void Engine | boss-artifacts | P3 | keyed | generated | source |  | missing |
+| voidEngine:vfx | Void Engine | boss-artifacts | P3 | additive | generated | source |  | missing |
+| passive-focus-fire:icon | Focus Fire | passives | P3 | keyed | generated | source |  | missing |
+| passive-overcharge-coils:icon | Overcharge Coils | passives | P3 | keyed | generated | source |  | missing |
+| passive-deadeye:icon | Deadeye | passives | P3 | keyed | generated | source |  | missing |
+| passive-light-frame:icon | Light Frame | passives | P3 | keyed | generated | source |  | missing |
+| passive-hardened-plating:icon | Hardened Plating | passives | P3 | keyed | generated | source |  | missing |
+| passive-wide-net:icon | Wide Net | passives | P3 | keyed | generated | source |  | missing |
+| passive-nanite-mesh:icon | Nanite Mesh | passives | P3 | keyed | generated | source |  | missing |
+| passive-salvage-protocol:icon | Salvage Protocol | passives | P3 | keyed | generated | source |  | missing |
+| passive-fast-learner:icon | Fast Learner | passives | P3 | keyed | generated | source |  | missing |
+| passive-escort-link:icon | Escort Link | passives | P3 | keyed | generated | source |  | missing |
+| passive-guardian-ward:icon | Guardian Ward | passives | P3 | keyed | generated | source |  | missing |
+| passive-signal-boost:icon | Signal Boost | passives | P3 | keyed | generated | source |  | missing |
+| passive-drone-primer:icon | Drone Primer | passives | P3 | keyed | generated | source |  | missing |
+| passive-resonance:icon | Resonance | passives | P3 | keyed | generated | source |  | missing |
+| artifact-shrapnel-core:icon | Shrapnel Core | artifacts | P3 | keyed | generated | source |  | missing |
+| artifact-shrapnel-core:vfx | Shrapnel Core | artifacts | P3 | additive | generated | source |  | missing |
+| artifact-reactive-plating:icon | Reactive Plating | artifacts | P3 | keyed | generated | source |  | missing |
+| artifact-reactive-plating:vfx | Reactive Plating | artifacts | P3 | additive | generated | source |  | missing |
+| artifact-fail-safe-cell:icon | Fail-Safe Cell | artifacts | P3 | keyed | generated | source |  | missing |
+| artifact-fail-safe-cell:vfx | Fail-Safe Cell | artifacts | P3 | additive | generated | source |  | missing |
+| artifact-ascension-matrix:icon | Ascension Matrix | artifacts | P3 | keyed | generated | source |  | missing |
+| artifact-ascension-matrix:vfx | Ascension Matrix | artifacts | P3 | additive | generated | source |  | missing |
+| ember-core:icon | Ember Core | relics | P3 | keyed | generated | source |  | missing |
+| frost-shard:icon | Frost Shard | relics | P3 | keyed | generated | source |  | missing |
+| cinder-heart:icon | Cinder Heart | relics | P3 | keyed | generated | source |  | missing |
+| gambler-die:icon | Gambler's Die | relics | P3 | keyed | generated | source |  | missing |
+| static-node:icon | Static Node | relics | P3 | keyed | generated | source |  | missing |
+| conduit-loop:icon | Conduit Loop | relics | P3 | keyed | generated | source |  | missing |
+| warden-token:icon | Warden's Token | relics | P3 | keyed | generated | source |  | missing |
+| singularity-keepsake:icon | Singularity Keepsake | relics | P3 | keyed | generated | source |  | missing |
+| veil-fragment:icon | Veil Fragment | relics | P3 | keyed | generated | source |  | missing |
+| set-thermal-cycle:set-tell | Thermal Cycle | relics | P3 | additive | generated | source |  | missing |
+| set-expedition-ledger:set-tell | Expedition Ledger | relics | P3 | additive | generated | source |  | missing |
+| crystal-fields-alpha:background | Crystal Fields | biomes | P2 | fullbleed | generated | source |  | missing |
+| ancient-core:background | First Light | biomes | P2 | fullbleed | generated | source |  | missing |
+| crystal-expanse:background | Prismheart | biomes | P2 | fullbleed | generated | source |  | missing |
+| derelict-expanse:background | Gravewake | biomes | P2 | fullbleed | generated | source |  | missing |
+| meridian-rest-frontier:background | Meridian Rest | biomes | P2 | fullbleed | generated | source |  | missing |
+| frozen-reach:background | Winterline | biomes | P2 | fullbleed | generated | source |  | missing |
+| living-ecospheres:background | Verdance | biomes | P2 | fullbleed | generated | source |  | missing |
+| machine-expanse:background | Forge Primus | biomes | P2 | fullbleed | generated | source |  | missing |
+| singularity-zone:background | Axiom | biomes | P2 | fullbleed | generated | source |  | missing |
+| solar-wastes:background | Cinderfall | biomes | P2 | fullbleed | generated | source |  | missing |
+| void-expanse:background | Hollow Crown | biomes | P2 | fullbleed | generated | source |  | missing |
+| biome-weather:Ancient Core:solarStreams | solarStreams | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Ancient Core:energyRain | energyRain | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Ancient Core:quantumResonance | quantumResonance | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Ancient Core:gravityHarmony | gravityHarmony | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Ancient Core:lightBloom | lightBloom | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Ancient Core:stellarWinds | stellarWinds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Ancient Core:ancientEnergyPulses | ancientEnergyPulses | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Ancient Core:securityFields | securityFields | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Ancient Core:energyBridges | energyBridges | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Ancient Core:quantumGates | quantumGates | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Ancient Core:gravityWells | gravityWells | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Ancient Core:guardianArrays | guardianArrays | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Ancient Core:defenceLasers | defenceLasers | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Ancient Core:collapsingPlatforms | collapsingPlatforms | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Ancient Core:temporalLocks | temporalLocks | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Ancient Core:planetaryLibraries | planetaryLibraries | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Ancient Core:stellarObservatories | stellarObservatories | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Ancient Core:ancientCouncils | ancientCouncils | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Ancient Core:knowledgeWells | knowledgeWells | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Ancient Core:guardianTemples | guardianTemples | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Ancient Core:quantumBridges | quantumBridges | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Ancient Core:memoryArchives | memoryArchives | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Ancient Core:civilisationMonuments | civilisationMonuments | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-weather:Crystal Expanse:crystalRain | crystalRain | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Crystal Expanse:prismaticStorms | prismaticStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Crystal Expanse:energyWinds | energyWinds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Crystal Expanse:resonancePulses | resonancePulses | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Crystal Expanse:lightBloom | lightBloom | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Crystal Expanse:crystalMist | crystalMist | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Crystal Expanse:solarRefraction | solarRefraction | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Crystal Expanse:growingCrystalWalls | growingCrystalWalls | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Crystal Expanse:reflectiveShards | reflectiveShards | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Crystal Expanse:energyEruptions | energyEruptions | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Crystal Expanse:resonanceFields | resonanceFields | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Crystal Expanse:crystalExplosions | crystalExplosions | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Crystal Expanse:collapsingFormations | collapsingFormations | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Crystal Expanse:prismaticLasers | prismaticLasers | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Crystal Expanse:livingTerrain | livingTerrain | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Crystal Expanse:resonanceWells | resonanceWells | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Crystal Expanse:livingMonoliths | livingMonoliths | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Crystal Expanse:ancientCrystalArchives | ancientCrystalArchives | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Crystal Expanse:energyBridges | energyBridges | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Crystal Expanse:crystalBloomSites | crystalBloomSites | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Crystal Expanse:hiddenCaverns | hiddenCaverns | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Crystal Expanse:planetaryHeartChambers | planetaryHeartChambers | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Crystal Expanse:prismaticSanctuaries | prismaticSanctuaries | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-weather:Derelict Expanse:debrisStorms | debrisStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Derelict Expanse:electromagneticClouds | electromagneticClouds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Derelict Expanse:microMeteorFields | microMeteorFields | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Derelict Expanse:staticDisturbance | staticDisturbance | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Derelict Expanse:sensorInterference | sensorInterference | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Derelict Expanse:powerFluctuations | powerFluctuations | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Derelict Expanse:ionDust | ionDust | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Derelict Expanse:hullExplosions | hullExplosions | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Derelict Expanse:reactorLeaks | reactorLeaks | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Derelict Expanse:electricalDischarge | electricalDischarge | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Derelict Expanse:floatingDebris | floatingDebris | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Derelict Expanse:brokenGravityFields | brokenGravityFields | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Derelict Expanse:radiationPockets | radiationPockets | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Derelict Expanse:fuelFires | fuelFires | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Derelict Expanse:unstableWreckage | unstableWreckage | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Derelict Expanse:ghostCarriers | ghostCarriers | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Derelict Expanse:abandonedBridges | abandonedBridges | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Derelict Expanse:cryoEscapePods | cryoEscapePods | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Derelict Expanse:fleetCommandShips | fleetCommandShips | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Derelict Expanse:prototypeHangars | prototypeHangars | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Derelict Expanse:researchVessels | researchVessels | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Derelict Expanse:cargoVaults | cargoVaults | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Derelict Expanse:emergencyBeacons | emergencyBeacons | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-weather:Human Frontier:solarWinds | solarWinds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Human Frontier:debrisFields | debrisFields | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Human Frontier:ionStorms | ionStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Human Frontier:microMeteorShowers | microMeteorShowers | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Human Frontier:radiationClouds | radiationClouds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Human Frontier:engineExhaustFields | engineExhaustFields | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Human Frontier:electricalStorms | electricalStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Human Frontier:damagedStations | damagedStations | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Human Frontier:explosiveFuelTanks | explosiveFuelTanks | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Human Frontier:minefields | minefields | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Human Frontier:debrisBelts | debrisBelts | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Human Frontier:electricalArcs | electricalArcs | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Human Frontier:reactorLeaks | reactorLeaks | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Human Frontier:navigationHazards | navigationHazards | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Human Frontier:distressSignals | distressSignals | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Human Frontier:abandonedStations | abandonedStations | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Human Frontier:miningOperations | miningOperations | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Human Frontier:civilianSettlements | civilianSettlements | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Human Frontier:prototypeWorkshops | prototypeWorkshops | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Human Frontier:blackMarketOutposts | blackMarketOutposts | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Human Frontier:navigationBeacons | navigationBeacons | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Human Frontier:historicWrecks | historicWrecks | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-weather:Frozen Reach:cryoStorms | cryoStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Frozen Reach:auroraActivity | auroraActivity | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Frozen Reach:iceFog | iceFog | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Frozen Reach:frozenDust | frozenDust | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Frozen Reach:electrostaticSnow | electrostaticSnow | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Frozen Reach:crystalHail | crystalHail | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Frozen Reach:thermalCollapse | thermalCollapse | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Frozen Reach:iceCracks | iceCracks | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Frozen Reach:cryogenicFields | cryogenicFields | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Frozen Reach:frozenGasClouds | frozenGasClouds | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Frozen Reach:slipperySurfaces | slipperySurfaces | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Frozen Reach:thermalShock | thermalShock | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Frozen Reach:cryoExplosions | cryoExplosions | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Frozen Reach:fallingIce | fallingIce | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Frozen Reach:frozenDebris | frozenDebris | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Frozen Reach:cryoVaults | cryoVaults | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Frozen Reach:frozenFleets | frozenFleets | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Frozen Reach:ancientLaboratories | ancientLaboratories | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Frozen Reach:iceTemples | iceTemples | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Frozen Reach:subsurfaceCities | subsurfaceCities | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Frozen Reach:auroraObservatories | auroraObservatories | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Frozen Reach:preservationChambers | preservationChambers | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Frozen Reach:deepIceArchives | deepIceArchives | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-weather:Living Ecospheres:sporeStorms | sporeStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Living Ecospheres:pollenClouds | pollenClouds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Living Ecospheres:bioluminescentRain | bioluminescentRain | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Living Ecospheres:livingFog | livingFog | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Living Ecospheres:photosyntheticBloom | photosyntheticBloom | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Living Ecospheres:seedWinds | seedWinds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Living Ecospheres:organicLightning | organicLightning | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Living Ecospheres:carnivorousFlora | carnivorousFlora | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Living Ecospheres:toxicSpores | toxicSpores | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Living Ecospheres:livingVines | livingVines | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Living Ecospheres:rootTraps | rootTraps | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Living Ecospheres:acidSap | acidSap | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Living Ecospheres:sporeBursts | sporeBursts | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Living Ecospheres:collapsingGrowth | collapsingGrowth | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Living Ecospheres:organicAmbushes | organicAmbushes | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Living Ecospheres:planetaryHeart | planetaryHeart | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Living Ecospheres:evolutionPools | evolutionPools | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Living Ecospheres:ancientBioLabs | ancientBioLabs | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Living Ecospheres:livingTemples | livingTemples | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Living Ecospheres:seedVaults | seedVaults | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Living Ecospheres:symbiosisChambers | symbiosisChambers | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Living Ecospheres:organicArchives | organicArchives | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Living Ecospheres:giganticRootSystems | giganticRootSystems | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-weather:Machine Expanse:electricalStorms | electricalStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Machine Expanse:plasmaRain | plasmaRain | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Machine Expanse:steamClouds | steamClouds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Machine Expanse:empWaves | empWaves | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Machine Expanse:magneticWinds | magneticWinds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Machine Expanse:coolingVents | coolingVents | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Machine Expanse:ionDischarge | ionDischarge | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Machine Expanse:movingMachinery | movingMachinery | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Machine Expanse:laserGrids | laserGrids | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Machine Expanse:crushingPresses | crushingPresses | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Machine Expanse:moltenMetal | moltenMetal | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Machine Expanse:electrifiedFloors | electrifiedFloors | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Machine Expanse:assemblyArms | assemblyArms | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Machine Expanse:powerSurges | powerSurges | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Machine Expanse:securityTurrets | securityTurrets | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Machine Expanse:prototypeLaboratories | prototypeLaboratories | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Machine Expanse:aiArchives | aiArchives | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Machine Expanse:machineTemples | machineTemples | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Machine Expanse:manufacturingVaults | manufacturingVaults | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Machine Expanse:orbitalShipyards | orbitalShipyards | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Machine Expanse:controlSpires | controlSpires | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Machine Expanse:energyWells | energyWells | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Machine Expanse:lostResearchFacilities | lostResearchFacilities | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-weather:Singularity Zone:gravityStorms | gravityStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Singularity Zone:quantumRain | quantumRain | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Singularity Zone:realityCascades | realityCascades | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Singularity Zone:timeEchoes | timeEchoes | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Singularity Zone:lightInversions | lightInversions | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Singularity Zone:particleCollapse | particleCollapse | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Singularity Zone:probabilityWaves | probabilityWaves | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Singularity Zone:microSingularities | microSingularities | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Singularity Zone:gravityCollapse | gravityCollapse | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Singularity Zone:timeDilationFields | timeDilationFields | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Singularity Zone:probabilityZones | probabilityZones | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Singularity Zone:realityFractures | realityFractures | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Singularity Zone:quantumLightning | quantumLightning | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Singularity Zone:phaseInstability | phaseInstability | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Singularity Zone:eventHorizonSurges | eventHorizonSurges | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Singularity Zone:realityWells | realityWells | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Singularity Zone:infiniteLibraries | infiniteLibraries | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Singularity Zone:collapsedObservatories | collapsedObservatories | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Singularity Zone:quantumArchives | quantumArchives | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Singularity Zone:singularityTemples | singularityTemples | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Singularity Zone:mathematicalEngines | mathematicalEngines | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Singularity Zone:timeVaults | timeVaults | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Singularity Zone:impossibleMonuments | impossibleMonuments | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-weather:Solar Wastes:solarFlares | solarFlares | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Solar Wastes:coronalMassEjections | coronalMassEjections | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Solar Wastes:plasmaRain | plasmaRain | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Solar Wastes:radiationStorms | radiationStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Solar Wastes:heatWaves | heatWaves | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Solar Wastes:magneticStorms | magneticStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Solar Wastes:fireTornadoes | fireTornadoes | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Solar Wastes:radiationFields | radiationFields | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Solar Wastes:solarBeams | solarBeams | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Solar Wastes:plasmaGeysers | plasmaGeysers | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Solar Wastes:moltenDebris | moltenDebris | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Solar Wastes:heatZones | heatZones | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Solar Wastes:magneticCollapse | magneticCollapse | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Solar Wastes:explosiveGasClouds | explosiveGasClouds | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Solar Wastes:solarShockwaves | solarShockwaves | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Solar Wastes:solarHarvesters | solarHarvesters | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Solar Wastes:ancientForges | ancientForges | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Solar Wastes:heatVaults | heatVaults | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Solar Wastes:plasmaWells | plasmaWells | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Solar Wastes:fusionReactors | fusionReactors | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Solar Wastes:orbitalMirrors | orbitalMirrors | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Solar Wastes:researchPlatforms | researchPlatforms | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Solar Wastes:collapsedMiningColonies | collapsedMiningColonies | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-weather:Void Expanse:voidStorms | voidStorms | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Void Expanse:realityPulses | realityPulses | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Void Expanse:gravitationalWaves | gravitationalWaves | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Void Expanse:darkMatterClouds | darkMatterClouds | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Void Expanse:temporalEchoes | temporalEchoes | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Void Expanse:spatialDistortion | spatialDistortion | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-weather:Void Expanse:quantumRain | quantumRain | biome-weather | P3 | additive | generated | source |  | missing |
+| biome-hazard:Void Expanse:gravityWells | gravityWells | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Void Expanse:realityTears | realityTears | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Void Expanse:temporalFields | temporalFields | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Void Expanse:voidZones | voidZones | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Void Expanse:darkEnergyBursts | darkEnergyBursts | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Void Expanse:movingSingularities | movingSingularities | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Void Expanse:collapsingSpace | collapsingSpace | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-hazard:Void Expanse:phaseHazards | phaseHazards | biome-hazards | P3 | additive | generated | source |  | missing |
+| biome-poi:Void Expanse:realityAnchors | realityAnchors | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Void Expanse:collapsedGateways | collapsedGateways | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Void Expanse:voidArchives | voidArchives | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Void Expanse:ancientMonoliths | ancientMonoliths | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Void Expanse:singularityChambers | singularityChambers | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Void Expanse:dimensionalBridges | dimensionalBridges | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Void Expanse:lostFleets | lostFleets | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-poi:Void Expanse:quantumBeacons | quantumBeacons | biome-poi | P3 | keyed | generated | source |  | missing |
+| biome-event:distressSignal | distressSignal | biome-events | P3 | additive | generated | source |  | missing |
+| biome-event:ancientVault | ancientVault | biome-events | P3 | additive | generated | source |  | missing |
+| biome-event:lostExpedition | lostExpedition | biome-events | P3 | additive | generated | source |  | missing |
+| biome-event:machineActivation | machineActivation | biome-events | P3 | additive | generated | source |  | missing |
+| biome-event:crystalBloom | crystalBloom | biome-events | P3 | additive | generated | source |  | missing |
+| biome-event:solarFlare | solarFlare | biome-events | P3 | additive | generated | source |  | missing |
+| biome-event:voidBreach | voidBreach | biome-events | P3 | additive | generated | source |  | missing |
+| biome-event:wanderingMerchant | wanderingMerchant | biome-events | P3 | additive | generated | source |  | missing |
+| biome-event:prototypeWreckage | prototypeWreckage | biome-events | P3 | additive | generated | source |  | missing |
+| biome-event:factionConflict | factionConflict | biome-events | P3 | additive | generated | source |  | missing |
+| galaxy-cluster:lucent-cluster | The Lucent Cluster | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-cluster:shattered-expanse-cluster | The Shattered Expanse | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:crystalDominion | Crystal Dominion | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:humanFrontier | Human Frontier | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:machineExpanse | Machine Expanse | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:voidExpanse | Void Expanse | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:ancientCore | Ancient Core | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:solarWastes | Solar Wastes | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:frozenReach | Frozen Reach | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:brokenSystems | Broken Systems | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:darkNebula | Dark Nebula | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:singularityZone | Singularity Zone | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-region:shatteredExpanse | Shattered Expanse | galaxy | P3 | fullbleed | generated | source |  | missing |
+| galaxy-system:sys-lucent-gate | Lucent Gate | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-hollow-drift | Hollow Drift | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-ember-reach | Ember Reach | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-meridian-rest | Meridian Rest | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-prismheart | Prismheart | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-forge-primus | Forge Primus | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-hollow-crown | Hollow Crown | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-first-light | First Light | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-cinderfall | Cinderfall | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-winterline | Winterline | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-gravewake | Gravewake | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-verdance | Verdance | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-axiom | Axiom | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-shatter-approach | Shatter Approach | galaxy | P3 | keyed | generated | source |  | missing |
+| galaxy-system:sys-shatter-core | Shatter Core | galaxy | P3 | keyed | generated | source |  | missing |
+| mission:crystal-fields-incursion | Crystal Fields Incursion | missions | P3 | fullbleed | generated | source |  | missing |
+| mission:winterline-rescue | Winterline Rescue | missions | P3 | fullbleed | generated | source |  | missing |
+| mission:first-light-excavation | First Light Excavation | missions | P3 | fullbleed | generated | source |  | missing |
+| mission:forge-primus-uprising | Forge Primus Uprising | missions | P3 | fullbleed | generated | source |  | missing |
+| modifier-icon:lowGravity | lowGravity | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:lowGravity | lowGravity | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:radiation | radiation | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:radiation | radiation | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:eliteActivity | eliteActivity | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:eliteActivity | eliteActivity | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:doubleRewards | doubleRewards | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:doubleRewards | doubleRewards | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:shieldInstability | shieldInstability | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:shieldInstability | shieldInstability | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:weaponOvercharge | weaponOvercharge | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:weaponOvercharge | weaponOvercharge | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:crystalBloom | crystalBloom | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:crystalBloom | crystalBloom | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:darkSector | darkSector | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:darkSector | darkSector | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:voidCorruption | voidCorruption | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:voidCorruption | voidCorruption | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:experimentalConditions | experimentalConditions | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:experimentalConditions | experimentalConditions | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:meteorStorm | meteorStorm | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:meteorStorm | meteorStorm | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:solarRadiation | solarRadiation | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:solarRadiation | solarRadiation | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:blackHoleDistortion | blackHoleDistortion | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:blackHoleDistortion | blackHoleDistortion | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:electricalNebula | electricalNebula | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:electricalNebula | electricalNebula | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:frozenSector | frozenSector | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:frozenSector | frozenSector | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:toxicClouds | toxicClouds | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:toxicClouds | toxicClouds | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:darkMatter | darkMatter | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:darkMatter | darkMatter | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:ancientBattlefield | ancientBattlefield | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:ancientBattlefield | ancientBattlefield | mission-modifiers | P3 | additive | generated | source |  | missing |
+| modifier-icon:civilianEvacuation | civilianEvacuation | mission-modifiers | P3 | keyed | generated | source |  | missing |
+| modifier-vfx:civilianEvacuation | civilianEvacuation | mission-modifiers | P3 | additive | generated | source |  | missing |
+| screen:Boot | Boot | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:Splash | Splash | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:MainMenu | MainMenu | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:GalaxyCommand | GalaxyCommand | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:MissionSelect | MissionSelect | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:Loading | Loading | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:Gameplay | Gameplay | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:Pause | Pause | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:LevelUp | LevelUp | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:InventoryOverlay | InventoryOverlay | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:MissionComplete | MissionComplete | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:Defeat | Defeat | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:Statistics | Statistics | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:Multiplayer | Multiplayer | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:CommunityHub | CommunityHub | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:BuildPathChoice | BuildPathChoice | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:MidRunMerchant | MidRunMerchant | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:ExtractionDecision | ExtractionDecision | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:BossArtifactChoice | BossArtifactChoice | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:RecruitCommanders | RecruitCommanders | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:ViewMuseum | ViewMuseum | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:ReadCodex | ReadCodex | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:ManageAtlas | ManageAtlas | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| screen:LoadoutChoice | LoadoutChoice | ui-screens | P3 | fullbleed | generated | source |  | missing |
+| particle:hitImpact | hitImpact | particles | P2 | additive | codeDrawn | source |  | missing |
+| particle:eliteDeath | eliteDeath | particles | P2 | additive | codeDrawn | source |  | missing |
+| particle:bossPhaseChange | bossPhaseChange | particles | P2 | additive | codeDrawn | source |  | missing |
+| particle:explosion | explosion | particles | P2 | additive | codeDrawn | source |  | missing |
+| particle:levelUp | levelUp | particles | P2 | additive | codeDrawn | source |  | missing |
+| status:burn | burn | status-effects | P2 | additive | generated | source |  | missing |
+| status:shock | shock | status-effects | P2 | additive | generated | source |  | missing |
+| status:freeze | freeze | status-effects | P2 | additive | generated | source |  | missing |
+| status:corruption | corruption | status-effects | P2 | additive | generated | source |  | missing |
+| status:poison | poison | status-effects | P2 | additive | generated | source |  | missing |
+| status:slow | slow | status-effects | P2 | additive | generated | source |  | missing |
+| status:stasis | stasis | status-effects | P2 | additive | generated | source |  | missing |
+| status:shieldBreak | shieldBreak | status-effects | P2 | additive | generated | source |  | missing |
+| status:armourBreak | armourBreak | status-effects | P2 | additive | generated | source |  | missing |
+| status:overload | overload | status-effects | P2 | additive | generated | source |  | missing |
+| rarity-frame:damaged | damaged | loot-rarity | P3 | additive | codeDrawn | source |  | missing |
+| rarity-frame:common | common | loot-rarity | P3 | additive | codeDrawn | source |  | missing |
+| rarity-frame:improved | improved | loot-rarity | P3 | additive | codeDrawn | source |  | missing |
+| rarity-frame:rare | rare | loot-rarity | P3 | additive | codeDrawn | source |  | missing |
+| rarity-frame:epic | epic | loot-rarity | P3 | additive | codeDrawn | source |  | missing |
+| rarity-frame:legendary | legendary | loot-rarity | P3 | additive | codeDrawn | source |  | missing |
+| rarity-frame:ancient | ancient | loot-rarity | P3 | additive | codeDrawn | source |  | missing |
+| rarity-frame:mythic | mythic | loot-rarity | P3 | additive | codeDrawn | source |  | missing |
+| rarity-frame:singularity | singularity | loot-rarity | P3 | additive | codeDrawn | source |  | missing |
+| resource:commonMaterials | commonMaterials | resources | P3 | keyed | generated | source |  | missing |
+| resource:rareAlloys | rareAlloys | resources | P3 | keyed | generated | source |  | missing |
+| resource:crystalFragments | crystalFragments | resources | P3 | keyed | generated | source |  | missing |
+| resource:voidEssence | voidEssence | resources | P3 | keyed | generated | source |  | missing |
+| resource:ancientComponents | ancientComponents | resources | P3 | keyed | generated | source |  | missing |
+| resource:quantumCores | quantumCores | resources | P3 | keyed | generated | source |  | missing |
+| resource:energyCells | energyCells | resources | P3 | keyed | generated | source |  | missing |
+| resource:researchSamples | researchSamples | resources | P3 | keyed | generated | source |  | missing |
+| resource:mythicMaterials | mythicMaterials | resources | P3 | keyed | generated | source |  | missing |
+| resource:singularityMatter | singularityMatter | resources | P3 | keyed | generated | source |  | missing |
+| resource:darkMatter | darkMatter | resources | P3 | keyed | generated | source |  | missing |
+| resource:quantumCrystals | quantumCrystals | resources | P3 | keyed | generated | source |  | missing |
+| resource:biomass | biomass | resources | P3 | keyed | generated | source |  | missing |
+| resource:livingMetal | livingMetal | resources | P3 | keyed | generated | source |  | missing |
+| resource:atlasFragments | atlasFragments | resources | P3 | keyed | generated | source |  | missing |
+| currency:credits | credits | currencies | P3 | keyed | generated | source |  | missing |
+| currency:researchData | researchData | currencies | P3 | keyed | generated | source |  | missing |
+| currency:ancientFragments | ancientFragments | currencies | P3 | keyed | generated | source |  | missing |
+| currency:crystalEssence | crystalEssence | currencies | P3 | keyed | generated | source |  | missing |
+| currency:voidMatter | voidMatter | currencies | P3 | keyed | generated | source |  | missing |
+| currency:singularityCores | singularityCores | currencies | P3 | keyed | generated | source |  | missing |
+| title:TITLE_UNSCARRED | TITLE_UNSCARRED | titles | P3 | keyed | generated | source |  | missing |
+| title:TITLE_VETERAN | TITLE_VETERAN | titles | P3 | keyed | generated | source |  | missing |
+| title:TITLE_ARCHIVIST_OF_BOSSES | TITLE_ARCHIVIST_OF_BOSSES | titles | P3 | keyed | generated | source |  | missing |
+| title:TITLE_WINTERLINE_WARDEN | TITLE_WINTERLINE_WARDEN | titles | P3 | keyed | generated | source |  | missing |
+| title:TITLE_FOUNDRY_BREAKER | TITLE_FOUNDRY_BREAKER | titles | P3 | keyed | generated | source |  | missing |
+| title:TITLE_UNTOUCHED | TITLE_UNTOUCHED | titles | P3 | keyed | generated | source |  | missing |
+| title:TITLE_DRONE_REAPER | TITLE_DRONE_REAPER | titles | P3 | keyed | generated | source |  | missing |
+| frame:FRAME_BOSS_HUNTER | FRAME_BOSS_HUNTER | frames | P3 | additive | codeDrawn | source |  | missing |
+| frame:FRAME_FIRST_LIGHT | FRAME_FIRST_LIGHT | frames | P3 | additive | codeDrawn | source |  | missing |
+| frame:FRAME_ELITE_HUNTER | FRAME_ELITE_HUNTER | frames | P3 | additive | codeDrawn | source |  | missing |
+| frame:FRAME_HARVESTER | FRAME_HARVESTER | frames | P3 | additive | codeDrawn | source |  | missing |
+| reputation-title:The Explorer | The Explorer | reputation-titles | P3 | keyed | generated | source |  | missing |
+| reputation-title:The Builder | The Builder | reputation-titles | P3 | keyed | generated | source |  | missing |
+| reputation-title:The Scientist | The Scientist | reputation-titles | P3 | keyed | generated | source |  | missing |
+| reputation-title:The Guardian | The Guardian | reputation-titles | P3 | keyed | generated | source |  | missing |
+| reputation-title:The Diplomat | The Diplomat | reputation-titles | P3 | keyed | generated | source |  | missing |
+| reputation-title:The Founder | The Founder | reputation-titles | P3 | keyed | generated | source |  | missing |
+| reputation-title:The Pathfinder | The Pathfinder | reputation-titles | P3 | keyed | generated | source |  | missing |
+| reputation-title:The Restorer | The Restorer | reputation-titles | P3 | keyed | generated | source |  | missing |
+| achievement:ach-veteran | ach-veteran | achievements | P3 | keyed | generated | source |  | missing |
+| achievement:ach-boss-hunter | ach-boss-hunter | achievements | P3 | keyed | generated | source |  | missing |
+| achievement:ach-curator | ach-curator | achievements | P3 | keyed | generated | source |  | missing |
+| achievement:ach-trusted-ally | ach-trusted-ally | achievements | P3 | keyed | generated | source |  | missing |
+| achievement:ach-researcher | ach-researcher | achievements | P3 | keyed | generated | source |  | missing |
+| achievement:ach-restorer | ach-restorer | achievements | P3 | keyed | generated | source |  | missing |
+| achievement:ach-ghost-vault | ach-ghost-vault | achievements | P3 | keyed | generated | source |  | missing |
+| achievement:ach-first-contact | ach-first-contact | achievements | P3 | keyed | generated | source |  | missing |
+| faction-reputation:hostile | hostile | faction-reputation | P3 | keyed | generated | source |  | missing |
+| faction-reputation:distrusted | distrusted | faction-reputation | P3 | keyed | generated | source |  | missing |
+| faction-reputation:neutral | neutral | faction-reputation | P3 | keyed | generated | source |  | missing |
+| faction-reputation:known | known | faction-reputation | P3 | keyed | generated | source |  | missing |
+| faction-reputation:trusted | trusted | faction-reputation | P3 | keyed | generated | source |  | missing |
+| faction-reputation:respected | respected | faction-reputation | P3 | keyed | generated | source |  | missing |
+| faction-reputation:honoured | honoured | faction-reputation | P3 | keyed | generated | source |  | missing |
+| faction-reputation:legendaryAlly | legendaryAlly | faction-reputation | P3 | keyed | generated | source |  | missing |
+| manufacturer:atlas-dynamics | Atlas Dynamics | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:helios-industries | Helios Industries | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:nova-forge | Nova Forge | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:vanguard-systems | Vanguard Systems | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:aegis-armaments | Aegis Armaments | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:quantum-horizon | Quantum Horizon | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:black-horizon | Black Horizon | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:frontier-salvage | Frontier Salvage | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:ancient-foundry | Ancient Foundry | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:paragon-laboratories | Paragon Laboratories | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:halcyon-driveworks | Halcyon Driveworks | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:ironmoor-foundry | Ironmoor Foundry | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:void-legion-remnant | Void Legion Remnant | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:meridian-yards | Meridian Yards | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:aegis-systems | Aegis Systems | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:vanguard-fleetworks | Vanguard Fleetworks | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:eclipse-engineering | Eclipse Engineering | manufacturers | P3 | keyed | generated | source |  | missing |
+| manufacturer:prototype-division | Prototype Division | manufacturers | P3 | keyed | generated | source |  | missing |
+| fire-pattern:singleShot | singleShot | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:burst | burst | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:spread | spread | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:arc | arc | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:nova | nova | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:spiral | spiral | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:beam | beam | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:orbit | orbit | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:homing | homing | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:chain | chain | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:wave | wave | fire-patterns | P1 | additive | generated | source |  | missing |
+| fire-pattern:chargedShot | chargedShot | fire-patterns | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:straight | straight | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:seeking | seeking | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:bouncing | bouncing | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:piercing | piercing | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:explosive | explosive | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:returning | returning | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:accelerating | accelerating | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:splitting | splitting | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:orbiting | orbiting | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:chainLightning | chainLightning | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:persistentBeam | persistentBeam | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| projectile-behaviour:gravityAffected | gravityAffected | projectile-behaviours | P1 | additive | generated | source |  | missing |
+| xp-tier:small | small | xp-tiers | P1 | keyed | generated | source |  | missing |
+| xp-tier:medium | medium | xp-tiers | P1 | keyed | generated | source |  | missing |
+| xp-tier:large | large | xp-tiers | P1 | keyed | generated | source |  | missing |
+| xp-tier:elite | elite | xp-tiers | P1 | keyed | generated | source |  | missing |
+| xp-tier:boss | boss | xp-tiers | P1 | keyed | generated | source |  | missing |
+| xp-tier:ancient | ancient | xp-tiers | P1 | keyed | generated | source |  | missing |
+| xp-tier:research | research | xp-tiers | P1 | keyed | generated | source |  | missing |
+| branding:logo-wordmark | AFTERLIGHT logo/wordmark | branding | P3 | keyed | generated | source |  | missing |
+| branding:app-icon-512 | PWA app icon 512px | branding | P3 | fullbleed | generated | source |  | missing |
+| branding:app-icon-192 | PWA app icon 192px | branding | P3 | fullbleed | generated | source |  | missing |
+| branding:favicon | Browser favicon | branding | P3 | fullbleed | generated | source |  | missing |
+| branding:loading-spinner | Loading spinner/animation | branding | P3 | additive | generated | source |  | missing |
+| branding:cursor | Custom cursor | branding | P3 | keyed | generated | source |  | missing |
+| branding:display-typeface | Chunky rounded display typeface (Visual Style Rule 5) | branding | P3 | keyed | generated | source |  | missing |
+| hud:health-bar | health-bar | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:shield-bar | shield-bar | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:energy-bar | energy-bar | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:xp-bar | xp-bar | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:boss-health-bar | boss-health-bar | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:ultimate-meter | ultimate-meter | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:ability-cooldown | ability-cooldown | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:minimap | minimap | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:crosshair | crosshair | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:damage-numbers | damage-numbers | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:toast-banner | toast-banner | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:wave-banner | wave-banner | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:objective-tracker | objective-tracker | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| hud:extraction-timer | extraction-timer | hud-chrome | P1 | keyed | codeDrawn | source |  | missing |
+| ui:button-set | button-set | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:panel | panel | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:card-frame | card-frame | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:tooltip | tooltip | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:modal-frame | modal-frame | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:tab-bar | tab-bar | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:toggle | toggle | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:slider | slider | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:scrollbar | scrollbar | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:list-row | list-row | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| ui:talent-node-frame | talent-node-frame | ui-components | P2 | keyed | codeDrawn | source |  | missing |
+| player-vfx:engine-trail | engine-trail | player-vfx | P2 | additive | generated | source |  | missing |
+| player-vfx:boost-dash | boost-dash | player-vfx | P2 | additive | generated | source |  | missing |
+| player-vfx:invuln-shimmer | invuln-shimmer | player-vfx | P2 | additive | generated | source |  | missing |
+| player-vfx:barrier-bubble | barrier-bubble | player-vfx | P2 | additive | generated | source |  | missing |
+| player-vfx:shield-impact | shield-impact | player-vfx | P2 | additive | generated | source |  | missing |
+| player-vfx:player-death | player-death | player-vfx | P2 | additive | generated | source |  | missing |
+| player-vfx:player-spawn | player-spawn | player-vfx | P2 | additive | generated | source |  | missing |
+| player-vfx:extraction-warp | extraction-warp | player-vfx | P2 | additive | generated | source |  | missing |
+| player-vfx:heal-pulse | heal-pulse | player-vfx | P2 | additive | generated | source |  | missing |
+| combat-entity:outlaw-mine | outlaw-mine | combat-entities | P2 | keyed | generated | source |  | missing |
+| combat-entity:crystal-growth | crystal-growth | combat-entities | P2 | keyed | generated | source |  | missing |
+| combat-entity:xeno-hive | xeno-hive | combat-entities | P2 | keyed | generated | source |  | missing |
+| combat-entity:ancient-site | ancient-site | combat-entities | P2 | keyed | generated | source |  | missing |
+| combat-entity:loot-cache | loot-cache | combat-entities | P2 | keyed | generated | source |  | missing |
+| combat-entity:merchant-vessel | merchant-vessel | combat-entities | P2 | keyed | generated | source |  | missing |
+| combat-entity:extraction-beacon | extraction-beacon | combat-entities | P2 | keyed | generated | source |  | missing |
+| combat-entity:meteor-telegraph | meteor-telegraph | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:meteor-impact | meteor-impact | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:acid-pool | acid-pool | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:void-zone | void-zone | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:gravity-well | gravity-well | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:singularity-charge | singularity-charge | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:machine-shield-lattice | machine-shield-lattice | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:constellation-link | constellation-link | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:spawn-warp-in | spawn-warp-in | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:telegraph-ring | telegraph-ring | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:telegraph-line | telegraph-line | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:hazard-telegraph | hazard-telegraph | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:loot-beam | loot-beam | combat-entities | P2 | additive | generated | source |  | missing |
+| combat-entity:extraction-beacon-pulse | extraction-beacon-pulse | combat-entities | P2 | additive | generated | source |  | missing |
+| environment:space-backdrop | Shared deep-space backdrop (starfield base layer) | environment | P2 | fullbleed | generated | source |  | missing |
+| environment:arena-boundary | Arena boundary treatment | environment | P2 | additive | generated | source |  | missing |
+| interactable:activateAncientDevice | activateAncientDevice | interactables | P3 | keyed | generated | source |  | missing |
+| interactable:destroyObstacle | destroyObstacle | interactables | P3 | keyed | generated | source |  | missing |
+| interactable:openHiddenArea | openHiddenArea | interactables | P3 | keyed | generated | source |  | missing |
+| interactable:triggerEvent | triggerEvent | interactables | P3 | keyed | generated | source |  | missing |
+| interactable:harvestResource | harvestResource | interactables | P3 | keyed | generated | source |  | missing |
+| interactable:disableHazard | disableHazard | interactables | P3 | keyed | generated | source |  | missing |
+| interactable:unlockSecret | unlockSecret | interactables | P3 | keyed | generated | source |  | missing |
+| condition:solarRadiation | solarRadiation | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| condition:gravityDistortion | gravityDistortion | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| condition:crystalGrowth | crystalGrowth | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| condition:nebulaFog | nebulaFog | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| condition:ionStorms | ionStorms | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| condition:empFields | empFields | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| condition:asteroidDrift | asteroidDrift | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| condition:voidCorruption | voidCorruption | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| condition:machineActivity | machineActivity | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| condition:ancientEnergy | ancientEnergy | environmental-conditions | P3 | keyed | generated | source |  | missing |
+| starmap:route-line | Star-map route/lane line | starmap-chrome | P3 | additive | codeDrawn | source |  | missing |
+| starmap:position-marker | Current-position marker | starmap-chrome | P3 | keyed | codeDrawn | source |  | missing |
+| starmap:threat-pips | System threat-level pips | starmap-chrome | P3 | keyed | codeDrawn | source |  | missing |
+| starmap:locked-marker | Locked-system marker | starmap-chrome | P3 | keyed | codeDrawn | source |  | missing |
+| banner:boss-intro | Boss introduction banner/title card | banners | P3 | fullbleed | generated | source |  | missing |
+| wayfarer-hull-mk2:ability-vfx | Wayfarer Mk. II — Emergency Thrusters | ship-abilities | P3 | additive | generated | source |  | missing |
+| bastion-hull-mk1:ability-vfx | Bastion Mk. I — Shield Overload | ship-abilities | P3 | additive | generated | source |  | missing |
+| aurelia-hull-mk1:ability-vfx | Aurelia Mk. I — Survey Burst | ship-abilities | P3 | additive | generated | source |  | missing |
+| sable-dart-mk1:ability-vfx | Sable Dart Mk. I — Afterburn Manifold | ship-abilities | P3 | additive | generated | source |  | missing |
+| falchion-mk2:ability-vfx | Falchion Mk. II — Executioner Suite | ship-abilities | P3 | additive | generated | source |  | missing |
+| hivemother-mk1:ability-vfx | Hivemother Mk. I — Brood Bay | ship-abilities | P3 | additive | generated | source |  | missing |
+| dawnspire:ability-vfx | Dawnspire — Vigil Lance | ship-abilities | P3 | additive | generated | source |  | missing |
+| ballista-mk3:ability-vfx | Ballista Mk. III — Hardpoint Lattice | ship-abilities | P3 | additive | generated | source |  | missing |
+| caduceus-mk1:ability-vfx | Caduceus Mk. I — Umbrella Field | ship-abilities | P3 | additive | generated | source |  | missing |
+| maelstrom-x1:ability-vfx | Maelstrom X-1 — Shear Field | ship-abilities | P3 | additive | generated | source |  | missing |
+| reyes-longlight:active-vfx | Ilsa Reyes — Energy Pulse | commander-actives | P3 | additive | generated | source |  | missing |
+| vek-ironhull:active-vfx | Vek Tarn — Emergency Barrier | commander-actives | P3 | additive | generated | source |  | missing |
+| vael-meridian:active-vfx | Dr. Sen Vael — Resonance Survey | commander-actives | P3 | additive | generated | source |  | missing |
+| okoye-torque:active-vfx | Jelan Okoye — Field Refit | commander-actives | P3 | additive | generated | source |  | missing |
+| naru-whisper:active-vfx | Ai Naru — Ghost Vector | commander-actives | P3 | additive | generated | source |  | missing |
+| vex-longfang:active-vfx | Dain Vex — Marked Quarry | commander-actives | P3 | additive | generated | source |  | missing |
+| holt-thunderline:active-vfx | Petra Holt — Ranging Shot | commander-actives | P3 | additive | generated | source |  | missing |
+| anders-cipher:active-vfx | Rell Anders — Intrusion Suite | commander-actives | P3 | additive | generated | source |  | missing |
+| kite-aviary:active-vfx | Suno Kite — Release the Flock | commander-actives | P3 | additive | generated | source |  | missing |
+| sel-keystone:active-vfx | Mara Sel — Well Anchor | commander-actives | P3 | additive | generated | source |  | missing |
+| vane-chord:active-vfx | Ilex Vane — Resonant Note | commander-actives | P3 | additive | generated | source |  | missing |
+| kael-nadir:active-vfx | Dr. Oshen Kael — Containment Sample | commander-actives | P3 | additive | generated | source |  | missing |
+| farr-redline:active-vfx | Juno Farr — Test Envelope | commander-actives | P3 | additive | generated | source |  | missing |
+| iman-relay:active-vfx | Sera Iman — Network Ping | commander-actives | P3 | additive | generated | source |  | missing |
+| korr-wardbreaker:active-vfx | Thessaly Korr — Writ of Cover | commander-actives | P3 | additive | generated | source |  | missing |
+| voss-lanternkeep:active-vfx | Dr. Imara Voss — Archive Lantern | commander-actives | P3 | additive | generated | source |  | missing |
+| devereux-static:active-vfx | Ash Devereux — Burn the Orders | commander-actives | P3 | additive | generated | source |  | missing |
+| okafor-halcyon:active-vfx | Rin Okafor — Field Triage | commander-actives | P3 | additive | generated | source |  | missing |
+| ur-sella-chorus:active-vfx | Vantha Ur-Sella — Harmonic Accord | commander-actives | P3 | additive | generated | source |  | missing |
+| kade-fulcrum:active-vfx | Boren Kade — Lattice Splice | commander-actives | P3 | additive | generated | source |  | missing |
+| calder-driftline:active-vfx | Yuen Calder — Driftline Scan | commander-actives | P3 | additive | generated | source |  | missing |
+| aldana-aftercare:active-vfx | Dr. Petrin Aldana — Aftercare Protocol | commander-actives | P3 | additive | generated | source |  | missing |
+| voss-pathfinder:active-vfx | Dr. Lyra Voss — Survey Drone | commander-actives | P3 | additive | generated | source |  | missing |
+| kane-vanguard:active-vfx | Adrian Kane — Guardian Barrier | commander-actives | P3 | additive | generated | source |  | missing |
+| ryker-engineer:active-vfx | Elias Ryker — Auto Turret | commander-actives | P3 | additive | generated | source |  | missing |
+| cael-weaver:active-vfx | Seraphina Cael — Quantum Anchor | commander-actives | P3 | additive | generated | source |  | missing |
+| drake-hunter:active-vfx | Kael Drake — Hunter Drone | commander-actives | P3 | additive | generated | source |  | missing |
+| sol-resonant:active-vfx | Aria Sol — Crystal Pulse | commander-actives | P3 | additive | generated | source |  | missing |
+| vale-voidrunner:active-vfx | Orion Vale — Phase Step | commander-actives | P3 | additive | generated | source |  | missing |
+| iskander-swarmmaster:active-vfx | Nova Iskander — Drone Deployment Matrix | commander-actives | P3 | additive | generated | source |  | missing |
+| thorne-starforged:active-vfx | Cassia Thorne — Thermal Overdrive | commander-actives | P3 | additive | generated | source |  | missing |
+| vex-chronomancer:active-vfx | Aurelion Vex — Time Fracture | commander-actives | P3 | additive | generated | source |  | missing |
+| ash-tempest:active-vfx | Valen Ash — Lightning Spear | commander-actives | P3 | additive | generated | source |  | missing |
+| korven-phantom:active-vfx | Nyx Korven — Optical Cloak | commander-actives | P3 | additive | generated | source |  | missing |
+| syn-bioforge:active-vfx | Dr. Mira Syn — Living Bloom | commander-actives | P3 | additive | generated | source |  | missing |
+| solari-photon:active-vfx | Rhea Solari — Photon Lance | commander-actives | P3 | additive | generated | source |  | missing |
+| kain-singularity:active-vfx | Zephyr Kain — Gravity Well | commander-actives | P3 | additive | generated | source |  | missing |
+| reyes-warden:active-vfx | Astrid Reyes — Guardian Dome | commander-actives | P3 | additive | generated | source |  | missing |
+| orion-starlancer:active-vfx | Lucien Orion — Star Dash | commander-actives | P3 | additive | generated | source |  | missing |
+| volkov-titan:active-vfx | Ivan Volkov — Titan Charge | commander-actives | P3 | additive | generated | source |  | missing |
+| myrr-oracle:active-vfx | Selene Myrr — Tactical Projection | commander-actives | P3 | additive | generated | source |  | missing |
+| nova-architect:active-vfx | Caelus Nova — Rapid Fabrication | commander-actives | P3 | additive | generated | source |  | missing |
+| vega-echo:active-vfx | Talia Vega — Resonance Pulse | commander-actives | P3 | additive | generated | source |  | missing |
+| rhem-catalyst:active-vfx | Darius Rhem — Catalytic Charge | commander-actives | P3 | additive | generated | source |  | missing |
+| ross-horizon:active-vfx | Eliana Ross — Survey Beacon | commander-actives | P3 | additive | generated | source |  | missing |
+| solace-diplomat:active-vfx | Kieran Solace — Peace Accord | commander-actives | P3 | additive | generated | source |  | missing |
+| oris-nanoforge:active-vfx | Xanthe Oris — Nanite Swarm | commander-actives | P3 | additive | generated | source |  | missing |
+| drake-sentinel:active-vfx | Ronan Drake — Interceptor Grid | commander-actives | P3 | additive | generated | source |  | missing |
+| helix-alchemist:active-vfx | Sora Helix — Elemental Injector | commander-actives | P3 | additive | generated | source |  | missing |
+| fen-beastmaster:active-vfx | Dorian Fen — Call Companion | commander-actives | P3 | additive | generated | source |  | missing |
+| noctis-voidwalker:active-vfx | Vega Noctis — Phase Step | commander-actives | P3 | additive | generated | source |  | missing |
+| aether-celestial:active-vfx | Lysandra Aether — Starfall | commander-actives | P3 | additive | generated | source |  | missing |
+| prime-founder:active-vfx | Atlas Prime — Command Protocol | commander-actives | P3 | additive | generated | source |  | missing |
+| elite-reward-xp-crystal:vfx | Large XP Crystal | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-xp-magnet:vfx | XP Magnet | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-screen-clear:vfx | Screen Clear | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-screen-stun:vfx | Screen Stun | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-rare-cache:vfx | Rare Cache | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-epic-upgrade:vfx | Epic Upgrade | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-legendary-chance:vfx | Legendary Chance | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-temporary-ally:vfx | Temporary Ally | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-repair-drone:vfx | Repair Drone | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-atlas-fragment:vfx | Atlas Fragment | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| elite-reward-ultra-rare-event:vfx | Ultra Rare Event Trigger | elite-reward-vfx | P3 | additive | generated | source |  | missing |
+| wave-reward-patch-kit:vfx | Patch Kit | wave-reward-vfx | P3 | additive | generated | source |  | missing |
+| wave-reward-salvage-haul:vfx | Salvage Haul | wave-reward-vfx | P3 | additive | generated | source |  | missing |
+| wave-reward-wide-scanner:vfx | Wide Scanner | wave-reward-vfx | P3 | additive | generated | source |  | missing |
+| wave-reward-coil-tune:vfx | Coil Tune | wave-reward-vfx | P3 | additive | generated | source |  | missing |
+| wave-reward-field-primer:vfx | Field Primer | wave-reward-vfx | P3 | additive | generated | source |  | missing |
+| wave-reward-second-look:vfx | Second Look | wave-reward-vfx | P3 | additive | generated | source |  | missing |
+| wave-reward-atlas-cache:vfx | Atlas Cache | wave-reward-vfx | P3 | additive | generated | source |  | missing |
+| wave-reward-overdrive:vfx | Overdrive | wave-reward-vfx | P3 | additive | generated | source |  | missing |
+| faction-emblem:crystalDominion | Crystal Dominion | faction-emblems | P3 | keyed | generated | source |  | missing |
+| faction-emblem:machineCollective | Machine Collective | faction-emblems | P3 | keyed | generated | source |  | missing |
+| faction-emblem:humanAlliance | Human Alliance | faction-emblems | P3 | keyed | generated | source |  | missing |
+| faction-emblem:mercenaryGuild | Mercenary Guild | faction-emblems | P3 | keyed | generated | source |  | missing |
+| faction-emblem:ancientCustodians | Ancient Custodians | faction-emblems | P3 | keyed | generated | source |  | missing |
+| faction-emblem:nomadFleet | Stellar Nomads | faction-emblems | P3 | keyed | generated | source |  | missing |
+| research-node:focused-lattice | Focused Lattice | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:coherent-beams | Coherent Beams | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:harmonic-overload | Harmonic Overload | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:field-dynamics | Field Dynamics | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:resonant-collectors | Resonant Collectors | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:survey-protocols | Survey Protocols | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:deep-scanning | Deep Scanning | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:unified-theory | Unified Theory | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:rapid-refit | Rapid Refit | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:expanded-archives | Expanded Archives | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:barrier-theory | Barrier Theory | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:ancient-conduit | Ancient Conduit | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:warp-charting | Warp Charting | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:lattice-attunement | Lattice Attunement | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:drone-doctrine | Drone Doctrine | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:gene-tempering | Gene Tempering | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:void-containment | Void Containment | research-nodes | P3 | keyed | generated | source |  | missing |
+| research-node:afterlight-network | The Afterlight Network | research-nodes | P3 | keyed | generated | source |  | missing |
+| build-path:commander | Commander | build-paths | P3 | keyed | generated | source |  | missing |
+| build-path:engineer | Engineer | build-paths | P3 | keyed | generated | source |  | missing |
+| build-path:void | Void Walker | build-paths | P3 | keyed | generated | source |  | missing |
+| build-path:guardian | Guardian | build-paths | P3 | keyed | generated | source |  | missing |
+| build-path:hunter | Hunter | build-paths | P3 | keyed | generated | source |  | missing |
+| build-path:droneCommander | Drone Commander | build-paths | P3 | keyed | generated | source |  | missing |
+| build-path:heavyWeapons | Heavy Weapons | build-paths | P3 | keyed | generated | source |  | missing |
+| build-path:orbitalSpecialist | Orbital Specialist | build-paths | P3 | keyed | generated | source |  | missing |
+| build-path:bioEngineer | Bio-Engineer | build-paths | P3 | keyed | generated | source |  | missing |
+| loot-item:PROTO_CANNON | proto cannon | loot-items | P3 | keyed | generated | source |  | missing |
+| loot-item:HULL_PLATING | hull plating | loot-items | P3 | keyed | generated | source |  | missing |
+| loot-item:STRANGE_RELIC | strange relic | loot-items | P3 | keyed | generated | source |  | missing |
+| loot-item:SALVAGED_ALLOY | salvaged alloy | loot-items | P3 | keyed | generated | source |  | missing |
+| loot-item:RESEARCH_CORE | research core | loot-items | P3 | keyed | generated | source |  | missing |
+| director-event:MeteorShower | MeteorShower | director-events | P3 | additive | generated | source |  | missing |
+| director-event:SolarFlare | SolarFlare | director-events | P3 | additive | generated | source |  | missing |
+| director-event:CrystalGrowth | CrystalGrowth | director-events | P3 | additive | generated | source |  | missing |
+| director-event:GravityFlux | GravityFlux | director-events | P3 | additive | generated | source |  | missing |
+| director-event:VoidDistortion | VoidDistortion | director-events | P3 | additive | generated | source |  | missing |
+| director-event:MachineReinforcements | MachineReinforcements | director-events | P3 | additive | generated | source |  | missing |
+| director-event:AncientSignal | AncientSignal | director-events | P3 | additive | generated | source |  | missing |
+| input-glyph:pad-north | pad-north | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:pad-south | pad-south | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:pad-east | pad-east | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:pad-west | pad-west | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:pad-dpad-up | pad-dpad-up | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:pad-dpad-down | pad-dpad-down | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:pad-dpad-left | pad-dpad-left | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:pad-dpad-right | pad-dpad-right | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:pad-start | pad-start | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:pad-back | pad-back | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:keyboard-keycap-frame | keyboard-keycap-frame | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:mouse-left | mouse-left | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:mouse-right | mouse-right | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| input-glyph:touch-button-frame | touch-button-frame | input-glyphs | P2 | keyed | codeDrawn | source |  | missing |
+| combat-entity:hostile-projectile-tint | hostile-projectile-tint | combat-entities | P2 | additive | generated | source |  | missing |
 

@@ -13,7 +13,7 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { sourceEntries, derivedEntries } from "../src/game/assets/assetRegistry";
+import { sourceEntries, derivedEntries, generatedSourceEntries, codeDrawnEntries } from "../src/game/assets/assetRegistry";
 import type { AssetPipelineKind, AssetRegistryEntry } from "../src/game/assets/assetPipeline";
 import { LAUNCH_FLEET, FLEET_ENTRIES, MANUFACTURERS as SHIP_MANUFACTURERS } from "../src/game/ships/shipRosterData";
 import { LAUNCH_ARSENAL, ARSENAL_ENTRIES, WEAPON_MANUFACTURERS } from "../src/game/weapons/weaponRosterData";
@@ -250,7 +250,13 @@ function assetShape(entry: AssetRegistryEntry, subtype: string): { assetType: st
 const assets: Record<string, unknown>[] = [];
 let unmatched = 0;
 
-for (const entry of sourceEntries()) {
+// Generated-art entries only, in generation order: P1 (playable vertical
+// slice) → P2 (commanders/biomes/readability layer) → P3 (the long tail).
+// Code-drawn entries (precision vector UI — glyphs, HUD, UI kit, rarity
+// frames, tier rings, star-map chrome, particle primitives) are excluded:
+// image generation is the wrong tool for them.
+const RUN_ENTRIES = [...generatedSourceEntries()].sort((a, b) => a.priority - b.priority);
+for (const entry of RUN_ENTRIES) {
   const lastColon = entry.id.lastIndexOf(":");
   const baseId = entry.id.slice(0, lastColon === -1 ? entry.id.length : lastColon);
   const subtype = lastColon === -1 ? "" : entry.id.slice(lastColon + 1);
@@ -450,6 +456,7 @@ for (const entry of sourceEntries()) {
     id: entry.id,
     name: entry.name,
     category: entry.category,
+    priority: entry.priority,
     pipeline: entry.pipeline,
     ...(entry.keyColour ? { keyColour: entry.keyColour, paletteConstraint: entry.keyColour === "magenta" ? "no magenta anywhere in this sprite's palette (magenta-keyed)" : "no green anywhere in this sprite's palette (green-keyed; see directive.colourLaw for substitutions)" } : {}),
     assetType: shape.assetType,
@@ -496,10 +503,20 @@ const runFile = {
     factionPalettes: FACTION_COLOUR_SIGNATURES,
     derivationPolicy:
       "Derived assets are NOT in this file and must not be generated: ship roster thumbnails, enemy move/attack/death states, and the World-Ender/Vanguard boss variants are produced in code from their parent asset (Asset Pipeline Directive §2).",
+    codeDrawnPolicy:
+      "Precision vector UI is NOT in this file and must not be generated: input glyphs, HUD chrome, the UI component kit, star-map chrome, portrait frames, rarity frames, elite tier rings, and particle primitives are code-drawn per the Visual Style Rules — image generation is the wrong tool for chunky rounded geometry.",
+    priorityOrder:
+      "Assets are sorted by priority. P1 = playable vertical slice (ships, weapons, enemies, boss, XP gems, fire-pattern/projectile primitives). P2 = commanders, biomes, player VFX, and the in-run readability layer (mutation tells, telegraphs, status effects). P3 = everything else. Generate in this order.",
   },
   counts: {
     assets: assets.length,
     derivedExcluded: derivedEntries().length,
+    codeDrawnExcluded: codeDrawnEntries().length,
+    byPriority: {
+      p1: assets.filter((a) => a.priority === 1).length,
+      p2: assets.filter((a) => a.priority === 2).length,
+      p3: assets.filter((a) => a.priority === 3).length,
+    },
     byPipeline: {
       keyed: assets.filter((a) => a.pipeline === "keyed").length,
       additive: assets.filter((a) => a.pipeline === "additive").length,
@@ -522,7 +539,7 @@ function csvEscape(field: unknown): string {
   return `"${String(field).replace(/"/g, '""')}"`;
 }
 const CSV_COLUMNS = [
-  "asset_id", "name", "category", "pipeline", "key_colour", "palette_constraint", "asset_type", "view", "suggested_size", "nine_slice",
+  "asset_id", "name", "category", "priority", "pipeline", "key_colour", "palette_constraint", "asset_type", "view", "suggested_size", "nine_slice",
   "subject", "description_or_lore", "faction", "faction_palette", "faction_visual_signature", "biome", "biome_visual_identity_status",
   "manufacturer", "manufacturer_visual_identity", "rarity", "rarity_hex", "used_in", "additional_context",
 ];
@@ -532,13 +549,13 @@ const directiveText =
   `${runFile.directive.artStyle} RULES: ${VISUAL_STYLE_RULES.map((r, i) => `${i + 1}. ${r}`).join(" ")} LITMUS: ${runFile.directive.litmusTest} ` +
   `DELIVERY — keyed: ${runFile.directive.delivery.keyed} additive: ${runFile.directive.delivery.additive} fullbleed: ${runFile.directive.delivery.fullbleed} ` +
   `COLOUR LAW: ${runFile.directive.colourLaw} DERIVATION: ${runFile.directive.derivationPolicy}`;
-csvRows.push([ "_directive", "ART DIRECTIVE (applies to every row below)", "directive", "", "", "", "", "", "", "", directiveText, "", "", "", "", "", "", "", "", "", "", "", JSON.stringify({ rarityPalette: runFile.directive.rarityPalette }) ].map(csvEscape).join(","));
+csvRows.push([ "_directive", "ART DIRECTIVE (applies to every row below)", "directive", "", "", "", "", "", "", "", "", directiveText, "", "", "", "", "", "", "", "", "", "", "", JSON.stringify({ rarityPalette: runFile.directive.rarityPalette }) ].map(csvEscape).join(","));
 for (const a of assets as any[]) {
   const req = a.requirements as Record<string, unknown>;
   const fv = req.factionVisual as { palette?: string; visualSignature?: string; language?: string } | undefined;
   const remainder = Object.fromEntries(Object.entries(req).filter(([k]) => !CONSUMED_KEYS.has(k)));
   csvRows.push([
-    a.id, a.name, a.category, a.pipeline, a.keyColour ?? "", a.paletteConstraint ?? "", a.assetType, a.view ?? "", a.suggestedSize, a.nineSlice ? "yes" : "",
+    a.id, a.name, a.category, a.priority, a.pipeline, a.keyColour ?? "", a.paletteConstraint ?? "", a.assetType, a.view ?? "", a.suggestedSize, a.nineSlice ? "yes" : "",
     req.subject ?? "", req.lore ?? req.description ?? req.briefing ?? "", req.faction ?? "", fv?.palette ?? fv?.language ?? "", fv?.visualSignature ?? "",
     req.biome ?? "", req.biomeVisualIdentityStatus ?? "", req.manufacturer ?? "", req.manufacturerVisualIdentity ?? "", req.rarity ?? "", req.rarityHex ?? "",
     req.usedIn ?? "", Object.keys(remainder).length > 0 ? JSON.stringify(remainder) : "",

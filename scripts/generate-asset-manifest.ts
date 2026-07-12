@@ -49,6 +49,8 @@ lines.push("");
 lines.push(`- **Total registry entries: ${ASSET_REGISTRY.length}**`);
 lines.push(`- **True source-file count (excludes derived): ${sourceEntries().length}**`);
 lines.push(`- Derived (code-generated, no art file needed): ${derivedEntries().length}`);
+lines.push(`- Code-drawn (precision vector UI implemented in code, not image-generated): ${ASSET_REGISTRY.filter((e) => e.production === "codeDrawn").length}`);
+lines.push(`- Generation run (source AND generated): ${ASSET_REGISTRY.filter((e) => e.sourceOrDerived === "source" && e.production === "generated").length} — P1 ${ASSET_REGISTRY.filter((e) => e.sourceOrDerived === "source" && e.production === "generated" && e.priority === 1).length} / P2 ${ASSET_REGISTRY.filter((e) => e.sourceOrDerived === "source" && e.production === "generated" && e.priority === 2).length} / P3 ${ASSET_REGISTRY.filter((e) => e.sourceOrDerived === "source" && e.production === "generated" && e.priority === 3).length}`);
 lines.push(
   `- By pipeline: keyed ${entriesByPipeline("keyed").length}, additive ${entriesByPipeline("additive").length}, fullbleed ${entriesByPipeline("fullbleed").length}`,
 );
@@ -70,10 +72,10 @@ lines.push("");
 
 lines.push("## Full registry");
 lines.push("");
-lines.push("| id | name | category | pipeline | sourceOrDerived | derivedFrom | status |");
-lines.push("|---|---|---|---|---|---|---|");
+lines.push("| id | name | category | priority | pipeline | production | sourceOrDerived | derivedFrom | status |");
+lines.push("|---|---|---|---|---|---|---|---|---|");
 for (const e of ASSET_REGISTRY) {
-  lines.push(`| ${mdEscape(e.id)} | ${mdEscape(e.name)} | ${e.category} | ${e.pipeline} | ${e.sourceOrDerived} | ${e.derivedFrom ? mdEscape(e.derivedFrom) : ""} | ${e.status} |`);
+  lines.push(`| ${mdEscape(e.id)} | ${mdEscape(e.name)} | ${e.category} | P${e.priority} | ${e.pipeline} | ${e.production} | ${e.sourceOrDerived} | ${e.derivedFrom ? mdEscape(e.derivedFrom) : ""} | ${e.status} |`);
 }
 lines.push("");
 
