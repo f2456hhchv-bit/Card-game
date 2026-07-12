@@ -282,8 +282,20 @@ for (const entry of RUN_ENTRIES) {
     const arsenal = arsenalEntriesById.get(weapon.id);
     const manufacturer = WEAPON_MANUFACTURERS.find((m: any) => m.name === weapon.manufacturer || m.id === weapon.manufacturer) as any;
     Object.assign(context, {
-      subject: `the ${weapon.name}, ${weapon.category} weapon`,
-      weaponCategory: weapon.category, rarity: weapon.rarity, rarityHex: (RARITY_TABLE as any)[weapon.rarity]?.colour, tier: arsenal?.tier, family: arsenal?.familyId,
+      subject:
+        subtype === "icon"
+          ? `the ${weapon.name}, a SHIP-MOUNTED ${weapon.category} weapon (starship armament, NOT a handheld gun)`
+          : subtype === "projectile"
+            ? `the projectile fired by the ${weapon.name} (a ${weapon.category} ship weapon) — a bolt/beam/shell in flight, not the weapon itself`
+            : `the ${weapon.name}, a SHIP-MOUNTED ${weapon.category} weapon`,
+      formFactor:
+        subtype === "icon"
+          ? "Ship armament that bolts to a starship hull hardpoint — a turret / cannon / missile pod / beam emitter / lattice array. Mechanical hardware at a 3/4 hardware angle. NEVER a handheld firearm, never held or worn by a person."
+          : subtype === "projectile"
+            ? "Just the projectile in flight (bolt / shell / beam segment / energy bolt) — small, readable, top-down. Not the launcher."
+            : "Ship-weapon VFX only — no handheld/firearm form.",
+      weaponCategory: weapon.category, rarity: weapon.rarity, rarityHex: (RARITY_TABLE as any)[weapon.rarity]?.colour, tier: arsenal?.tier,
+      family: arsenal?.familyId, familyNote: "family names describe firing behaviour, not an infantry form-factor",
       manufacturer: weapon.manufacturer, manufacturerVisualIdentity: manufacturer?.visualIdentity, manufacturerSignature: manufacturer?.signatureMechanic,
       firePattern: `${weapon.firePattern} — ${FIRE_PATTERN_GEOMETRY[weapon.firePattern] ?? ""}`,
       projectileBehaviour: `${weapon.projectileBehaviour} — ${PROJECTILE_BEHAVIOUR_MOTION[weapon.projectileBehaviour] ?? ""}`,
@@ -434,8 +446,8 @@ for (const entry of RUN_ENTRIES) {
   }
   if (entry.category === "elite-mutations") { matched = true; Object.assign(context, { subject: `mutation tell "${entry.name}"`, visualTell: MUTATION_TELL[entry.name], rule: "additive overlay composited onto ANY enemy sprite — never a separate mutated sprite (DIRECTIVE §2)", usedIn: "elite enemies, in-run" }); }
   if (entry.category === "elite-tiers") { matched = true; Object.assign(context, { subject: `elite tier ring "${entry.name}"`, tierOrder: "veteran→champion→ancient→prime→legendary→apex→mythic; intensity escalates", rule: "additive ring composited under the enemy — stackable with mutation tells", usedIn: "elite enemies, in-run" }); }
-  if (entry.category === "equipment") { matched = true; Object.assign(context, { subject: `equipment item "${entry.name}"`, usedIn: "inventory/loadout" }); }
-  if (entry.category === "ship-modules") { matched = true; Object.assign(context, { subject: `ship module "${entry.name}"`, usedIn: "Upgrade Ship / outfitting UI" }); }
+  if (entry.category === "equipment") { matched = true; Object.assign(context, { subject: `ship equipment module "${entry.name}"`, formFactor: "A starship equipment module/component (defensive plating, thrusters, energy core, drone bay, etc.) — mechanical space hardware, NOT character gear, clothing, or a held item.", usedIn: "inventory/loadout" }); }
+  if (entry.category === "ship-modules") { matched = true; Object.assign(context, { subject: `ship module "${entry.name}"`, formFactor: "A starship internal module (reactor, engine, shield system, targeting array, etc.) — mechanical space hardware, NOT character gear.", usedIn: "Upgrade Ship / outfitting UI" }); }
   if (entry.category === "build-paths") {
     matched = true;
     const buildPath = BUILD_PATHS.find((p) => entry.id === `build-path:${p.id}`);
@@ -488,6 +500,13 @@ const runFile = {
   title: "AFTERLIGHT — Asset Run (requirements, no prompts — the consuming generator writes its own)",
   generatedBy: "scripts/generate-asset-run.ts (source of truth: src/game/assets/assetRegistry.ts — regenerate via `npm run assets:run`, never hand-edit)",
   directive: {
+    gameFraming:
+      "Afterlight is a top-down 360° SPACE roguelite. The player is a STARSHIP seen from above, not a person on foot. " +
+      "Ships, weapons, equipment, and ship modules are all SPACE HARDWARE — hull-mounted armaments, pods, cannons, engine/reactor/shield modules — " +
+      "rendered as mechanical kit at a top-down or 3/4 hardware angle, NEVER held, worn, or carried by a character, and never an infantry firearm. " +
+      "A 'weapon' is a ship armament that bolts to a hull hardpoint (turret / cannon / missile pod / beam emitter / lattice array), not a gun a soldier holds. " +
+      "Weapon FAMILY names (railguns, shotguns, missileLaunchers, laserArrays…) describe the FIRING BEHAVIOUR, not an infantry form-factor. " +
+      "Commanders are the ONLY human/character assets in the game (chibi pilots) — everything else is hardware, creatures, environments, or UI.",
     artStyle: "Chibi-proportioned stylized 3D rendered with flat toon/cel-shading — Nintendo-inspired, hopeful not grim. The 8 Visual Style Rules below bind every asset.",
     visualStyleRules: VISUAL_STYLE_RULES,
     litmusTest: "Shrink any new visual element to 32px. If you can't tell what it is, redesign it.",
@@ -546,6 +565,7 @@ const CSV_COLUMNS = [
 const CONSUMED_KEYS = new Set(["subject", "lore", "description", "briefing", "faction", "factionVisual", "biome", "biomeVisualIdentityStatus", "manufacturer", "manufacturerVisualIdentity", "rarity", "rarityHex", "usedIn"]);
 const csvRows: string[] = [CSV_COLUMNS.map(csvEscape).join(",")];
 const directiveText =
+  `GAME FRAMING: ${runFile.directive.gameFraming} ` +
   `${runFile.directive.artStyle} RULES: ${VISUAL_STYLE_RULES.map((r, i) => `${i + 1}. ${r}`).join(" ")} LITMUS: ${runFile.directive.litmusTest} ` +
   `DELIVERY — keyed: ${runFile.directive.delivery.keyed} additive: ${runFile.directive.delivery.additive} fullbleed: ${runFile.directive.delivery.fullbleed} ` +
   `COLOUR LAW: ${runFile.directive.colourLaw} DERIVATION: ${runFile.directive.derivationPolicy}`;
