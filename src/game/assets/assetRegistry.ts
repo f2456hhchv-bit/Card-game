@@ -16,7 +16,7 @@
  */
 import { LAUNCH_FLEET, MANUFACTURERS as SHIP_MANUFACTURERS } from "../ships/shipRosterData";
 import { LAUNCH_ARSENAL, WEAPON_MANUFACTURERS } from "../weapons/weaponRosterData";
-import { GEOMETRIC_FIRE_PATTERNS, IDENTITY_FIRE_PATTERNS, PROJECTILE_BEHAVIOURS } from "../weapons/weaponData";
+import { PROJECTILE_BEHAVIOURS } from "../weapons/weaponData";
 import { FULL_ROSTER_WITH_FOUNDER } from "../commanders/cmd031AtlasPrime";
 import { SANDBOX_ENEMIES } from "../enemies/enemyData";
 import { OUTLAW_ENEMIES } from "../enemies/outlawData";
@@ -73,7 +73,7 @@ import type { AssetPipelineKind, AssetRegistryEntry } from "./assetPipeline";
  * in code today. These entries stay in the registry (they're real work
  * with real status tracking) but are excluded from the asset run.
  */
-const CODE_DRAWN_CATEGORIES = new Set(["input-glyphs", "hud-chrome", "ui-components", "starmap-chrome", "frames", "loot-rarity", "elite-tiers", "particles"]);
+const CODE_DRAWN_CATEGORIES = new Set(["input-glyphs", "hud-chrome", "ui-components", "starmap-chrome", "frames", "loot-rarity", "elite-tiers", "particles", "projectile-behaviours"]);
 
 /**
  * Generation order (Project Owner review, 2026-07-12): P1 is the playable
@@ -83,8 +83,8 @@ const CODE_DRAWN_CATEGORIES = new Set(["input-glyphs", "hud-chrome", "ui-compone
  * composes from). P2: commanders, biomes, and the in-run readability layer.
  * P3: everything else. Generate in that order.
  */
-const PRIORITY_1_CATEGORIES = new Set(["ships", "weapons", "enemies", "boss", "hud-chrome", "xp-tiers", "fire-patterns", "projectile-behaviours"]);
-const PRIORITY_2_CATEGORIES = new Set(["commanders", "biomes", "environment", "player-vfx", "elite-mutations", "elite-tiers", "combat-entities", "status-effects", "particles", "ui-components", "input-glyphs"]);
+const PRIORITY_1_CATEGORIES = new Set(["ships", "weapons", "enemies", "boss", "hud-chrome"]);
+const PRIORITY_2_CATEGORIES = new Set(["commanders", "biomes", "environment", "player-vfx", "elite-mutations", "elite-tiers", "combat-entities", "status-effects", "particles", "ui-components", "input-glyphs", "projectile-behaviours"]);
 
 const entries: AssetRegistryEntry[] = [];
 function add(entry: Omit<AssetRegistryEntry, "status" | "production" | "priority"> & Partial<Pick<AssetRegistryEntry, "status" | "production" | "priority">>): void {
@@ -250,9 +250,18 @@ for (const m of SHIP_MANUFACTURERS as readonly { id: string; name: string }[]) {
   const dupOfWeapon = (WEAPON_MANUFACTURERS as readonly { id: string }[]).some((w) => w.id === m.id);
   if (!dupOfWeapon) add({ id: `manufacturer:${m.id}`, name: m.name, category: "manufacturers", pipeline: "keyed", sourceOrDerived: "source" });
 }
-for (const p of [...GEOMETRIC_FIRE_PATTERNS, ...IDENTITY_FIRE_PATTERNS] as readonly string[]) add({ id: `fire-pattern:${p}`, name: p, category: "fire-patterns", pipeline: "additive", sourceOrDerived: "source" });
+// Fire patterns have NO registry entries (Project Owner review, 2026-07-12):
+// spawn geometry is already pure code (FirePattern.ts computeShotAngles) —
+// there is no image to generate; each weapon's own :muzzle row is the art.
+// Projectile behaviours are codeDrawn: motion is already pure code
+// (ProjectileBehaviour.ts stepProjectile) and the trail is rendered from
+// motion history — precision geometry. Each weapon's own :projectile row
+// is the single source of projectile art (it carries manufacturer identity).
 for (const b of PROJECTILE_BEHAVIOURS as readonly string[]) add({ id: `projectile-behaviour:${b}`, name: b, category: "projectile-behaviours", pipeline: "additive", sourceOrDerived: "source" });
-for (const tier of ["small", "medium", "large", "elite", "boss", "ancient", "research"]) add({ id: `xp-tier:${tier}`, name: tier, category: "xp-tiers", pipeline: "keyed", sourceOrDerived: "source" });
+// XP gems: ONE source sprite; the other six tiers are derived by scale +
+// runtime tint (assetPipeline.ts xpGemTierStyle) — the elite-tier pattern.
+add({ id: "xp-tier:small", name: "small", category: "xp-tiers", pipeline: "keyed", sourceOrDerived: "source" });
+for (const tier of ["medium", "large", "elite", "boss", "ancient", "research"]) add({ id: `xp-tier:${tier}`, name: tier, category: "xp-tiers", pipeline: "keyed", sourceOrDerived: "derived", derivedFrom: "xp-tier:small" });
 
 // ── Full-sweep additions (2026-07-12, second registry pass): everything
 // rendered as a primitive today that the roster-driven walk above missed —

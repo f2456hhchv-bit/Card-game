@@ -8,13 +8,13 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 
 ## Summary
 
-- **Total registry entries: 1277**
-- **True source-file count (excludes derived): 1082**
-- Derived (code-generated, no art file needed): 195
-- Code-drawn (precision vector UI implemented in code, not image-generated): 68
-- Generation run (source AND generated): 1014 — P1 167 / P2 231 / P3 616
-- By pipeline: keyed 755, additive 465, fullbleed 57
-- By status: missing 1277, placeholder 0, delivered 0
+- **Total registry entries: 1265**
+- **True source-file count (excludes derived): 1064**
+- Derived (code-generated, no art file needed): 201
+- Code-drawn (precision vector UI implemented in code, not image-generated): 80
+- Generation run (source AND generated): 984 — P1 136 / P2 231 / P3 617
+- By pipeline: keyed 755, additive 453, fullbleed 57
+- By status: missing 1265, placeholder 0, delivered 0
 
 **Colour law (DIRECTIVE §4):** nothing green in any KEYED sprite's palette (the chroma-key extraction step would strip it). Substitutions: regeneration → gold, poison → amber, toxic → amber, biomass → amber-yellow. Green is permitted freely in additive/fullbleed assets. Crystal Dominion sprites are magenta-keyed instead of green-keyed (see each entry's own `keyColour`).
 
@@ -48,7 +48,6 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 | equipment | 10 |
 | faction-emblems | 6 |
 | faction-reputation | 8 |
-| fire-patterns | 12 |
 | frames | 4 |
 | galaxy | 28 |
 | hud-chrome | 14 |
@@ -1101,37 +1100,25 @@ Derived assets (DIRECTIVE §2) are never separate source files — ship roster t
 | manufacturer:vanguard-fleetworks | Vanguard Fleetworks | manufacturers | P3 | keyed | generated | source |  | missing |
 | manufacturer:eclipse-engineering | Eclipse Engineering | manufacturers | P3 | keyed | generated | source |  | missing |
 | manufacturer:prototype-division | Prototype Division | manufacturers | P3 | keyed | generated | source |  | missing |
-| fire-pattern:singleShot | singleShot | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:burst | burst | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:spread | spread | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:arc | arc | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:nova | nova | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:spiral | spiral | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:beam | beam | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:orbit | orbit | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:homing | homing | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:chain | chain | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:wave | wave | fire-patterns | P1 | additive | generated | source |  | missing |
-| fire-pattern:chargedShot | chargedShot | fire-patterns | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:straight | straight | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:seeking | seeking | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:bouncing | bouncing | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:piercing | piercing | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:explosive | explosive | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:returning | returning | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:accelerating | accelerating | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:splitting | splitting | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:orbiting | orbiting | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:chainLightning | chainLightning | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:persistentBeam | persistentBeam | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| projectile-behaviour:gravityAffected | gravityAffected | projectile-behaviours | P1 | additive | generated | source |  | missing |
-| xp-tier:small | small | xp-tiers | P1 | keyed | generated | source |  | missing |
-| xp-tier:medium | medium | xp-tiers | P1 | keyed | generated | source |  | missing |
-| xp-tier:large | large | xp-tiers | P1 | keyed | generated | source |  | missing |
-| xp-tier:elite | elite | xp-tiers | P1 | keyed | generated | source |  | missing |
-| xp-tier:boss | boss | xp-tiers | P1 | keyed | generated | source |  | missing |
-| xp-tier:ancient | ancient | xp-tiers | P1 | keyed | generated | source |  | missing |
-| xp-tier:research | research | xp-tiers | P1 | keyed | generated | source |  | missing |
+| projectile-behaviour:straight | straight | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:seeking | seeking | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:bouncing | bouncing | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:piercing | piercing | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:explosive | explosive | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:returning | returning | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:accelerating | accelerating | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:splitting | splitting | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:orbiting | orbiting | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:chainLightning | chainLightning | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:persistentBeam | persistentBeam | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| projectile-behaviour:gravityAffected | gravityAffected | projectile-behaviours | P2 | additive | codeDrawn | source |  | missing |
+| xp-tier:small | small | xp-tiers | P3 | keyed | generated | source |  | missing |
+| xp-tier:medium | medium | xp-tiers | P3 | keyed | generated | derived | xp-tier:small | missing |
+| xp-tier:large | large | xp-tiers | P3 | keyed | generated | derived | xp-tier:small | missing |
+| xp-tier:elite | elite | xp-tiers | P3 | keyed | generated | derived | xp-tier:small | missing |
+| xp-tier:boss | boss | xp-tiers | P3 | keyed | generated | derived | xp-tier:small | missing |
+| xp-tier:ancient | ancient | xp-tiers | P3 | keyed | generated | derived | xp-tier:small | missing |
+| xp-tier:research | research | xp-tiers | P3 | keyed | generated | derived | xp-tier:small | missing |
 | branding:logo-wordmark | AFTERLIGHT logo/wordmark | branding | P3 | keyed | generated | source |  | missing |
 | branding:app-icon-512 | PWA app icon 512px | branding | P3 | fullbleed | generated | source |  | missing |
 | branding:app-icon-192 | PWA app icon 192px | branding | P3 | fullbleed | generated | source |  | missing |

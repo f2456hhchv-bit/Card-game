@@ -147,3 +147,23 @@ export function deriveEnemyDeathFrame(deathElapsedMs: number, deathDurationMs: n
 export function bossVisualScale(hullMultiplier: number): number {
   return Math.cbrt(hullMultiplier);
 }
+
+/**
+ * §2 (extended, Project Owner review 2026-07-12): XP pickup gems are ONE
+ * source sprite; every other tier is derived by scale + runtime tint —
+ * the same base-plus-code-treatment pattern as elite tiers. Tints are
+ * applied POST-keying at render time, so the colour law (which governs
+ * source-art palettes fed to the chroma-key step) does not constrain them
+ * — research's green tint is legal here just as it is in additive assets.
+ */
+export function xpGemTierStyle(tier: "small" | "medium" | "large" | "elite" | "boss" | "ancient" | "research"): { scale: number; tint: string } {
+  switch (tier) {
+    case "small": return { scale: 0.65, tint: "#dce4f2" };
+    case "medium": return { scale: 0.8, tint: "#3fd4f5" };
+    case "large": return { scale: 1.0, tint: "#4d7cff" };
+    case "elite": return { scale: 1.15, tint: "#9b5cff" };
+    case "boss": return { scale: 1.4, tint: "#ffc652" };
+    case "ancient": return { scale: 1.25, tint: "#c8323c" };
+    case "research": return { scale: 1.0, tint: "#4de868" };
+  }
+}

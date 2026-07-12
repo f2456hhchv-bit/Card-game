@@ -122,11 +122,15 @@ describe("Production split + priority (Project Owner review, 2026-07-12)", () =>
   });
 
   it("precision vector UI is code-drawn, never image-generated", () => {
-    const codeDrawnCategories = new Set(["input-glyphs", "hud-chrome", "ui-components", "starmap-chrome", "frames", "loot-rarity", "elite-tiers", "particles"]);
+    const codeDrawnCategories = new Set(["input-glyphs", "hud-chrome", "ui-components", "starmap-chrome", "frames", "loot-rarity", "elite-tiers", "particles", "projectile-behaviours"]);
     for (const e of ASSET_REGISTRY) {
       expect(e.production, `${e.id} production mismatch`).toBe(codeDrawnCategories.has(e.category) ? "codeDrawn" : "generated");
     }
     expect(codeDrawnEntries().length).toBeGreaterThan(50); // the "~60 rows off the pile"
+  });
+
+  it("fire patterns have NO registry entries — spawn geometry is pure code, not art", () => {
+    expect(ASSET_REGISTRY.filter((e) => e.category === "fire-patterns")).toHaveLength(0);
   });
 
   it("generatedSourceEntries excludes both derived and code-drawn entries, and the split is exhaustive", () => {
@@ -139,15 +143,16 @@ describe("Production split + priority (Project Owner review, 2026-07-12)", () =>
     expect(generatedSource + codeDrawnSource).toBe(sourceEntries().length);
   });
 
-  it("the playable vertical slice is P1: ships, weapons, enemies, boss, HUD, XP gems, weapon primitives", () => {
-    for (const category of ["ships", "weapons", "enemies", "boss", "hud-chrome", "xp-tiers", "fire-patterns", "projectile-behaviours"]) {
+  it("the playable vertical slice is P1: ships, weapons, enemies, boss, HUD only — nothing cosmetic", () => {
+    for (const category of ["ships", "weapons", "enemies", "boss", "hud-chrome"]) {
       const inCategory = ASSET_REGISTRY.filter((e) => e.category === category);
       expect(inCategory.length).toBeGreaterThan(0);
       for (const e of inCategory) expect(e.priority, `${e.id} should be P1`).toBe(1);
     }
-    // Commanders and biomes are P2; the meta long tail is P3.
+    // Commanders and biomes are P2; the meta long tail — including XP tier
+    // gems (progression cosmetics, not slice-critical) — is P3.
     for (const e of ASSET_REGISTRY.filter((e) => e.category === "commanders" || e.category === "biomes")) expect(e.priority).toBe(2);
-    for (const e of ASSET_REGISTRY.filter((e) => e.category === "achievements" || e.category === "titles")) expect(e.priority).toBe(3);
+    for (const e of ASSET_REGISTRY.filter((e) => e.category === "achievements" || e.category === "titles" || e.category === "xp-tiers")) expect(e.priority).toBe(3);
   });
 });
 
