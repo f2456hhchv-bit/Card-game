@@ -17,7 +17,6 @@ const run = (o: Partial<RunStats>): RunStats =>
     podsCollected: 0,
     level: 1,
     ascension: 0,
-    stagesCleared: 0,
     ...o,
   }) as RunStats;
 

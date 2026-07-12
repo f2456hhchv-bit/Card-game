@@ -83,12 +83,8 @@ export interface SaveData {
     /** Pity counters so drops can't go cold (consecutive dupes / non-Rare). */
     pity: { sinceNew: number; sinceRare: number };
   };
-  /** Best Boss Rush result: most bosses felled in a single rush. */
-  bossRushBest: number;
   /** Best Endless result: highest Ascension tier reached. */
   endlessBest: number;
-  /** Best Stage Gauntlet result: most stages cleared (0–3). */
-  gauntletBest: number;
   /** Campaign progress: number of Sectors cleared (= index of the next to play). */
   campaignProgress: number;
   /** Best time/kills per stage id (normal runs), for the Records screen. */
@@ -107,8 +103,6 @@ export interface SaveData {
   selectedChassis: string;
   /** Currently selected stage id (see stageDefs). */
   selectedStage: string;
-  /** Today's Daily Run best (resets when the date rolls over). */
-  daily: { date: string; bestTime: number; bestKills: number };
   /** Daily-cache login streak: consecutive days a cache was claimed. */
   streak: { count: number; lastClaim: string };
   /** Rotating objectives (3 daily + 1 weekly) with progress + claim state. */
@@ -138,9 +132,7 @@ function defaultSave(): SaveData {
     tutorialSeen: false,
     meta: {},
     gear: { inventory: {}, equipped: emptyEquip(), pity: { sinceNew: 0, sinceRare: 0 } },
-    bossRushBest: 0,
     endlessBest: 0,
-    gauntletBest: 0,
     campaignProgress: 0,
     stageBest: {},
     signatures: { owned: [], equipped: null },
@@ -150,7 +142,6 @@ function defaultSave(): SaveData {
     chassis: ["skiff"],
     selectedChassis: "skiff",
     selectedStage: "fade",
-    daily: { date: "", bestTime: 0, bestKills: 0 },
     streak: { count: 0, lastClaim: "" },
     directives: { day: "", week: "", daily: [], weekly: [], progress: {}, claimed: [] },
     audio: { master: 0.8, sfx: 0.9, music: 0.5, muted: false },
@@ -203,9 +194,7 @@ export class SaveManager {
       alloy: parsed.alloy ?? 0,
       meta: parsed.meta ?? {},
       gear: this.migrateGear(parsed),
-      bossRushBest: parsed.bossRushBest ?? 0,
       endlessBest: parsed.endlessBest ?? 0,
-      gauntletBest: parsed.gauntletBest ?? 0,
       campaignProgress: parsed.campaignProgress ?? 0,
       stageBest: parsed.stageBest ?? {},
       signatures: parsed.signatures ?? { owned: [], equipped: null },
@@ -216,7 +205,6 @@ export class SaveManager {
       chassis: parsed.chassis ?? ["skiff"],
       selectedChassis: parsed.selectedChassis ?? "skiff",
       selectedStage: parsed.selectedStage ?? "fade",
-      daily: parsed.daily ?? { date: "", bestTime: 0, bestKills: 0 },
       streak: parsed.streak ?? { count: 0, lastClaim: "" },
       directives:
         parsed.directives ?? { day: "", week: "", daily: [], weekly: [], progress: {}, claimed: [] },
@@ -316,31 +304,23 @@ export class SaveManager {
 
   /**
    * Record the outcome of a finished run and persist. `ctx` carries the run mode
-   * so per-mode records (per-stage bests, Boss Rush best) update correctly.
-   * Returns which global records fell.
+   * so per-mode records (per-stage bests for Story, Ascension best for Endless)
+   * update correctly. Returns which global records fell.
    */
   recordRun(
     stats: RunStats,
     motesEarned: number,
     ctx: {
       stageId: string;
-      bossRush: boolean;
       endless: boolean;
-      gauntlet: boolean;
-      daily: boolean;
     } = {
       stageId: "fade",
-      bossRush: false,
       endless: false,
-      gauntlet: false,
-      daily: false,
     },
   ): {
     newBestTime: boolean;
     newBestKills: boolean;
-    newBestRush: boolean;
     newBestEndless: boolean;
-    newBestGauntlet: boolean;
   } {
     const d = this.data;
     d.runsPlayed++;
@@ -356,20 +336,12 @@ export class SaveManager {
     if (newBestKills) d.bestKills = stats.kills;
 
     // Mode-specific bests.
-    let newBestRush = false;
     let newBestEndless = false;
-    let newBestGauntlet = false;
-    if (ctx.bossRush) {
-      newBestRush = stats.bossKills > d.bossRushBest;
-      if (newBestRush) d.bossRushBest = stats.bossKills;
-    } else if (ctx.endless) {
+    if (ctx.endless) {
       newBestEndless = stats.ascension > d.endlessBest;
       if (newBestEndless) d.endlessBest = stats.ascension;
-    } else if (ctx.gauntlet) {
-      newBestGauntlet = stats.stagesCleared > d.gauntletBest;
-      if (newBestGauntlet) d.gauntletBest = stats.stagesCleared;
-    } else if (!ctx.daily) {
-      // Per-stage best for normal (campaign) runs.
+    } else {
+      // Per-stage best for Story runs.
       const prev = d.stageBest[ctx.stageId] ?? { time: 0, kills: 0 };
       d.stageBest[ctx.stageId] = {
         time: Math.max(prev.time, stats.elapsed),
@@ -378,28 +350,7 @@ export class SaveManager {
     }
 
     this.save();
-    return { newBestTime, newBestKills, newBestRush, newBestEndless, newBestGauntlet };
-  }
-
-  /**
-   * Record a Daily Run result. Resets the day's best when the date rolls over,
-   * then keeps the best time/kills for that date. Returns whether a record fell.
-   */
-  recordDaily(
-    date: string,
-    timeSeconds: number,
-    kills: number,
-  ): { newBestTime: boolean; newBestKills: boolean } {
-    const d = this.data;
-    if (d.daily.date !== date) {
-      d.daily = { date, bestTime: 0, bestKills: 0 };
-    }
-    const newBestTime = timeSeconds > d.daily.bestTime;
-    const newBestKills = kills > d.daily.bestKills;
-    if (newBestTime) d.daily.bestTime = timeSeconds;
-    if (newBestKills) d.daily.bestKills = kills;
-    this.save();
-    return { newBestTime, newBestKills };
+    return { newBestTime, newBestKills, newBestEndless };
   }
 
   // ---- Daily cache (login streak) -----------------------------------------

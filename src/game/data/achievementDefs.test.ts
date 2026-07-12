@@ -9,12 +9,10 @@ function ctx(over: Partial<AchievementContext> = {}): AchievementContext {
     runBossKills: 0,
     runLevel: 1,
     runEvolved: false,
-    runDaily: false,
     runMotes: 0,
     runAffixKills: 0,
     runPods: 0,
     runAscension: 0,
-    runStagesCleared: 0,
     runModifierCleared: false,
     lifetimeBosses: 0,
     metaPurchases: 0,
@@ -61,9 +59,8 @@ describe("achievementDefs", () => {
     expect(check("collector", ctx({ wardensUnlocked: 4, wardensTotal: 4 }))).toBe(true);
   });
 
-  it("evolution and daily flags drive their achievements", () => {
+  it("the evolution flag drives its achievement", () => {
     expect(check("transcendent", ctx({ runEvolved: true }))).toBe(true);
-    expect(check("devotee", ctx({ runDaily: true }))).toBe(true);
   });
 
   it("gear achievements track set completion and maxed items", () => {
@@ -99,7 +96,6 @@ describe("achievementDefs", () => {
 
   it("alt-mode and fleet achievements", () => {
     expect(check("starclimber", ctx({ runAscension: 5 }))).toBe(true);
-    expect(check("iron-vigil", ctx({ runStagesCleared: 3 }))).toBe(true);
     expect(check("bossbreaker", ctx({ runBossKills: 3 }))).toBe(true);
     expect(check("fleet-admiral", ctx({ chassisUnlocked: 9, chassisTotal: 9 }))).toBe(true);
     expect(check("fleet-admiral", ctx({ chassisUnlocked: 8, chassisTotal: 9 }))).toBe(false);

@@ -29,7 +29,6 @@ export interface LoadoutSnapshot {
 export interface WorldRunState {
   stageId: string;
   campaignLevel: number;
-  gauntletIndex: number;
   rngState: number;
   player: {
     x: number;
@@ -60,10 +59,7 @@ export interface RunSnapshot extends WorldRunState {
   version: number;
   /** Which mode the run is (drives how the World is reconstructed). */
   mode: {
-    daily: boolean;
-    bossRush: boolean;
     endless: boolean;
-    gauntlet: boolean;
     campaign: boolean;
   };
   runEvolved: boolean;

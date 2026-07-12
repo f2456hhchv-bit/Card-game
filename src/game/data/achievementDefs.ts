@@ -12,12 +12,10 @@ export interface AchievementContext {
   runBossKills: number;
   runLevel: number;
   runEvolved: boolean;
-  runDaily: boolean;
   runMotes: number;
   runAffixKills: number;
   runPods: number;
   runAscension: number;
-  runStagesCleared: number;
   /** True when a Sector with an active Modifier was just cleared. */
   runModifierCleared: boolean;
   // Lifetime / profile
@@ -111,13 +109,6 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     description: "Evolve a weapon.",
     icon: "★",
     check: (c) => c.runEvolved,
-  },
-  {
-    id: "devotee",
-    name: "Devotee",
-    description: "Complete a Daily Run.",
-    icon: "📅",
-    check: (c) => c.runDaily,
   },
   {
     id: "collector",
@@ -276,13 +267,6 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     description: "Reach Ascension 5 in Endless mode.",
     icon: "▲",
     check: (c) => c.runAscension >= 5,
-  },
-  {
-    id: "iron-vigil",
-    name: "Iron Vigil",
-    description: "Clear all three stages of the Gauntlet on one life.",
-    icon: "🏰",
-    check: (c) => c.runStagesCleared >= 3,
   },
   {
     id: "bossbreaker",

@@ -65,7 +65,7 @@ export class SpawnDirector {
   }
 
   /**
-   * Swap the active enemy pool + difficulty mid-run (Stage Gauntlet) without
+   * Swap the active enemy pool + difficulty (e.g. when restoring a run) without
    * disturbing the spawn/elite/surge timers.
    */
   setStage(pool: readonly string[], difficulty: number, damageDifficulty = difficulty): void {

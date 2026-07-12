@@ -222,14 +222,6 @@ export class Game {
       this.camera.addShake(8, 0.4);
       this.ui.showToast("▲", `Ascension ${a.level}`, "The Hollow grow stronger — push on.", "Endless");
     });
-    e.on("stageAdvance", (s) => {
-      // Reward clearing a stage with a breather heal, then press on.
-      const p = this.world.player;
-      p.hp = Math.min(p.stats.maxHp, p.hp + p.stats.maxHp * 0.3);
-      this.audio.bossDown();
-      this.camera.addShake(10, 0.5);
-      this.ui.showToast("⟶", `Stage ${s.cleared} cleared`, `Onward to ${s.name}…`, "Gauntlet");
-    });
     e.on("revived", () => {
       // Aegis save — a dramatic beat the player should feel.
       this.audio.evolveFanfare();
@@ -391,10 +383,7 @@ export class Game {
       ...this.world.captureRunState(),
       version: SNAPSHOT_VERSION,
       mode: {
-        daily: false,
-        bossRush: false,
         endless: this.isEndless,
-        gauntlet: false,
         campaign: this.isCampaign,
       },
       runEvolved: this.runEvolved,
@@ -519,22 +508,18 @@ export class Game {
     this.state = "gameover";
     this.save.clearRunSnapshot(); // run resolved — nothing to resume
     const stats = this.world.stats;
-    // Reward: motes scale with time survived, kills and bosses felled (the last
-    // makes Boss Rush worthwhile), boosted by Fortune.
+    // Reward: motes scale with time survived, kills and bosses felled, boosted
+    // by Fortune.
     const base =
       stats.elapsed * 0.5 +
       stats.kills * 0.2 +
       stats.bossKills * 15 +
       stats.ascension * 8 +
-      stats.stagesCleared * 20 +
       stats.motesCollected;
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     const records = this.save.recordRun(stats, motes, {
       stageId: this.world.stageId,
-      bossRush: false,
       endless: this.isEndless,
-      gauntlet: false,
-      daily: false,
     });
     // Feed the run into every active Directive (rotating objectives).
     this.save.recordDirectiveProgress(stats);
@@ -547,8 +532,7 @@ export class Game {
         stats.kills +
         Math.floor(stats.elapsed / 2) +
         stats.bossKills * 25 +
-        stats.ascension * 8 +
-        stats.stagesCleared * 15;
+        stats.ascension * 8;
       const res = this.save.grantWardenXp(wid, xp);
       if (res.gained > 0) {
         const w = WARDEN_LIST.find((x) => x.id === wid);
@@ -592,12 +576,10 @@ export class Game {
       runBossKills: s.bossKills,
       runLevel: s.level,
       runEvolved: this.runEvolved,
-      runDaily: false,
       runMotes: s.motesCollected,
       runAffixKills: s.affixKills,
       runPods: s.podsCollected,
       runAscension: s.ascension,
-      runStagesCleared: s.stagesCleared,
       runModifierCleared: this.runModifierCleared,
       lifetimeBosses: d.lifetime.bosses + s.bossKills,
       metaPurchases,

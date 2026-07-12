@@ -2,8 +2,8 @@
  * Deterministic, seedable pseudo-random number generator.
  *
  * Uses the `mulberry32` algorithm: small, fast, and good enough statistically
- * for gameplay. Determinism matters for offline-generated Daily Runs and for
- * reproducible playtests, so the entire game routes randomness through this
+ * for gameplay. Determinism matters for reproducible playtests and any
+ * seed-driven content, so the entire game routes randomness through this
  * rather than `Math.random()`.
  */
 export class Rng {

@@ -259,33 +259,6 @@ describe("World — combat integration", () => {
     expect(spawnHusk("ember")).toBeGreaterThan(spawnHusk("fade"));
   });
 
-  it("Boss Rush spawns a boss fast, no fodder, and queues the next on defeat", () => {
-    const world = new World(31);
-    world.bossRush = true;
-    world.reset();
-    world.player.stats.maxHp = 1e9;
-    world.player.hp = 1e9;
-
-    // No fodder spawns in rush — only the boss (and its summons) should appear.
-    let spawned = false;
-    world.events.on("bossSpawned", () => (spawned = true));
-    for (let i = 0; i < 60 * 7 && !spawned; i++) world.step(1 / 60, STILL);
-    expect(spawned).toBe(true);
-    // Every live enemy right after the first boss spawns is the boss itself.
-    expect(world.enemies.every((e) => e.isBoss)).toBe(true);
-
-    // Killing the boss queues the next one a few seconds later.
-    const firstBoss = world.boss!;
-    world.damageEnemy(firstBoss, firstBoss.maxHp + 1, false, 0, 0);
-    world.step(1 / 60, STILL);
-    expect(world.bossActive).toBe(false);
-    let respawned = false;
-    world.events.on("bossSpawned", () => (respawned = true));
-    for (let i = 0; i < 60 * 6 && !respawned; i++) world.step(1 / 60, STILL);
-    expect(respawned).toBe(true);
-    expect(world.stats.bossKills).toBe(1);
-  });
-
   it("Endless mode raises the Ascension tier over time and toughens enemies", () => {
     const world = new World(44);
     world.endless = true;
@@ -310,38 +283,6 @@ describe("World — combat integration", () => {
     (world as unknown as { spawnAdd(id: string, x: number, y: number): void }).spawnAdd("husk", 0, 0);
     const ascended = world.enemies[world.enemies.length - 1].maxHp;
     expect(ascended).toBeGreaterThan(baseline);
-  });
-
-  it("Stage Gauntlet advances stage on a boss kill, carrying HP over", () => {
-    const world = new World(52);
-    world.gauntlet = true;
-    world.reset();
-    expect(world.stageId).toBe("fade"); // always starts on the first stage
-    world.player.stats.maxHp = 1e9;
-    world.player.hp = 1e9;
-
-    let advancedTo = "";
-    let cleared = 0;
-    world.events.on("stageAdvance", (s) => {
-      advancedTo = s.stageId;
-      cleared = s.cleared;
-    });
-
-    // Force the first gauntlet boss to appear, then slay it.
-    world.debugTriggerBoss();
-    for (let i = 0; i < 60 && !world.bossActive; i++) world.step(1 / 60, STILL);
-    expect(world.bossActive).toBe(true);
-    const hpBefore = world.player.hp;
-    const boss = world.boss!;
-    world.damageEnemy(boss, boss.maxHp + 1, false, 0, 0);
-    world.step(1 / 60, STILL);
-
-    expect(cleared).toBe(1);
-    expect(advancedTo).toBe("ember"); // Fade → Ember
-    expect(world.stageId).toBe("ember");
-    expect(world.stats.stagesCleared).toBe(1);
-    // HP carries over (a stage-clear heal may top it up, never resets it).
-    expect(world.player.hp).toBeGreaterThanOrEqual(hpBefore - 1);
   });
 
   it("a Campaign Sector runs 10 waves ending in a boss; felling it clears", () => {

@@ -41,8 +41,6 @@ export function metricValue(metric: string, s: RunStats): number {
       return s.podsCollected;
     case "ascension":
       return s.ascension;
-    case "stages":
-      return s.stagesCleared;
     case "runs":
       return 1;
     default:

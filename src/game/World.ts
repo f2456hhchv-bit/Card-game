@@ -45,16 +45,9 @@ import { clamp, TAU } from "../core/math/MathUtils";
 
 /** First boss appears at this many seconds; bosses recur on this interval. */
 const BOSS_INTERVAL = 180;
-/** Boss Rush: first boss delay, and gap after each boss falls (seconds). */
-const RUSH_FIRST = 5;
-const RUSH_GAP = 4;
 /** Endless: seconds between Ascension steps, and the faster boss cadence. */
 const ASCENSION_INTERVAL = 45;
 const ENDLESS_BOSS_INTERVAL = 90;
-/** Stage Gauntlet: the stage order, first boss delay, and gap after advancing. */
-const GAUNTLET_ORDER = ["fade", "ember", "deep"] as const;
-const GAUNTLET_FIRST = 75;
-const GAUNTLET_GAP = 70;
 
 /** Aggregate, read-only run statistics surfaced to HUD and endgame screen. */
 export interface RunStats {
@@ -73,8 +66,6 @@ export interface RunStats {
   level: number;
   /** Endless mode: highest Ascension tier reached this run (0 otherwise). */
   ascension: number;
-  /** Gauntlet mode: stages cleared this run (0 otherwise). */
-  stagesCleared: number;
 }
 
 /** Typed gameplay events for audio/UI/feedback decoupling. */
@@ -95,8 +86,6 @@ export interface GameEvents {
   pulse: { x: number; y: number; radius: number };
   /** Endless mode stepped up an Ascension tier. */
   ascension: { level: number };
-  /** Gauntlet advanced to a new stage (after clearing the previous one's boss). */
-  stageAdvance: { stageId: string; name: string; cleared: number };
   /** Campaign Sector cleared (the Sector boss on the final wave was felled). */
   levelCleared: { level: number };
   /** A campaign wave began (wave = 1-based; the final wave is the boss). */
@@ -149,22 +138,11 @@ export class World {
   /** Stage id, supplied by Game; drives the enemy pool and backdrop palette. */
   stageId = "fade";
   /**
-   * Boss Rush mode: no fodder spawns — bosses arrive fast and escalate endlessly,
-   * each a few seconds after the last falls. A pure gauntlet to flex a build.
-   */
-  bossRush = false;
-  /**
    * Endless / Ascension mode: a normal run whose difficulty ramps every
    * {@link ASCENSION_INTERVAL}s — enemy HP/damage/spawn-rate climb without bound
    * and bosses recur faster. A pure high-score chase ("how high can you climb").
    */
   endless = false;
-  /**
-   * Stage Gauntlet mode: clear Fade → Ember → Deep back-to-back on a single life
-   * (HP/level/loadout carry over). Defeating a stage's boss advances to the next.
-   */
-  gauntlet = false;
-  private gauntletIndex = 0;
   /**
    * Campaign mode: a finite Sector with a clear condition (survive the duration,
    * or defeat the Sector boss). Cleared → the run ends in victory, not death.
@@ -259,7 +237,6 @@ export class World {
     podsCollected: 0,
     level: 1,
     ascension: 0,
-    stagesCleared: 0,
   };
 
   /** Pending level-up drafts the Game state machine must resolve (pauses sim). */
@@ -330,11 +307,6 @@ export class World {
     return this.campaign ? levelDamageDifficulty(this.campaignLevel) : this.stage.difficulty;
   }
 
-  /** Re-seed the world RNG (used to start a deterministic Daily Run). */
-  reseed(seed: number): void {
-    this.rng.setState(seed);
-  }
-
   getOrbitOrbs(): readonly OrbitOrb[] {
     return this.orbitOrbs;
   }
@@ -359,11 +331,6 @@ export class World {
   }
 
   reset(): void {
-    // Gauntlet always begins on the first stage of its fixed order.
-    if (this.gauntlet) {
-      this.gauntletIndex = 0;
-      this.stageId = GAUNTLET_ORDER[0];
-    }
     // Return all live entities to their pools.
     for (const e of this.enemies) this.enemyPool.release(e);
     for (const p of this.projectiles) this.projectilePool.release(p);
@@ -425,7 +392,6 @@ export class World {
     this.podTimer = World.POD_FIRST;
     this.stats.level = 1;
     this.stats.ascension = 0;
-    this.stats.stagesCleared = 0;
     this.pendingLevelUps = 0;
     this.isDead = false;
     this.auraRadius = 0;
@@ -437,13 +403,7 @@ export class World {
     // interval-based boss scheduler stays off (startWave spawns it directly).
     this.levelCleared = false;
     this.modifier = this.campaign ? modifierForLevel(this.campaignLevel) : null;
-    this.nextBossTime = this.bossRush
-      ? RUSH_FIRST
-      : this.gauntlet
-        ? GAUNTLET_FIRST
-        : this.campaign
-          ? Infinity
-          : this.bossInterval();
+    this.nextBossTime = this.campaign ? Infinity : this.bossInterval();
     this.bossEncounter = 0;
     this.waveNumber = 0;
     if (this.campaign) this.startWave(1);
@@ -520,7 +480,6 @@ export class World {
     return {
       stageId: this.stageId,
       campaignLevel: this.campaignLevel,
-      gauntletIndex: this.gauntletIndex,
       rngState: this.rng.getState(),
       player: {
         x: p.x,
@@ -552,11 +511,10 @@ export class World {
    */
   restoreRunState(s: import("./save/RunSnapshot").WorldRunState): void {
     this.rng.setState(s.rngState);
-    // Restore the active arena (gauntlet's reset() forces the first stage) and
-    // re-point the spawn director at the correct pool/difficulty.
+    // Restore the active arena and re-point the spawn director at the correct
+    // pool/difficulty.
     this.stageId = s.stageId;
     this.campaignLevel = s.campaignLevel;
-    this.gauntletIndex = s.gauntletIndex;
     this.spawnDirector.setStage(
       this.activeEnemyPool as string[],
       this.activeDifficulty,
@@ -590,30 +548,6 @@ export class World {
     if (this.campaign) {
       this.startWave(Math.max(1, s.waveNumber ?? 1));
       if (s.waveTimer !== undefined) this.waveTimer = s.waveTimer;
-    }
-  }
-
-  /**
-   * Gauntlet: clearing a stage's boss advances to the next stage (swapping its
-   * enemy pool, difficulty and palette) until all are cleared, then keeps the
-   * bosses coming on the final stage. The Warden's HP/level/loadout carry over.
-   */
-  private advanceGauntlet(): void {
-    this.stats.stagesCleared++;
-    if (this.gauntletIndex < GAUNTLET_ORDER.length - 1) {
-      this.gauntletIndex++;
-      this.stageId = GAUNTLET_ORDER[this.gauntletIndex];
-      const stage = this.stage;
-      this.spawnDirector.setStage(stage.enemyPool, stage.difficulty);
-      this.nextBossTime = this.stats.elapsed + GAUNTLET_GAP;
-      this.events.emit("stageAdvance", {
-        stageId: stage.id,
-        name: stage.name,
-        cleared: this.stats.stagesCleared,
-      });
-    } else {
-      // Final stage cleared — keep bosses arriving for an endless victory lap.
-      this.nextBossTime = this.stats.elapsed + GAUNTLET_GAP;
     }
   }
 
@@ -717,8 +651,7 @@ export class World {
     }
     this.updatePlayer(dt, input);
     this.rebuildGrid();
-    // Boss Rush suppresses fodder spawns — only bosses and their summons appear.
-    if (!this.bossRush) this.spawnEnemies(dt);
+    this.spawnEnemies(dt);
     this.updateBoss(dt);
     this.weaponSystem.update(this, dt);
     this.updateProjectiles(dt);
@@ -854,7 +787,6 @@ export class World {
   }
 
   private updateSupplyPods(dt: number): void {
-    if (this.bossRush) return; // boss-only mode has no fodder lulls to fill
     if (this.bossActive) return;
     this.podTimer -= dt;
     if (this.podTimer > 0) return;
@@ -1120,9 +1052,9 @@ export class World {
     // Schedule a new boss when its time arrives and none is active.
     if (!this.bossActive && this.stats.elapsed >= this.nextBossTime) {
       this.spawnBoss();
-      // In rush the next boss is scheduled when this one dies; a campaign Sector
-      // has exactly one boss; otherwise it recurs on the fixed interval.
-      this.nextBossTime += this.bossRush || this.campaign ? 1e9 : this.bossInterval();
+      // A campaign Sector has exactly one boss; otherwise it recurs on the
+      // fixed interval.
+      this.nextBossTime += this.campaign ? 1e9 : this.bossInterval();
     }
     if (this.boss && this.bossController) {
       if (!this.boss.active) {
@@ -1770,10 +1702,6 @@ export class World {
     this.boss = null;
     this.bossController = null;
     this.stats.bossKills++;
-    // Boss Rush: queue the next escalating boss a short beat later.
-    if (this.bossRush) this.nextBossTime = this.stats.elapsed + RUSH_GAP;
-    // Gauntlet: a boss kill clears the current stage; advance to the next.
-    if (this.gauntlet) this.advanceGauntlet();
     this.events.emit("bossDefeated", { x: e.x, y: e.y, id: e.typeId });
     // Campaign: every Sector's final wave is its boss — felling it clears.
     if (this.campaign && !this.levelCleared) {
