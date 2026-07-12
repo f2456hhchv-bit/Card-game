@@ -31,7 +31,7 @@ Counts reflect the roster as of this document's date (2026-07-11) — new conten
 | 13 | Relics | 9 individual + 2 sets | Icon + set-bonus visual tell |
 | 14 | Biomes | 11 | Background/environment art + weather VFX + hazard art + POI icons |
 | 15 | Galaxy clusters / regions / star systems | 2 / 11 / 15 | Star-map icon + background art |
-| 16 | Mission templates | 5 | Briefing illustration |
+| 16 | Mission templates | 4 | Briefing illustration |
 | 17 | Mission modifiers | 19 | Icon + environmental overlay VFX |
 | 18 | UI screens | 24 | Full screen layout/background art |
 | 19 | Audio cues | 12 | Sound effect |
@@ -55,7 +55,9 @@ Counts reflect the roster as of this document's date (2026-07-11) — new conten
 | 37 | Projectile behaviours | 12 | Distinct projectile visual/trail |
 | 38 | XP pickup tiers | 7 | Gem/orb sprite |
 
-**Grand total of individually-named entries needing a dedicated asset: 705** (still before each enemy's 4 animation states, or resolution/frame-count decisions that depend on a chosen art pipeline — see the intro above).
+**Grand total of individually-named entries needing a dedicated asset: 704** (still before each enemy's 4 animation states, or resolution/frame-count decisions that depend on a chosen art pipeline — see the intro above; corrected from 705 after a data-verification pass found "The Vault Signal" is a mission chain, not a 5th mission, see §16).
+
+**Update (2026-07-12): a full prompt-ready breakdown now exists — `docs/asset-prompts.csv`.** Once every multi-view/multi-state asset each entry above needs is broken into individual image units (a ship's 3 views, a weapon's 4 VFX units, an enemy's 4 animation states, etc.), the true count is **1,064 individual image prompts**, each pulling its subject description verbatim from the shipped data (lore, manufacturer visual identity, commander design briefs, biome visual identity) and locked to the 2026-07-12 toon-shaded style rules. See the file for the full breakdown and the note on which categories are excluded (audio cues/music — these need a sound-design brief, not an image prompt, since the style directive is visual-only).
 
 ---
 
@@ -233,9 +235,11 @@ A real, pre-existing art-direction data file — **not previously in this manife
 - **Galaxy regions (11):** Crystal Dominion · Human Frontier · Machine Expanse · Void Expanse · Ancient Core · Solar Wastes · Frozen Reach · Broken Systems · Dark Nebula · Singularity Zone · Shattered Expanse — each needs a region label/nebula-art treatment on the star map.
 - **Star systems (15):** Lucent Gate · Hollow Drift · Ember Reach · Meridian Rest · Prismheart · Forge Primus · Hollow Crown · First Light · Cinderfall · Winterline · Gravewake · Verdance · Axiom · Shatter Approach · Shatter Core — each needs a star-map node icon.
 
-## 16. Mission templates (5) — `src/game/missions/`
+## 16. Mission templates (4) — `src/game/missions/`
 
-Briefing illustration each: Crystal Fields Incursion · Winterline Rescue · First Light Excavation · Forge Primus Uprising · The Vault Signal
+**Correction (asset-prompts.csv generation pass):** the first pass listed 5, including "The Vault Signal" — but that's a `MissionChainDef` (a narrative wrapper linking Crystal Fields Incursion → First Light Excavation), not a 5th playable mission with its own briefing. It needs a chain banner at most, not a full briefing illustration. Corrected count: 4.
+
+Briefing illustration each: Crystal Fields Incursion · Winterline Rescue · First Light Excavation · Forge Primus Uprising
 
 ## 17. Mission modifiers (19) — icon + environmental overlay VFX
 
