@@ -56,12 +56,9 @@ import { formatTime } from "../core/format";
  * 120 FPS render path and the accessible, native-feeling UI clean.
  */
 export interface UICallbacks {
-  onStart(): void;
-  onStartDaily(): void;
-  onStartBossRush(): void;
+  /** Launch an Endless run on the chosen region. */
   onStartEndless(): void;
-  onStartGauntlet(): void;
-  /** Launch a Campaign Sector by its global level index. */
+  /** Launch a Story Sector by its global level index. */
   onStartCampaign(level: number): void;
   /** Warp to the next Campaign Sector from the cleared screen. */
   onNextLevel(): void;
@@ -110,7 +107,6 @@ export class UIManager {
   private ascLabel!: HTMLDivElement;
 
   private menu!: HTMLDivElement;
-  private bossRushBtn!: HTMLButtonElement;
   private continueBtn!: HTMLButtonElement;
   // Tabbed main-menu structure.
   private tabBar!: HTMLDivElement;
@@ -449,7 +445,7 @@ export class UIManager {
       this.lastHudMotes = world.stats.motesCollected;
       this.setCurrency(this.motesLabel, "mote", world.stats.motesCollected);
     }
-    // Mode badge: campaign wave, Endless Ascension tier, or Gauntlet progress.
+    // Mode badge: Story wave or Endless Ascension tier.
     if (world.campaign) {
       this.ascLabel.classList.remove("hidden");
       const mod = world.modifier ? ` · ${world.modifier.name}` : "";
@@ -460,9 +456,6 @@ export class UIManager {
     } else if (world.endless) {
       this.ascLabel.classList.remove("hidden");
       this.ascLabel.textContent = `▲ Ascension ${world.stats.ascension}`;
-    } else if (world.gauntlet) {
-      this.ascLabel.classList.remove("hidden");
-      this.ascLabel.textContent = `⟶ Gauntlet · Stage ${Math.min(3, world.stats.stagesCleared + 1)}/3`;
     } else {
       this.ascLabel.classList.add("hidden");
     }
@@ -592,35 +585,19 @@ export class UIManager {
       this.journeyBody,
     );
 
-    // Play — the game modes, with the Quick Play stage chooser.
+    // Endless — the survival mode, with the region chooser. (Story lives on the
+    // Journey tab; those are the game's two modes.)
     this.playPanel = this.el("div", "menu-panel hidden");
     const stageRow = this.el("div", "stage-row");
     stageRow.id = "stage-row";
-    const play = this.el("button", "btn", "Quick Play");
-    play.addEventListener("click", () => this.cb.onStart());
-    const dailyBtn = this.el("button", "btn secondary", "Daily Run");
-    dailyBtn.addEventListener("click", () => this.cb.onStartDaily());
-    const dailyLine = this.el("div", "daily-line");
-    dailyLine.id = "daily-line";
-    this.bossRushBtn = this.el("button", "btn secondary", "Boss Rush");
-    this.bossRushBtn.addEventListener("click", () => {
-      if (this.bossRushBtn.classList.contains("locked")) {
-        this.showToast(glyphIcon("skull", 6), "Boss Rush locked", "Fell a boss in a normal run to unlock the gauntlet.", "Locked");
-        return;
-      }
-      this.cb.onStartBossRush();
-    });
-    const endlessBtn = this.el("button", "btn secondary", "Endless");
+    const endlessBtn = this.el("button", "btn", "Play Endless");
     endlessBtn.addEventListener("click", () => this.cb.onStartEndless());
-    const gauntletBtn = this.el("button", "btn secondary", "Gauntlet");
-    gauntletBtn.addEventListener("click", () => this.cb.onStartGauntlet());
     const modeGrid = this.el("div", "mode-grid");
-    modeGrid.append(play, dailyBtn, this.bossRushBtn, endlessBtn, gauntletBtn);
+    modeGrid.append(endlessBtn);
     this.playPanel.append(
-      this.el("div", "panel-head", "Quick Play — choose a region"),
+      this.el("div", "panel-head", "Endless — choose a region"),
       stageRow,
       modeGrid,
-      dailyLine,
     );
 
     // More — the secondary destinations.
@@ -659,8 +636,8 @@ export class UIManager {
       b.addEventListener("click", () => this.goTab(id));
       this.tabBar.appendChild(b);
     };
-    tab("journey", "Journey");
-    tab("play", "Play");
+    tab("journey", "Story");
+    tab("play", "Endless");
     tab("wardens", "Crew");
     tab("ships", "Ships");
     tab("hangar", "Hangar");
@@ -1056,14 +1033,6 @@ export class UIManager {
       }
       row.appendChild(chip);
     }
-  }
-
-  /** Today's local date as YYYY-MM-DD, matching Game's Daily Run seed. */
-  private todayString(): string {
-    const d = new Date();
-    const m = `${d.getMonth() + 1}`.padStart(2, "0");
-    const day = `${d.getDate()}`.padStart(2, "0");
-    return `${d.getFullYear()}-${m}-${day}`;
   }
 
   // ---- How to Play -------------------------------------------------------
@@ -2002,9 +1971,7 @@ export class UIManager {
       stat("Best Time", formatTime(d.bestTime)),
       stat("Most Felled", `${d.bestKills}`),
       stat("Galaxy", `${galaxyReached}/${GALAXY_COUNT}`),
-      stat("Boss Rush", d.bossRushBest > 0 ? `${d.bossRushBest} bosses` : "—"),
       stat("Endless", d.endlessBest > 0 ? `Asc ${d.endlessBest}` : "—"),
-      stat("Gauntlet", d.gauntletBest > 0 ? `${d.gauntletBest}/3` : "—"),
     ]);
     group("Collection", [
       stat("Commanders", `${d.wardens.length}/${WARDEN_LIST.length}`),
@@ -2279,22 +2246,6 @@ export class UIManager {
     );
 
     this.refreshStageChooser();
-
-    // Boss Rush unlocks after the first boss kill.
-    const rushUnlocked = d.lifetime.bosses >= 1;
-    this.bossRushBtn.classList.toggle("locked", !rushUnlocked);
-    this.bossRushBtn.textContent = rushUnlocked ? "Boss Rush" : "Boss Rush — Locked";
-
-    const dailyLine = this.menu.querySelector("#daily-line");
-    if (dailyLine) {
-      const today = this.todayString();
-      if (d.daily.date === today && (d.daily.bestTime > 0 || d.daily.bestKills > 0)) {
-        dailyLine.textContent =
-          `Today's Daily — best ${formatTime(d.daily.bestTime)} · ${d.daily.bestKills} felled`;
-      } else {
-        dailyLine.textContent = "Daily Run — a fair, fixed challenge. Not played today.";
-      }
-    }
   }
 
   showMenu(): void {
@@ -2443,26 +2394,12 @@ export class UIManager {
       newBestTime: boolean;
       newBestKills: boolean;
       newBestEndless?: boolean;
-      newBestGauntlet?: boolean;
     },
-    daily = false,
-    bossRush = false,
     endless = false,
-    gauntlet = false,
   ): void {
     const title = this.gameover.querySelector("#go-title");
     if (title) {
-      title.textContent = gauntlet
-        ? stats.stagesCleared >= 3
-          ? "GAUNTLET CLEARED!"
-          : "GAUNTLET — THE LIGHT FADES"
-        : endless
-          ? "ENDLESS — THE LIGHT FADES"
-          : bossRush
-            ? "BOSS RUSH — THE LIGHT FADES"
-            : daily
-              ? "DAILY RUN — THE LIGHT FADES"
-              : "THE LIGHT FADES";
+      title.textContent = endless ? "ENDLESS — THE LIGHT FADES" : "THE LIGHT FADES";
     }
     const container = this.gameover.querySelector("#go-stats");
     if (container) {
@@ -2483,11 +2420,8 @@ export class UIManager {
       const tiles = [
         stat("Survived", formatTime(stats.elapsed), records.newBestTime),
       ];
-      // Each alt-mode headlines its own metric.
+      // Endless headlines its Ascension tier.
       if (endless) tiles.push(stat("Ascension", `${stats.ascension}`, records.newBestEndless));
-      else if (gauntlet)
-        tiles.push(stat("Stages", `${stats.stagesCleared}/3`, records.newBestGauntlet));
-      else if (bossRush) tiles.push(stat("Bosses", `${stats.bossKills}`, stats.bossKills > 0));
       const moteTile = stat("Motes", `+${motesEarned}`);
       moteTile.querySelector("b")?.prepend(this.curIcon("mote"), " ");
       tiles.push(

@@ -14,7 +14,6 @@ import { metaMoteMultiplier } from "./data/metaDefs";
 import {
   GEAR_ITEMS,
   SET_LIST,
-  emptyEquip,
   completedSets,
   maxedItems,
   rarityName,
@@ -25,16 +24,7 @@ import { SIGNATURE_DEFS, SIGNATURE_LIST } from "./data/signatureDefs";
 import { WARDEN_LIST } from "./data/wardenDefs";
 import { CHASSIS_LIST } from "./data/chassisDefs";
 import { ACHIEVEMENT_DEFS, type AchievementContext } from "./data/achievementDefs";
-import { Rng } from "../core/math/Rng";
 import { clamp } from "../core/math/MathUtils";
-
-/** Local calendar date as YYYY-MM-DD — the Daily Run seed source. */
-function dailyDateString(): string {
-  const d = new Date();
-  const m = `${d.getMonth() + 1}`.padStart(2, "0");
-  const day = `${d.getDate()}`.padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-}
 
 /** High-level game states. The simulation only advances while `playing`. */
 export type GameState = "menu" | "playing" | "paused" | "draft" | "gameover" | "cleared";
@@ -67,15 +57,9 @@ export class Game {
   private slowmoScale = 1;
   private simCarry = 0;
 
-  /** True while the current run is a Daily Run (fixed seed, equal footing). */
-  private isDailyRun = false;
-  /** True while the current run is a Boss Rush (endless boss gauntlet). */
-  private isBossRush = false;
   /** True while the current run is Endless / Ascension mode. */
   private isEndless = false;
-  /** True while the current run is a Stage Gauntlet. */
-  private isGauntlet = false;
-  /** True while playing a Campaign Sector; `campaignLevel` is which one. */
+  /** True while playing a Story Sector; `campaignLevel` is which one. */
   private isCampaign = false;
   private campaignLevel = 0;
   /** Whether a weapon was evolved this run (for the achievement). */
@@ -98,11 +82,7 @@ export class Game {
     this.audio.settings = this.save.data.audio;
 
     this.ui = new UIManager(uiParent, this.save, this.audio, {
-      onStart: () => this.startRun(false),
-      onStartDaily: () => this.startRun(true),
-      onStartBossRush: () => this.startRun(false, true),
-      onStartEndless: () => this.startRun(false, false, true),
-      onStartGauntlet: () => this.startRun(false, false, false, true),
+      onStartEndless: () => this.startEndless(),
       onStartCampaign: (level: number) => this.startCampaign(level),
       onNextLevel: () => this.startCampaign(Math.min(this.campaignLevel + 1, MAX_LEVEL)),
       onContinueRun: () => this.resumeSavedRun(),
@@ -112,9 +92,7 @@ export class Game {
         if (this.state === "playing") this.world.activateSpecial();
       },
       onRestart: () =>
-        this.isCampaign
-          ? this.startCampaign(this.campaignLevel)
-          : this.startRun(this.isDailyRun, this.isBossRush, this.isEndless, this.isGauntlet),
+        this.isCampaign ? this.startCampaign(this.campaignLevel) : this.startEndless(),
       onToMenu: () => this.toMenu(),
       onPickDraft: (opt) => this.pickDraft(opt),
       onGearChanged: () => this.checkAchievements(),
@@ -272,66 +250,41 @@ export class Game {
 
   // ---- State transitions -------------------------------------------------
 
-  private startRun(daily = false, bossRush = false, endless = false, gauntlet = false): void {
+  private startEndless(): void {
     this.audio.unlock();
     this.save.clearRunSnapshot(); // a fresh run supersedes any resumable one
-    this.isDailyRun = daily;
-    this.isBossRush = bossRush;
-    this.isEndless = endless;
-    this.isGauntlet = gauntlet;
+    this.isEndless = true;
     this.isCampaign = false;
     this.runEvolved = false;
     this.runModifierCleared = false;
-    this.world.bossRush = bossRush;
-    this.world.endless = endless;
-    this.world.gauntlet = gauntlet;
+    this.world.endless = true;
     this.world.campaign = false;
-    if (daily) {
-      // Daily Run: a fair, equal challenge — fixed daily seed, default Warden,
-      // and no permanent meta-upgrades, so the run is the same for everyone.
-      this.world.metaLevels = {};
-      this.world.gearInventory = {};
-      this.world.gearEquipped = emptyEquip();
-      this.world.signatureId = null;
-      this.world.selectedWarden = "lumen";
-      this.world.wardenLevel = 0; // equal footing — no mastery bonus
-      this.world.selectedChassis = "skiff"; // equal footing — neutral hull
-      this.world.stageId = "fade"; // Daily is always the base stage, equal footing.
-      this.world.reset();
-      this.world.reseed(Rng.seedFromString(dailyDateString()));
-    } else {
-      // Apply permanent meta-upgrades, equipped ship gear + selected Warden.
-      this.world.metaLevels = this.save.data.meta;
-      this.world.gearInventory = this.save.data.gear.inventory;
-      this.world.gearEquipped = this.save.data.gear.equipped;
-      this.world.signatureId = this.save.data.signatures.equipped;
-      this.world.selectedWarden = this.save.data.selectedWarden;
-      this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
-      this.world.selectedChassis = this.save.data.selectedChassis;
-      this.world.stageId = this.selectedStageId();
-      this.world.reset();
-    }
+    // Apply permanent meta-upgrades, equipped ship gear + selected Warden.
+    this.world.metaLevels = this.save.data.meta;
+    this.world.gearInventory = this.save.data.gear.inventory;
+    this.world.gearEquipped = this.save.data.gear.equipped;
+    this.world.signatureId = this.save.data.signatures.equipped;
+    this.world.selectedWarden = this.save.data.selectedWarden;
+    this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
+    this.world.selectedChassis = this.save.data.selectedChassis;
+    this.world.stageId = this.selectedStageId();
+    this.world.reset();
     this.beginRunUi();
   }
 
   /**
-   * Start a Campaign Sector: a finite level with a clear condition. Full loadout
+   * Start a Story Sector: a finite level with a clear condition. Full loadout
    * (meta/gear/signature/Warden mastery) applies — it's the main progression.
    */
   private startCampaign(level: number): void {
     this.audio.unlock();
     this.save.clearRunSnapshot(); // a fresh run supersedes any resumable one
-    this.isDailyRun = false;
-    this.isBossRush = false;
     this.isEndless = false;
-    this.isGauntlet = false;
     this.isCampaign = true;
     this.campaignLevel = level;
     this.runEvolved = false;
     this.runModifierCleared = false;
-    this.world.bossRush = false;
     this.world.endless = false;
-    this.world.gauntlet = false;
     this.world.campaign = true;
     this.world.campaignLevel = level;
     this.world.metaLevels = this.save.data.meta;
@@ -438,10 +391,10 @@ export class Game {
       ...this.world.captureRunState(),
       version: SNAPSHOT_VERSION,
       mode: {
-        daily: this.isDailyRun,
-        bossRush: this.isBossRush,
+        daily: false,
+        bossRush: false,
         endless: this.isEndless,
-        gauntlet: this.isGauntlet,
+        gauntlet: false,
         campaign: this.isCampaign,
       },
       runEvolved: this.runEvolved,
@@ -460,39 +413,23 @@ export class Game {
     }
     this.audio.unlock();
     const m = snap.mode;
-    this.isDailyRun = m.daily;
-    this.isBossRush = m.bossRush;
     this.isEndless = m.endless;
-    this.isGauntlet = m.gauntlet;
     this.isCampaign = m.campaign;
     this.campaignLevel = snap.campaignLevel;
     this.runEvolved = snap.runEvolved;
-    this.world.bossRush = m.bossRush;
     this.world.endless = m.endless;
-    this.world.gauntlet = m.gauntlet;
     this.world.campaign = m.campaign;
     this.world.campaignLevel = snap.campaignLevel;
     // Re-apply the same loadout sources the original run used, so recomputeStats
-    // during restore lands on the identical stat block (Daily is equal-footing).
-    if (m.daily) {
-      this.world.metaLevels = {};
-      this.world.gearInventory = {};
-      this.world.gearEquipped = emptyEquip();
-      this.world.signatureId = null;
-      this.world.selectedWarden = "lumen";
-      this.world.wardenLevel = 0;
-      this.world.selectedChassis = "skiff";
-      this.world.stageId = "fade";
-    } else {
-      this.world.metaLevels = this.save.data.meta;
-      this.world.gearInventory = this.save.data.gear.inventory;
-      this.world.gearEquipped = this.save.data.gear.equipped;
-      this.world.signatureId = this.save.data.signatures.equipped;
-      this.world.selectedWarden = this.save.data.selectedWarden;
-      this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
-      this.world.selectedChassis = this.save.data.selectedChassis;
-      this.world.stageId = snap.stageId;
-    }
+    // during restore lands on the identical stat block.
+    this.world.metaLevels = this.save.data.meta;
+    this.world.gearInventory = this.save.data.gear.inventory;
+    this.world.gearEquipped = this.save.data.gear.equipped;
+    this.world.signatureId = this.save.data.signatures.equipped;
+    this.world.selectedWarden = this.save.data.selectedWarden;
+    this.world.wardenLevel = this.save.wardenLevel(this.save.data.selectedWarden);
+    this.world.selectedChassis = this.save.data.selectedChassis;
+    this.world.stageId = snap.stageId;
     this.world.reset();
     this.world.restoreRunState(snap);
 
@@ -594,21 +531,17 @@ export class Game {
     const motes = Math.floor(base * metaMoteMultiplier(this.save.data.meta));
     const records = this.save.recordRun(stats, motes, {
       stageId: this.world.stageId,
-      bossRush: this.isBossRush,
+      bossRush: false,
       endless: this.isEndless,
-      gauntlet: this.isGauntlet,
-      daily: this.isDailyRun,
+      gauntlet: false,
+      daily: false,
     });
-    if (this.isDailyRun) {
-      this.save.recordDaily(dailyDateString(), stats.elapsed, stats.kills);
-    }
     // Feed the run into every active Directive (rotating objectives).
     this.save.recordDirectiveProgress(stats);
     // Salvage a gear item from the wreck — every run advances the Hangar.
     this.salvageGear();
-    // Warden mastery: the played Warden earns XP from the run (not the Daily,
-    // which is equal-footing). Daily forces Lumen, so attribute by save selection.
-    if (!this.isDailyRun) {
+    // Warden mastery: the played Warden earns XP from the run.
+    {
       const wid = this.save.data.selectedWarden;
       const xp =
         stats.kills +
@@ -624,15 +557,7 @@ export class Game {
     }
     this.checkAchievements();
     this.ui.hideHUD();
-    this.ui.showGameOver(
-      stats,
-      motes,
-      records,
-      this.isDailyRun,
-      this.isBossRush,
-      this.isEndless,
-      this.isGauntlet,
-    );
+    this.ui.showGameOver(stats, motes, records, this.isEndless);
   }
 
   /** Grant one gear-item salvage and toast the result (boss kill / run end). */
@@ -667,7 +592,7 @@ export class Game {
       runBossKills: s.bossKills,
       runLevel: s.level,
       runEvolved: this.runEvolved,
-      runDaily: this.isDailyRun,
+      runDaily: false,
       runMotes: s.motesCollected,
       runAffixKills: s.affixKills,
       runPods: s.podsCollected,
